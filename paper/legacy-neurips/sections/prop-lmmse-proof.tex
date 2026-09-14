@@ -1,0 +1,70 @@
+%% SHARED SECTION -- the proof of Proposition~\ref{prop:lmmse}, included from
+%% the appendix. Split out of prop-lmmse.tex because the body has a nine-page
+%% limit and a full induction does not belong in it; the STATEMENT, the
+%% projection definition and the hypothesis discussion stay in the body, which
+%% is what a reader needs there.
+%%
+%% INCLUDED BY THE PAPER AND THE WORKSHOP, which do not carry the same
+%% equations: the workshop is a 4pp condensation and drops several the paper
+%% numbers. So refer to objects by name here, never by \eqref to a label that
+%% only one of the two documents defines -- that resolves in the paper and
+%% prints "??" in the workshop, which is how eq:closure came to dangle on
+%% page 5 of it.
+
+\begin{remark}[On the hypotheses]
+\label{rem:lmmse-hyp}
+Four are load-bearing and worth separating. \emph{Finite second moments} are what make $\Pgauss$
+defined at all. \emph{Zero mean} is not cosmetic: the general LMMSE carries
+$\E[\va] + \Cov(\va,\vx)\Cov(\vx)^{-1}(\vx-\E[\vx])$, and \eqref{eq:lmmse} is the centred
+special case. \emph{$\corr\neq0$} is required because the backward map of the Gaussian closure
+recursion divides by $\corr$; at $\corr=0$ the chain has no edges, the sites are independent, and the
+claim holds trivially and separately, each site's posterior mean being the scalar Gaussian
+$e^{-t}\Sig_0(e^{-2t}\Sig_0+\Dt)^{-1}x_i = e^{t}\Sig_0(\Sig_0+\Dt e^{2t})^{-1}x_i$. \emph{Where the projection is applied} matters because
+$\Pgauss$ does not commute with multiplication by the likelihood; Proposition~\ref{prop:lmmse}
+fixes the order, and a different order is a different algorithm.
+
+The statement is about exact message functions on $\Reals$ and an analytic projection operator.
+\textbf{The grid plays no part in it.} Discretisation enters only when the \emph{unrestricted}
+non-Gaussian messages are represented numerically, which is what the recursion is compared
+against; conflating the two would turn a theorem about a closure into a claim about quadrature.
+\end{remark}
+
+\begin{proof}
+Write $\mu_i^{\rightarrow}$ for the forward message at site $i$ after projection and
+$\ell_i$ for the Gaussian unary likelihood. We show by induction that every projected message
+coincides with the corresponding exact message of the covariance-matched Gaussian chain --- the
+chain with the same $\corr$ and innovation variance $\ivar$ but Gaussian innovations.
+
+\emph{Base.} The initial message is Gaussian by hypothesis, or is projected to the Gaussian with
+the same first two moments; either way it equals the Gaussian chain's initial message, which has
+those same moments by construction.
+
+\emph{Step.} Suppose $\mu_{i-1}^{\rightarrow}$ agrees with the Gaussian chain's message, so it is
+Gaussian with some mean $m$ and variance $v$. Multiplying by $\ell_{i-1}$ multiplies two Gaussian
+densities and yields a Gaussian, with mean and variance given by the usual precision-weighted
+combination --- identical in both chains, since the likelihood is the same object. Taking the
+transition integral against $a_i = \corr a_{i-1} + \varepsilon_i$ convolves with $\innov$ and
+scales by $\corr$, which maps $(m,v) \mapsto (\corr m,\, \corr^2 v + \ivar)$: the mean and variance
+of a convolution depend on $\innov$ \emph{only} through its mean and variance, so this is the same
+map for every innovation with moments $(0,\ivar)$, and in particular the same as for the Gaussian
+chain. In the Gaussian chain the convolution of two Gaussians is already Gaussian, so no
+projection occurs there; here $\Pgauss$ is applied, and since the pre-projection function has
+exactly the moments just computed, the projection returns precisely the Gaussian chain's message.
+
+The backward recursion runs the same argument with the transition map inverted, $(m,v)\mapsto
+(m/\corr,\,(v+\ivar)/\corr^2)$, which is where $\corr\neq0$ is used. Its base case needs one word
+of care. The terminal backward message is $r_n\equiv 1$, which is not a normalisable density and
+so is not in the domain of $\Pgauss$; the induction therefore starts one step earlier, at the
+terminal \emph{unary likelihood} $\ell_n$, which is Gaussian and normalisable. Every subsequent
+backward message is a likelihood-weighted transition integral of a normalisable Gaussian and stays
+in the domain. Nothing is lost by starting there, because $r_n\equiv1$ contributes no factor: the
+first object the recursion actually projects is $\ell_n$.
+
+Hence every projected belief equals the corresponding Gaussian-chain belief, and the returned
+posterior mean is the Gaussian chain's posterior mean. For jointly Gaussian zero-mean
+$(\va,\vx)$ the conditional mean is linear in $\vx$ and therefore coincides with the best linear
+estimator, which is \eqref{eq:lmmse}: since $\vx = e^{-t}\va + \sqrt{\Dt}\,\vect{z}$ with
+$\vect{z}$ independent, $\Cov(\va,\vx)=e^{-t}\Sig_0$ and $\Cov(\vx)=e^{-2t}\Sig_0+\Dt\Id$. Since
+the recursion never read $\innov$ beyond $(0,\ivar)$, the same estimator is returned for every
+innovation law with those moments.
+\end{proof}

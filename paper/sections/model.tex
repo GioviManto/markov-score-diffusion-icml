@@ -1,0 +1,49 @@
+%% SHARED SECTION -- included by paper/main.tex and paper/workshop.tex.
+%% Edit here, never in a copy. This file exists because the four documents
+%% disagreeing with each other is the failure this rebuild was for.
+
+\paragraph{Forward process.} With $\gwn$ standardised Gaussian white noise,
+$\langle\gwn(t)\gwn(t')\rangle=\delta(t-t')$, the forward Ornstein--Uhlenbeck process and its
+solution are
+\begin{equation}
+\label{eq:forward}
+\frac{\mathrm{d}\vx}{\mathrm{d}t} \;=\; -\vx + \sqrt{2}\,\gwn(t),
+\qquad
+\vx(t) \;=\; e^{-t} \va + \sqrt{\Dt}\, \vz,
+\qquad
+\Dt = 1 - e^{-2t},
+\quad \vz\sim\normal{\vect{0}}{\Id}.
+\end{equation}
+The reverse-time convention is fixed once in Appendix~\ref{app:notation} and used without
+variation.
+
+\paragraph{Prior.} $\Pz$ factorises as
+\begin{equation}
+\label{eq:prior}
+\Pz(\va) \;=\; \mu(a_1)\prod_{i=2}^{\nsites} \kernel(a_i \mid a_{i-1}),
+\qquad
+\kernel(a'\mid a) \;=\; \innov(a' - \corr a),
+\end{equation}
+with $\innov$ an innovation density of mean zero and variance $\ivar$, and $|\corr|<1$. We draw
+$a_1\sim\normal{0}{1}$ and set $\ivar = 1-\corr^2$, which makes $\Var(a_i)=1$ at every site and
+$\Cov(a_i,a_j)=\corr^{|i-j|}$ exactly, \emph{whatever the shape of $\innov$}. Variance matching is
+what makes the family a controlled probe: Gaussian, Laplace, Student, uniform and bimodal
+innovations share the same covariance and differ only beyond second moments. The chain is
+covariance-stationary but not strictly stationary; Appendix~\ref{app:stationary} states the
+difference, and shows why it collapses in the Gaussian case.
+
+\paragraph{The score is a posterior mean.} From \eqref{eq:forward}, $\Pt$ is a Gaussian
+convolution of $\Pz$. Differentiating under the integral and dividing by $\Pt(\vx)$ --- the
+Gaussian factor over $\Pt(\vx)$ is exactly the posterior density $P(\va\mid \vx,t)$ --- gives
+\begin{equation}
+\label{eq:score}
+\score(\vx,t) \;=\; -\,\frac{\vx - e^{-t}\,\pmean{\va}}{\Dt},
+\qquad
+\pmean{\va} = \int \mathrm{d}\va\; \va\, P(\va\mid \vx,t).
+\end{equation}
+Equation~\eqref{eq:score} is a change of variables, not an approximation: computing the score and
+computing the posterior mean are the same problem. The identity is classical in the
+empirical-Bayes literature \citep{robbins1956empirical,miyasawa1961empirical,efron2011tweedie} and underlies denoising
+score matching \citep{vincent2011connection,hyvarinen2005estimation}. For squared loss $\pmean{\va}$ minimises the
+conditional risk (Appendix~\ref{app:identity}), so it is the reference every estimator below is
+scored against.

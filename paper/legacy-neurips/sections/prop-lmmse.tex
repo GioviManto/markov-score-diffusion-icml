@@ -1,0 +1,25 @@
+%% SHARED SECTION -- included by paper/main.tex and paper/workshop.tex.
+%% Edit here, never in a copy. This file exists because the four documents
+%% disagreeing with each other is the failure this rebuild was for.
+%%
+%% The projection operator is defined inside the proposition rather than as its
+%% own numbered environment purely for length: the body has a nine-page limit.
+%% The full hypothesis discussion and the proof are in prop-lmmse-proof.tex.
+
+\begin{proposition}[Gaussian closure computes the LMMSE estimator]
+\label{prop:lmmse}
+Let $\Pgauss f$ be the Gaussian density matching the mean and variance of $f/\!\int\!f$, and let
+\emph{moment-projected sum-product} be the forward--backward recursion applying $\Pgauss$ to each
+message immediately after every transition integral, multiplying by the site's unary likelihood
+before the next. Take the chain \eqref{eq:prior} with $a_i = \corr a_{i-1} + \varepsilon_i$,
+$\corr\neq0$, Gaussian unary likelihoods, $\E[a_1]=0$, an innovation law $\innov$ with mean zero
+and finite variance $\ivar$, and an initial message Gaussian or projected by $\Pgauss$. Then it
+returns the LMMSE estimator of the covariance-matched Gaussian model,
+\begin{equation}
+\label{eq:lmmse}
+\lmmse
+= \Cov(\va,\vx)\,\Cov(\vx)^{-1} \vx
+= e^{-t}\Sig_0\left(e^{-2t}\Sig_0 + \Dt \Id\right)^{-1} \vx ,
+\end{equation}
+and returns the same estimator for every innovation law sharing the moments $(0,\ivar)$.
+\end{proposition}

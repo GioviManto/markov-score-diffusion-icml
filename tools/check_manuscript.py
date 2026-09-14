@@ -1,0 +1,134 @@
+#!/usr/bin/env python
+"""Consistency checks between generated results and the manuscript.
+
+Three checks, each of which failed silently in the previous manuscript's pipeline
+(docs/CURRENT_STATE_AUDIT.md §2.2–2.3):
+
+1. --regenerate: run every generator into a temporary directory and diff the result
+   against the committed paper/sections/*.tex. A difference means a generator or an
+   input changed without the fragment being regenerated (or a fragment was hand-edited).
+2. --diff is implied by --regenerate; without --regenerate only checks 3–4 run.
+3. Typed literals: every decimal number in paper/main.tex and paper/sections/*.tex body
+   files that is not inside a generated fragment, a \\newcommand, a citation key, a
+   label, a URL or an equation number must be listed in paper/LITERALS_ALLOWED.txt with
+   its justification (analytic constant, definition, or a registered output path).
+4. Every \\ref and \\cite in the manuscript resolves (checked from the .aux if present).
+
+Exit code 1 on any failure; the report names each offending line.
+"""
+
+from __future__ import annotations
+
+import argparse
+import difflib
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+PAPER = ROOT / "paper"
+GENERATORS = [
+    "make_tab_efficiency.py", "make_tab_structured.py", "make_tab_screening.py",
+    "make_aggregation_structured.py", "make_aggregation_robustness.py",
+    "make_convergence_numbers.py", "make_rate_analysis.py", "make_tab_hellinger.py",
+]
+# Fragments the legacy generators emit that the manuscript may or may not input.
+FRAGMENT_GLOB = "sections/*.tex"
+NUMBER = re.compile(r"(?<![\w\\{])(?:\d+\.\d+|\d+e-?\d+|\d+\s*\\times\s*10\^\{-?\d+\})(?![\w}])")
+SKIP_LINE = re.compile(r"\\(newcommand|renewcommand|label|ref|cite|citep|citet|url|href|input|include|bibitem)")
+
+
+def regenerate_and_diff() -> int:
+    failures = 0
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
+        (tmp / "paper" / "sections").mkdir(parents=True)
+        # generators write to paper/sections relative to the cwd; run them from a
+        # scratch tree that symlinks everything except paper/sections
+        for item in ROOT.iterdir():
+            if item.name in {"paper", ".git", ".venv"}:
+                continue
+            (tmp / item.name).symlink_to(item)
+        (tmp / "paper" / "figures").symlink_to(PAPER / "figures")
+        for g in GENERATORS:
+            r = subprocess.run([sys.executable, str(ROOT / "tools" / g)], cwd=tmp, capture_output=True, text=True)
+            if r.returncode != 0:
+                print(f"[FAIL] {g} exited {r.returncode}\n{r.stdout[-800:]}\n{r.stderr[-800:]}")
+                failures += 1
+        for frag in sorted((tmp / "paper" / "sections").glob("*.tex")):
+            committed = PAPER / "sections" / frag.name
+            if not committed.exists():
+                print(f"[WARN] generator emitted {frag.name} but the manuscript has no such fragment")
+                continue
+            a, b = committed.read_text().splitlines(), frag.read_text().splitlines()
+            if a != b:
+                failures += 1
+                print(f"[FAIL] {frag.name} differs from the committed fragment:")
+                for line in difflib.unified_diff(a, b, "committed", "regenerated", lineterm="", n=1):
+                    print("   " + line)
+    return failures
+
+
+def typed_literals() -> int:
+    allowed_path = PAPER / "LITERALS_ALLOWED.txt"
+    allowed = set()
+    if allowed_path.exists():
+        for line in allowed_path.read_text().splitlines():
+            line = line.split("#")[0].strip()
+            if line:
+                allowed.add(line.split()[0])
+    generated = {p.name for p in (PAPER / "sections").glob("*.tex")
+                 if p.read_text().lstrip().startswith("%% GENERATED")}
+    failures = 0
+    for tex in [PAPER / "main.tex", *sorted((PAPER / "sections").glob("*.tex"))]:
+        if tex.name in generated or not tex.exists():
+            continue
+        in_comment_block = False
+        for no, line in enumerate(tex.read_text().splitlines(), 1):
+            stripped = line.split("%")[0]
+            if not stripped.strip() or SKIP_LINE.search(stripped):
+                continue
+            for m in NUMBER.finditer(stripped):
+                tok = m.group(0).replace(" ", "")
+                if tok in allowed:
+                    continue
+                failures += 1
+                print(f"[FAIL] typed literal {tok!r} at {tex.relative_to(ROOT)}:{no}: {stripped.strip()[:90]}")
+    return failures
+
+
+def unresolved_refs() -> int:
+    aux = PAPER / "main.aux"
+    log = PAPER / "main.log"
+    failures = 0
+    if log.exists():
+        txt = log.read_text(errors="replace")
+        for pat in ("Reference `", "Citation `", "multiply defined", "undefined"):
+            for line in txt.splitlines():
+                if pat in line and ("Warning" in line or "undefined" in line):
+                    failures += 1
+                    print(f"[FAIL] {line.strip()[:120]}")
+    return failures
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--regenerate", action="store_true")
+    ap.add_argument("--diff", action="store_true")
+    ap.add_argument("--no-literals", action="store_true")
+    args = ap.parse_args()
+    failures = 0
+    if args.regenerate:
+        failures += regenerate_and_diff()
+    if not args.no_literals:
+        failures += typed_literals()
+    failures += unresolved_refs()
+    print("OK" if failures == 0 else f"{failures} failure(s)")
+    return 1 if failures else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

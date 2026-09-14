@@ -1,0 +1,996 @@
+\section{Notation and diffusion conventions}
+\label{app:notation}
+
+\subsection{Symbols}
+
+\begin{center}
+\small
+\begin{tabular}{ll@{\qquad}ll}
+\toprule
+symbol & meaning & symbol & meaning \\
+\midrule
+$\nsites$ & chain length $=$ ambient dimension & $\kernel,\ \kernelth$ & transition kernel \\
+$\nseq$ & number of observed sequences & $\innov$ & innovation density \\
+$\ngrid$ & number of quadrature grid points & $\corr$ & autoregressive coefficient \\
+$\gridpt{1},\dots,\gridpt{\ngrid}$ & grid points & $\ivar$ & innovation variance \\
+$\gridh$ & grid spacing & $\ncomp$ & mixture components \\
+$\halfwidth$ & grid half-width, domain $[-\halfwidth,\halfwidth]$ & $\mu$ & initial law $\mu(a_1)$ \\
+$t$ & diffusion time & $\like$ & unary likelihood factor \\
+$\Dt = 1-e^{-2t}$ & noise variance & $\lmsg,\ \rmsg$ & forward, backward message \\
+$\Pz,\ \Pt$ & clean, noised distribution & $\params$ & kernel parameters \\
+$\score(x,t)$ & score $\nabla_x\log\Pt(x)$ & $\Qfun$ & EM auxiliary function \\
+$\pmean{a}$ & posterior mean of $a$ given $x$ & $\Xis$ & expected transition statistic \\
+$\gwn$ & standardised Gaussian white noise & $\Lik$ & marginal log-likelihood \\
+$\tmin,\ \tmax$ & reverse-integration endpoints & $\lmmse$ & LMMSE estimator \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Two symbols are worth pinning down, because neighbouring literatures use them differently.
+\textbf{$\kernel$ always means the transition kernel} and never a grid size; the grid size is
+always $\ngrid$. The ambient dimension is written $\nsites$ because it \emph{is} the chain length
+and every graphical-model statement is indexed by sites; the diffusion literature more often
+writes $n$ for the sample count, which here is $\nseq$.
+
+\subsection{Time orientation and the reverse SDE}
+
+\begin{center}
+\fbox{\parbox{0.93\textwidth}{
+\textbf{Convention, used without variation.} $\gwn$ is standardised Gaussian white noise,
+$\langle\gwn(t)\gwn(t')\rangle=\delta(t-t')$, so every $\sqrt{2}$ is written explicitly.
+
+\emph{Forward}, $t$ running from $0$ to $\tmax$:
+\[
+\frac{\mathrm{d}x}{\mathrm{d}t} = -x + \sqrt{2}\,\gwn(t),
+\qquad
+x(t) = e^{-t}a + \sqrt{\Dt}\,z,
+\qquad
+\Dt = 1-e^{-2t},\quad z\sim\normal{0}{I}.
+\]
+
+\emph{Reverse}, in the elapsed-time variable $\tau = \tmax - t$ running from $0$ to
+$\tmax-\tmin$, so that increasing $\tau$ means decreasing $t$:
+\[
+\frac{\mathrm{d}x}{\mathrm{d}\tau} = x + 2\,\score\!\left(x, \tmax-\tau\right) + \sqrt{2}\,\gwn(\tau).
+\]
+
+\emph{Probability-flow ODE}, same marginals, deterministic:
+$\;\mathrm{d}x/\mathrm{d}\tau = x + \score(x,\tmax-\tau)$.
+
+Initialisation $x(\tau{=}0)\sim\normal{0}{I}$; termination at $\tau = \tmax-\tmin$.
+}}
+\end{center}
+
+The reverse drift follows from the time-reversal theorem for diffusions
+\citep{anderson1982reverse,haussmann1986}: for a forward SDE $\mathrm{d}x = f\,\mathrm{d}t +
+g\,\mathrm{d}W$ the time-reversed process has drift $f - g^2\nabla\log p_t$ and the same
+diffusion coefficient. With $f=-x$ and $g=\sqrt{2}$ the backward-in-$t$ drift is
+$-x - 2\score$, and rewriting in $\tau$ flips the sign to give the box above. Because unit-variance
+data keep $\Var(x_t)=1$, initialising at $\normal{0}{I}$ incurs a bias $e^{-2\tmax}$, which is
+$2.5\times10^{-3}$ at $\tmax=3$. The implementation is
+\codefile{src/reverse.py}, whose module docstring states the same convention; the sampler uses a
+geometric time grid, denser at small $t$, because the reverse drift stiffens like
+$1/\Dt$ there.
+
+\section{The score--posterior identity}
+\label{app:identity}
+
+\paragraph{Differentiation under the integral.}
+$\Pt(x) = \int\mathrm{d}a\,\Pz(a)\,g_{\Dt}(x-e^{-t}a)$ with
+$g_{\Dt}(u) = (2\pi\Dt)^{-\nsites/2}e^{-\|u\|^2/2\Dt}$. Since
+$\nabla_x g_{\Dt}(x-e^{-t}a) = -\frac{x-e^{-t}a}{\Dt}g_{\Dt}(x-e^{-t}a)$ and, for $x$ in a
+compact neighbourhood, $\|x-e^{-t}a\|\,g_{\Dt}(x-e^{-t}a) \le c_1 e^{-c_2\|a\|^2}$ uniformly, the
+integrand is dominated by an integrable function whenever $\Pz$ has a finite first moment.
+Dominated convergence then licenses
+\[
+\nabla_x \Pt(x)
+= \int \mathrm{d}a\; \Pz(a)\,\frac{e^{-t}a - x}{\Dt}\, g_{\Dt}(x-e^{-t}a).
+\]
+Dividing by $\Pt(x)$ and recognising $\Pz(a)g_{\Dt}(x-e^{-t}a)/\Pt(x) = P(a\mid x,t)$ gives
+\eqref{eq:score}. Nothing is approximated. In the empirical-Bayes literature this is Tweedie's
+formula \citep{robbins1956empirical,miyasawa1961empirical,efron2011tweedie}.
+
+\paragraph{Risk decomposition.} For any $u$ that is a function of $x$ alone,
+\begin{equation}
+\label{eq:orthogonal}
+\E\!\left[\|a-u\|^2 \,\middle|\, x\right]
+= \E\!\left[\|a - \pmean{a}\|^2 \,\middle|\, x\right] + \|u - \pmean{a}\|^2 ,
+\end{equation}
+by expanding $a-u = (a-\pmean{a}) + (\pmean{a}-u)$ and noting the cross term vanishes because
+$\pmean{a}-u$ is $x$-measurable and $\E[a-\pmean{a}\mid x]=0$. Hence $\pmean{a}$ minimises the
+conditional risk, with an irreducible floor given by the first term \citep{lehmann1998}.
+Optimality is with respect to squared error specifically; a different loss selects a different
+functional of the posterior. This is why every table in \S\ref{sec:networks} reports error
+\emph{against} $\pmean{a}$ rather than raw risk: the floor is common to all estimators and
+subtracting it is what makes the comparison informative.
+
+\section{What ``exact'' means here, in four parts}
+\label{app:exactness}
+
+The body compresses this to two sentences; the distinctions matter enough to be kept apart
+somewhere, because collapsing any two of them is how a discretised number acquires the authority
+of an exact one.
+
+(i) Sum-product on \eqref{eq:posterior} is \emph{exact at the level of functional messages}, as a
+consequence of the graph being a tree.
+
+(ii) A message is a \emph{function on $\Reals$}, and this is forced by the state space, not chosen.
+On a discrete graphical model $a_i$ takes finitely many values and $\lmsg_i$ is a vector of that
+length. Here $a_i$ ranges over $\Reals$, so $\lmsg_i$ assigns a number to every real $a_i$: it is
+an unnormalised density, the evidence from everything left of site $i$. Only when the transition
+and the likelihood are both Gaussian does that function stay inside a finite-dimensional family
+--- two numbers, a mean and a variance, which is the Kalman filter. For a general $\innov$ it does
+not, and the integral in \eqref{eq:messages} produces a new shape at every site. An implementation
+must therefore represent a function. We use a truncated uniform grid
+$[-\halfwidth,\halfwidth]$ with $\ngrid$ points, spacing $\gridh$ and composite trapezoidal
+weights. That defines a chain-shaped \emph{factor model} for which the recursion is \emph{exact
+up to floating-point arithmetic}. It is not a normalised finite-state Markov chain: the sampled
+transition columns are not renormalised under the quadrature weights, which is deliberate ---
+renormalising would introduce a $\params$-dependent log-normaliser into Fisher's identity and the
+M-step, and because none is applied that term is absent by construction rather than by oversight.
+
+(iii) That factor model \emph{approximates} the continuous one, with an error that must be
+measured --- \S\ref{sec:rung0} measures it.
+
+(iv) Determinism here is conditional, and the condition matters. Given a dataset, a grid and a
+noise realisation, posterior means, evidences and information matrices are computed by
+deterministic quadrature and carry discretisation error rather than sampling error. But the
+\emph{reported} quantities are not conditional on a dataset: training and held-out sequences are
+drawn at random, network training is stochastic, the information matrices are outer-product
+estimates over $D=512$ sampled trajectories, and every risk and ratio is an average over finitely
+many seeds. Those numbers carry sampling uncertainty, which is why they are reported with paired
+intervals across replicates.
+
+The information matrices deserve their own sentence, because ``Fisher information'' names an exact
+quantity and what is computed is not one. An outer-product matrix $J = D^{-1}\sum_d g_dg_d^{\top}$
+of per-sequence scores equals the Fisher information only at the true parameter of a correctly
+specified model, and here it is in addition a finite-sample estimate of that: these are
+outer-product estimates with sampling error, not exact information calculations, and the wording
+in the abstract is deliberately ``information'' rather than ``Fisher information'' for that
+reason. The quantity read off them is moreover an \emph{inverse} --- the efficient information
+$1/(J^{-1})_{pp}$, what remains about a shape coordinate once the nuisance coordinates must be
+estimated too --- so its meaning degrades with the conditioning of $J$, and the runs record the
+condition number per cell. That conditioning is benign exactly where the information is large and
+degrades by orders of magnitude exactly where the efficient information has itself all but
+vanished. The decay is therefore resolved at the end where the coordinate is identified, and the
+far tail is a statement that the information has gone rather than a measurement of how much
+remains. The per-cell condition numbers are tabulated in the accompanying compendium.
+
+Three levels of exactness are involved and collapsing any two of them overstates the result, so
+each has its own name and none is abbreviated to ``exact''.
+
+\begin{enumerate}
+\item \emph{Tree-exact functional BP.} The posterior factorises on a chain and the sum-product
+integrals are exact as statements about functions on $\Reals$. Nothing numerical has happened yet.
+\item \emph{Exact recursion for the discretised model.} Once grid and quadrature weights are
+fixed, forward--backward is exact --- up to floating point --- \emph{for that factor model}. It
+is not exact for the continuous chain, and the factor model is not itself a normalised
+finite-state chain.
+\item \emph{Validated grid-quadrature reference.} The factor model approximates the
+continuous chain, with truncation and quadrature error that is measured rather than assumed
+(\S\ref{sec:rung0}).
+\end{enumerate}
+
+Accordingly the tables say ``deterministic grid-BP reference under the true kernel'', and the
+population statement is that the score \emph{reduces to tree-exact functional inference and is
+evaluated numerically by controlled grid quadrature}. ``Exact grid-BP'' would collapse (ii) into
+(iii) and quietly promote a measured approximation into a guarantee.
+
+\section{Sum-product on the posterior chain}
+\label{app:bp}
+
+\paragraph{Posterior factorisation.} Bayes' rule applied to \eqref{eq:prior}, with the likelihood
+factorising sitewise because the forward noise is independent across coordinates, gives
+\eqref{eq:posterior}. Each likelihood factor has degree one among latent variables, so attaching
+it to the prior's path adds a leaf and cannot create a cycle: the posterior factor graph is a
+tree. Conditioning usually creates dependence; it does not here, precisely because each
+observation is generated from a single latent variable. The construction fails the moment the
+forward noise is correlated across coordinates, since then $P(x\mid a)$ does not factorise, the
+likelihood becomes a factor touching several $a_i$, and the posterior graph acquires edges.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+  latent/.style={circle, draw, minimum size=7mm, inner sep=1pt},
+  obs/.style={circle, draw, fill=black!10, minimum size=7mm, inner sep=1pt},
+  fac/.style={rectangle, draw, fill=black, minimum size=2.2mm, inner sep=0pt},
+  node distance=9mm]
+\foreach \i in {1,2,3,4}{
+  \node[latent] (a\i) at (2.1*\i, 0) {$a_{\i}$};
+  \node[fac] (f\i) at (2.1*\i, -1.0) {};
+  \node[obs] (x\i) at (2.1*\i, -2.0) {$x_{\i}$};
+  \draw (a\i) -- (f\i) -- (x\i);
+}
+\foreach \i/\j in {1/2,2/3,3/4}{
+  \node[fac] (w\i) at (2.1*\i+1.05, 0) {};
+  \draw (a\i) -- (w\i) -- (a\j);
+}
+% The transition-factor label sits just above its factor square; the two
+% message arrows are lifted clear of it so nothing overlaps.
+\node[above=1mm of w1] {\small $\kernel(a_{i}\mid a_{i-1})$};
+\node[right=2mm of f4] {\small $\like(x_i\mid a_i)$};
+\draw[-{Stealth}, thick] (1.15,1.35) -- (2.55,1.35) node[midway,above] {\small $\lmsg$};
+\draw[-{Stealth}, thick] (9.35,1.35) -- (7.95,1.35) node[midway,above] {\small $\rmsg$};
+\end{tikzpicture}
+\caption{Factor graph of the posterior \eqref{eq:posterior}. Open circles are latent variables,
+shaded circles are observations, squares are factors. Each transition factor
+$\kernel(a_i\mid a_{i-1})$ joins two adjacent latent variables; each observation enters through a
+\emph{unary} factor $\like$ attached to a single latent variable. Conditioning therefore reweights
+node potentials without creating edges among the $a_i$, and the posterior graph remains a chain.
+Arrows show the two message sweeps \eqref{eq:messages}.}
+\label{fig:factorgraph}
+\end{figure}
+
+\paragraph{Exactness on a tree.} Let the graph be a tree and let $a_i$ be a variable node.
+Removing $a_i$ disconnects it into components, and every factor involves $a_i$ together with
+variables of exactly one component --- a factor touching two components would create a second
+path between them, hence a cycle. Grouping factors by component gives
+$P \propto \prod_c g_c(a_i, v^{(c)})$, so conditionally on $a_i$ the components are independent.
+Unrolling the forward recursion \eqref{eq:messages},
+\[
+\lmsg_i(a_i) \propto \int\!\mathrm{d}a_{1:i-1}\;
+\mu(a_1)\prod_{j=2}^{i}\kernel(a_j\mid a_{j-1})\prod_{j=1}^{i-1}\like(x_j\mid a_j),
+\]
+which is the joint density of everything at or left of site $i$ with the left variables
+integrated out and $\like(x_i\mid a_i)$ \emph{not} included; symmetrically for $\rmsg_i$. The two
+are conditionally independent given $a_i$, so their product times the local evidence is
+proportional to the marginal. The pairwise statement is the same argument with the separator
+taken to be the edge.
+
+\paragraph{Where the local factor goes.} In \eqref{eq:messages} the local evidence at site $i-1$
+is absorbed \emph{before} the transition, so $\lmsg_i$ carries the factors
+$\like(x_1\mid a_1),\dots,\like(x_{i-1}\mid a_{i-1})$ and $\rmsg_i$ carries
+$\like(x_{i+1}\mid a_{i+1}),\dots,\like(x_{\nsites}\mid a_{\nsites})$, and each appears exactly
+once in the marginal. Absorbing it \emph{after} would place $\like(x_i\mid a_i)$ in both
+messages and square it: the
+belief would be sharper than the truth and every posterior variance too small. This produces
+plausible-looking output, which is why the convention is pinned by
+\codefile{tests/test\_message\_normalization.py} rather than left to a comment.
+
+\paragraph{Evidence.} Messages are renormalised at each step to prevent underflow; accumulating
+the discarded constants recovers $\log\Pt(x)$ for the discretised model exactly. This is the
+objective that \S\ref{sec:rung1} maximises, and having it in closed form is what makes it possible
+to check a gradient against a finite difference of the thing being optimised.
+\coderef{src/bp\_grid.py}{grid\_bp} returns it alongside the beliefs;
+\coderef{src/exact\_scores.py}{gaussian\_log\_evidence} is the closed form it is tested against.
+
+\paragraph{Complexity at the functional level.} Each message update integrates one variable
+against the kernel. Abstractly this is an integral operator applied to a function; represented on
+$\ngrid$ points it is one $\ngrid\times\ngrid$ matrix--vector product, $O(\ngrid^2)$. There are
+$2\nsites$ updates, so one sequence costs $O(\nsites\ngrid^2)$ against $O(\ngrid^{\nsites})$ for
+naive marginalisation. At $\nsites=32,\ngrid=401$ that is about $5\times10^6$ operations.
+Batching over sequences turns each update into a single GEMM, which is why the same code runs on
+a GPU without restructuring (\codefile{src/backend.py}, gated by
+\codefile{tests/test\_backend\_parity.py}).
+
+\section{Covariance-stationary versus strictly stationary}
+\label{app:stationary}
+
+Two notions of stationarity coincide for Gaussian processes and separate here, and the body
+relies on the weaker one, so the difference is worth stating.
+
+A process is \emph{strictly stationary} if the joint law of $(a_{i+1},\dots,a_{i+k})$ does not
+depend on $i$, for every $k$. It is \emph{covariance-stationary} (or weakly, or second-order
+stationary) if only the first two moments are shift-invariant: $\E[a_i]$ constant and
+$\Cov(a_i,a_j)$ a function of $|i-j|$ alone. Strict stationarity implies the covariance version
+whenever second moments exist; the converse is false in general.
+
+\paragraph{Why they coincide in the Gaussian case.} A Gaussian law is determined by its mean
+vector and covariance matrix. If the mean is constant and the covariance depends only on $|i-j|$,
+then the joint law of any window $(a_{i+1},\dots,a_{i+k})$ is the Gaussian with that mean and that
+covariance block --- and the block depends on $i$ only through the differences $|j-j'|$, which are
+shift-invariant. So the joint law is shift-invariant, which is strict stationarity. The
+implication runs through ``determined by two moments'' and therefore fails for any family that is
+not.
+
+\paragraph{What holds for our chain.} With $\ivar=1-\corr^2$ and $\Var(a_1)=1$, second moments
+propagate exactly:
+\[
+\Var(a_i) = \corr^2\Var(a_{i-1}) + \ivar = \corr^2 + (1-\corr^2) = 1 ,
+\]
+by induction, and $\Cov(a_i,a_j)=\corr^{|i-j|}$, \emph{whatever the shape of $\innov$}. The chain
+is therefore covariance-stationary, and this is exactly the property the variance-matched family
+needs: Gaussian, Laplace, Student, uniform and bimodal innovations share the same second-order
+structure and differ only beyond it.
+
+It is \textbf{not} strictly stationary for non-Gaussian $\innov$. The invariant law of
+$a_i=\corr a_{i-1}+\varepsilon_i$ is that of $\sum_{k\ge0}\corr^k\varepsilon_{-k}$, an infinite
+convolution which is not Gaussian, so drawing $a_1\sim\normal{0}{1}$ starts the chain off its
+invariant law. The marginal of $a_i$ then drifts towards it over a burn-in of order
+$1/\log(1/\corr)\approx 6$ sites at $\corr=0.85$. This does not affect the comparisons in the
+body, because every family shares the same $a_1$ law and the same covariance and so still differs
+only beyond second moments --- but $\ivar=1-\corr^2$ alone does not deliver strict stationarity,
+and we do not claim it does.
+
+\section{The Gaussian model and the second-order baseline}
+\label{app:lmmse}
+
+For $\innov=\normal{0}{\ivar}$ with $\ivar=1-\corr^2$ and $a_1\sim\normal{0}{1}$, the vector $a$
+is jointly Gaussian with $(\Sigma_0)_{ij}=\corr^{|i-j|}$. Expanding
+$\Pz(a)\propto\exp[-\tfrac{1}{2\ivar}\sum_{i\ge2}(a_i-\corr a_{i-1})^2 - \tfrac12 a_1^2]$
+produces only $a_i^2$ and $a_ia_{i-1}$ terms, so $\Sigma_0^{-1}$ is tridiagonal with
+$(\Sigma_0^{-1})_{ii} = (1+\corr^2)/\ivar$ in the interior, $1/\ivar$ at the two ends, and
+$-\corr/\ivar$ on the off-diagonals. Adding the likelihood contributes $(e^{-2t}/\Dt)I$, so the
+posterior precision is tridiagonal at every $t$: Markovianity is a statement about the precision,
+while the covariance $\Sigma_0$ is dense.
+
+Since $x = e^{-t}a + \sqrt{\Dt}z$ with $z$ independent, $(a,x)$ is jointly Gaussian with
+$\Cov(a,x) = e^{-t}\Sigma_0$ and $\Cov(x) = e^{-2t}\Sigma_0 + \Dt I =: \Sigma_t$, whence
+$\E[a\mid x] = e^{-t}\Sigma_0\Sigma_t^{-1}x$ and, by \eqref{eq:score},
+$\score(x,t) = -\Sigma_t^{-1}x$. For zero-mean jointly Gaussian variables the conditional
+expectation is linear, so it coincides with the LMMSE estimator \citep{kay1993}. That supplies the
+covariance identity the proposition's proof appeals to; the proof itself, an induction over the
+forward and backward recursions establishing that every projected message equals the Gaussian
+chain's, follows.
+
+\input{sections/prop-lmmse-proof}
+
+Consequently, on this model, the \emph{message-representation error} and the \emph{model error}
+coincide: projecting messages onto Gaussians and replacing the prior by its covariance-matched
+Gaussian give the same estimator. This is a property of single-Gaussian closure with linear
+transitions, not of Gaussian approximations in general, and the two separate for richer message
+families.
+
+\section{Numerical representation}
+\label{app:numerics}
+
+Messages are represented on a uniform grid $\gridpt{1},\dots,\gridpt{\ngrid}$ spanning
+$[-\halfwidth,\halfwidth]$ with spacing $\gridh = 2\halfwidth/(\ngrid-1)$ and composite
+trapezoidal weights $w_k = \gridh$ for interior points, $\gridh/2$ at the two ends.
+
+The recursions are \emph{scaled linear-domain} forward--backward, not log-semiring belief
+propagation. The transition matrix and the unary likelihoods are built in logs --- the likelihood
+with a per-site maximum subtracted before exponentiating --- and are then exponentiated once, so
+each message update is an ordinary $(\ngrid,\ngrid)$ matrix product followed by renormalisation to
+unit quadrature mass. The removed constants are accumulated and restored in the evidence, which is
+therefore exact. This is the standard scaled recursion and it is what keeps the \emph{total} mass
+of every message at unity, so no message vanishes as a whole.
+
+It does not, however, guarantee that no individual entry underflows: a single likelihood or
+transition value far in a tail can round to zero while the message it belongs to remains
+well-normalised. The recursion is scaled, not logarithmic, so this is a real possibility and is
+measured below rather than excluded by construction. The $10^{-14}$ agreement reported below is
+correspondingly evidence at the Gaussian configuration tested, not a uniform bound over innovation
+families, noise levels and fitted kernels.
+
+\paragraph{How far from a bound, measured.} Sweeping $\ngrid\in\{201,401,801\}$ and
+$\halfwidth\in\{6,8,10\}$ against a finer reference ($\ngrid=1601$, $\halfwidth=12$), over all
+twelve noise levels and four innovation families, with observations drawn from the prior and again
+conditioned into the tail at ${\sim}3$ standard deviations:
+
+\begin{center}\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+worst relative score error at $\ngrid=401,\ \halfwidth=8$
+  & Gaussian & bimodal & Laplace & Student \\
+\midrule
+observations drawn from the prior & $2\times10^{-13}$ & $1\times10^{-15}$
+  & $1\times10^{-5}$ & $\mathbf{9.9\times10^{-4}}$ \\
+observations conditioned into the tail & $2\times10^{-7}$ & $1\times10^{-11}$
+  & $\mathbf{1.7\times10^{-2}}$ & $8.3\times10^{-3}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent The $10^{-14}$ figure is the \emph{best} cell in this table, not a bound on it. Under
+ordinary draws the production grid resolves the whole schedule to $10^{-3}$ or better across every
+family, which is the regime all reported results are in and is the threshold the generator
+enforces. Under displaced observations the two heavy-tailed families lose two further orders.
+Partial underflow is real rather than hypothetical: up to $0.27\%$ of likelihood entries round to
+exactly zero at the production configuration, rising to $3.8\%$ at $\ngrid=201$ --- always under
+displacement, never under ordinary draws.
+
+\paragraph{What the stress row is, exactly.} It is a three-standard-deviation
+\emph{displacement} of the whole chain, not conditioning on a tail event of the prior. A translate
+and a conditional law are different objects, and it is the translate that is computed: a
+legitimate stress test, named as one.
+
+\paragraph{Boundary occupancy, measured inside the recursion.} The quantity that matters is how
+much mass the objects BP actually propagates place at the edge of the domain, so it is measured on
+those objects rather than on a proxy assembled from the likelihood and the transition matrix. The
+worst forward-message edge occupancy over the schedule is $\gcfwdedge$ and the worst node-belief
+edge occupancy is $\gcbeledge$, both over $\gccells$ production cells. The worst per-site
+log-evidence shift against the reference resolution is $\gcworstev$ nats.
+
+\paragraph{Fitted kernels, the hardest case for the grid.} The families above are four analytic
+priors, but the kernels the reported runs actually use are \emph{fitted} mixtures, which can place
+a component far narrower than any smooth law. Since the narrowest component relative to the mesh is
+precisely what the grid must resolve, this is the case most likely to fail and is tested directly.
+Adding a fitted mixture with a component two grid cells wide changes the picture in one place and
+not the other. Under ordinary draws it is unremarkable and the schedule still
+resolves to $\gcworstord$. Under three-standard-deviation displacement at the narrowest domain
+tried ($\halfwidth=6$) it is the worst cell in the entire sweep, with $96\%$ of node-belief mass
+against the boundary: a narrow component displaced toward the edge of a too-small window is not
+resolved at all. That configuration is outside the production setting, and it marks where the
+method stops working rather than a defect in the reported numbers --- but it is the failure mode to
+check first if the domain is ever narrowed.
+
+\paragraph{What this does and does not certify.} It is a self-convergence stress test on fresh
+synthetic draws. It establishes that errors on representative ordinary draws are below $10^{-3}$.
+It does \emph{not} establish that no reported number moves: that would require re-evaluating the
+actual held-out observations and fitted kernels at a finer resolution --- a different experiment,
+and one not run here. Appendix~\ref{app:limits} records the residual limitation.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.72\textwidth]{fig_grid_domain.pdf}
+\caption{Grid and domain control, Laplace chain. (a) Relative score error against a
+high-resolution reference at fixed $\halfwidth=8$; (b) the same at fixed $\ngrid=401$ as the
+domain grows. Both saturate at the floating-point floor $\sim10^{-14}$, so beyond that the curves
+measure arithmetic, not discretisation. (c) Forward-message boundary mass against $\halfwidth$ ---
+the truncation diagnostic --- as the worst case and the $90$th percentile over $256$ chains, which
+differ by roughly two orders of magnitude and are therefore both drawn. (d) Interior column-mass
+residual against spacing at $\halfwidth=8$ --- the quadrature diagnostic --- with an $O(\gridh^2)$
+reference. The two diagnostics do different jobs and neither alone certifies convergence.}
+\label{fig:grid}
+\end{figure}
+
+\paragraph{Two error sources.} \emph{Truncation}: probability mass outside
+$[-\halfwidth,\halfwidth]$ is discarded rather than transported, an error controlled by
+$\halfwidth$ and essentially independent of $\ngrid$. \emph{Quadrature}: the trapezoidal rule is
+second order in $\gridh$ for integrands with bounded second derivative, an error controlled by
+$\gridh$ at fixed $\halfwidth$. Figure~\ref{fig:grid} measures them separately, using the
+forward-message boundary mass for the first and the interior column-mass residual of the
+transition matrix for the second; the interior restriction $|\gridpt{}| \le \halfwidth/2$ removes
+columns whose transition density has a tail outside the grid, which is what makes the second
+diagnostic measure quadrature alone.
+
+The boundary mass is the maximum over sites of a \emph{sampled} trajectory, so it is a statistic
+and not a bound, and it is reported over $256$ chains per cell rather than from one draw. At
+$\ngrid=401$, taking the worst case over the twelve-level schedule,
+
+\begin{center}\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+$\halfwidth$ & $4$ & $6$ & $8$ & $10$ \\
+\midrule
+worst chain & $2.3\times10^{-3}$ & $1.6\times10^{-4}$ & $1.2\times10^{-6}$ & $3.3\times10^{-8}$ \\
+$90$th percentile & $2.7\times10^{-4}$ & $2.5\times10^{-6}$ & $1.5\times10^{-8}$ & $7.8\times10^{-11}$ \\
+median & $3.8\times10^{-5}$ & $3.8\times10^{-7}$ & $3.0\times10^{-9}$ & $1.8\times10^{-11}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The spread between the rows is the point: at the working $\halfwidth=8$ the worst chain carries
+$84$ times the boundary mass of the $90$th percentile, so a single trajectory's value --- or an
+upper quantile quoted as though it were a bound --- understates the tail by close to two orders of
+magnitude. The interior residual falls by a factor of four per halving of $\gridh$, i.e.\
+$O(\gridh^2)$.
+
+At $\halfwidth=4$ the interior residual saturates at $\sim10^{-3}$ instead of continuing to fall,
+because at that domain even the ``interior'' columns have truncated tails --- the floor is the
+truncation error leaking into the quadrature diagnostic. This is the reason the two diagnostics
+have to be read together and neither alone certifies convergence.
+
+\paragraph{What is not claimed.} A grid-resolution sweep at fixed $\halfwidth$ does not rule out
+truncation error, and a domain sweep at fixed $\ngrid$ does not rule out quadrature error. We
+report both axes and the two diagnostics; we do not claim continuum convergence, only that at
+$\ngrid=401$, $\halfwidth=8$ both diagnostics sit far below every effect the paper reports.
+For the Laplace family, whose innovation density has a discontinuous derivative at the origin, we
+claim second order and no better.
+
+\section{Learning procedure}
+\label{app:learning}
+
+\paragraph{Objective.} Maximum marginal likelihood
+$\Lik(\params) = \sum_\mu\log P_{t,\params}(x^\mu)$, with the complete-data objective
+$\log P_\params(a,x) = \log\mu(a_1) + \sum_{i\ge2}\log\kernelth(a_i\mid a_{i-1}) +
+\sum_i\log\like(x_i\mid a_i)$. Only the middle term depends on $\params$, which is why $\Xis$ of
+\eqref{eq:xi} is sufficient and why $\Qfun(\params\mid\params') = \langle\Xis(\params'),
+\log\kernelth\rangle$ up to $\params$-free constants.
+
+\paragraph{E-step.} One forward and one backward sweep per sequence, then a rank-one accumulation
+of the pairwise statistics: writing $\ell^{(i)}$ for the vector $\like(x_i\mid \cdot)$ on the
+grid, and with $f_i = w\odot\lmsg_i\odot\ell^{(i)}$ and $g_i = w\odot\rmsg_i\odot\ell^{(i)}$,
+the pairwise belief on edge $(i,i+1)$ is
+$f_i(j)\,\kernel[k,j]\,g_{i+1}(k)/Z_i$ with $Z_i = g_{i+1}^\top \kernel f_i$, and
+$\Xis = \left(\sum_{\mu,i} g_{i+1}(f_i)^\top/Z_i\right)\odot \kernel$. $\Xis$ sums to the number
+of edges in the dataset, which is asserted in the tests. Exact for the discretised model, in the
+sense of Appendix~\ref{app:exactness}(ii). Implementation \coderef{src/em.py}{e\_step}.
+
+\paragraph{M-step, by kernel.}
+\begin{itemize}\itemsep2pt
+\item \emph{Gaussian}, $\params=(\corr,\ivar)$: closed-form maximiser, the belief-weighted
+      Yule--Walker equations $\corr = S_{01}/S_{00}$, $\ivar = (S_{11}-\corr S_{01})/W$. Exact
+      maximisation, hence exact EM for that family.
+\item \emph{Laplace}, $\params=(\corr,b)$: closed form despite non-differentiability. Profiling
+      $b$ out of $\Qfun$ turns the problem into minimising the belief-weighted mean absolute
+      residual, whose exact solution is a weighted median. Exact maximisation.
+\item \emph{Mixture} \eqref{eq:kernel}: the complete-data problem carries a second latent
+      variable, so the M-step is itself an inner EM over the mixture label with
+      $\Xis$ held fixed. We alternate the $(\pi,\nu,s^2)$ block and the $\corr$ block, both
+      closed form, for at most \textbf{sixteen} inner sweeps, stopping early when the per-edge
+      gain in $\Qfun$ drops below $10^{-8}$. This increases $\Qfun$
+      without maximising it: \textbf{generalised EM / ECM} \citep{meng1993maximum}, not exact EM.
+      Sixteen is chosen by measurement: at four sweeps the fitted innovation excess kurtosis
+      is $28\%$ below its value at sixteen whenever the outer loop is also cut short, while
+      $\corr$ moves in the fourth decimal --- the same shape-versus-correlation rate asymmetry
+      the outer loop shows, one level down. Since shape is the coordinate every non-Gaussian
+      claim depends on, the budget is reported here rather than left as a default.
+      Because each block is a conditional \emph{maximiser}, $\Qfun$ cannot decrease along an
+      inner sweep; the implementation raises rather than stopping if it ever does, and across
+      the certified fits it never has.
+\item \emph{Mixture-density network}: one backtracked Adam step, accepted only if $\Qfun$
+      increased, halving the step up to five times otherwise and standing still if no ascent is
+      found. Also generalised EM.
+\end{itemize}
+
+\paragraph{Guarantees, initialisation, stopping.} Generalised EM guarantees monotone ascent of
+$\Lik$ \citep{dempster1977maximum,wu1983}; convergence is to a stationary point, not necessarily a global
+maximum. Mixture components are initialised spread over $[-\sqrt{\Var}, \sqrt{\Var}]$ with random
+scales; $\corr$ is initialised away from its truth in every experiment --- at $0.3$ in most, and
+over $\{0,\,0.3,\,0.6,\,-0.4\}$ in the initialisation sweep of \codefile{exp\_18}. The truth is
+$0.85$ in \codefile{exp\_02}, \codefile{exp\_16}, \codefile{exp\_18} and \codefile{exp\_22}, and
+$0.8$ in \codefile{exp\_06}, \codefile{exp\_07} and \codefile{exp\_08}; every table and figure
+states the value it used. Iteration
+stops when the relative increase of $\Lik$ falls below $10^{-9}$, capped at $50$--$120$
+iterations depending on the experiment. Variances are floored at $10^{-6}$ to prevent component
+collapse; no other regularisation is applied, and the component means are unconstrained
+(\S\ref{sec:rung1}). Monotonicity is recorded per run as the largest decrease across iterations and
+is zero in every run reported here.
+
+\section{Convergence rates, clean against channel}
+\label{app:rates}
+
+Two slownesses, measured separately, because they are independent and easily conflated.
+
+\paragraph{Optimisation: coordinates of the same kernel settle at very different rates.} Running
+EM to $\convcap$ updates at $\nseq=\convsize$, $\ncomp=\convcomps$ and recording the whole parameter
+trace, we measure for each coordinate the last update at which it was still further than a fixed
+relative tolerance from its final value. Over $\convseeds$ seeds the median is $\convrhomed$ updates
+for $\corr$ ($10^{-3}$ tolerance), $\convivarmed$ for the innovation variance
+($10^{-2}$) and $\convshapemed$ for the excess kurtosis ($2\times10^{-2}$), the
+last ranging up to $\convshapemax$. Paired within a fit, the shape is a
+median factor of $\convratio$ slower to
+settle than the correlation, and monitoring $\corr$ --- the natural thing to plot --- shows a
+converged-looking trace over a kernel that is not. This is why the stopping rule may not be read
+off $\corr$, and why an iteration budget must be justified against the \emph{slowest} coordinate.
+
+\paragraph{Statistics: fitting through the channel costs rate, not just constant.} Comparing
+maximum likelihood on clean transition pairs against the same estimate obtained through the
+noising channel, at sixteen replicates over $\nseq=64$ to $1024$, the fitted $\log$--$\log$ slopes
+are
+
+\begin{center}\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+& $\corr$ & innovation variance \\
+\midrule
+clean transition pairs & $-0.52$ & $-0.50$ \\
+through the channel    & $-0.44$ & $-0.36$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The clean arm sits on the parametric $\nseq^{-1/2}$ to two decimal places on both coordinates,
+which is the check that the estimator itself is not the bottleneck; the noised arm is slower, and
+more so on the shape than on the correlation. Note that the clean arm is \emph{not} flat in
+$\nseq$ --- its error falls by a factor of $3.4$ on $\corr$ and $4.3$ on the variance across the
+range. This is worth stating explicitly: a flat clean arm would indicate a discretisation floor,
+and at three replicates the curve is noisy enough to look flat when it is not.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.55\textwidth]{fig_innovation_density.pdf}
+\caption{The fitted innovation density against the true Laplace density, on a log scale so the
+tails are visible. What is recovered here is a density, not a parameter: the mixture is a
+representation of it.}
+\label{fig:density}
+\end{figure}
+
+\section{The fitted rates in the efficiency comparison}
+\label{app:fitted-rates}
+
+The body reports fitted $\log$--$\log$ slopes of relative denoising error against
+$\nseq$. They are fitted \emph{per seed} and then averaged, not fitted to the
+seed-averaged curve: cells within a seed share one training set and one set of
+fitted models, so the two differ, and only the first keeps the pairing that makes
+the arms' difference testable. Over $\nseq=32$ to $\biggestn$ the network gives
+$\ratenet \pm \ratenetse$ and EM--BP $\rateem \pm \rateemse$, a paired difference
+of $\rategap \pm \rategapse$ ($t = \rategapt$ on $\rateseeds - 1$ degrees of
+freedom). The sign test is the one to trust at this sample size, and it is
+unanimous: EM--BP is steeper in all $\ratesteeperseeds$ seeds. Restricting to
+$\nseq \ge 256$ or to $\nseq \le 512$ leaves the difference at $0.08$ in both
+cases, so it is not carried by either end of the range.
+
+\paragraph{Why censoring does not explain it.} Both arms select their largest
+allowed budget in a growing fraction of cells as $\nseq$ grows --- the network
+from $6\%$ at $\nseq=32$ to $42\%$ at $\biggestn$, EM--BP from $12\%$ to $61\%$.
+By the rule used throughout this work, two arms with different cap-hit rates are
+being compared on their budgets, so the fitted slopes are uninterpretable unless
+the direction of the effect is known. It is measured. Tripling both caps at
+$\nseq=\nseqcalib$, on the same seeds and validation bundles, lowers the network's
+error by $\ratecalibnet\%$ and EM--BP's by $\ratecalibem\%$ --- an order of
+magnitude apart. EM--BP is the arm being held back, and it is also the arm whose
+cap-hit rate rises faster with $\nseq$, so the censoring inflates its error more
+at large $\nseq$ than at small and \emph{flattens} its fitted curve. Removing the
+censoring would steepen EM--BP's slope and widen the difference. The reported
+value is a lower bound.
+
+Two further checks point the same way. Fitting the slope between $\nseq=\nseqcalib$
+and $\nseq=\biggestn$ using only the raised-budget runs at both ends --- so that
+neither endpoint is at the certified cap --- gives a difference of $0.26 \pm 0.14$,
+larger than the full-range figure, though a two-point slope on $\rateseeds$ seeds
+is individually weak. And the fit is generated rather than transcribed: the
+generator refuses to emit if the budget calibration ever shows the network as the
+more censored arm, since that is the single assumption the claim rests on which
+the fitted slopes do not themselves display.
+
+\paragraph{What the slopes are not.} Neither matches a rate we can derive.
+EM--BP's $\rateem$ is well short of the $\nseq^{-1/2}$ that
+Appendix~\ref{app:protocol} and the Rung~1 measurement obtain for $\ivar$ alone,
+which is consistent with a score error inheriting the slower of its two
+coordinates rather than the faster --- $\corr$ falls at $-0.27$ over the same
+range --- but we have not established that, and we do not build on it. The claim
+in the body is the qualitative one.
+
+\section{Experimental protocol}
+\label{app:protocol}
+
+\input{sections/prop-fisher-scope}
+
+\paragraph{What $\Xis$ is sufficient for.} The complete-data log-likelihood is a sum over edges, so
+the $\params$-dependent part of $\Qfun(\params\mid\params^{(r)})$ sees the data only through
+$\Xis$. But $\Xis$ is itself computed at $\params^{(r)}$ and rebuilt every iteration, so the claim
+concerns one maximisation step, not the data being compressible once. It also requires a
+homogeneous kernel shared across sites and sequences, a fixed grid, an initial law excluded from
+$\params$, and $\params$-free likelihood factors --- the last licensing observations at several
+noise levels to add into one $\Xis$. Given those, maximisation costs $O(P\ngrid^2)$ for $P$
+parameters, independently of $\nseq$, while forming $\Xis$ costs $O(\nseq\nsites\ngrid^2)$ per
+iteration. ``One matrix'' is therefore a statement about sufficiency, not about inference being
+cheap.
+
+The reported numbers come from one frozen configuration, defined in a single file and imported by
+the experiments that produce them: Laplace chain unless stated, $\corr=0.85$, $\nsites=32$,
+$\ngrid=401$, $\halfwidth=8$, twelve log-spaced noise levels on $[0.05,3.0]$, sixteen replicates,
+and $256$ held-out sequences on a disjoint seed.
+
+Two qualifications limit how much the frozen file guarantees on its own. A declared field is not
+necessarily a \emph{read} field: importing a configuration does not make the code consult it, and
+the provenance stamp compares the configuration against itself, so it cannot see a setting nobody
+reads. Two such fields exist today and are listed as defects in
+\texttt{tests/test\_frozen\_config\_is\_read.py}, which fails the build if a third appears.
+Separately, experiments carrying their own local settings --- chain length, noise grid,
+architecture sweeps --- are not described by this file at all, so their outputs also record
+a digest of the settings actually resolved at run time.
+
+\paragraph{What Table~\ref{tab:pointwise} covers.} Five qualifications, kept here rather than in
+the caption. The estimand is the schedule-pooled relative error: per-level squared score error and
+reference score energy are summed before the square root, per seed, with the reference energies of
+the frozen test bundle recovered deterministically (the bundle is shared across seeds, so they are
+twelve numbers, validated against stored sums); the ratio is paired within seed. Both arms select their optimisation budget on a disjoint validation bundle --- the
+network its parameterisation \emph{and} training length, EM--BP its iteration count --- and that
+choice agrees with the test-set optimum in $\netagree\%$ and $\emagree\%$ of cells respectively,
+so the protocol is symmetric and the selection is close to an oracle without being one. The
+$\nseq=\extendedn$ row uses a raised budget, the caps having been set for
+$\nseq\le\nseqcalib$; rerunning $\nseq=\nseqcalib$ at that budget on the same seeds moves its
+ratio by $\budgetdelta\pm\budgetdeltase$, so the caps are selected without binding.
+The resolution gate excludes $\ndropped$ of $\ncellstotal$ cells, because in those the
+narrowest fitted mixture component is under two grid cells wide; including them changes no ratio
+by more than $\dropshift$. The network wins in $\nreversed$ of the $\ncellsused$ reported cells,
+both at the smallest sizes --- Appendix~\ref{app:aggregation} resolves where the advantage is
+largest. Both cell counts, here and in the caption of Table~\ref{tab:pointwise}, are
+\emph{descriptive} and not $\ncellsused$ replications: the twelve levels of a cell share one
+training set and one pair of fitted models, so the $\nseedsused$ paired seeds remain the
+inferential unit, and every interval quoted for this comparison --- in
+Table~\ref{tab:pointwise}, in Table~\ref{tab:structured} and in the fitted slopes of
+Appendix~\ref{app:fitted-rates} --- is formed across those seeds and not across cells.
+
+\paragraph{An excluded row, and why the neighbouring one stays.} No $\nseq=8192$ row is reported,
+although one was run. Its parameter file records a source tree with $207$ uncommitted paths, and
+intersecting that list with the experiment's fifteen-file import closure leaves three that the run
+itself executes: the experiment, the frozen configuration, and the EM implementation. The program
+that produced those numbers is not recoverable, so the row is excluded from
+Table~\ref{tab:pointwise} and from every figure drawn on the same grid; it would otherwise have
+set the top of the quoted ratio range.
+
+The $\nseq=4096$ rows are kept, and the distinction is not special pleading. Their tree carried
+eight uncommitted paths and the same intersection is \emph{empty} --- all eight are wavelet and
+image-metric work, none of it reachable from this experiment --- so no edit in that tree could have
+moved these numbers. ``The tree was dirty'' and ``a file this run executes was dirty'' are
+different facts, and only the second is disqualifying. The check is
+\texttt{tools/provenance\_gate.py}, which computes the closure statically and reports the
+intersection per run rather than refusing every dirty tree alike.
+
+\paragraph{One view per chain --- for EM--BP, and not for the networks.} Each clean chain is
+noised at \emph{one} level, the chains being
+split evenly across the twelve levels, so a training set of $\nseq$ chains yields exactly $\nseq$
+observations and the likelihood is a genuine one-view marginal likelihood rather than a composite
+objective over repeated views of the same latent sequence. This costs resolution at the small end
+--- at $\nseq=32$ a level carries two or three chains --- and it is what makes $\nseq$ a count of
+independent latent sequences, so that the horizontal axis of Table~\ref{tab:pointwise} is a
+sample size and not a count of noised views.
+
+That frozen bundle is what EM--BP is given, and it is all it is given: the estimator never sees a
+clean trajectory $\va$ at any point. The network arms are not restricted in the same way, and the
+difference is not incidental to how the tables should be read. Denoising score matching is
+defined on \emph{paired} $(\va,\vx)$ data, so the network is handed the clean trajectories, and
+the standard recipe --- the one used here --- redraws the diffusion time and the corrupting noise
+at every gradient step, so over a training run the network consumes many distinct noised views of
+each clean trajectory rather than one. Weakening it to EM--BP's view would measure a handicap
+rather than a structural advantage, so the recipe is left standard and the asymmetry is reported
+instead.
+
+What the protocol therefore equalises is the number of \emph{clean trajectories} available to
+each arm, and ``the same data'' would be the wrong description of it. Both asymmetries ---
+EM--BP given the Markov factorisation, the networks given the clean signal and unlimited
+corruptions of it --- run in opposite directions, and the second runs \emph{against} the result
+reported here. The consequence for reading Table~\ref{tab:pointwise} and
+Table~\ref{tab:structured} is that the ratio is a statement about value per clean trajectory
+under the two standard recipes, and not about data efficiency at a matched information interface.
+
+\paragraph{The stopping rule, and what actually gates a reported number.} Two mechanisms are in
+play and only the second determines any headline result.
+
+\texttt{fit\_em} stops when the signed log-evidence gain per transition falls in $[0,10^{-9}]$ ---
+signed, so a decrease is recorded as a defect rather than accepted as convergence --- subject to an
+iteration cap supplied by the caller, after which the run is labelled \emph{censored} rather than
+converged. This is a diagnostic: it says whether a fit ran to a flat likelihood, and nothing more.
+
+The headline estimator does not rely on it. It selects an iteration count on the disjoint
+validation bundle, from the grid listed below, exactly as the network arm selects its training
+length --- so the reported model is chosen by held-out risk, not by a convergence test, and a
+censored fit is not thereby disqualified.
+
+That distinction carries real weight here, because the coordinates converge at very different
+rates: at $\corr=0.85$, $\nseq=512$, $C=8$ the autoregressive coefficient is flat from iteration
+${\sim}25$ while the fitted excess kurtosis reads $0.84$ at $30$ iterations, $1.85$ at $60$,
+$2.30$ at $120$ and $2.29$ at $400$. A likelihood- or $\corr$-based stopping rule would certify a
+kernel still missing a third of the higher-order structure. Validation selection is what guards
+against that, and it is the guard every reported number passes through. The configuration file
+also declares a shape-based threshold, $|\Delta\kappa_4|<10^{-3}$; nothing reads it, it is one of
+the two unread fields recorded above, and no reported number was produced by it.
+
+\begin{center}
+\small
+\begin{tabular}{ll}
+\toprule
+chain & Laplace AR(1), $\corr=0.85$, $\ivar=1-\corr^2$, $a_1\sim\normal{0}{1}$, $\nsites=32$ \\
+other families & Gaussian, Student-$t$ ($\nu=5$), uniform, symmetric two-component mixture
+                 ($\kappa=0.6$) \\
+                & all variance-matched to $\ivar$, so $\Cov(a_i,a_j)=\corr^{|i-j|}$ exactly \\
+grid & $\ngrid=401$, $\halfwidth=8$ ($\gridh=0.04$); refinements $\ngrid\in\{801,1601\}$ \\
+noise levels & twelve log-spaced $t\in[0.05,3.0]$, for training and pointwise evaluation \\
+budgets & $\nseq\in\{32,64,128,256,512,1024,2048\}$, one noise view per chain \\
+test set & $256$ held-out sequences, seed \texttt{exp07-test}, disjoint from all training seeds \\
+validation & a second disjoint bundle, used to select both arms' budget (below) \\
+replicates & sixteen; the replicate index is mixed into every training seed, so replicates \\
+           & vary the training set \emph{and} the initialisation; the test set is common to all \\
+\midrule
+EM--BP & mixture-innovation kernel \eqref{eq:kernel}, $\ncomp=8$; $3\ncomp=24$ free
+         parameters \\
+       & $\corr$ initialised at $0.3$; iteration count selected on validation from \\
+       & $\{10,20,40,60,80,120,160,220,300,400\}$; relative tolerance $10^{-9}$ \\
+global MLP & fully connected, $25{,}248$ parameters, denoising score matching, Adam \\
+           & training length selected on validation from
+             $\{0.5,1,2,3.5,6,10,14,20\}\times10^{3}$ steps \\
+           & both parameterisations ($\varepsilon$ and $a$) trained, and the choice between
+             them \\
+           & is also made on validation \\
+local CNN & weight-shared one-dimensional convolution, radius $r$, receptive field $2r+1$ \\
+capacity control & $24$ configurations, $3.2$k--$297$k parameters \\
+\midrule
+hardware & CPU: single-threaded, \texttt{medium\_cpu} partition, Bocconi HPC \\
+         & GPU: CUDA 12.4, CuPy 13.6, gated by a CPU/GPU parity test before any sweep \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Selection rules, stated plainly.} Every tunable quantity that either arm is allowed to
+choose is chosen on a validation bundle disjoint from both the training set and the test set, and
+the two arms are given the same privilege. The network selects its parameterisation
+($\varepsilon$ or $a$) \emph{and} its training length; EM--BP selects its iteration count. Neither
+selection touches the test set. The selected choice coincides with the test-set optimum in
+$\netagree\%$ of cells for the network and $\emagree\%$ for EM--BP, and Table~\ref{tab:pointwise}
+reports the validation-selected numbers, not those optima.
+
+The symmetry matters because the training length is a bias--variance knob for both arms, not a
+convergence detail: selecting one arm's budget while pinning the other's is not a neutral choice.
+Measured on this run, giving the network the same early-stopping privilege costs between $5\%$ and
+$36\%$ of the ratio, the larger corrections at the smaller sample sizes. The one selection that
+remains a fixed configuration value rather than a validation choice is the convolution's receptive
+field; the numbers in \S\ref{sec:networks} that depend on it are labelled exploratory.
+
+\section{Scope conditions}
+\label{app:limits}
+
+The initial law is held fixed at the one the generating process uses, so nothing is misspecified
+there and nothing shows it could be recovered. The linear form of \eqref{eq:kernel} is assumed:
+what is free is a scalar and a density, not an arbitrary bivariate transition. The chain is
+covariance-stationary rather than strictly stationary. Identifiability is a theorem at level 1 and
+conditional at level 2. The implementation is a discretisation whose error, for the Laplace family,
+is second order rather than spectral. Inference costs $O(\nsites\ngrid^{2})$ per sequence, far above
+a network forward pass, so the estimator's advantage is in data and not in wall-clock. And the
+comparison is asymmetric in supplied information by construction, in \emph{both} directions
+(Section~\ref{sec:networks}): EM--BP is given the Markov factorisation and the autoregressive
+form, while every network arm is given the clean trajectories and a freshly drawn corruption of
+them at each gradient step, where EM--BP sees one frozen noised view and never the clean signal.
+It measures what the Markov assumption buys, per clean trajectory and against the standard
+training recipe for the alternative, where that assumption holds exactly; it says nothing about a
+setting where it does not, and it does not rank learning algorithms at a matched information
+interface.
+
+One further scope condition belongs with the headline rather than with the model. The reported
+estimator runs at $\ncomp=8$ mixture components because the protocol fixed that in advance and not
+because any selection rule chose it, and the capacity sweep does not support reading the margin as
+a return on that capacity: no tested capacity improves on a single Gaussian innovation under the
+implemented grid, M-step and iteration cap, and a single Gaussian innovation with a fitted $\corr$
+is, by Proposition~\ref{prop:lmmse} --- whose moment projection is the identity when the
+innovation is itself Gaussian --- exactly the covariance-matched linear estimator. Within the
+range tested, then, the margin over the network arms is earned by the Markov factorisation and its
+covariance, and not by the mixture's capacity to represent a non-Gaussian innovation shape. The
+sweep runs different bundles and scoring regions from the headline, so no headline figure is
+restated on its basis; the transferable point is the attribution, not a substituted number, and
+whether capacity pays once the grid resolves the narrowest component is left open
+(\S\ref{sec:limits}).
+
+\section{Reproducibility map}
+\label{app:repro}
+
+\begin{center}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}
+                   >{\raggedright\arraybackslash}p{0.30\textwidth}
+                   >{\raggedright\arraybackslash}p{0.34\textwidth}@{}}
+\toprule
+claim & script (\texttt{experiments/\allowbreak }) & output (\texttt{outputs/\allowbreak }) \\
+\midrule
+grid and domain convergence & \texttt{exp\_\allowbreak 01\_\allowbreak grid\_\allowbreak validation} &
+  \texttt{exp\_\allowbreak 01\_\allowbreak .../\allowbreak grid\_\allowbreak heatmap.csv} \\
+boundary and quadrature diagnostics & \texttt{exp\_18\_... -{}-parts boundary} &
+  \texttt{exp\_\allowbreak 18/\allowbreak boundary.csv} \\
+closure error vs $t$ & \texttt{exp\_\allowbreak 02\_\allowbreak laplace\_\allowbreak gaussian\_\allowbreak ...} &
+  \texttt{exp\_\allowbreak 02\_\allowbreak .../\allowbreak laplace\_\allowbreak summary.csv} \\
+closure error by family & \texttt{exp\_\allowbreak 03\_\allowbreak nongaussian\_\allowbreak ...} &
+  \texttt{exp\_\allowbreak 03\_\allowbreak .../\allowbreak innovation\_\allowbreak sweep.csv} \\
+EM monotonicity, $\corr$ recovery & \texttt{exp\_18\_... -{}-parts emtrace} &
+  \texttt{exp\_\allowbreak 18/\allowbreak em\_\allowbreak trace.csv} \\
+learned innovation density & \texttt{exp\_18\_... -{}-parts density} &
+  \texttt{exp\_\allowbreak 18/\allowbreak innovation\_\allowbreak density.csv} \\
+parameter-recovery rate & \texttt{exp\_\allowbreak 06\_\allowbreak em\_\allowbreak parameter\_\allowbreak ...} &
+  \texttt{exp\_\allowbreak 06\_\allowbreak .../\allowbreak em\_\allowbreak rate.csv} \\
+outer-product information vs $t$ & \texttt{exp\_\allowbreak 06\_\allowbreak em\_\allowbreak parameter\_\allowbreak ...} &
+  \texttt{exp\_\allowbreak 06\_\allowbreak .../\allowbreak price\_\allowbreak of\_\allowbreak noising.csv} \\
+Fisher identity vs finite diff. & \texttt{exp\_\allowbreak 08\_\allowbreak gradient\_\allowbreak vs\_\allowbreak ...} &
+  \texttt{exp\_\allowbreak 08\_\allowbreak .../\allowbreak gradient\_\allowbreak vs\_\allowbreak exact.csv} \\
+pointwise error ratio (\S\ref{sec:networks}) & \texttt{exp\_\allowbreak 07\_\allowbreak em\_\allowbreak vs\_\allowbreak score\_\allowbreak ...} &
+  \texttt{replicates/\allowbreak merged\_\allowbreak summary.csv} \\
+network capacity control & \texttt{exp\_\allowbreak 07\_\allowbreak em\_\allowbreak vs\_\allowbreak score\_\allowbreak ...} &
+  \texttt{exp\_\allowbreak 07\_\allowbreak .../\allowbreak capacity.csv} \\
+inference and training cost & \texttt{exp\_\allowbreak 07\_\allowbreak em\_\allowbreak vs\_\allowbreak score\_\allowbreak ...} &
+  \texttt{exp\_\allowbreak 07\_\allowbreak .../\allowbreak \{inference,training\}\_cost.csv} \\
+receptive field (exploratory) & \texttt{exp\_\allowbreak 12\_\allowbreak receptive\_\allowbreak field} &
+  \texttt{exp\_\allowbreak 12\_\allowbreak .../\allowbreak efficiency\_\allowbreak three\_\allowbreak way.csv} \\
+sampler step convergence & \texttt{exp\_\allowbreak 16\_\allowbreak ... MODE=calibrate} &
+  \texttt{exp\_\allowbreak 16/\allowbreak calibrate\_\allowbreak steps*/\allowbreak steps.csv} \\
+generation by budget & \texttt{exp\_\allowbreak 16\_\allowbreak ... MODE=generate} &
+  \texttt{exp\_\allowbreak 16/\allowbreak gen\_\allowbreak n*\_\allowbreak seed*/\allowbreak generation.csv} \\
+generation by family & \texttt{exp\_\allowbreak 16\_\allowbreak sampling\_\allowbreak validation} &
+  \texttt{exp\_\allowbreak 16/\allowbreak family\_\allowbreak */\allowbreak generation.csv} \\
+capacity: generation & \texttt{exp\_\allowbreak 16\_\allowbreak sampling\_\allowbreak validation} &
+  \texttt{exp\_\allowbreak 16/\allowbreak components\_\allowbreak C*/\allowbreak generation.csv} \\
+capacity: pointwise & \texttt{exp\_\allowbreak 16\_\allowbreak sampling\_\allowbreak validation} &
+  \texttt{exp\_\allowbreak 16/\allowbreak cpoint\_\allowbreak C*/\allowbreak pointwise.csv} \\
+discrete-alphabet variant & \texttt{exp\_\allowbreak 10\_\allowbreak discrete\_\allowbreak alphabet} &
+  \texttt{exp\_\allowbreak 10\_\allowbreak .../\allowbreak discrete\_\allowbreak *.csv} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Every figure in this note is produced by
+\codefile{research/nongaussian-bp/tools/make\_figures.py}, which reads the outputs above and fails
+loudly if one is missing; no number in any figure is entered by hand. Exact commands, environment
+and HPC job configuration are in \codefile{REPRODUCIBILITY.md}, and the claim-level audit behind
+this revision --- what was claimed, what was withdrawn and why --- is the accompanying compendium.
+
+\section{The structured baseline}
+\label{app:structured}
+
+The headline comparison of Section~\ref{sec:networks} uses a fully connected network, which
+carries no locality prior and no weight sharing. Separating that from the structural assumption
+requires a weight-shared window predictor with radius and parameterisation selected on a
+validation bundle disjoint from test, and EM--BP refitted on the same chains --- at the headline
+protocol, with every site scored, deployed and provenance-gated through
+\texttt{hpc/deploy\_clean.sh}. ``The same chains'' means the same clean trajectories and not the
+same observations: the window head, like every network arm in this paper, is trained on paired
+$(\va,\vx)$ data with the diffusion time and the corruption redrawn at each gradient step, while
+EM--BP sees one frozen noised view of each trajectory and never the clean signal
+(Appendix~\ref{app:protocol}). The structured ratio is therefore scoped exactly as the headline
+one is. \texttt{experiments/exp\_31\_structured\_baseline.py} is that
+measurement: it replaces an earlier exploratory run whose provenance did not verify and whose
+protocol differed from the headline table's in four ways (\texttt{outputs/README\_exp12\_scaled.md}
+records the detail; no number from that run is cited here or in the main text).
+
+\paragraph{Which architecture, and under what search.} Three candidates were screened on
+$\screendevseeds$ development seeds, disjoint from the $\structseeds$ used below: the
+weight-shared window head, a dilated convolutional stack, and a bidirectional message-passing
+network, the last two able in principle to propagate across the whole chain. Each ran over its own
+hyperparameter grid, with a shared learning-rate grid, both output parameterisations and a common
+checkpoint ladder ($\screenckptlo$ to $\screenckpthi$ steps), $\screenconfigs$ configurations in
+all, selected on the \screenregion{} region with squared error and reference
+energy pooled over development seeds and sizes before the square root --- the
+same accumulation the confirmatory stage reports. \textbf{The window
+head won}, at radius $\screenwinnerradius$, width $\screenwinnerwidth$.
+
+\input{sections/tab-screening}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.58\textwidth]{fig_screening.pdf}
+\caption{Every configuration of the screen, scored on the \screenregion{} region with errors pooled
+over the $\screendevseeds$ development seeds and sizes; the outlined marker is each architecture's best. The
+dilated stack sits an order of magnitude to the right on parameter count and does not reach the
+window head's risk anywhere.}
+\label{fig:screening}
+\end{figure}
+
+This is a model-selection fact under this search space and protocol, not evidence that long-range
+propagation is intrinsically unnecessary or that radius $\screenwinnerradius$ is optimal in the
+population. It does rule out the cheapest objection: the dilated stack carries
+\screenconvparams{} parameters against the window head's \screenwindowparams{} and placed last, so
+the long-range arms did not lose for want of capacity. The confirmatory comparison below is
+therefore against the strongest baseline \emph{this screen found}, not the strongest conceivable
+one, and every claim that follows is scoped to that.
+
+\input{sections/tab-structured}
+
+EM--BP is more accurate in every one of the $\structcells$ scored cells --- $\structseeds$ seeds
+$\times$ $\structsizes$ sizes $\times$ $\structregions$ regions (\structregionlist{}), of which the
+table shows two. That count is descriptive: regions and sizes share fitted models and data, so the
+inferential unit behind each row is the $\structseeds$ paired seeds. The ratio increases across the
+four sizes tested. That is a description of four measurements and not evidence that the residual is
+non-architectural: a baseline with an irreducible approximation floor $b^2$ gives
+$(b^2 + c_w/\nseq)/(c_e/\nseq)$, linear increasing in $\nseq$ for a wholly architectural reason,
+and the raw risks above are consistent with it --- EM--BP's risk falls about fourfold across the
+range while the window head's falls by less than half that.
+
+Consistent with, and no more than that. Four sizes support a two-parameter fit with two residual
+degrees of freedom, which cannot separate a converged curve from a slowly decaying one: a
+\emph{floorless} power law in $\nseq$ fits the same four window-head points with a residual sum of
+squares under twice that of the floor model at equal parameter count, and a fitted floor that
+lands on the last measured point is partly a tautology. (Both fits, and their residuals, are in
+the accompanying compendium; neither is reported here as a result.) The window head's curve should therefore
+be read as showing diminishing returns over the four tested sizes, and not as having flattened
+onto a resolved architectural floor. What can be said without a fit is the comparison itself:
+EM--BP's error is still falling steeply across the same range where the window head's is not. Both arms select their budget
+symmetrically on a validation bundle disjoint from test, \emph{within the grids on offer}:
+$\structcapem\%$ of EM--BP cells and $\structcapwindow\%$ of window-head cells take the last rung,
+which indicates validation error still falling where the grid ended rather than convergence. The
+values therefore compare the two procedures at stated, validation-selected budgets, not at
+converged optima. Table~\ref{tab:aggregation-structured} reports the ratio under
+$\structaggcount$ aggregations of the same cells; none falls below $\structaggfloor\times$ at any
+size.
+
+\section{Density-level recovery: the Hellinger figures}
+\label{app:hellinger}
+
+Both kernels are put on the same grid and renormalised under the same quadrature, so the
+comparison measures fit rather than normalisation convention. Absent a law over parent states a
+conditional kernel $\kernel(\cdot\mid a)$ has no canonical scalar distance, and an unweighted
+median over grid columns gives a rarely-visited tail parent the same standing as a typical one ---
+so it was, until this revision, a diagnostic on the fitted density rather than an intrinsic
+distance between transition laws. The intrinsic version is $\E_{A\sim\pi_0}[H(\kernel_{\hat\params}
+(\cdot\mid A), \kernel_0(\cdot\mid A))]$ under the true parent law $\pi_0$, and both are reported
+below, computed by the same run (\texttt{outputs/exp\_07\_certified\_clean\_seed*/}, sixteen
+seeds, clean-deployed and gated; independently verified bit-identical to the certified table's
+own score-based fields, \texttt{outputs/README\_exp07\_certified\_clean.md}).
+
+\input{sections/tab-hellinger}
+
+\noindent All three rows fall with $\nseq$, so the transition is being recovered and not merely
+fitted. The weighted mean sits consistently a little below the unweighted median --- the parent
+law downweights exactly the tail columns an unweighted vote overweights --- without changing the
+qualitative story.
+
+\input{sections/tab-aggregation}
+
+The same question applies to the structure-aware ratio, and with more force, since that one is
+quoted as a range. There the noise schedule is already reduced into each cell's risk, so the seed
+is the inferential unit by construction and only the forming and pooling of the ratio remain
+optional.
+
+\input{sections/tab-aggregation-structured}

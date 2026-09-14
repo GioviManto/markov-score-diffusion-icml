@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+# Lean build products (mathlib cache is fetched by `lake exe cache get`)
+lean/.lake/
+*.olean
+# TeX build intermediates
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.synctex.gz
+paper/build/
+# Scratch outputs: only registered experiment outputs are tracked (see outputs/README.md)
+outputs/scratch/
+outputs/_determinism/
+# OS
+.DS_Store
+.claude/

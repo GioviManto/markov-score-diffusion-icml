@@ -1,0 +1,21 @@
+{
+  "rho": 0.85,
+  "n_sites": 32,
+  "t_values": [
+    0.02,
+    0.05,
+    0.1,
+    0.2,
+    0.4,
+    0.8,
+    1.6
+  ],
+  "parts": [
+    "boundary",
+    "emtrace",
+    "density"
+  ],
+  "numpy": "2.5.1",
+  "python": "3.13.11",
+  "blas_threads": "1"
+}

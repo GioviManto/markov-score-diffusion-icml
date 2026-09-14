@@ -1,0 +1,79 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    name: unit and numerical regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+      - name: fast suite (mathematical identities, BP/EM correctness, theory checks)
+        run: OMP_NUM_THREADS=2 python -m pytest -q -p no:cacheprovider -m "not slow"
+               tests/test_bp_mixture.py tests/test_em_bp.py tests/test_fisher_bruteforce.py
+               tests/test_gaussian_bp_equivalence.py tests/test_gaussian_precision_score.py
+               tests/test_message_normalization.py tests/test_recursion_agreement.py
+               tests/test_score_mean_error_identity.py tests/test_shape_kernel.py tests/test_stationary.py
+               tests/test_protocols.py tests/test_frozen_config_is_read.py
+      - name: theory regression tests (Hermite attenuation, oracle ladder)
+        run: OMP_NUM_THREADS=2 python -m pytest -q -p no:cacheprovider tests/test_theory_hermite.py tests/test_oracles.py
+        continue-on-error: false
+
+  manuscript-consistency:
+    name: generated fragments agree with registered outputs and the manuscript
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --upgrade pip && pip install -e ".[dev]"
+      - name: regenerate every generated .tex fragment and diff against the committed copy
+        run: python tools/check_manuscript.py --regenerate --diff
+
+  paper:
+    name: paper compiles (ICML style, provisional 2026 kit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: wtfjoke/setup-tectonic@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: cd paper && tectonic -X compile main.tex
+      - uses: actions/upload-artifact@v4
+        with:
+          name: main.pdf
+          path: paper/main.pdf
+
+  lean:
+    name: Lean audit compiles (pinned toolchain, no sorry)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: install elan
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: cache mathlib
+        uses: actions/cache@v4
+        with:
+          path: lean/.lake
+          key: lake-${{ hashFiles('lean/lean-toolchain', 'lean/lake-manifest.json') }}
+      - name: build
+        run: cd lean && lake exe cache get && lake build ThesisAudit
+      - name: no sorry / axiom / native_decide
+        run: |
+          if grep -rnE "^\s*(sorry|axiom )|native_decide" lean/ThesisAudit lean/ThesisAudit.lean | grep -v "^\s*--" ; then echo "forbidden token found"; exit 1; fi

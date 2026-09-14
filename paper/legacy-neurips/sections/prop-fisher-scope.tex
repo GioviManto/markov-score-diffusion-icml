@@ -1,0 +1,29 @@
+%% SHARED SECTION -- the scope remark for Proposition~\ref{prop:fisher},
+%% included from the appendix. The body carries the statement; a reader asking
+%% "exact for WHICH likelihood?" is served here, where there is room to answer.
+
+\begin{remark}[Discrete and continuous are separate claims]
+\label{rem:fisher-scope}
+Proposition~\ref{prop:fisher} is a statement about the \emph{finite-state model on the grid}. There
+the interchange of $\nabla_\params$ with a finite sum is unconditional, and the returned gradient
+is exact for the discretised likelihood up to floating point --- which is what the
+$10^{-9}$ finite-difference agreement of Appendix~\ref{app:protocol} measures.
+
+The corresponding continuum identity,
+$\nabla_\params \Lik = \int\!\!\int \xi_\params(a,a')\,\nabla_\params \log
+\kernel_\params(a'\mid a)\,\dd a\,\dd a'$, also holds, but it needs hypotheses the discrete
+statement does not: $\kernel_\params(a'\mid a)$ differentiable in $\params$, support not depending
+on $\params$, and an integrable dominating function for $\partial_\params \kernel_\params$ so that
+differentiation and integration may be exchanged.
+
+Gaussian and Gaussian-mixture innovations satisfy the hypotheses \emph{as written}: both are
+smooth in $\params$ with full support. Laplace does not, and saying so matters because Laplace is
+the innovation law the reported runs use. Its density $\propto \exp(-|a'-\corr a|/b)$ has a kink
+at $a'=\corr a$, so $\partial_\corr \kernel_\corr$ fails to exist on that set and the proposition's
+smoothness hypothesis is violated there. The identity survives, but by a different argument: the
+kink set is Lebesgue-null, the derivative exists almost everywhere, and the difference quotients
+are dominated locally uniformly in $\corr$, so dominated convergence still licenses the exchange.
+The discrete statement is untouched either way --- on the grid the kink is a finite set of entries
+and the sum is differentiated term by term --- and it is the discrete one the reported numbers
+certify.
+\end{remark}

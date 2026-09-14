@@ -1,0 +1,28 @@
+%% SHARED SECTION -- included by paper/main.tex and paper/workshop.tex.
+%% Edit here, never in a copy. This file exists because the four documents
+%% disagreeing with each other is the failure this rebuild was for.
+
+\begin{proposition}[Exact gradient from one forward--backward pass]
+\label{prop:fisher}
+Fix the grid $\gridpt{1},\dots,\gridpt{\ngrid}$ and let $\kernelth$ be the induced finite-state
+transition matrix, differentiable in $\params$. With $\Xis$ the expected transition mass,
+indexed \textbf{child-first} to match
+$[\kernelth]_{kl} = \kernel_\params(\gridpt{k}\mid\gridpt{l})$,
+\begin{equation}
+\label{eq:xi}
+\Xis_{kl} \;=\; \sum_{\mu=1}^{\nseq}\sum_{i=2}^{\nsites}
+P\!\left(a_i=\gridpt{k},\; a_{i-1}=\gridpt{l} \;\middle|\; \vx^\mu\right),
+\end{equation}
+the gradient of the \emph{discretised} marginal log-likelihood is
+\begin{equation}
+\label{eq:fisher}
+\nabla_\params \Lik(\params)
+= \sum_{\mu}\E_\params\!\left[\nabla_\params \log P_\params(\va,\vx^\mu)\,\middle|\,\vx^\mu\right]
+= \big\langle \Xis(\params),\; \nabla_\params \log \kernelth \big\rangle .
+\end{equation}
+Both $\Xis$ and the evidence come from a single complete forward--backward pass --- one forward and
+one backward recursion, not one directional sweep --- so \eqref{eq:fisher} is of the same
+asymptotic order as evaluating the likelihood, with no additional message pass and no
+backpropagation through the recursion. It is not free: accumulating $\Xis$ over all $(k,l)$
+dominates the constant at large $\ngrid$.
+\end{proposition}
