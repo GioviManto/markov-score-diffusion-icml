@@ -26,6 +26,8 @@ partition() {
   ssh -o BatchMode=yes "$MSD_HPC_HOST" 'sinfo -h -o "%P" | sed "s/\*//" | grep -v -i gpu | head -1'
 }
 PART=$(partition); [[ -n "$PART" ]] || { echo "no partition found; set MSD_HPC_PARTITION" >&2; exit 2; }
+# SLURM does not expand $HOME inside #SBATCH directives: resolve the remote home once and use absolute paths
+RHOME=$(ssh -o BatchMode=yes "$MSD_HPC_HOST" 'echo $HOME'); [[ -n "$RHOME" ]] || { echo "cannot resolve remote HOME" >&2; exit 2; }
 
 # name -> "script args" (relative to experiments/); {OUT} is replaced by the remote outputs dir
 cmd_for() {
@@ -56,7 +58,7 @@ submit_one() {
 #SBATCH --job-name=msd-$name
 #SBATCH --partition=$PART
 #SBATCH --nodes=1 --ntasks=1 --cpus-per-task=$CPUS --mem=$MEM --time=$TIME
-#SBATCH --output=\$HOME/$MSD_HPC_ROOT/logs/%x_%j.out --error=\$HOME/$MSD_HPC_ROOT/logs/%x_%j.err
+#SBATCH --output=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.out --error=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.err
 set -euo pipefail
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
 export PYTHONPATH=\$HOME/$MSD_SRC/src
