@@ -14,4 +14,12 @@ $\nseq=2048$, the usual variance-to-bias trade, and at $\nseq=2048$ the $\ncomp=
 selected at the top of its iteration ladder in $\capAtCapeightD$ of $\capSeeds$ seeds, so
 its error there is an upper bound on what a longer ladder would give. The fitted innovation
 excess kurtosis is $\capKurteightD$ at $\nseq=2048$ against the true $3$; $\capUnresolved$
-cells fail the two-grid-cell resolution gate and are reported, not dropped.
+cells fail the two-grid-cell resolution gate and are reported, not dropped. The last row of
+\cref{tab:capacity} is the family's infinite-data reference: the $\ncomp$-component mixture
+closest in Kullback--Leibler divergence to the Laplace innovation, scored on the same
+bundles. Its $\ncomp=1$ member is the covariance twin and scores $\capPopone$, the LMMSE
+floor to three decimals, as \cref{prop:lmmse} requires; at $\ncomp=8$ it scores
+$\capPopeight$, so the fitted kernel at $\nseq=2048$ sits $\capPopRatioeightD\times$ above
+what its own family can express, a data limit rather than a capacity limit. (The reference is
+not a bound: a Kullback--Leibler-optimal innovation need not minimise the score error, and
+the $\ncomp=2$ fit at $\nseq=2048$ scores below it.)
