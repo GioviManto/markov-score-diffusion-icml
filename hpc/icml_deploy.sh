@@ -50,8 +50,14 @@ if [[ ! -x "$HOME/$ROOT/venv/bin/python" ]]; then
   "$HOME/$ROOT/venv/bin/pip" install --quiet torch --index-url https://download.pytorch.org/whl/cpu
 fi
 "$HOME/$ROOT/venv/bin/python" -c "import numpy, scipy, pandas, torch; print('venv ok: numpy', numpy.__version__, 'torch', torch.__version__)"
-# smoke: the quick E02 capacity run against the deployed tree (serial, ~1 min)
-cd "$HOME/$SRC/experiments" && OMP_NUM_THREADS=1 PYTHONPATH="$HOME/$SRC/src" "$HOME/$ROOT/venv/bin/python" e02_capacity.py --quick --only capacity --output-dir "$HOME/$ROOT/scratch/smoke_$(basename $SRC)" | tail -2
+# Import check only. The quick experiment run used to happen here and was the wrong thing to do
+# on a shared login node (4 cores, CPU-limited: it was killed mid-numpy-import on 15 Sep). The
+# real smoke is the first submitted job, which runs on a compute node.
+cd "$HOME/$SRC/experiments" && OMP_NUM_THREADS=1 PYTHONPATH="$HOME/$SRC/src" "$HOME/$ROOT/venv/bin/python" -c "
+import sys; sys.path.insert(0, '.')
+import e02_capacity, e03_baselines, e04_refinement, e05_generation, e06_learning_through_noise, e08_misspecification, e09_capacity_floor
+from protocol import PROTOCOL, protocol_hash
+print('imports ok; protocol', PROTOCOL.version, protocol_hash())" || echo "WARNING: import check failed or was killed on the login node; the submitted job will report the real error"
 REMOTE
 cat > hpc/.last_deploy.env <<ENVEOF
 MSD_HPC_HOST=$HOST
