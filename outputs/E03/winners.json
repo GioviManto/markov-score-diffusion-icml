@@ -1,0 +1,62 @@
+{
+  "bigru": {
+    "hp": {
+      "hidden": 32
+    },
+    "lr": 0.001,
+    "mode": "eps",
+    "screen_risk": 0.12683840373938948
+  },
+  "mlp": {
+    "hp": {
+      "hidden": [
+        128,
+        128
+      ]
+    },
+    "lr": 0.001,
+    "mode": "eps",
+    "screen_risk": 0.390112106584352
+  },
+  "tcn": {
+    "hp": {
+      "channels": 32,
+      "dilations": [
+        1,
+        2,
+        4,
+        8
+      ]
+    },
+    "lr": 0.001,
+    "mode": "eps",
+    "screen_risk": 0.14280956131127517
+  },
+  "transformer": {
+    "hp": {
+      "d": 32,
+      "heads": 4,
+      "layers": 2
+    },
+    "lr": 0.003,
+    "mode": "eps",
+    "screen_risk": 0.1473454135834839
+  },
+  "unet": {
+    "hp": {
+      "channels": 16
+    },
+    "lr": 0.001,
+    "mode": "eps",
+    "screen_risk": 0.14785252035878907
+  },
+  "window": {
+    "hp": {
+      "radius": 4,
+      "width": 64
+    },
+    "lr": 0.001,
+    "mode": "eps",
+    "screen_risk": 0.11643101034133088
+  }
+}

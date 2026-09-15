@@ -49,11 +49,12 @@ innovation law is recovered $e^{4t}$ times more slowly than its correlation at
 observation level $t$; the experiment confirms it, and locates the levels at which shape
 is still learnable. Against denoising networks trained on the clean trajectories---a
 fully connected network, a weight-shared window head, and dilated, recurrent,
-attention-based and multiscale architectures under one training recipe---the
-structured estimator recovers fourth-order structure that the networks do not reach at
-the same number of sequences: at every size tested the learned networks sit at or above
-the second-order floor of \cref{prop:lmmse}, and the structured estimator sits far below
-it (\cref{sec:experiments}). We show that this advantage is earned by the non-Gaussian
+attention-based and multiscale architectures under one training recipe---the structured
+estimator is ahead at every sample size while seeing strictly less: one noised view per
+sequence, never a clean chain, against clean targets with a fresh corruption at every
+gradient step (\cref{sec:experiments}). Given enough clean data the networks do cross the
+second-order floor of \cref{prop:lmmse}, so the gap is a statement about the information
+interface and not about a barrier they cannot pass. We show that this advantage is earned by the non-Gaussian
 capacity of the innovation model and not only by the Markov factorisation, that it
 transfers to the generated distribution, that it extrapolates in sequence length, and
 that it has a measurable boundary under misspecification.

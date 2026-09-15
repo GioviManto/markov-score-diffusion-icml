@@ -43,3 +43,39 @@ the one-view protocol.
 
 *(none yet — entries are added the day an experiment returns a result against its
 hypothesis)*
+
+## The networks do NOT stop at the second-order floor (15 September 2026)
+
+**The claim I was about to make.** The draft abstract and introduction said the learned
+denoisers "sit at or above the second-order floor of the pooled score error, the structured
+estimator far below it". That reading came from the archival comparison, where the networks
+were screened unequally and evaluated mostly at small sample sizes.
+
+**What the full screen shows.** On the development seeds, bulk region (`outputs/E03/screening.csv`,
+68 configurations x 4 seeds x 3 restarts x 32k steps):
+
+| M | best network | which | LMMSE floor | EM-BP (C = 8) |
+|---|---|---|---|---|
+| 32 | 0.147 | window head | 0.169 | 0.100 |
+| 2048 | 0.056 | bidirectional GRU | 0.169 | 0.023 |
+
+At M = 2048 every architecture except the fully connected one is far **below** the floor
+(0.056-0.071 against 0.169). Given enough clean sequences and fresh corruptions at every
+gradient step, a neural denoiser plainly does learn fourth-order structure. The claim as
+drafted is false and has been removed from the abstract and the introduction.
+
+**What survives, and is stronger.** At equal sequence count the structured estimator is still
+ahead -- 0.023 against 0.056 at M = 2048, 0.100 against 0.147 at M = 32 -- and it is ahead
+while seeing strictly less: one noised view per sequence, never a clean chain, against the
+networks' clean targets with a fresh corruption at every step. The honest statement is about
+the information interface, not about a floor the networks cannot cross. E03's
+information-matched arm measures exactly that gap.
+
+**A second finding in the same table.** Which architecture wins depends on the sample size:
+the radius-4 window head is best at M = 32 (0.147 against the bidirectional GRU's 0.171) and
+worst of the structured five at M = 2048 (0.071 against 0.056). Locality is a good prior when
+data is scarce and a binding constraint when it is not. The confirmatory table reports both
+sizes for this reason.
+
+**Status.** Development seeds; the confirmatory table (E03 confirm, running) replaces these
+numbers. The direction is a factor of three and is not a seed effect.
