@@ -11,3 +11,6 @@
 3.5       the level at which the uniform closure gap reaches double precision (descriptive)
 0.3       EM initialisation of rho (protocol)
 1.0       gradient clipping (protocol)
+1.1       excess kurtosis of the generalised Gaussian at beta = 6 (family definition, -1.1)
+0.6       separation parameter of the symmetric two-component mixture (family definition)
+0.72      excess kurtosis of that mixture, -2 kappa^2 with kappa = 0.6 (family definition)

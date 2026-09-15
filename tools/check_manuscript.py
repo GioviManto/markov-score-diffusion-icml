@@ -88,9 +88,9 @@ def typed_literals() -> int:
             if line:
                 allowed.add(line.split()[0])
     generated = {p.name for p in (PAPER / "sections").glob("*.tex")
-                 if p.read_text().lstrip().startswith("%% GENERATED")}
+                 if "generated" in "\n".join(p.read_text().splitlines()[:8]).lower()}
     failures = 0
-    for tex in [PAPER / "main.tex", *sorted((PAPER / "sections").glob("*.tex"))]:
+    for tex in [PAPER / "main.tex", *sorted((PAPER / "body").glob("*.tex")), *sorted((PAPER / "sections").glob("*.tex"))]:
         if tex.name in generated or not tex.exists():
             continue
         in_comment_block = False

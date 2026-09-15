@@ -182,3 +182,4 @@ script) · 03 theory-information-decay (E1, Theorem B written, Lean targets) ·
 ## Revision log
 
 * 2026-09-15 — first version, after the audit.
+* 2026-09-15 06:30 — E01 done and verified (rates −4/−8, constant to 6%); E02a confirmatory running; E06, E02b queued; E03–E08 scripted and smoke-tested; theorem positioned against Katsevich–Bandeira / Balanov et al. / Aarts et al. after the literature sweep (docs/RELATED_WORK_SWEEP.md).
