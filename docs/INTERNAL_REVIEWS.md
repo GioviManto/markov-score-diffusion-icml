@@ -114,3 +114,88 @@ ships with the theory alone.
 * Appendix proof of Theorem 2 with remainder: written (`paper/body/A1-proofs.tex`, 15 Sep); the remainder bound is a sketch with the moment condition and the tail estimate stated, not a fully quantified constant.
 * General-m remark: added after Theorem 2.
 * E02 confirmatory, E03, E05, E06, E07, E09: scheduled (`RESEARCH_PLAN.md` §5).
+
+---
+
+## Milestone 04 (15 September 2026, 08:00): related work rewritten, Lean targets green, confirmatory runs relaunched
+
+### Reviewer 1 — theory
+
+**Strongest objection.** The Lean module proves algebra: four constants, under hypotheses
+that are numbers. Nothing in it says that the score of the Laplace chain has the expansion
+Theorem 2 asserts, and the remainder bound in Appendix A is a sketch. A reader who sees
+"machine-checked" in the abstract will assume more than is checked.
+
+**What neutralises it.** State the Lean coverage in one sentence exactly as
+`lean/README.md` §2 does — the Mehler identity for n ≤ 4, the κ₄ difference, the ½ in the
+Gaussian Fisher rate, the 1/6 in the scalar score gap — and never write "Theorem 2 is
+verified in Lean". The manuscript currently says nothing about Lean in the body; the
+appendix and the repository do. Keep it that way, or add the one sentence with the four
+items and the words "algebraic skeleton".
+
+**Second objection.** The theorem's constant is checked on the chain at t ≥ 3 to 1–6% on two
+families; the paper should not round that to "verified to the constant" without the range
+and the failing family (Student-t, infinite sixth moment) in the same sentence. The current
+verification paragraph does this; do not shorten it when cutting to eight pages.
+
+**Verdict.** Theory section acceptable; the honesty of the Lean sentence is the only risk.
+
+### Reviewer 2 — ML experiments
+
+**Strongest objection.** Two confirmatory launches of E02a were killed for engineering
+reasons before any cell completed, and the driver, the batch BP and the convolution layers
+were all changed today. Were any of these changes numerically consequential? The reviewer
+wants to see, for each: (i) a test that the new code equals the old on the same inputs,
+(ii) the registry entry recording the change and its timing relative to the runs.
+
+**Status.** (i) `tests/test_run_cells.py` (driver, file transport), `tests/test_bp_grid_chunk.py`
+(chunked BP equals unchunked to 1e−12), `tests/test_nn_torch.py::test_fastconv1d_matches_native_conv1d`
+(gather+matmul equals `conv1d` to 1e−5 with gradients) — all pass. (ii) `experiments/registry/E02.json`
+carries the frozen sha, the new sha and the change note; `E03.json` carries the screen
+amendment with its timestamp, before any screen cell ran. The E02a run that will be reported
+started at 07:58 at commit `08d48f5` with a clean code path.
+
+**Second objection.** The E03 screen was cut from 3 restarts × 4 seeds × 32k steps to 1 run ×
+2 seeds × 16k steps. A screen this small can pick a configuration that is good on two seeds
+and mediocre on sixteen, which would flatter EM–BP. **What neutralises it:** the screen
+selects per architecture family among a small grid (2–6 configurations × 2 lr × 2 modes),
+each judged on four (seed, size) fits; selection noise of that size changes which of two
+similar configurations wins, not whether an architecture family reaches the LMMSE floor.
+The confirmatory table should report the second-best configuration's screen risk next to
+the winner's, so the reader can see the margin; `make_baseline_numbers.py` should add that
+column. (Action below.)
+
+**Third objection.** The memory and transport incidents were found because the run was
+watched; a run on a cluster would have failed silently. The per-cell files and the
+resumability are the right fix, and `docs/REPRODUCIBILITY.md` now records both incidents.
+
+**Verdict.** Proceed; add the runner-up column.
+
+### Reviewer 3 — significance
+
+**Strongest objection.** The related-work section now concedes that the SNR^k law is known
+(Katsevich–Bandeira; Balanov–Bendory–Edidin) and that cumulant attenuation is in Aarts et
+al. What is left is "the same law in a different clock, on a chain, with a constant". Is
+that a paper? **What neutralises it:** the experiments. The theorem earns its place if the
+laboratory shows (a) a learned family that is *exactly* second-order sitting on the floor
+while a fourth-order family goes below it (E02a), (b) shape learned e^{4t} more slowly than
+correlation (E06), and (c) six architectures under one recipe stopping at or above the
+floor while the structured learner does not (E03). None of these is in hand yet; all three
+are running or queued. The paper's significance is decided by them, not by the theorem.
+
+**Second objection.** Fifteen pages with references; the body must reach eight. The
+related-work section is a full column; the appendix carries the oracle table, the capacity
+artefact, the aggregation tables. When the experiments land, the archival aggregation
+tables (App. D) should go, and the phase-diagram figure should move to the appendix if
+Figure 3 (learning) and Figure 4 (ladder) need the space.
+
+**Verdict.** Significance still 4/5 conditional on E02a + E06 + E03; unchanged since
+milestone 03.
+
+### Actions taken from this review
+
+* Runner-up column in the screen table: to add to `tools/make_baseline_numbers.py` before
+  the confirmatory table is generated.
+* Lean sentence policy: none in the abstract; if mentioned in the body, the four items and
+  "algebraic skeleton" verbatim.
+* Page plan recorded for the cut (App. D aggregation tables first, phase figure second).
