@@ -108,6 +108,34 @@ def main() -> int:
         lines += ["\\bottomrule", "\\end{tabular}", "\\end{table*}"]
         (dest / "tab-baselines.tex").write_text("\n".join(lines) + "\n")
         macros["baseSeeds"] = str(int(c.seed.nunique()))
+        # The best NETWORK at each size, its paired ratio against EM-BP, and whether it is below
+        # the second-order floor there. Which architecture wins changes with the sample size, so
+        # the text must not name one; and the networks do cross the floor at large M
+        # (docs/NEGATIVE_RESULTS.md), so the crossing is reported rather than assumed.
+        for n in sizes:
+            tag = SIZE_TAG.get(n, str(n))
+            per = c[c.n_chains == n].groupby("arch").risk.mean().sort_values()
+            if not len(per):
+                continue
+            best_a = per.index[0]
+            macros[f"baseBestArch{tag}"] = ARCH_NAME.get(best_a, best_a)
+            macros[f"baseBest{tag}"] = f"{per.iloc[0]:.3f}"
+            macros[f"baseWorst{tag}"] = f"{per.iloc[-1]:.3f}"
+            macros[f"baseWorstArch{tag}"] = ARCH_NAME.get(per.index[-1], per.index[-1])
+            if len(per) > 1:
+                macros[f"baseSecondArch{tag}"] = ARCH_NAME.get(per.index[1], per.index[1])
+                macros[f"baseSecond{tag}"] = f"{per.iloc[1]:.3f}"
+            if em is not None:
+                fl = float(orc[orc.n_chains == n].lmmse_true.mean())
+                below = [ARCH_NAME.get(a, a) for a in per.index if per.loc[a] < fl]
+                macros[f"baseBelowFloorN{tag}"] = str(len(below))
+                macros[f"baseBelowFloor{tag}"] = ", ".join(below) if below else "none"
+                j = c[(c.arch == best_a) & (c.n_chains == n)].merge(em, on=["seed", "n_chains", "test_bundle"])
+                if len(j):
+                    ratio = j.risk / j.risk_em; lo, hi = boot_ci(ratio.values)
+                    macros[f"baseRatioBest{tag}"] = f"{ratio.mean():.2f}"
+                    macros[f"baseRatioBest{tag}lo"] = f"{lo:.2f}"; macros[f"baseRatioBest{tag}hi"] = f"{hi:.2f}"
+                    macros[f"baseWinsBest{tag}"] = str(int((ratio > 1).sum()))
         print(c.groupby(["n_chains", "arch"]).risk.agg(["mean", "sem", "count"]).to_string(float_format=lambda x: f"{x:.4f}"))
     # ---- matched
     mp = src / "matched.csv"
