@@ -62,6 +62,11 @@ four legacy figures reproduce the archival numbers exactly; the differences betw
 regenerated fragments and the copies the previous manuscript shipped (a CI column, a
 label) are recorded in `docs/CURRENT_STATE_AUDIT.md`, §2.2.
 
+Known Tectonic quirk: the ICML style's running-head height test fails under Tectonic's
+font metrics, so page headers read "Title Suppressed Due to Excessive Size" — for the
+kit's own example paper as well. Under pdfLaTeX/TeX Live (what the submission system
+uses) the running title appears. The style file is never edited to work around this.
+
 ## Running experiments
 
 Legacy experiments (`experiments/exp_NN_*.py`) take `--quick`, `--only <part>`, `--set
