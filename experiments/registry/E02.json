@@ -12,7 +12,7 @@
  },
  "predeclared_analysis": "tools/make_capacity_numbers.py: per (M, C) mean +/- s.e. over seeds of the all-site pooled risk; paired per-seed differences C=8 minus C=1 with a 20000-resample seed bootstrap; per-seed ratio LMMSE_true / EM-BP(C); the window head's risk from outputs/frozen/exp_31_confirm_merged/confirm.csv joined on (seed, n_chains, region) after the test-bundle hash is verified equal",
  "frozen_on": "2026-09-15T02:20 BST",
- "status": "PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659260, 659269); CONFIRMATORY RUNNING (relaunched 2026-09-15 07:19, 6 workers, per-cell files; the 02:20 launch produced no readable result and was killed at 07:17 -- pool result transport hang, docs/REPRODUCIBILITY.md 'Cell files')",
+ "status": "FROZEN E02a 2026-09-15T20:10:42Z; PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659260, 659269); CONFIRMATORY RUNNING (relaunched 2026-09-15 07:19, 6 workers, per-cell files; the 02:20 launch produced no readable result and was killed at 07:17 -- pool result transport hang, docs/REPRODUCIBILITY.md 'Cell files')",
  "registered": "2026-09-15",
  "frozen_settings": {
   "capacity": {
@@ -94,5 +94,20 @@
     "E02b": 659256
    }
   }
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E02a/capacity.csv": "0793d83abca360ae1f02240821170128a5a6c18701573f940ab3cce140257a6f",
+  "outputs/E02a/params_capacity.json": "85563cb87844765bb47764885fb8832fe8ce2e40c2ce1e56117bc536aa43bc59"
+ },
+ "frozen_at": {
+  "E02a": "2026-09-15T20:10:42Z"
+ },
+ "frozen_commit": {
+  "E02a": "afbb080a5a94bfa9317641ec828a111e27a4216b"
+ },
+ "frozen_run_commits": {
+  "E02a": [
+   "ea0435a"
+  ]
+ }
 }
