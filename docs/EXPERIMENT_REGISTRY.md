@@ -14,7 +14,7 @@ not re-registered; their status there is authoritative.
 | id | script | hypothesis | config | seeds | status | outputs | commit |
 |---|---|---|---|---|---|---|---|
 | E01 | `experiments/e01_information_decay.py` | H1 (theory rates, crossover) | `experiments/registry/E01.json` | deterministic (`gauss`); replicates `rng_for("e01-shape", beta, rep)`, rep 0–7; closure reps 0–3 | DONE (15 Sep; `tools/make_theory_numbers.py`, `tools/make_fig_theory.py`) | `outputs/E01/` | `e179391` |
-| E02a | `experiments/e02_capacity.py` | H2 (mixture capacity on the headline task) | to freeze after a dev pass | dev 10000–10003; confirmatory 0–15 | CONFIRMATORY RUNNING (frozen 15 Sep 02:20; queue on 6 workers; incremental CSV) | `outputs/E02a/` | `e57a3eb` |
+| E02a | `experiments/e02_capacity.py` | H2 (mixture capacity on the headline task) | to freeze after a dev pass | dev 10000–10003; confirmatory 0–15 | CONFIRMATORY RUNNING (frozen 15 Sep 02:20; first launch 02:01 lost to the pool-transport hang, no result used; relaunched 07:19 on 6 workers with per-cell files) | `outputs/E02a/` | `e57a3eb` |
 | E02b | `experiments/e02_capacity.py --only family` | H2 (tunable non-Gaussian family) | idem | 0–15 | QUEUED (after E06) | `outputs/E02b/` | — |
 | E06 | `experiments/e06_learning_through_noise.py` | H6 (RMSE vs observation level) | `experiments/registry/E06.json` | 0–15 | QUEUED (after E02a) | `outputs/E06/` | — |
 | E03 | `experiments/e03_baselines.py` | H3/H9/H10 (fair baselines, matched arm, length) | `experiments/registry/E03.json` | dev 10000–10003; confirm 0–15 | PRE-REGISTERED (smoke-tested) | `outputs/E03/` | — |

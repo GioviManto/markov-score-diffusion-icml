@@ -76,9 +76,26 @@ hash, seeds, host, Python/NumPy versions and timestamp (`experiments/common.py`)
 `NGBP_REQUIRE_CLEAN=1` makes a run refuse to start on a dirty tree.
 
 New experiments (`experiments/e*_*.py`, registered in `docs/EXPERIMENT_REGISTRY.md`)
-take a YAML/JSON config from `experiments/configs/` and a `--seeds` list, and write the
-same provenance record plus the config file's SHA-256. Confirmatory runs use the seed
-block declared in the registry entry, which is frozen before the run.
+carry their settings in a `SETTINGS` dict at the top of the script, take `--quick`,
+`--dev` (development seeds), `--only <part>`, `--set key=value`, `--workers N` and
+`--output-dir`, and write the same provenance record; the registry entry
+(`experiments/registry/<id>.json`) stores the frozen settings and the script's SHA-256.
+Confirmatory runs use the seed block declared in the registry entry, which is frozen
+before the run.
+
+**Cell files.** Every multi-cell driver goes through `run_cells` in
+`experiments/common.py`: the process that computes a cell writes that cell's rows to
+`<output-dir>/cells/<csv stem>/<key>.json` itself, and the driver rebuilds the CSV from
+the cell files after every completion. Cells whose file exists are skipped, so an
+interrupted run is resumed by re-issuing the same command; a cell that raised leaves
+`<key>.failed` with its traceback and stops the run. Nothing but a short key travels
+through the pool's result pipe, and the driver detects completion from the files rather
+than from the pipe. This replaced the earlier "return rows through `imap_unordered`"
+driver on 15 September 2026, after the first confirmatory E02a launch (6 workers, 02:01)
+computed fifteen cells whose results never reached the parent process: the workers kept
+computing, the parent's result handler sat in a blocking read for five hours, and no CSV
+was written (`outputs/scratch/queue.log`). A synthetic pool with 30 kB results did not
+reproduce it; the cause was not identified and the design no longer depends on it.
 
 Archival cluster scripts are in `hpc/`; they read `BP_CLUSTER_HOST`/`BP_CLUSTER_USER`
 from the environment. Everything in this repository's plan was sized to run on eight

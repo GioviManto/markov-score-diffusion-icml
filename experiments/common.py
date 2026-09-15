@@ -269,3 +269,153 @@ def provenance(config=None) -> dict[str, str]:
     if config is not None:
         out["resolved_config_hash"] = resolved_config_hash(config)
     return out
+
+
+# ----------------------------------------------------------------------------- cell runner
+
+
+def _slug(x) -> str:
+    """Filename-safe rendering of a cell argument (seed, size, name, hyper-parameter dict)."""
+    import hashlib
+    import re
+
+    if isinstance(x, dict):
+        s = "_".join(f"{k}={_slug(v)}" for k, v in sorted(x.items()))
+    elif isinstance(x, (list, tuple)):
+        s = "_".join(_slug(v) for v in x)
+    else:
+        s = f"{x}"
+    s = re.sub(r"[^A-Za-z0-9._=-]+", "-", s).strip("-")
+    if len(s) > 80:
+        s = s[:64] + "-" + hashlib.sha256(s.encode()).hexdigest()[:12]
+    return s or "cell"
+
+
+def default_cell_key(cell) -> str:
+    """Key of a cell tuple whose first element is the settings dict (the convention of every
+    driver here): the remaining elements, slugified."""
+    parts = cell[1:] if isinstance(cell, tuple) and len(cell) > 1 and isinstance(cell[0], dict) else cell
+    return _slug(parts)
+
+
+def _json_default(o):
+    if isinstance(o, np.generic):
+        return o.item()
+    if isinstance(o, np.ndarray):
+        return o.tolist()
+    if isinstance(o, Path):
+        return str(o)
+    raise TypeError(f"not JSON serialisable: {type(o)}")
+
+
+class CellWriter:
+    """Picklable wrapper: computes one cell and writes its rows to <cells_dir>/<key>.json
+    itself (atomic rename), so no result travels through the pool's result pipe."""
+
+    def __init__(self, fn, cells_dir):
+        self.fn, self.cells_dir = fn, Path(cells_dir)
+
+    def __call__(self, item):
+        import json
+        import traceback
+
+        key, cell = item
+        target = self.cells_dir / f"{key}.json"
+        try:
+            rows = list(self.fn(cell))
+        except BaseException:
+            (self.cells_dir / f"{key}.failed").write_text(traceback.format_exc())
+            raise
+        tmp = target.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(rows, default=_json_default))
+        os.replace(tmp, target)
+        return key
+
+
+def run_cells(cells, fn, workers, out, csv_name, key=default_cell_key, poll=20.0):
+    """Run `fn(cell) -> rows` over `cells`, serially or in a spawn pool of `workers`.
+
+    The process that computes a cell writes its rows to
+    `<out>/cells/<csv stem>/<key>.json`; the driver rebuilds `<out>/<csv_name>` from those
+    files after every completion and skips cells whose file already exists, so an
+    interrupted run resumes where it stopped and a crash loses one cell, not the run.
+    Only the key string is returned through the pool, and the driver does not depend even on
+    that: completion is detected from the files. (On the 8-core laptop a six-worker spawn
+    pool silently stopped delivering multi-kilobyte results to the parent after ~15 cells,
+    the workers computing on while the parent's result handler waited forever;
+    docs/REPRODUCIBILITY.md, "Cell files".) A `<key>.failed` file carries the traceback of
+    a cell that raised; the driver stops on it.
+    """
+    import json
+    import time as _time
+
+    from markov_score.utils import write_csv
+
+    out = Path(out)
+    cells_dir = out / "cells" / Path(csv_name).stem
+    cells_dir.mkdir(parents=True, exist_ok=True)
+    keyed = [(key(c), c) for c in cells]
+    keys = [k for k, _ in keyed]
+    if len(set(keys)) != len(keys):
+        dup = sorted({k for k in keys if keys.count(k) > 1})
+        raise ValueError(f"run_cells: cell keys are not unique: {dup[:5]}")
+    for k in keys:
+        f = cells_dir / f"{k}.failed"
+        if f.exists():
+            f.unlink()
+    todo = [(k, c) for k, c in keyed if not (cells_dir / f"{k}.json").exists()]
+    print(f"  [cells] {len(keyed)} cells, {len(keyed) - len(todo)} already on disk, {len(todo)} to run, workers={workers}", flush=True)
+
+    def _collect():
+        rows = []
+        for k in keys:
+            p = cells_dir / f"{k}.json"
+            if p.exists():
+                rows.extend(json.loads(p.read_text()))
+        if rows:
+            write_csv(out / csv_name, rows)
+        return rows
+
+    def _failed():
+        return [k for k in keys if (cells_dir / f"{k}.failed").exists()]
+
+    writer = CellWriter(fn, cells_dir)
+    if workers <= 1 or not todo:
+        for item in todo:
+            writer(item)
+            _collect()
+        return _collect()
+
+    import multiprocessing as mp
+
+    ctx = mp.get_context("spawn")
+    pending = {k for k, _ in todo}
+    with ctx.Pool(workers) as pool:
+        it = pool.imap_unordered(writer, todo)
+        exhausted = False
+        while pending:
+            if not exhausted:
+                try:
+                    it.next(timeout=poll)
+                except mp.TimeoutError:
+                    pass
+                except StopIteration:
+                    exhausted = True
+            else:
+                _time.sleep(poll)
+            done = {k for k in pending if (cells_dir / f"{k}.json").exists()}
+            if done:
+                pending -= done
+                _collect()
+            bad = _failed()
+            if bad:
+                raise RuntimeError(f"run_cells: {len(bad)} cell(s) failed, see {cells_dir}/<key>.failed: {bad[:5]}")
+            if exhausted and pending:
+                # the pool reports completion but files are missing: wait one more poll for
+                # in-flight renames, then give up loudly rather than spin forever
+                _time.sleep(poll)
+                done = {k for k in pending if (cells_dir / f"{k}.json").exists()}
+                pending -= done
+                if pending:
+                    raise RuntimeError(f"run_cells: pool finished but {len(pending)} cell file(s) missing: {sorted(pending)[:5]}")
+    return _collect()

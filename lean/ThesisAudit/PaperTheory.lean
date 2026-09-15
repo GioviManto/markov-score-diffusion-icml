@@ -26,7 +26,7 @@ No `sorry`, no `axiom`, no `native_decide`.
 
 namespace ThesisAudit
 
-open Polynomial
+open Polynomial Matrix
 
 noncomputable section
 
@@ -183,7 +183,7 @@ theorem paper_he4_moment_difference_functional (E E' : Polynomial ℝ →ₗ[ℝ
     (hE0 : E 1 = 1) (hE'0 : E' 1 = 1) (h2 : E (X ^ 2) = E' (X ^ 2)) :
     E (paperHe 4) - E' (paperHe 4)
       = paperKappa4 (E (X ^ 2)) (E (X ^ 4)) - paperKappa4 (E' (X ^ 2)) (E' (X ^ 4)) := by
-  rw [paper_he4_expectation, paper_he4_expectation, hE0, hE'0, mul_one, mul_one]
+  rw [paper_he4_expectation, paper_he4_expectation, hE0, hE'0, mul_one]
   exact paper_he4_moment_difference _ _ _ _ h2
 
 /-! ## Target 3 — Gaussian Fisher-information rate (THEORY_NOTES §2, B3) -/
@@ -216,13 +216,11 @@ theorem paper_exp_neg_two_tendsto :
 theorem paperSig_tendsto (S0 : Matrix (Fin n) (Fin n) ℝ) :
     Filter.Tendsto (paperSig S0) Filter.atTop (nhds 1) := by
   have h1 := paper_exp_neg_two_tendsto.smul_const S0
-  have h2 := (tendsto_const_nhds.sub paper_exp_neg_two_tendsto).smul_const
+  have h2 := ((tendsto_const_nhds (x := (1 : ℝ))).sub paper_exp_neg_two_tendsto).smul_const
     (1 : Matrix (Fin n) (Fin n) ℝ)
   have h := h1.add h2
-  have hfun : paperSig S0 = fun t =>
-      Real.exp (-2 * t) • S0 + (1 - Real.exp (-2 * t)) • (1 : Matrix (Fin n) (Fin n) ℝ) := rfl
-  rw [hfun]
-  simpa using h
+  simp only [zero_smul, sub_zero, one_smul, zero_add] at h
+  exact h
 
 /-- `Σ_t⁻¹ → I` entrywise as `t → ∞` (matrix inversion is continuous at the identity, whose
 determinant `1` is a unit). -/
@@ -307,7 +305,7 @@ theorem paperSig_isUnit_det (S0 : Matrix (Fin n) (Fin n) ℝ) (hS0 : S0.PosSemid
   have hA : (Real.exp (-2 * t) • S0).PosSemidef := hS0.smul (Real.exp_pos _).le
   have hB : ((1 - Real.exp (-2 * t)) • (1 : Matrix (Fin n) (Fin n) ℝ)).PosDef :=
     Matrix.PosDef.one.smul hpos
-  have hSig : (paperSig S0 t).PosDef := hA.posSemidef_add hB
+  have hSig : (paperSig S0 t).PosDef := Matrix.PosDef.posSemidef_add hA hB
   exact (Matrix.isUnit_iff_isUnit_det _).mp hSig.isUnit
 
 /-! ## Target 4 — scalar score-gap leading coefficient `κ₄/6` (THEORY_NOTES §2, B1) -/

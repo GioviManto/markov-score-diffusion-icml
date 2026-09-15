@@ -44,7 +44,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import apply_overrides, experiment_parser, provenance, select_parts  # noqa: E402
+from common import apply_overrides, experiment_parser, provenance, run_cells, select_parts  # noqa: E402
 from frozen_config import FROZEN  # noqa: E402
 from markov_score.bp_grid import grid_bp_batch, make_grid  # noqa: E402
 from markov_score.noising import alpha_delta  # noqa: E402
@@ -372,21 +372,10 @@ def part_length(cfg, out, workers):
 
 
 def _run(cells, fn, workers, out=None, csv_name=None):
-    """Run cells (serially or in a spawn pool); write the CSV after EVERY cell so a crash
-    loses one cell, not the run. Returns the accumulated rows."""
-    rows = []
-    def _flush():
-        if out is not None and csv_name is not None and rows:
-            write_csv(out / csv_name, rows)
-    if workers <= 1:
-        for c in cells:
-            rows.extend(fn(c)); _flush()
-        return rows
-    import multiprocessing as mp
-    with mp.get_context("spawn").Pool(workers) as pool:
-        for r in pool.imap_unordered(fn, cells):
-            rows.extend(r); _flush()
-    return rows
+    """Run cells serially or in a spawn pool; each cell's rows are written by the worker to
+    out/cells/<csv stem>/<key>.json and the CSV is rebuilt after every completion
+    (experiments/common.py: run_cells; resumable, no result travels through the pool pipe)."""
+    return run_cells(cells, fn, workers, out, csv_name)
 
 
 PARTS = {"screen": part_screen, "confirm": part_confirm, "matched": part_matched, "length": part_length}

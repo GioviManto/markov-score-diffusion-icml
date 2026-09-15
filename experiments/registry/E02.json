@@ -12,7 +12,7 @@
   },
   "predeclared_analysis": "tools/make_capacity_numbers.py: per (M, C) mean +/- s.e. over seeds of the all-site pooled risk; paired per-seed differences C=8 minus C=1 with a 20000-resample seed bootstrap; per-seed ratio LMMSE_true / EM-BP(C); the window head's risk from outputs/frozen/exp_31_confirm_merged/confirm.csv joined on (seed, n_chains, region) after the test-bundle hash is verified equal",
   "frozen_on": "2026-09-15T02:20 BST",
-  "status": "CONFIRMATORY RUNNING (launched 2026-09-15 02:20, 6 workers)",
+  "status": "CONFIRMATORY RUNNING (relaunched 2026-09-15 07:19, 6 workers, per-cell files; the 02:20 launch produced no readable result and was killed at 07:17 -- pool result transport hang, docs/REPRODUCIBILITY.md 'Cell files')",
   "registered": "2026-09-15",
   "frozen_settings": {
     "capacity": {
@@ -70,5 +70,7 @@
     }
   },
   "dev_pass": "seed 10000 partial (outputs/E02a_dev, 7 fits): C=1 at 0.169/0.170/0.168 for M=32/128/512 (= LMMSE floor); C=2 at 0.082/0.061/0.047. Used only to confirm the code path and direction; no design change followed.",
-  "script_sha256": "69044145ecc090ec28d8b0139652ab4850c0ff84b16fffee8f746bda91895aa3"
+  "script_sha256_frozen_2026-09-15T02:20": "69044145ecc090ec28d8b0139652ab4850c0ff84b16fffee8f746bda91895aa3",
+  "script_sha256": "9263179cee39000367b04a35d009ccd55aa394b3895a3fe18db8b1df1e8931b0",
+  "script_change_after_freeze": "2026-09-15 07:15: _run delegates to common.run_cells (per-cell JSON files written by the worker, CSV rebuilt from them, resumable). Protocol, settings, seeds, selection and scoring untouched; only the transport of finished rows to the driver changed."
 }
