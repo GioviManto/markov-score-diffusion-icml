@@ -12,12 +12,17 @@
   \label{fig:family}
 \end{figure}
 Moving the innovation from Laplace (excess kurtosis $+3$) through the Gaussian to the
-platykurtic end at fixed covariance (\cref{fig:family}), the LMMSE floor falls from
-$\famLmmseBone$ to zero at $\beta=2$ and rises again to $\famLmmseBsix$; the
-Gaussian-innovation kernel follows it, and the mixture kernel stays near
-$\famEmeightBone$--$\famEmeightBsix$ throughout. The paired gain of $\ncomp=8$ over
-$\ncomp=1$ is $\famDiffBone$ ($[\famDiffBonelo,\famDiffBonehi]$) at the Laplace end and
-$\famDiffBtwo$ ($[\famDiffBtwolo,\famDiffBtwohi]$) at the Gaussian member, where the
-two kernels are the same estimator up to sampling noise. Non-Gaussian capacity is worth
-what \cref{thm:decay} says it is worth: the fourth-order structure the covariance twin
-leaves behind.
+platykurtic end at fixed $\corr$ and variance (\cref{fig:family}), the LMMSE floor traces a
+V: $\famLmmseBone$ at the Laplace end, exactly zero at $\beta=2$ where the covariance twin
+\emph{is} the truth, and $\famLmmseBsix$ at the platykurtic end. The Gaussian-innovation
+kernel follows that V within its own standard error at every member, which is
+\cref{prop:lmmse} read across a family rather than at a point; the mixture kernel stays
+between $\famEmeightBtwo$ and $\famEmeightBone$ throughout. The paired gain of $\ncomp=8$
+over $\ncomp=1$ is therefore ordered by $\kfour$: $\famDiffBone$
+($[\famDiffBonelo,\famDiffBonehi]$) at Laplace, $\famDiffBoneptwofive$ at
+$\kappa_4=\famKurtValBoneptwofive$, and $\famDiffBsix$ at the platykurtic end. At the
+Gaussian member the gain reverses: $\famDiffBtwo$
+($[\famDiffBtwolo,\famDiffBtwohi]$), a small but unambiguous \emph{loss}, because there is
+no fourth-order structure to buy and the extra components only add estimation variance.
+Non-Gaussian capacity is worth what \cref{thm:decay} says it is worth---the fourth-order
+structure the covariance twin leaves behind---and nothing where the twin leaves nothing.

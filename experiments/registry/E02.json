@@ -97,16 +97,23 @@
  ],
  "frozen_outputs": {
   "outputs/E02a/capacity.csv": "0793d83abca360ae1f02240821170128a5a6c18701573f940ab3cce140257a6f",
-  "outputs/E02a/params_capacity.json": "85563cb87844765bb47764885fb8832fe8ce2e40c2ce1e56117bc536aa43bc59"
+  "outputs/E02a/params_capacity.json": "85563cb87844765bb47764885fb8832fe8ce2e40c2ce1e56117bc536aa43bc59",
+  "outputs/E02b/family.csv": "06bc6e3effbbc9e1ff398dc5acce9b22a2e45cf405458d94cf2a4f5b8cdd7f28",
+  "outputs/E02b/params_family.json": "dc4be6db1dbf80adcfe94b050dee91eaab815a13b8462782b8953e381ca6cb19"
  },
  "frozen_at": {
-  "E02a": "2026-09-15T20:10:42Z"
+  "E02a": "2026-09-15T20:10:42Z",
+  "E02b": "2026-09-15T20:32:59Z"
  },
  "frozen_commit": {
-  "E02a": "afbb080a5a94bfa9317641ec828a111e27a4216b"
+  "E02a": "afbb080a5a94bfa9317641ec828a111e27a4216b",
+  "E02b": "d2ddedf5b45fcddf5f5798fbee41cc9de861f676"
  },
  "frozen_run_commits": {
   "E02a": [
+   "ea0435a"
+  ],
+  "E02b": [
    "ea0435a"
   ]
  }

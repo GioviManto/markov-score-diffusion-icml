@@ -41,9 +41,18 @@ def _sha(p: Path) -> str:
 
 
 def _registry_file(out_id: str) -> Path:
+    """The registry entry that owns an output directory. One entry can own several directories
+    (E02.json registers both the capacity part in outputs/E02a and the family part in
+    outputs/E02b), so a direct map is tried first and then the id with its trailing part
+    letter removed."""
     for rid, d in OUTPUT_DIRS.items():
         if d == out_id and (REG / f"{rid}.json").exists():
             return REG / f"{rid}.json"
+    if (REG / f"{out_id}.json").exists():
+        return REG / f"{out_id}.json"
+    trimmed = out_id.rstrip("abcdefgh")
+    if trimmed != out_id and (REG / f"{trimmed}.json").exists():
+        return REG / f"{trimmed}.json"
     raise SystemExit(f"no registry entry maps to outputs/{out_id}")
 
 
