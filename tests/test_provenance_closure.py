@@ -9,7 +9,7 @@ from provenance_gate import import_closure  # noqa: E402
 
 
 def _names(entry):
-    return {str(Path(p).relative_to(ROOT)) for p in import_closure(ROOT / entry, ROOT)}
+    return {str(p) for p in import_closure(ROOT / entry, ROOT)}  # the closure is returned root-relative
 
 
 def test_e02_closure_reaches_em_and_bp():
