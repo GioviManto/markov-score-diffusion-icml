@@ -23,6 +23,16 @@ The forward process is the coordinatewise Ornstein--Uhlenbeck channel
 \end{equation}
 so $\Var(x_{t,i})=1$ at every $t$ and the noised law $\Pt$ tends to $\normal{0}{\Id}$.
 
+\begin{figure}[t]
+  \centering
+  \input{figures/fig_mechanism}
+  \caption{\textbf{Why the score is exact.} Coordinatewise noising attaches one unary
+  factor per site to the chain prior and adds no edge among the latent variables, so the
+  posterior factor graph is the prior's chain; two message sweeps return the posterior
+  mean, and Tweedie's identity turns it into the score.}
+  \label{fig:mechanism}
+\end{figure}
+
 \paragraph{The score is a posterior mean, and the posterior is a tree.}
 Tweedie's identity gives $\score(\vx,t)=-(\vx-e^{-t}\pmean{\va})/\Dt$, with
 $\pmean{\va}=\E[\va\mid\vx_t=\vx]$ \citep{robbins1956empirical,efron2011tweedie}. Conditioning

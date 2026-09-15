@@ -1,0 +1,36 @@
+%% Figure 1: the mechanism. Clean chain -> coordinatewise OU noising -> posterior stays a
+%% chain (tree) -> two message sweeps -> Tweedie gives the exact score. TikZ, single column.
+\begin{tikzpicture}[
+  x=1cm, y=1cm, font=\footnotesize,
+  lat/.style={circle, draw=black!70, fill=white, minimum size=4.2mm, inner sep=0pt},
+  obs/.style={circle, draw=black!70, fill=black!15, minimum size=4.2mm, inner sep=0pt},
+  fac/.style={rectangle, draw=black!70, fill=black!70, minimum size=1.8mm, inner sep=0pt},
+  ufac/.style={rectangle, draw=black!70, fill=white, minimum size=1.8mm, inner sep=0pt},
+  msg/.style={-{Latex[length=1.6mm]}, thick, draw=blue!70!black},
+  lab/.style={text=black!60, font=\scriptsize},
+]
+  % latent chain
+  \foreach \i in {1,...,5} {
+    \node[lat] (a\i) at (1.15*\i, 1.2) {$a_{\i}$};
+  }
+  \foreach \i/\j in {1/2,2/3,3/4,4/5} {
+    \node[fac] (k\i) at ($(a\i)!0.5!(a\j)$) {};
+    \draw[black!70] (a\i) -- (k\i) -- (a\j);
+  }
+  \node[lab, anchor=east] at (0.55, 1.2) {$\kernel(a_{i}\!\mid\! a_{i-1})$};
+  % unary factors and observations
+  \foreach \i in {1,...,5} {
+    \node[ufac] (l\i) at (1.15*\i, 0.6) {};
+    \node[obs] (x\i) at (1.15*\i, 0.0) {$x_{\i}$};
+    \draw[black!70] (a\i) -- (l\i) -- (x\i);
+  }
+  \node[lab, anchor=east] at (0.55, 0.6) {$\like(x_i\!\mid\! a_i)$};
+  \node[lab, anchor=east] at (0.55, 0.0) {$\vx_t=e^{-t}\va+\sqrt{\Dt}\,\vz$};
+  % messages
+  \draw[msg] ($(a1)+(0,0.42)$) -- node[above, lab, yshift=-1pt] {$\lmsg$} ($(a3)+(-0.25,0.42)$);
+  \draw[msg] ($(a5)+(0,0.42)$) -- node[above, lab, yshift=-1pt] {$\rmsg$} ($(a3)+(0.25,0.42)$);
+  % annotation: no edges added, exact score
+  \node[lab, anchor=north, text width=6.0cm, align=center] at (3.45, -0.45)
+    {unary factors add no edges among the $a_i$: the posterior is the prior's chain, a tree;
+     two sweeps give $\pmean{\va}$, and $\score(\vx,t)=-(\vx-e^{-t}\pmean{\va})/\Dt$ exactly};
+\end{tikzpicture}

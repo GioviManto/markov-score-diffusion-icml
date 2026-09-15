@@ -34,3 +34,5 @@ import ThesisAudit.Ch08a
 import ThesisAudit.Ch08b
 import ThesisAudit.Ch09
 import ThesisAudit.Ch10
+
+import ThesisAudit.PaperTheory
