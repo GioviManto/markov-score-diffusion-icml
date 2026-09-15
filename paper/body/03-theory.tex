@@ -40,16 +40,16 @@ Let $\Pz$ have finite eighth moments and covariance $\Sig_0$, let $\Sgauss$ be t
 of its covariance twin, and let $\lmax=\lmax(\Sig_0)$. As $t\to\infty$,
 \begin{align}
   \E_{\Pt}\lVert\score-\Sgauss\rVert^2
-   &= \tfrac{1}{6}\Frob{\kfour}^2\,e^{-8t}\bigl(1+\epsilon_t\bigr),
+   &= \tfrac{1}{6}\Frob{\kfour}^2\,e^{-8t}(1+\epsilon_t),
   \label{eq:scoregap}\\
-  I_t(\theta)&= \tfrac12\Frob{\partial_\theta\Sig_0}^2\,e^{-4t}\bigl(1+\epsilon_t\bigr)
-  \ \ \text{if }\partial_\theta\Sig_0\neq0,
+  I_t(\theta)&= \tfrac12\Frob{\partial_\theta\Sig_0}^2\,e^{-4t}(1+\epsilon_t)
+  \quad\text{if }\partial_\theta\Sig_0\neq0,
   \label{eq:info2}\\
-  I_t(\theta)&= \tfrac1{24}\Frob{\partial_\theta\kfour}^2\,e^{-8t}\bigl(1+\epsilon_t\bigr)
-  \ \ \text{if }\partial_\theta\Sig_0=0,\ \partial_\theta\kfour\neq0,
+  I_t(\theta)&= \tfrac1{24}\Frob{\partial_\theta\kfour}^2\,e^{-8t}(1+\epsilon_t)
+  \quad\text{if }\partial_\theta\Sig_0=0,
   \label{eq:info4}
 \end{align}
-with $\epsilon_t=O(e^{-2t}\lmax)$,
+the last with $\partial_\theta\kfour\neq0$, and with $\epsilon_t=O(e^{-2t}\lmax)$,
 where $I_t(\theta)=\E_{\Pt}[(\partial_\theta\log\Pt)^2]$ is the Fisher information one
 noised sequence carries about a parameter $\theta$ of $\Pz$, and $\Frob{\cdot}$ is the
 Frobenius norm of the matrix or symmetric 4-tensor. For a Gaussian chain

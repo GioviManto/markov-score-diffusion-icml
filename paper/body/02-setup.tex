@@ -4,8 +4,8 @@
 \paragraph{Data and channel.}
 A clean sequence $\va\in\Reals^{\nsites}$ is a first-order Markov chain,
 \begin{equation}
-  \Pz(\va)=\mu(a_1)\prod_{i=2}^{\nsites}\kernel(a_i\mid a_{i-1}),\quad
-  \kernel(a'\mid a)=\innov(a'-\corr a),
+  \Pz(\va)=\mu(a_1)\prod_{i=2}^{\nsites}\kernel(a_i\mid a_{i-1}),\qquad
+  \kernel(a'\mid a)=\innov(a'\!-\!\corr a),
   \label{eq:prior}
 \end{equation}
 with $a_1\sim\normal{0}{1}$, $|\corr|<1$, and an innovation density $\innov$ of mean zero
@@ -42,8 +42,8 @@ the latent variables, the posterior factor graph is the prior's chain, and sum-p
 on it is exact \citep{pearl1988probabilistic,kschischang2001factor}. Two message sweeps,
 \begin{equation}
 \begin{aligned}
-  \lmsg_i(a_i)&\propto\!\int\!\kernel(a_i\mid a_{i-1})\,\like(x_{i-1}\mid a_{i-1})\,\lmsg_{i-1}(a_{i-1})\dd a_{i-1},\\
-  \rmsg_i(a_i)&\propto\!\int\!\kernel(a_{i+1}\mid a_i)\,\like(x_{i+1}\mid a_{i+1})\,\rmsg_{i+1}(a_{i+1})\dd a_{i+1},
+  \lmsg_i(a)&\propto\!\int\!\kernel(a\mid a')\,\like(x_{i-1}\mid a')\,\lmsg_{i-1}(a')\dd a',\\
+  \rmsg_i(a)&\propto\!\int\!\kernel(a''\mid a)\,\like(x_{i+1}\mid a'')\,\rmsg_{i+1}(a'')\dd a'',
 \end{aligned}
 \label{eq:bp}
 \end{equation}
