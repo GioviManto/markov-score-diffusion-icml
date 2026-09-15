@@ -234,6 +234,10 @@ def _family_cell(args):
     base = dict(seed=seed, n_chains=n, beta=beta, excess_kurtosis=generalized_gaussian_excess_kurtosis(beta),
                 val_bundle=_bundle_hash(val), test_bundle=_bundle_hash(test))
     rows = _oracle_rows(test, grid, weights, sigma0, base)
+    # uniform row schema: the oracle rows carry the Hellinger keys as NaN
+    hell_keys = [k for k, v in transition_hellinger(log_k, log_k, grid, weights).items() if np.isscalar(v)]
+    for r in rows:
+        r.update({k: np.nan for k in hell_keys})
     tags = {"init": ("e02-fam-init", beta, seed), "split": ("e02-fam-split", beta, seed), "noise": ("e02-fam-noise", beta, seed)}
     for C in cfg["family_components"]:
         r, kb = _em_fit_and_score(cfg, C, A, val, test, grid, weights, tags, base)
