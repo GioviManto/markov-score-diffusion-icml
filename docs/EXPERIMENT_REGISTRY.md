@@ -13,8 +13,8 @@ not re-registered; their status there is authoritative.
 
 | id | script | hypothesis | config | seeds | status | outputs | commit |
 |---|---|---|---|---|---|---|---|
-| E01 | `experiments/e01_information_decay.py` | H1 (theory rates, crossover) | `experiments/registry/E01.json` | deterministic (`gauss`); replicates `rng_for("e01-shape", beta, rep)`, rep 0–7; closure reps 0–3 | RUNNING (15 Sep) | `outputs/E01/` | — |
-| E02a | `experiments/e02_capacity.py` | H2 (mixture capacity on the headline task) | to freeze after a dev pass | dev 10000–10003; confirmatory 0–15 | PRE-REGISTERED (dev pass first) | `outputs/E02a/` | — |
+| E01 | `experiments/e01_information_decay.py` | H1 (theory rates, crossover) | `experiments/registry/E01.json` | deterministic (`gauss`); replicates `rng_for("e01-shape", beta, rep)`, rep 0–7; closure reps 0–3 | DONE (15 Sep; `tools/make_theory_numbers.py`, `tools/make_fig_theory.py`) | `outputs/E01/` | `8091a2d` (outputs), script at `e179391` |
+| E02a | `experiments/e02_capacity.py` | H2 (mixture capacity on the headline task) | to freeze after a dev pass | dev 10000–10003; confirmatory 0–15 | DEV PASS RUNNING (15 Sep, `outputs/E02a_dev/`) | `outputs/E02a/` | — |
 | E02b | `experiments/e02_capacity.py --only family` | H2 (tunable non-Gaussian family) | idem | idem | PRE-REGISTERED | `outputs/E02b/` | — |
 | E06 | `experiments/e06_learning_through_noise.py` | H6 (RMSE vs observation level) | to freeze | 0–15 | PRE-REGISTERED | `outputs/E06/` | — |
 
