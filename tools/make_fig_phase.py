@@ -51,11 +51,12 @@ def main() -> int:
     for i, rho in enumerate(rhos):
         d = per[(per.rho == rho) & (per.family == "laplace")].sort_values("t")
         col = fs.BLUE_RAMP[min(i, len(fs.BLUE_RAMP) - 1)]
-        ax.plot(d.t, d.rel_lmmse, color=col, lw=1.3)
+        ax.plot(d.t, d.rel_lmmse, color=col, lw=1.3, label=f"ρ = {rho:g}")
         ts = float(pooled[(pooled.rho == rho) & (pooled.family == "laplace")].t_star.iloc[0])
         if ts > 0:
             y = np.interp(ts, d.t, d.rel_lmmse); ax.plot([ts], [y], marker="|", ms=6, mew=1.1, color=col)
-        ax.text(d.t.iloc[-1] * 1.08, d.rel_lmmse.iloc[-1], f"ρ = {rho:g}", color=col, fontsize=7, va="center")
+    ax.legend(loc="lower left", fontsize=6.5, frameon=False, handlelength=1.6, borderaxespad=0.2)
+    ax.text(0.06, 2e-5, "Laplace chain; ticks: $t_*(\\rho)$", fontsize=6.5, color=fs.INK2)
     ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlabel("diffusion time  $t$"); ax.set_ylabel("LMMSE floor, per level")
     ax.set_xticks([0.05, 0.1, 0.3, 1, 3]); ax.set_xticklabels(["0.05", "0.1", "0.3", "1", "3"])
     from matplotlib.ticker import NullFormatter
@@ -67,11 +68,11 @@ def main() -> int:
         d = pooled[pooled.family == key].sort_values("rho")
         if len(d) == 0:
             continue
-        ax.plot(d.rho, d.rel_lmmse, color=col, ls=ls, marker=mk, ms=3, lw=1.3, mec=col, mfc="white" if mk in ("s", "D") else col)
-        ax.text(d.rho.iloc[-1] + 0.02, d.rel_lmmse.iloc[-1], lab, color=col, fontsize=7, va="center")
+        ax.plot(d.rho, d.rel_lmmse, color=col, ls=ls, marker=mk, ms=3, lw=1.3, mec=col, mfc="white" if mk in ("s", "D") else col, label=lab)
     d = pooled[pooled.family == "laplace"].sort_values("rho")
-    ax.plot(d.rho, d.rel_iso, color=fs.MUTED, ls=":", lw=1.0); ax.text(d.rho.iloc[-1] + 0.02, d.rel_iso.iloc[-1], "isotropic", color=fs.MUTED, fontsize=7, va="center")
-    ax.set_xlabel("correlation  $\\rho$"); ax.set_ylabel("pooled floor"); ax.set_xlim(-0.02, 1.25)
+    ax.plot(d.rho, d.rel_iso, color=fs.MUTED, ls=":", lw=1.0, label="isotropic (any family)")
+    ax.legend(loc="upper left", fontsize=6.5, frameon=False, handlelength=2.0, borderaxespad=0.2)
+    ax.set_xlabel("correlation  $\\rho$"); ax.set_ylabel("pooled LMMSE floor"); ax.set_xlim(-0.03, 1.0)
     fs.panel_label(ax, "(b)", x=-0.3)
     fig.savefig(figdir / "fig_phase.pdf"); fig.savefig(figdir / "fig_phase.png", dpi=220)
     print(pooled.to_string(index=False, float_format=lambda x: f"{x:.3f}")); print("wrote", figdir / "fig_phase.pdf")
