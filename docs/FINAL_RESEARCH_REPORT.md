@@ -1,4 +1,4 @@
-# Final research report (living document; last updated 15 September 2026, 06:50)
+# Final research report (living document; last updated 15 September 2026, 08:10)
 
 This file is rewritten at the end of the project. Until then it records, milestone by
 milestone, what changed scientifically, so that an interruption never loses the
@@ -30,15 +30,15 @@ learning consequences — not the law itself.
 | Shape information slope → −8 for the smooth members of the generalised-Gaussian family (−7.94 at β = 2, −8.01 at β = 3); Laplace member floors at t ≈ 2.5 | done | `outputs/E01/shape_information.csv` |
 | Closure-gap constant ‖κ₄‖²_F/6 reproduced to 1–6% on the Laplace and bimodal chains; Student-t(5) departs (infinite sixth moment); uniform reaches double precision near t = 3.5 | done | `outputs/E01/closure_gap.csv` |
 | The oracle ladder: LMMSE floor 0.168 (Laplace, pooled); the archival MLP at M = 4096 sits on it; the archival EM–BP far below | done | `AUDIT_ORACLE_LADDER.md`, `sections/oracle-numbers.tex` |
-| Capacity on the headline task under identical checkpoint selection (C ∈ {1,2,4,8}, 16 seeds) | *running* (E02a; first cells: C = 1 = floor at every M; C = 2 already 2× below at M = 32) | `outputs/E02a/` |
+| Capacity on the headline task under identical checkpoint selection (C ∈ {1,2,4,8}, 16 seeds) | *running* (E02a relaunched 07:58 after two engineering false starts, no result used from them; dev pass: C = 1 = floor at every M, C = 2 already 2× below at M = 32) | `outputs/E02a/` |
 | Learning through noise: RMSE(ρ̂) ∝ e^{2t}, RMSE(κ̂₄) ∝ e^{4t} | *queued* (E06) | — |
 | Tunable non-Gaussian family: C = 8 vs C = 1 gap tracks the exact closure gap | *queued* (E02b) | — |
-| Fair baselines (six architectures, one recipe), information-matched arm, length extrapolation | *pending* (E03) | — |
+| Fair baselines (six architectures, one recipe), information-matched arm, length extrapolation | *screen running* (E03, 272 configurations on 2 workers) | `outputs/E03/` |
 | Generation with paired noise and the exact-evidence log-likelihood metric | *pending* (E05) | — |
 | Refinement on the actual fitted models | *pending* (E04) | — |
 | Phase diagram of the LMMSE floor over ρ: the pooled floor falls from 0.29 (ρ = 0) to 0.085 (ρ = 0.95) on the Laplace chain; families order by κ₄ at every ρ | done | `outputs/E07/ladder.csv`, `paper/figures/fig_phase.pdf` |
 | Misspecification against a locality-aware baseline | *pending* (E08) | — |
-| Lean: Mehler identity n ≤ 4, κ₄ difference, Gaussian information constant, scalar score-gap coefficient | *in progress* (`lean/ThesisAudit/PaperTheory.lean`) | — |
+| Lean: Mehler identity n ≤ 4, κ₄ difference, Gaussian information constant ½‖∂Σ₀‖²_F, scalar score-gap coefficient κ₄/6 | done (green build 15 Sep; algebra only, remainders informal) | `lean/ThesisAudit/PaperTheory.lean`, `lean/README.md` §2 |
 
 ## 3. Original claims: survived, weakened, strengthened, removed
 
