@@ -36,7 +36,7 @@ learning consequences — not the law itself.
 | Fair baselines (six architectures, one recipe), information-matched arm, length extrapolation | *pending* (E03) | — |
 | Generation with paired noise and the exact-evidence log-likelihood metric | *pending* (E05) | — |
 | Refinement on the actual fitted models | *pending* (E04) | — |
-| Phase diagram of the LMMSE floor over ρ | *pending* (E07) | — |
+| Phase diagram of the LMMSE floor over ρ: the pooled floor falls from 0.29 (ρ = 0) to 0.085 (ρ = 0.95) on the Laplace chain; families order by κ₄ at every ρ | done | `outputs/E07/ladder.csv`, `paper/figures/fig_phase.pdf` |
 | Misspecification against a locality-aware baseline | *pending* (E08) | — |
 | Lean: Mehler identity n ≤ 4, κ₄ difference, Gaussian information constant, scalar score-gap coefficient | *in progress* (`lean/ThesisAudit/PaperTheory.lean`) | — |
 
