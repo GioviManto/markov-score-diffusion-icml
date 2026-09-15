@@ -1,30 +1,65 @@
 \section{Related work}
 \label{sec:related}
 
-\needsdata{Rewritten from docs/RELATED\_WORK\_SWEEP.md once the sweep is verified.}
-Diffusion and score matching are due to \citet{sohl2015deep,ho2020denoising,song2021scorebased} and
-\citet{hyvarinen2005estimation,vincent2011connection}; the score--posterior-mean identity is Tweedie's
-\citep{robbins1956empirical,efron2011tweedie}. Solvable settings and the statistical mechanics of
-diffusion \citep{biroli2023generative,biroli2024dynamical,cui2025solvable,raya2023spontaneous,ghio2024sampling} analyse memorisation and
-speciation with targets that are Gaussian or mixture-like; hierarchical models supply
-tractable non-Gaussian families \citep{sclocchi2025phase} on which U-Nets and transformers
-implement belief propagation \citep{mei2024unets,garnierbrun2024transformers}. Our chain is the
-degenerate tree of depth $\nsites$, and our estimator is classical: sum-product on a
-chain is forward--backward \citep{baum1970,rabiner1989tutorial}, reducing to Kalman--RTS in the
-Gaussian case; grid quadrature is Kitagawa's smoother \citep{kitagawa1987}; Fisher's
-identity and EM are \citet{dempster1977maximum,cappe2005}. \Cref{thm:decay} belongs to the low-SNR literature. In Gaussian channels the
-mutual information and the MMSE expand in the SNR with fourth-order statistics entering
-at second order \citep{prelov2004second,guo2005mutual,dytso2023meta}; for latent-variable
+\paragraph{Solvable diffusion and the Gaussian part of the score.}
+Diffusion and score matching are due to \citet{sohl2015deep,ho2020denoising,song2021scorebased}
+and \citet{hyvarinen2005estimation,vincent2011connection}; the score--posterior-mean identity is
+Tweedie's \citep{robbins1956empirical,efron2011tweedie}. Exactly solvable targets have been
+Gaussian \citep{pierret2024gaussian}, mean-field or mixture-like
+\citep{biroli2023generative,biroli2024dynamical,raya2023spontaneous,cui2025solvable,ghio2024sampling},
+or hierarchical with discrete leaves \citep{sclocchi2025phase,sclocchi2025probing}, on which
+U-Nets and transformers implement belief propagation
+\citep{mei2024unets,mei2023deep,garnierbrun2024transformers,favero2025compositional}. A recurrent
+empirical observation is that learned scores are dominated by their Gaussian part over a wide
+noise range \citep{wang2024gaussian,li2024hidden,kadkhodaie2024generalization,wang2026rmt}, and
+that downstream statistics of generated data depend on the first two moments alone
+\citep{ghane2025universality}. Our chain is the degenerate tree of depth $\nsites$ with
+continuous non-Gaussian states; the Gaussian part of its score is the Kalman smoother of the
+covariance twin (\cref{prop:lmmse}), and \cref{eq:scoregap} is the sharp rate, with constant and
+crossover, behind the dominance those papers report. Kamb and Ganguli's local-score machines
+\citep{kamb2024analytic} are the analogous closed form for convolutional image models; here the
+closed form is exact.
+
+\paragraph{What survives noise: the low-SNR literature.}
+\Cref{thm:decay} belongs to the low-SNR expansions of estimation theory. In Gaussian channels the
+mutual information and the MMSE expand in the SNR with fourth-order statistics entering at second
+order \citep{prelov2004second,guo2005mutual,dytso2023meta,kong2023information}; for latent-variable
 models the log-likelihood expands with the order-$k$ term matching $k$-th moments
-\citep{katsevich2023likelihood}, which gives the $\sigma^{2k}$ sample complexity of
-multireference alignment and orbit recovery \citep{perry2019sample,bandeira2023estimation}
-and, most closely, the layered Fisher-information geometry of \citet{balanov2026gmm}.
-\citet{aarts2025cumulants} write the forward-process cumulant attenuation $e^{-nt}$ and
-show that score networks regenerate the cumulants. \citet{wang2024gaussian} and
-\citet{li2024hidden} observe that learned scores are dominated by their Gaussian part
-over a wider noise range than a first-order bound suggests; \cref{eq:scoregap} is the
-sharp rate behind that observation for a non-Gaussian chain, where the Gaussian part is
-exactly the Kalman smoother. New here are the score-level statement with its constant
-and crossover, the Markov (dependent) rather than i.i.d.\ latent structure, the exact
-verification, and the learning consequences with an exact E-step rather than moment
-matching.
+\citep{katsevich2023likelihood}, which yields the $\sigma^{2k}$ sample complexity of multireference
+alignment and orbit recovery \citep{perry2019sample,bandeira2023estimation} and, most closely, the
+layered Fisher-information geometry of \citet{balanov2026gmm}, where information about directions
+first identifiable at moment order $k$ scales as $\mathrm{SNR}^k$. Under the OU channel
+$\mathrm{SNR}_t\simeq e^{-2t}$, so that statement and our $e^{-2mt}$ are the same law in different
+clocks. \citet{aarts2025cumulants} write the forward-process cumulant attenuation $e^{-nt}$ and
+show that score networks regenerate the cumulants. What is not in that literature, and is what
+this paper adds, is the score-level statement for a Markov (dependent) rather than i.i.d.\ latent
+structure, its constant $\tfrac16\|\kappa_4\|_F^2$ and crossover $\tstar$, the exact verification
+on a chain, and the learning consequences with an exact E-step. Speciation and collapse times
+\citep{biroli2024dynamical,achilli2026speciation} and the information-restricted Bayesian analysis
+of \citet{hunt2026exact} are second-moment phenomena in this vocabulary; heavy-tailed forward
+processes \citep{pandey2024heavy,tang2026tweedie} change the channel and therefore the ladder.
+
+\paragraph{Learning from noisy data only.}
+Ambient diffusion learns a clean distribution from corrupted samples by predicting a further
+corruption \citep{daras2023ambient,daras2024consistent}; EM with diffusion posterior sampling in
+the E-step \citep{rozet2024learning,bai2024em} and SURE-type surrogates \citep{kawar2024gsure}
+address the same problem nonparametrically. Our learner is parametric and its E-step is exact,
+so the question changes from ``can the clean law be recovered'' to ``how fast is it lost'', which
+\cref{thm:decay} answers order by order. The estimator is classical: sum-product on a chain is
+forward--backward \citep{baum1970,rabiner1989tutorial}, grid quadrature is Kitagawa's smoother
+\citep{kitagawa1987}, Fisher's identity and EM are \citet{dempster1977maximum,cappe2005}, and the
+Gaussian special case is the Shumway--Stoffer algorithm \citep{shumway1982em}. Consistency of the
+maximum-likelihood estimator for general-state hidden Markov models is \citet{douc2011consistency};
+the identifiability of a Markov signal observed through independent noise, which is what makes
+the one-view protocol of \cref{sec:learning} well posed, is \citet{gassiat2020identifiability}.
+Spectral and moment methods for hidden Markov models \citep{hsu2012spectral} are the natural
+high-noise competitor that \cref{cor:samples} suggests.
+
+\paragraph{Sequence denoisers and length.}
+The baselines of \cref{sec:experiments} follow the standard sequence architectures
+\citep{bai2018tcn,vaswani2017attention,ronneberger2015unet}; length extrapolation of
+attention-based models depends on the positional encoding
+\citep{press2022alibi,kazemnejad2023positional}, and sequence diffusion models that generalise
+past the training horizon do so by construction \citep{chen2024diffusionforcing}. Here the
+reference at every length is the exact score, so length generalisation is measured rather than
+assumed.

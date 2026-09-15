@@ -2,7 +2,7 @@
 
 This directory holds a machine-checked audit of the display mathematics of the thesis
 *Markov Score Diffusion*, carried out in Lean 4 (`leanprover/lean4:v4.33.0`) against `mathlib`.
-Twelve modules under `ThesisAudit/`, per-formula verdicts in `AUDIT_RESULTS/*.json`, findings in
+Thirteen modules under `ThesisAudit/` (twelve audit modules plus `PaperTheory.lean`, §2), per-formula verdicts in `AUDIT_RESULTS/*.json`, findings in
 [`AUDIT_REPORT.md`](AUDIT_REPORT.md) and [`PROSE_FINDINGS.md`](PROSE_FINDINGS.md).
 
 The audit predates the current manuscript. Its purpose here is no longer the thesis but the paper:
@@ -81,7 +81,31 @@ vector parameter and the `Ξ` pairing.
 
 ---
 
-## 2. Planned targets for the new theory
+## 2. Targets for the new theory — status
+
+**Module `ThesisAudit/PaperTheory.lean` (15 September 2026): builds green under `lake build
+ThesisAudit.PaperTheory` on `leanprover/lean4:v4.33.0` + Mathlib `v4.33.0`; no `sorry`, no
+`axiom`, no `native_decide`; 31 declarations.** Every statement is algebraic: hypotheses are
+numbers (moments, coefficients, matrix entries) and ℝ-linear functionals on `ℝ[X]`, never
+measures. The measure-level instantiation (that `N(0,1)` has moments `0,1,0,3`; that the Fisher
+information of a Gaussian family is the trace formula; that the score of the actual law has the
+claimed expansion) and every `O(·)` remainder of `docs/THEORY_NOTES.md` §2 remain **informal**,
+by design (§6 there). Line numbers are of the `theorem` keyword.
+
+| target | Lean theorem (`PaperTheory.lean:line`) | hypotheses in the Lean statement | what it checks | what stays informal |
+|---|---|---|---|---|
+| 1. Mehler identity, `n ≤ 4` (Theorem A, scalar) | `paper_mehler_he_n` (:128); explicit forms `paperHe_zero`…`paperHe_four` (:39–49) proved from `Polynomial.hermite_succ` | `E : ℝ[X] →ₗ[ℝ] ℝ` with `E 1 = 1`, `E X = 0`, `E X² = 1`, `E X³ = 0`, `E X⁴ = 3`; `β² = 1 − α²`; `n ≤ 4` | `E[He_n(αa + βz)] = αⁿ He_n(a)` for `n = 0..4`, i.e. the attenuation `e^{−nt}` of degree-`n` modes with `α = e^{−t}` | that a Gaussian `z` satisfies the four moment hypotheses (Mathlib has no `E z⁴ = 3`); general `n` (needs the generating function, absent from Mathlib); the chain (tensor) form |
+| 2. Degree-4 moments differ by `κ₄` | `paper_he4_moment_difference` (:171), `paper_he4_moment_difference_functional` (:181), via `paper_he4_expectation` (:154) | two laws as moment pairs `(m₂,m₄)`, `(m₂',m₄')` with `m₂ = m₂'` (functional form: `E 1 = E' 1 = 1`, `E X² = E' X²`); `κ₄ := m₄ − 3m₂²` defined locally (`paperKappa4`, :149) | `E He₄ − E' He₄ = κ₄ − κ₄'` under variance matching | the tensor version over sites (same identity index by index; not written) |
+| 3. Gaussian Fisher-information rate (B3) | `paper_gaussian_fisher_rate` (:268), `paper_gaussian_fisher_rate_frob` (:289); `paper_exp_mul_fisher` (:238) exact factorisation; `paperSig_inv_tendsto` (:226); `paperSig_isUnit_det` (:298) | `Σ_t := e^{−2t}Σ₀ + (1−e^{−2t})I` (`paperSig`, :194), `I_t := ½ tr(Σ_t⁻¹ (e^{−2t}dS) Σ_t⁻¹ (e^{−2t}dS))` (`paperFisher`, :201) with Mathlib's total `Matrix.inv`; `dSᵀ = dS`; any `n`, any real `Σ₀` for the limit; `Σ₀ ⪰ 0`, `t > 0` for invertibility | `e^{4t} I_t → ½ tr(dSᵀ dS) = ½ ‖dS‖²_F` (`ch05b_frobSq`) as `t → ∞`; `e^{4t} I_t = ½ tr(Σ_t⁻¹ dS Σ_t⁻¹ dS)` exactly; `Σ_t` invertible on `t > 0` when `Σ₀ ⪰ 0` | that `I_t` *is* the Fisher information of the Gaussian family (the trace formula is taken as the definition); the rate of approach (`t_*`) is not bounded |
+| 4. Scalar score-gap coefficient `κ₄/6` (B1) | `paper_scalar_score_gap_coefficient` (:348), `_he3` (:354), `paper_scalar_score_gap_deriv` (:362), via `paper_Lam4diff_hasDerivAt` (:323) | `Λ₄ − Λ₄^G` encoded as the explicit polynomial `paperLam4diff β k4 s` (:318) in the graded variables `s, β`; unit variance | `∂_s(Λ₄ − Λ₄^G)` at `s = αx`, `β = α²` equals `(κ₄/6) α³ He₃(x)` | that this polynomial is the fourth-order truncation of the damped CGF of the actual law (the graded expansion and its remainder, THEORY_NOTES §2) |
+| 5. Proposition 1 projection step | not started | — | — | the projection operator `P_G` and the moments-only clause (see §1 and the plan below) |
+
+**Reading.** Targets 1–4 check the four constants a reader is most likely to doubt (`e^{−nt}` per
+degree, `κ₄` as the degree-4 difference, the `½` in the Fisher rate, the `1/6` in the score gap)
+and nothing about convergence of the expansions. The paper's Theorem 2 is therefore *not*
+machine-verified; its algebraic skeleton is.
+
+### The original plan (retained)
 
 These are the five targets of `docs/THEORY_NOTES.md` §6. The rule stated there holds: **do not
 formalise the remainder bounds of B1/B2.** They are analysis, not algebra, and the value of Lean

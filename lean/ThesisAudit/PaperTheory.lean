@@ -21,7 +21,7 @@ The Hermite polynomials are Mathlib's `Polynomial.hermite` (probabilists' conven
 from `Polynomial.hermite_succ` (`paperHe_zero` … `paperHe_four`), so nothing here depends
 on a hand-typed polynomial.
 
-No `sorry`, no `axiom`, no `native_decide`.
+No sorry, no axiom, no native-decide (the CI grep forbids the three tokens).
 -/
 
 namespace ThesisAudit
@@ -87,9 +87,8 @@ theorem paperHe_two_comp (u β : ℝ) :
     (paperHe 2).comp (C u + C β * X)
       = C (u ^ 2 - 1) + C (2 * u * β) * X + C (β ^ 2) * X ^ 2 + C 0 * X ^ 3 + C 0 * X ^ 4 := by
   rw [paperHe_two]
-  simp only [add_comp, sub_comp, mul_comp, pow_comp, X_comp, C_comp, one_comp, ofNat_comp,
-    Nat.cast_ofNat]
-  simp only [map_add, map_sub, map_mul, map_pow, map_ofNat, map_zero, map_one]
+  simp only [sub_comp, pow_comp, X_comp, one_comp]
+  simp only [map_sub, map_mul, map_pow, map_ofNat, map_zero, map_one]
   ring
 
 theorem paperHe_three_comp (u β : ℝ) :
@@ -97,9 +96,9 @@ theorem paperHe_three_comp (u β : ℝ) :
       = C (u ^ 3 - 3 * u) + C (3 * u ^ 2 * β - 3 * β) * X + C (3 * u * β ^ 2) * X ^ 2
         + C (β ^ 3) * X ^ 3 + C 0 * X ^ 4 := by
   rw [paperHe_three]
-  simp only [add_comp, sub_comp, mul_comp, pow_comp, X_comp, C_comp, one_comp, ofNat_comp,
+  simp only [sub_comp, mul_comp, pow_comp, X_comp, ofNat_comp,
     Nat.cast_ofNat]
-  simp only [map_add, map_sub, map_mul, map_pow, map_ofNat, map_zero, map_one]
+  simp only [map_sub, map_mul, map_pow, map_ofNat, map_zero]
   ring
 
 theorem paperHe_four_comp (u β : ℝ) :
@@ -108,9 +107,9 @@ theorem paperHe_four_comp (u β : ℝ) :
         + C (6 * u ^ 2 * β ^ 2 - 6 * β ^ 2) * X ^ 2 + C (4 * u * β ^ 3) * X ^ 3
         + C (β ^ 4) * X ^ 4 := by
   rw [paperHe_four]
-  simp only [add_comp, sub_comp, mul_comp, pow_comp, X_comp, C_comp, one_comp, ofNat_comp,
+  simp only [add_comp, sub_comp, mul_comp, pow_comp, X_comp, ofNat_comp,
     Nat.cast_ofNat]
-  simp only [map_add, map_sub, map_mul, map_pow, map_ofNat, map_zero, map_one]
+  simp only [map_add, map_sub, map_mul, map_pow, map_ofNat]
   ring
 
 /-- **Target 1 (THEORY_NOTES §1, Theorem A; scalar Mehler identity, `n ≤ 4`).**

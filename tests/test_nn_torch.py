@@ -57,3 +57,21 @@ def test_ism_exact_and_hutchinson_agree_in_expectation():
     exact = float(nt.ism_loss(m, x, t, al, de, cfg_e, rng))
     hut = np.mean([float(nt.ism_loss(m, x, t, al, de, cfg_h, np.random.default_rng(k))) for k in range(200)])
     assert abs(hut - exact) < 0.05 * max(1.0, abs(exact))
+
+
+def test_fastconv1d_matches_native_conv1d():
+    import torch
+    import torch.nn.functional as F
+    from markov_score.nn_torch import FastConv1d
+    torch.manual_seed(0)
+    for (cin, cout, k, pad, dil) in [(1, 64, 5, 2, 1), (64, 64, 3, 1, 1), (64, 64, 3, 4, 4), (64, 1, 1, 0, 1), (32, 16, 3, 1, 1)]:
+        m = FastConv1d(cin, cout, k, padding=pad, dilation=dil)
+        x = torch.randn(7, cin, 32)
+        ref = F.conv1d(x, m.weight, m.bias, padding=pad, dilation=dil)
+        assert torch.allclose(m(x), ref, atol=1e-5, rtol=1e-5), (cin, cout, k, pad, dil)
+        # gradients agree too
+        x.requires_grad_(True)
+        (m(x) ** 2).sum().backward()
+        g1 = x.grad.clone(); x.grad = None
+        (F.conv1d(x, m.weight, m.bias, padding=pad, dilation=dil) ** 2).sum().backward()
+        assert torch.allclose(g1, x.grad, atol=1e-4, rtol=1e-4)

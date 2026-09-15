@@ -12,7 +12,7 @@ built in its own right below.
 All twelve chapter modules build cleanly and are imported here, so
 `lake build ThesisAudit` is a single green-or-red signal for the audited
 portion of the thesis.  The audit contains no `sorry`, no `axiom` and no
-`native_decide`.
+native-decide.
 
 A green build means Lean accepted these proofs.  It does NOT mean every
 formalisation captures the full content of the thesis's prose: see

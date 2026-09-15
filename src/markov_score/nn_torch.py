@@ -62,6 +62,38 @@ class TimeFeatures(nn.Module):
         return torch.cat([torch.log(t)[:, None], torch.sin(u), torch.cos(u)], dim=1)  # (B, dim)
 
 
+# --------------------------------------------------------------------------- fast 1-D convolution
+
+
+class FastConv1d(nn.Module):
+    """`nn.Conv1d` semantics (weight (O, C, K), bias (O,), zero padding, dilation, stride 1)
+    computed as gather + matmul. On this CPU build of PyTorch (no oneDNN on arm64) the
+    native `conv1d` kernel is 10–100× slower than a matmul of the same size for these
+    shapes (64 channels, 32 sites); the two are equal to floating-point round-off
+    (`tests/test_nn_torch.py`). Parameters and initialisation are `nn.Conv1d`'s."""
+
+    def __init__(self, in_ch: int, out_ch: int, kernel_size: int, padding: int = 0, dilation: int = 1, bias: bool = True):
+        super().__init__()
+        ref = nn.Conv1d(in_ch, out_ch, kernel_size, padding=padding, dilation=dilation, bias=bias)
+        self.weight = ref.weight
+        self.bias = ref.bias
+        self.in_ch, self.out_ch, self.k, self.pad, self.dil = in_ch, out_ch, kernel_size, padding, dilation
+
+    def forward(self, x):  # x: (B, C, L) -> (B, O, L_out)
+        B, C, L = x.shape
+        if self.k == 1 and self.pad == 0:
+            y = torch.einsum("bcl,oc->bol", x, self.weight[:, :, 0])
+        else:
+            xp = F.pad(x, (self.pad, self.pad)) if self.pad else x
+            L_out = xp.shape[-1] - self.dil * (self.k - 1)
+            idx = torch.arange(L_out, device=x.device)[:, None] + self.dil * torch.arange(self.k, device=x.device)[None, :]
+            cols = xp[:, :, idx]                                            # (B, C, L_out, K)
+            y = torch.einsum("bclk,ock->bol", cols, self.weight)
+        if self.bias is not None:
+            y = y + self.bias[None, :, None]
+        return y
+
+
 # --------------------------------------------------------------------------- architectures
 
 
@@ -90,9 +122,9 @@ class WindowHead(nn.Module):
         super().__init__()
         self.tf = TimeFeatures(n_freq)
         self.radius = radius
-        self.conv = nn.Conv1d(1, width, kernel_size=2 * radius + 1, padding=radius)
+        self.conv = FastConv1d(1, width, 2 * radius + 1, padding=radius)
         self.tproj = nn.Linear(self.tf.dim, width)
-        self.mlp = nn.Sequential(nn.Tanh(), nn.Conv1d(width, width, 1), nn.Tanh(), nn.Conv1d(width, 1, 1))
+        self.mlp = nn.Sequential(nn.Tanh(), FastConv1d(width, width, 1), nn.Tanh(), FastConv1d(width, 1, 1))
         self.length_agnostic = True
 
     def forward(self, x, t):
@@ -106,11 +138,11 @@ class TCN(nn.Module):
     def __init__(self, channels: int = 64, dilations=(1, 2, 4, 8), n_freq: int = 4):
         super().__init__()
         self.tf = TimeFeatures(n_freq)
-        self.stem = nn.Conv1d(1, channels, 1)
+        self.stem = FastConv1d(1, channels, 1)
         self.tproj = nn.Linear(self.tf.dim, channels)
-        self.blocks = nn.ModuleList([nn.Conv1d(channels, channels, 3, padding=d, dilation=d) for d in dilations])
-        self.proj = nn.ModuleList([nn.Conv1d(channels, channels, 1) for _ in dilations])
-        self.head = nn.Conv1d(channels, 1, 1)
+        self.blocks = nn.ModuleList([FastConv1d(channels, channels, 3, padding=d, dilation=d) for d in dilations])
+        self.proj = nn.ModuleList([FastConv1d(channels, channels, 1) for _ in dilations])
+        self.head = FastConv1d(channels, 1, 1)
         self.receptive_radius = sum(dilations)
         self.length_agnostic = True
 
@@ -197,12 +229,12 @@ class UNet1D(nn.Module):
         c = channels
         self.tf = TimeFeatures(n_freq)
         self.tproj = nn.Linear(self.tf.dim, c)
-        self.enc1 = nn.Sequential(nn.Conv1d(1, c, 3, padding=1), nn.GELU(), nn.Conv1d(c, c, 3, padding=1), nn.GELU())
+        self.enc1 = nn.Sequential(FastConv1d(1, c, 3, padding=1), nn.GELU(), FastConv1d(c, c, 3, padding=1), nn.GELU())
         self.down = nn.Conv1d(c, 2 * c, 4, stride=2, padding=1)
-        self.enc2 = nn.Sequential(nn.Conv1d(2 * c, 2 * c, 3, padding=1), nn.GELU(), nn.Conv1d(2 * c, 2 * c, 3, padding=1), nn.GELU())
+        self.enc2 = nn.Sequential(FastConv1d(2 * c, 2 * c, 3, padding=1), nn.GELU(), FastConv1d(2 * c, 2 * c, 3, padding=1), nn.GELU())
         self.up = nn.ConvTranspose1d(2 * c, c, 4, stride=2, padding=1)
-        self.dec1 = nn.Sequential(nn.Conv1d(2 * c, c, 3, padding=1), nn.GELU(), nn.Conv1d(c, c, 3, padding=1), nn.GELU())
-        self.head = nn.Conv1d(c, 1, 1)
+        self.dec1 = nn.Sequential(FastConv1d(2 * c, c, 3, padding=1), nn.GELU(), FastConv1d(c, c, 3, padding=1), nn.GELU())
+        self.head = FastConv1d(c, 1, 1)
         self.length_agnostic = True
 
     def forward(self, x, t):

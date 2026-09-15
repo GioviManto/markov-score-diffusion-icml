@@ -6,13 +6,19 @@ long-range architectures one noise level per gradient step and one run, the wind
 head twelve levels and eight restarts. Here every architecture trains under the
 recipe of `markov_score.nn_torch.TrainConfig` (per-example level from the twelve,
 batch 64, Adam, grad-clip 1, checkpoint ladder to `net_steps` of ONE run, both
-parameterisations), and the screen averages three restarts per configuration.
+parameterisations).
 
 Parts
 -----
-screen    dev seeds; sizes (32, 2048); every architecture × its hyper-grid × lr grid ×
-          parameterisation; checkpoint selected on the validation bundle (bulk);
-          selection statistic = pooled bulk risk over dev seeds and sizes (as exp_31).
+screen    dev seeds (two); sizes (32, 2048); every architecture × its hyper-grid × lr grid ×
+          parameterisation; ONE run of `screen_steps` (16k) per configuration, checkpoint
+          selected on the validation bundle (bulk); selection statistic = pooled bulk risk
+          over dev seeds and sizes (as exp_31). Amended 15 Sep from (4 dev seeds, 3
+          restarts, 32k): the measured single-thread cost (1–16 min per 32k-step run after
+          the gather-matmul convolutions of `nn_torch.FastConv1d`) put the original screen
+          at ~136 core-hours, beyond the laptop budget; the screen ranks configurations,
+          it produces no headline number, and every configuration still gets four
+          (seed, size) fits. The confirmatory protocol is unchanged.
 confirm   confirmatory seeds; sizes (32, 128, 512, 2048); the winner of each
           architecture family from the screen, checkpoint selected per cell on its
           validation bundle; scored on the test bundle in every region. Bundles are the
@@ -67,19 +73,19 @@ GRIDS = {
 
 SETTINGS = dict(
     sizes=(32, 128, 512, 2048), screen_sizes=(32, 2048),
-    seeds=tuple(range(16)), dev_seeds=tuple(range(10_000, 10_004)),
+    seeds=tuple(range(16)), dev_seeds=(10_000, 10_001),
     n_val=1024, n_test=2048,
     grid_size=FROZEN.n_grid, half_width=FROZEN.half_width,
     net_steps=32_000, net_checkpoints=(500, 1000, 2000, 4000, 8000, 16000, 32000),
     lrs=(1e-3, 3e-3), parameterizations=("eps", "x0"), batch_size=64, grad_clip=1.0,
-    screen_restarts=3, archs=tuple(GRIDS),
+    screen_restarts=1, screen_steps=16_000, archs=tuple(GRIDS),
     winners=None,                       # confirm: dict arch -> hp, or "auto:<screen.csv>"
     matched_archs=("window", "transformer"), matched_steps=32_000,
     lengths=(64, 128, 256),
     torch_threads=1,
 )
 QUICK = dict(sizes=(32,), screen_sizes=(32,), seeds=(10_000,), dev_seeds=(10_000,), n_val=64, n_test=64, grid_size=201,
-             net_steps=200, net_checkpoints=(100, 200), lrs=(1e-3,), parameterizations=("eps",), screen_restarts=1,
+             net_steps=200, net_checkpoints=(100, 200), lrs=(1e-3,), parameterizations=("eps",), screen_restarts=1, screen_steps=200,
              archs=("window", "transformer"), matched_steps=200, lengths=(64,))
 
 
@@ -209,9 +215,11 @@ def _cell_common(cfg, seed, n):
 def _screen_cell(args):
     cfg, seed, n, arch, hp, lr, mode = args
     A, val, test, base = _cell_common(cfg, seed, n)
+    # the screen trains to `screen_steps` (checkpoint ladder truncated there); confirm trains to `net_steps`
+    cfg_s = dict(cfg, net_checkpoints=tuple(c for c in cfg["net_checkpoints"] if c <= cfg["screen_steps"]) or (cfg["screen_steps"],))
     rows = []
     for restart in range(cfg["screen_restarts"]):
-        den, info = _train_select(cfg, arch, hp, lr, mode, A, val, seed, restart)
+        den, info = _train_select(cfg_s, arch, hp, lr, mode, A, val, seed, restart)
         for region in REGIONS:
             pairs = _eval(den, test, region)
             rows.append({**base, "arch": arch, "hp": str(hp), "lr": lr, "mode": mode, "restart": restart, "region": region,
