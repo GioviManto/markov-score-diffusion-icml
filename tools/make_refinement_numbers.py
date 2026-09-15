@@ -37,7 +37,9 @@ def main() -> int:
             rt = RUNG_TAG.get((ng, hw), f"g{ng}a{int(hw)}")
             r = r.set_index("seed")
             for col in risk_cols:
-                name = col.replace("risk_", "").replace("em_C", "Em").replace("lmmse", "Lmmse").replace("iso", "Iso")
+                name = col.replace("risk_", "").replace("lmmse", "Lmmse").replace("iso", "Iso")
+                if name.startswith("em_C"):
+                    name = "Em" + {"1": "one", "2": "two", "4": "four", "8": "eight", "16": "sixteen"}.get(name[4:], name[4:])
                 rel = ((r[col] - base[col]) / base[col]).abs()
                 macros[f"refMove{name}{tag}{rt}"] = f"{100 * rel.max():.2f}"       # per cent, max over seeds
                 macros[f"refMean{name}{tag}{rt}"] = f"{r[col].mean():.4f}"

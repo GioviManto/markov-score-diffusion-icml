@@ -36,12 +36,10 @@ what weight sharing, locality and global propagation buy}
 one-corruption DSM arm}
 
 \paragraph{Generation.}
-\needsdata{E05: reverse-SDE samples under the exact, EM--BP, LMMSE and network scores;
-predeclared metrics}
+\IfFileExists{sections/generation-numbers.tex}{\input{body/05b-generation}}{\needsdata{E05 pending: reverse-SDE samples under the exact, EM--BP, LMMSE and network scores}}
 
 \paragraph{Length extrapolation.}
 \needsdata{E03 length: kernels fitted at $\nsites=32$ evaluated at $64$, $128$, $256$}
 
 \paragraph{Misspecification.}
-\needsdata{E08: advantage against a misspecification parameter for a rank-one latent,
-long-range coupling, AR(2) truth, site-dependent $\corr$; break-even}
+\IfFileExists{sections/misspec-numbers.tex}{\input{body/05c-misspec}}{\needsdata{E08 pending: advantage against a misspecification parameter; break-even}}

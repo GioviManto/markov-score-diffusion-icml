@@ -1,0 +1,9 @@
+%% Included by A2-numerics.tex only when sections/refinement-numbers.tex exists (E04 done).
+Re-scoring the validation-selected kernels of the capacity experiment on their own test
+bundles at $\ngrid=801$ and $1601$ ($\halfwidth=8$) and at $\halfwidth=10$
+($\ngrid=801$), with the reference recomputed at each resolution, moves the pooled error
+of EM--BP ($\ncomp=8$) by at most $\refMoveEmeightDfine\%$, $\refMoveEmeightDfinest\%$
+and $\refMoveEmeightDwide\%$ at $\nseq=2048$ (maximum over $\refSeeds$ seeds), and the
+LMMSE floor by at most $\refMoveLmmseDfine\%$; the reference score itself moves by
+$\refRefMoveDfine\%$ between $\ngrid=401$ and $801$. The reported effects are three
+orders of magnitude larger than the discretisation.

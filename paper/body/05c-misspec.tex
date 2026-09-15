@@ -1,0 +1,22 @@
+%% Included by 05-experiments.tex only when sections/misspec-numbers.tex exists (E08 done).
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig_misspec.pdf}
+  \caption{\textbf{Where the structure stops helping.} Ratio of the window head's error
+  to EM--BP's against the misspecification strength, for four Gaussian departures from
+  the chain with exact reference scores (rank-one global latent, long-range precision
+  coupling, an AR(2) second coefficient at fixed lag-one correlation, site-dependent
+  $\corr$), at two sample sizes. Above the dotted line the misspecified chain estimator
+  still wins.}
+  \label{fig:misspec}
+\end{figure}
+Every departure is Gaussian so that its score is exact, and every arm is scored against
+that score. A rank-one global latent is absorbed by the chain's fitted $\corr$ and never
+reverses the ordering (ratio $\misRatioGlobalEoneD$ at $\beta=1$); long-range
+precision coupling reverses it between $\gamma=\misBreakLoLongrangeD$ and
+$\misBreakHiLongrangeD$ at $\nseq=2048$ (interpolated crossing
+$\misBreakLongrangeD$) and between $\misBreakLoLongrangeC$ and $\misBreakHiLongrangeC$
+at $\nseq=512$; an AR(2) second coefficient reverses it at
+$\misBreakArtwoD$. The two sizes separate the statistical gain of the structure at
+small $\nseq$ from its asymptotic bias at large $\nseq$: where the ratio falls with
+$\nseq$, the chain estimator has converged to a wrong law and more data no longer helps.

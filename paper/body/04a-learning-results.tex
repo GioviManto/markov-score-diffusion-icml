@@ -1,0 +1,11 @@
+%% Included by 04-learning.tex only when sections/learning-numbers.tex exists (E06 done).
+\Cref{fig:learning} measures both with $\nseq=\learnSize$ Laplace-chain sequences and
+$\learnSeeds$ replicates per level. Above $\tstar$ the fitted log-slopes of the two
+errors against the observation level are $\learnSlopeRho$ for $\widehat\corr$ and
+$\learnSlopeKurt$ for $\widehat\kfour$, against the predicted $2$ and $4$; their
+difference, $\learnSlopeRatio$, is the $e^{2t}$ separation of \cref{cor:samples}. At
+$t=0.1$ the fitted excess kurtosis is recovered to $\learnRmseKurtTzeropone$ RMSE and
+the transition law to Hellinger distance $\learnHellTzeropone$; at $t=2$ the RMSE is
+$\learnRmseKurtTtwo$ against a true value of $3$, while $\widehat\corr$ is still within
+$\learnRmseRhoTtwo$. The clean-data fit (no channel) gives the optimiser's own floor,
+$\learnRmseRhoTzero$ and $\learnRmseKurtTzero$.

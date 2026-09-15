@@ -1,0 +1,13 @@
+%% Included by 05-experiments.tex only when sections/generation-numbers.tex exists (E05 done).
+\input{sections/tab-generation}
+Samples are drawn by the same reverse SDE (\genSteps{} steps on a geometric grid, one
+Brownian path shared by every arm, \genSeeds{} seeds) from the exact score, the fitted
+kernel, the LMMSE twin and the isotropic score, and compared with a reference sample of
+the true law at $t_{\min}$ (\cref{tab:generation}). The exact arm's log-likelihood gap,
+$\genLoglikgapDExact$ nats per sequence at $\nseq=2048$, is the sampler's discretisation
+floor; the fitted kernel sits at $\genLoglikgapDEm$, the LMMSE twin at
+$\genLoglikgapDLmmse$ and the isotropic score at $\genLoglikgapDIso$. The innovation
+excess kurtosis of the generated residuals is $\genKurtgenDEm$ for the fitted kernel
+against $\genKurtrefD$ for the true law and $\genKurtgenDLmmse$ for the twin, which by
+construction generates Gaussian innovations: what the second-order estimator discards in
+score error it discards in the samples.
