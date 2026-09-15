@@ -50,7 +50,7 @@ submit_one() {
   local name=$1 dep=${2:-}
   local cmd; cmd=$(cmd_for "$name"); cmd=${cmd//\{OUT\}/\$HOME/$MSD_OUT}
   local depflag=""; [[ -n "$dep" ]] && depflag="--dependency=afterok:$dep"     # dep may be "id1:id2"
-  local workers_flag='--workers \$SLURM_CPUS_PER_TASK'                       # e04/e05 are serial scripts
+  local workers_flag='--workers $SLURM_CPUS_PER_TASK'                       # e04/e05 are serial scripts
   case "$name" in e04|e05) workers_flag="";; esac
   local jid
   jid=$(ssh -o BatchMode=yes "$MSD_HPC_HOST" "sbatch --parsable $depflag" <<SB
