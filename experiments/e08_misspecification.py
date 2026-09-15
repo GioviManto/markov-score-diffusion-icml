@@ -93,11 +93,7 @@ def _ar2_cov(rho1, rho2, L):
 def _sitevar_cov(rho, delta, L):
     """Cov of a_1 ~ N(0,1), a_i = rho_i a_{i-1} + eps_i with Var eps_i = 1 - rho_i^2 (unit variances)."""
     rhos = rho + delta * np.cos(2 * np.pi * np.arange(L) / L)
-    S = np.eye(L)
-    for i in range(L):
-        for j in range(i + 1, L):
-            S[i, j] = S[j, i] = S[i, j - 1] * rhos[j] if j - 1 >= i else 1.0
-    # correct: Cov(a_i, a_j) = prod_{k=i+1}^{j} rho_k
+    # Cov(a_i, a_j) = prod_{k=i+1}^{j} rho_k  (unit variances at every site)
     S = np.eye(L)
     for i in range(L):
         for j in range(i + 1, L):
@@ -107,11 +103,9 @@ def _sitevar_cov(rho, delta, L):
 
 def _truth(mech, eps, L, rho):
     if mech == "global":
-        p = GaussianAR1PlusGlobal(rho, eps) if "coupling" not in GaussianAR1PlusGlobal.__dataclass_fields__ else GaussianAR1PlusGlobal(rho, eps)
-        return GaussianCov(p.covariance(L) if hasattr(p, "covariance") else p.sigma0(L))
+        return GaussianCov(GaussianAR1PlusGlobal(rho, eps).covariance(L))
     if mech == "longrange":
-        p = GaussianLongRange(rho, eps)
-        return GaussianCov(p.covariance(L) if hasattr(p, "covariance") else p.sigma0(L))
+        return GaussianCov(GaussianLongRange(rho, eps).covariance(L))
     if mech == "ar2":
         # keep the lag-one correlation at rho: rho1 = rho (1 - rho2)
         rho1 = rho * (1 - eps)
@@ -158,11 +152,13 @@ def _cell(args):
     base = dict(mechanism=mech, eps=eps, seed=seed, n_chains=n)
     rows = []
 
+    DEFAULTS = {"checkpoint": -1, "at_cap": False, "fit_rho": np.nan, "fit_kurt": np.nan, "n_params": 0}
+
     def score_rows(arm, mean_fn, extra=None):
         for region, sl in REGIONS.items():
             pairs = [_sq(mean_fn(test[t][0], t), test[t][1], test[t][0], t, sl) for t in T_SCHEDULE]
             rows.append({**base, "arm": arm, "region": region, "sq_err": sum(e for e, _ in pairs), "sq_ref": sum(r for _, r in pairs),
-                         "risk": _risk(pairs), **(extra or {})})
+                         "risk": _risk(pairs), **DEFAULTS, **(extra or {})})
 
     # oracles of the wrong model: AR(1) covariance with the truth's lag-one correlation, unit variance
     lag1 = float(np.mean(np.diag(truth.sigma0, 1)))
