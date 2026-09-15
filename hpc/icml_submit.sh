@@ -50,14 +50,14 @@ submit_one() {
   local name=$1 dep=${2:-}
   local cmd; cmd=$(cmd_for "$name"); cmd=${cmd//\{OUT\}/\$HOME/$MSD_OUT}
   local depflag=""; [[ -n "$dep" ]] && depflag="--dependency=afterok:$dep"     # dep may be "id1:id2"
-  local workers_flag='--workers $SLURM_CPUS_PER_TASK'                       # e04/e05 are serial scripts
-  case "$name" in e04|e05) workers_flag="";; esac
+  local workers_flag='--workers $SLURM_CPUS_PER_TASK' cpus=$CPUS            # e04/e05 are serial scripts: 2 cores
+  case "$name" in e04|e05) workers_flag=""; cpus=2;; esac
   local jid
   jid=$(ssh -o BatchMode=yes "$MSD_HPC_HOST" "sbatch --parsable $depflag" <<SB
 #!/bin/bash
 #SBATCH --job-name=msd-$name
 #SBATCH --partition=$PART
-#SBATCH --nodes=1 --ntasks=1 --cpus-per-task=$CPUS --mem=$MEM --time=$TIME
+#SBATCH --nodes=1 --ntasks=1 --cpus-per-task=$cpus --mem=$MEM --time=$TIME
 #SBATCH --output=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.out --error=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.err
 set -euo pipefail
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
@@ -68,7 +68,7 @@ echo "start=\$(date -Is) host=\$(hostname) job=\$SLURM_JOB_ID cpus=\$SLURM_CPUS_
 echo "done=\$(date -Is)"
 SB
 )
-  echo "$name -> job $jid (partition $PART, $CPUS cpus, dep=${dep:-none})"; LAST_JOB=$jid
+  echo "$name -> job $jid (partition $PART, $cpus cpus, dep=${dep:-none})"; LAST_JOB=$jid
 }
 case "$WHAT" in
   all)
