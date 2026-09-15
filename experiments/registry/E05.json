@@ -14,7 +14,7 @@
   "histogram KL of residuals",
   "mean log-likelihood under the true P_{t_min} by exact BP evidence (headline) and its gap to the reference sample"
  ],
- "status": "PROTOCOL v2 SUBMITTED to HPC 15 Sep 12:53 (jobs 659245); PRE-REGISTERED (smoke-tested 15 Sep); runs after E02a and E03",
+ "status": "PROTOCOL v2 SUBMITTED to HPC 15 Sep 12:53 (jobs 659259); PRE-REGISTERED (smoke-tested 15 Sep); runs after E02a and E03",
  "registered": "2026-09-15",
  "hpc_runs": [
   {
@@ -22,11 +22,14 @@
    "deployment": "ea0435a-20260915T104955Z",
    "partition": "defq",
    "cpus": 24,
-   "slurm_jobs": {
+   "submitted": "2026-09-15T12:53 BST",
+   "note": "2026-09-15 12:53 BST: protocol version 2 (experiments/protocol.py; EM ladder to 1200, capacities 1-16, full screen) submitted to the Bocconi HPC (defq, 24 cpus/job) from the clean deployment ea0435a (hpc/.last_deploy.env; source archive sha256 98bde0c3...); outputs land in ~/msd-icml/outputs/ea0435a-20260915T104955Z/<E>/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. The laptop runs of 07:58 (protocol v1: E02a, E03 screen) continue as replications under the shorter ladder; the local E06/E02b chain was cancelled at 11:49 before starting. First submission (12:53) failed at launch: $HOME in the #SBATCH --output directive is not expanded by SLURM; resubmitted 13:05 with absolute log paths.",
+   "slurm_jobs_failed_at_launch": {
     "generation": 659245
    },
-   "submitted": "2026-09-15T12:53 BST",
-   "note": "2026-09-15 12:53 BST: protocol version 2 (experiments/protocol.py; EM ladder to 1200, capacities 1-16, full screen) submitted to the Bocconi HPC (defq, 24 cpus/job) from the clean deployment ea0435a (hpc/.last_deploy.env; source archive sha256 98bde0c3...); outputs land in ~/msd-icml/outputs/ea0435a-20260915T104955Z/<E>/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. The laptop runs of 07:58 (protocol v1: E02a, E03 screen) continue as replications under the shorter ladder; the local E06/E02b chain was cancelled at 11:49 before starting."
+   "slurm_jobs": {
+    "generation": 659259
+   }
   }
  ]
 }

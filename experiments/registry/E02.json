@@ -12,7 +12,7 @@
  },
  "predeclared_analysis": "tools/make_capacity_numbers.py: per (M, C) mean +/- s.e. over seeds of the all-site pooled risk; paired per-seed differences C=8 minus C=1 with a 20000-resample seed bootstrap; per-seed ratio LMMSE_true / EM-BP(C); the window head's risk from outputs/frozen/exp_31_confirm_merged/confirm.csv joined on (seed, n_chains, region) after the test-bundle hash is verified equal",
  "frozen_on": "2026-09-15T02:20 BST",
- "status": "PROTOCOL v2 SUBMITTED to HPC 15 Sep 12:53 (jobs 659234, 659242); CONFIRMATORY RUNNING (relaunched 2026-09-15 07:19, 6 workers, per-cell files; the 02:20 launch produced no readable result and was killed at 07:17 -- pool result transport hang, docs/REPRODUCIBILITY.md 'Cell files')",
+ "status": "PROTOCOL v2 SUBMITTED to HPC 15 Sep 12:53 (jobs 659248, 659256); CONFIRMATORY RUNNING (relaunched 2026-09-15 07:19, 6 workers, per-cell files; the 02:20 launch produced no readable result and was killed at 07:17 -- pool result transport hang, docs/REPRODUCIBILITY.md 'Cell files')",
  "registered": "2026-09-15",
  "frozen_settings": {
   "capacity": {
@@ -79,12 +79,16 @@
    "deployment": "ea0435a-20260915T104955Z",
    "partition": "defq",
    "cpus": 24,
-   "slurm_jobs": {
+   "submitted": "2026-09-15T12:53 BST",
+   "note": "2026-09-15 12:53 BST: protocol version 2 (experiments/protocol.py; EM ladder to 1200, capacities 1-16, full screen) submitted to the Bocconi HPC (defq, 24 cpus/job) from the clean deployment ea0435a (hpc/.last_deploy.env; source archive sha256 98bde0c3...); outputs land in ~/msd-icml/outputs/ea0435a-20260915T104955Z/<E>/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. The laptop runs of 07:58 (protocol v1: E02a, E03 screen) continue as replications under the shorter ladder; the local E06/E02b chain was cancelled at 11:49 before starting. First submission (12:53) failed at launch: $HOME in the #SBATCH --output directive is not expanded by SLURM; resubmitted 13:05 with absolute log paths.",
+   "slurm_jobs_failed_at_launch": {
     "E02a": 659234,
     "E02b": 659242
    },
-   "submitted": "2026-09-15T12:53 BST",
-   "note": "2026-09-15 12:53 BST: protocol version 2 (experiments/protocol.py; EM ladder to 1200, capacities 1-16, full screen) submitted to the Bocconi HPC (defq, 24 cpus/job) from the clean deployment ea0435a (hpc/.last_deploy.env; source archive sha256 98bde0c3...); outputs land in ~/msd-icml/outputs/ea0435a-20260915T104955Z/<E>/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. The laptop runs of 07:58 (protocol v1: E02a, E03 screen) continue as replications under the shorter ladder; the local E06/E02b chain was cancelled at 11:49 before starting."
+   "slurm_jobs": {
+    "E02a": 659248,
+    "E02b": 659256
+   }
   }
  ]
 }

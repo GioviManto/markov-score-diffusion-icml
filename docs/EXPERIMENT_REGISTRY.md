@@ -14,9 +14,9 @@ not re-registered; their status there is authoritative.
 | id | script | hypothesis | config | seeds | status | outputs | commit |
 |---|---|---|---|---|---|---|---|
 | E01 | `experiments/e01_information_decay.py` | H1 (theory rates, crossover) | `experiments/registry/E01.json` | deterministic (`gauss`); replicates `rng_for("e01-shape", beta, rep)`, rep 0–7; closure reps 0–3 | DONE (15 Sep; `tools/make_theory_numbers.py`, `tools/make_fig_theory.py`) | `outputs/E01/` | `e179391` |
-| E02a | `experiments/e02_capacity.py` | H2 (mixture capacity on the headline task) | `experiments/protocol.py` (v2) + registry | confirmatory 0–15 | PROTOCOL v2 on the Bocconi HPC (job 659234, submitted 15 Sep 12:53; ladder to 1200, C ≤ 16); laptop v1 replication running since 07:58 (ladder to 400, C ≤ 8) | `outputs/E02a/` | `e57a3eb` |
-| E02b | `experiments/e02_capacity.py --only family` | H2 (tunable non-Gaussian family) | idem | 0–15 | PROTOCOL v2 on the HPC (job 659242) | `outputs/E02b/` | — |
-| E06 | `experiments/e06_learning_through_noise.py` | H6 (RMSE vs observation level) | `experiments/registry/E06.json` | 0–15 | PROTOCOL v2 on the HPC (job 659241) | `outputs/E06/` | — |
+| E02a | `experiments/e02_capacity.py` | H2 (mixture capacity on the headline task) | `experiments/protocol.py` (v2) + registry | confirmatory 0–15 | PROTOCOL v2 on the Bocconi HPC (job 659248, submitted 15 Sep 12:53; ladder to 1200, C ≤ 16); laptop v1 replication running since 07:58 (ladder to 400, C ≤ 8) | `outputs/E02a/` | `e57a3eb` |
+| E02b | `experiments/e02_capacity.py --only family` | H2 (tunable non-Gaussian family) | idem | 0–15 | PROTOCOL v2 on the HPC (job 659256) | `outputs/E02b/` | — |
+| E06 | `experiments/e06_learning_through_noise.py` | H6 (RMSE vs observation level) | `experiments/registry/E06.json` | 0–15 | PROTOCOL v2 on the HPC (job 659255) | `outputs/E06/` | — |
 | E03 | `experiments/e03_baselines.py` | H3/H9/H10 (fair baselines, matched arm, length) | `experiments/registry/E03.json` | dev 10000–10001 (screen); confirm 0–15 | SCREEN amended 15 Sep 08:20 before running (2 dev seeds, 1 run, 16k steps; see registry `amendments`); screen running on 2 workers beside the EM queue | `outputs/E03/` | — |
 | E04 | `experiments/e04_refinement.py` | H4 (grid refinement on the fitted models) | `experiments/registry/E04.json` | 0–15 (E02a fits) | PRE-REGISTERED (smoke-tested) | `outputs/E04/` | — |
 | E05 | `experiments/e05_generation.py` | H5 (generation) | `experiments/registry/E05.json` | 0–3 | PRE-REGISTERED (smoke-tested) | `outputs/E05/` | — |
