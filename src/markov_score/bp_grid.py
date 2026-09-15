@@ -180,8 +180,16 @@ def grid_bp_batch(
     *,
     return_evidence: bool = False,
     boundary_frac: float | None = None,
+    chunk: int | None = 256,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Vectorized grid BP over a batch of observations X of shape (B, n).
+
+    ``chunk`` bounds the rows processed at once (memory knob, default 256): the chains are
+    independent, so the recursion is run on consecutive blocks of ``chunk`` rows and the
+    outputs concatenated; the result is the same to floating-point round-off
+    (``tests/test_bp_grid_chunk.py``). At M = 401 grid points and n = 32 sites the
+    unchunked pass over a 2048-chain bundle holds about 1 GB of (B, n, M) temporaries,
+    which is what pushed six concurrent experiment workers into swap on an 8 GB laptop.
 
     Same algorithm as `grid_bp` (independent chains, one per batch row), with
     the site loop shared and each message update a (M, M) @ (M, B) matmul.
@@ -207,6 +215,11 @@ def grid_bp_batch(
     """
     if xp is None:
         xp = np
+    if chunk is not None and X.shape[0] > chunk:
+        parts = [grid_bp_batch(grid, weights, log_K, X[s : s + chunk], alpha, delta, log_mu, xp,
+                               return_evidence=return_evidence, boundary_frac=boundary_frac, chunk=None)
+                 for s in range(0, X.shape[0], chunk)]
+        return tuple(xp.concatenate([pt[i] for pt in parts], axis=0) for i in range(len(parts[0])))
     grid = to_device(grid, xp)
     weights = to_device(weights, xp)
     log_K = to_device(log_K, xp)
