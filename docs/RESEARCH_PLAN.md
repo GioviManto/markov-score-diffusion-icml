@@ -183,3 +183,31 @@ script) · 03 theory-information-decay (E1, Theorem B written, Lean targets) ·
 
 * 2026-09-15 — first version, after the audit.
 * 2026-09-15 06:30 — E01 done and verified (rates −4/−8, constant to 6%); E02a confirmatory running; E06, E02b queued; E03–E08 scripted and smoke-tested; theorem positioned against Katsevich–Bandeira / Balanov et al. / Aarts et al. after the literature sweep (docs/RELATED_WORK_SWEEP.md).
+
+## Page budget (measured 15 September 2026, 21:10)
+
+`main.pdf` at the current state: body ends on page 8, references begin on page 8, so the
+body occupies about 7.5 of the 8 allowed pages **with the experiments section still mostly
+placeholders**. Measured layout:
+
+| pages | content |
+|---|---|
+| 1 | title, abstract, §1 introduction |
+| 2–3 | §1 end, §2 setup (Figure 1 mechanism), Proposition 1 |
+| 3–4 | §3 theory (Theorems 2–3, corollary, crossover), §4 learning |
+| 5 | Figure 2 (theory, three panels), Figure 3 (learning), §4 results |
+| 6–7 | §5 experiments, §6 related work, §7 limitations and conclusion, impact statement |
+| 8+ | references, appendices |
+
+The experiments section needs roughly one more page than it has: capacity table, family
+figure, baseline table, ladder figure, generation, misspecification. The cut, in order:
+
+1. **Appendix D aggregation tables** (archival robustness of a comparison E03 replaces) — remove.
+2. **§6 related work** from a full column to two thirds: the low-SNR paragraph keeps its
+   five citations and loses its restatement of the mechanism (already in §3).
+3. **Phase-diagram figure** (E07) to the appendix if Figures 3 and 4 both stay in the body.
+4. **§2 setup**: the two message-sweep displays collapse to one line of prose plus a
+   pointer to Appendix B; Figure 1 already carries the argument.
+
+Not cut under any circumstance: the verification paragraph of §3 (the range and the
+failing family), the protocol sentence of §5, the limitations section.
