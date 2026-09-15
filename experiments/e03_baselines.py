@@ -31,8 +31,9 @@ matched   the information-matched arm: the best two architectures trained by imp
           scored against the true-kernel reference for reporting only; plus a
           one-corruption DSM arm (clean targets, one fixed noise draw per chain).
 length    the length-agnostic winners fitted at L = 32 evaluated at L in (64, 128, 256)
-          against true-kernel BP at those lengths; EM-BP (from E02) evaluated the same
-          way in tools/.
+          against true-kernel BP at those lengths, loading the confirm part's selected
+          checkpoint for the same (seed, size, architecture) from <out>/ckpts/ (trained
+          afresh only if it is missing); EM-BP (from E02) evaluated the same way in tools/.
 
 Rows record architecture, hyperparameters, parameter count, steps, selected
 checkpoint, wall-clock, region, sq_err / sq_ref, risk, bundle hashes. Provenance in
@@ -251,10 +252,21 @@ def winners_from_screening(path) -> dict:
     return out
 
 
+def _ckpt_path(cfg, seed, n, arch):
+    d = cfg.get("ckpt_dir")
+    return Path(d) / f"{seed}_{n}_{arch}.pt" if d else None
+
+
 def _confirm_cell(args):
     cfg, seed, n, arch, w = args
     A, val, test, base = _cell_common(cfg, seed, n)
     den, info = _train_select(cfg, arch, w["hp"], w["lr"], w["mode"], A, val, seed, 0)
+    ck = _ckpt_path(cfg, seed, n, arch)
+    if ck is not None:  # the selected checkpoint, reused by the length part and by E05's network arms
+        import torch
+        ck.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(den.model.state_dict(), ck)
+        info = dict(info, ckpt_path=str(ck))
     rows = []
     for region in REGIONS:
         pairs = _eval(den, test, region)
@@ -271,6 +283,7 @@ def part_confirm(cfg, out, workers):
     if not w:
         raise SystemExit("confirm needs --set winners=\"'auto:<screening.csv>'\"")
     write_json(out / "winners.json", w)
+    cfg = dict(cfg, ckpt_dir=str(out / "ckpts"))
     cells = [(cfg, s, n, arch, ww) for s in cfg["seeds"] for n in cfg["sizes"] for arch, ww in w.items()]
     rows = _run(cells, _confirm_cell, workers, out, "confirm.csv")
     write_csv(out / "confirm.csv", rows)
@@ -351,7 +364,16 @@ def part_matched(cfg, out, workers):
 def _length_cell(args):
     cfg, seed, n, arch, w = args
     A, val, test, base = _cell_common(cfg, seed, n)
-    den, info = _train_select(cfg, arch, w["hp"], w["lr"], w["mode"], A, val, seed, 0)
+    ck = _ckpt_path(cfg, seed, n, arch)
+    if ck is not None and ck.exists():  # the confirm part's selected checkpoint: same seed, size, configuration
+        import torch
+        from markov_score import nn_torch as nt
+        torch.set_num_threads(cfg["torch_threads"])
+        model = nt.build(arch, N_SITES, **w["hp"]); model.load_state_dict(torch.load(ck))
+        den = nt.Denoiser(model, w["mode"])
+        info = dict(checkpoint=-1, at_cap=False, val_selected=np.nan, wall=0.0, n_params=nt.n_params(model), val_curve="", ckpt_path=str(ck))
+    else:
+        den, info = _train_select(cfg, arch, w["hp"], w["lr"], w["mode"], A, val, seed, 0)
     if not den.model.length_agnostic:
         return []
     rows = []
@@ -374,6 +396,7 @@ def part_length(cfg, out, workers):
     w = cfg["winners"]
     if isinstance(w, str) and w.startswith("auto:"):
         w = winners_from_screening(w[5:])
+    cfg = dict(cfg, ckpt_dir=str(out / "ckpts"))
     cells = [(cfg, s, n, arch, ww) for s in cfg["seeds"] for n in cfg["sizes"] for arch, ww in w.items()]
     rows = _run(cells, _length_cell, workers, out, "length.csv")
     write_csv(out / "length.csv", rows)

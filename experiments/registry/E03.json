@@ -16,6 +16,8 @@
  "status": "PRE-REGISTERED (smoke-tested 15 Sep); screen amended 15 Sep 08:20 before running; screen to run on 2 workers alongside the EM queue",
  "registered": "2026-09-15",
  "amendments": [
-  "2026-09-15 08:20 (before any screen run): screen budget cut from (4 dev seeds, 3 restarts, 32k steps) to (2 dev seeds, 1 run, 16k steps) after measuring 1-16 min per 32k-step single-thread run (136 core-hours for the original screen). Selection stage only; confirm/matched/length untouched. The conv layers of nn_torch were reimplemented as gather+matmul (FastConv1d, identical maths, tests/test_nn_torch.py) because this PyTorch build's conv1d kernel was 10-100x slower than a matmul of the same size."
- ]
+  "2026-09-15 08:20 (before any screen run): screen budget cut from (4 dev seeds, 3 restarts, 32k steps) to (2 dev seeds, 1 run, 16k steps) after measuring 1-16 min per 32k-step single-thread run (136 core-hours for the original screen). Selection stage only; confirm/matched/length untouched. The conv layers of nn_torch were reimplemented as gather+matmul (FastConv1d, identical maths, tests/test_nn_torch.py) because this PyTorch build's conv1d kernel was 10-100x slower than a matmul of the same size.",
+  "2026-09-15 08:20 (screen running since 07:58; confirm/length not yet started): the confirm part saves each cell's validation-selected checkpoint to outputs/E03/ckpts/<seed>_<n>_<arch>.pt and the length part loads it instead of retraining (identical model; the length bundles are separate draws); E05's network arms read the same files. Screen code path unchanged; the screen ran at commit 59828f7 or earlier (e03_baselines.py last changed for the screen budget in ba954f3)."
+ ],
+ "script_sha256": "769b3b84278c22f181eb318222358050190f3a52ad1b090c06e618800c575a9e"
 }

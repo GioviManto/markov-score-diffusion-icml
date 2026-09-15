@@ -23,3 +23,6 @@ outputs/_determinism/
 # OS
 .DS_Store
 .claude/
+# Per-cell result files and torch checkpoints: the registered outputs are the CSVs and params files
+outputs/**/cells/
+outputs/**/ckpts/
