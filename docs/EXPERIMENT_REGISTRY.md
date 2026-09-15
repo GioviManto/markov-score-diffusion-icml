@@ -22,6 +22,7 @@ not re-registered; their status there is authoritative.
 | E05 | `experiments/e05_generation.py` | H5 (generation) | `experiments/registry/E05.json` | 0–3 | PRE-REGISTERED (smoke-tested) | `outputs/E05/` | — |
 | E07 | `experiments/e07_phase_diagram.py` | H7 (oracle-ladder phase diagram) | `experiments/registry/E07.json` | deterministic, 2 reps | DONE (15 Sep; `tools/make_fig_phase.py`) | `outputs/E07/` | `8003dfc` |
 | E08 | `experiments/e08_misspecification.py` | H8 (misspecification) | `experiments/registry/E08.json` | 0–7 | PRE-REGISTERED (smoke-tested) | `outputs/E08/` | — |
+| E09 | `experiments/e09_capacity_floor.py` | capacity resolution: infinite-data KL-optimal mixture per C on the E02a test bundles (reference, not a bound) | `experiments/registry/E09.json` | test bundles of 0–15 | REGISTERED 15 Sep 11:40, running (1 worker) | `outputs/E09/` | — |
 
 Dev seeds are 10000–10003 everywhere; confirmatory seeds 0–15. A confirmatory row's
 config file is committed before the run starts, and the commit that produced the
