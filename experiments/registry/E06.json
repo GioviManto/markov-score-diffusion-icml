@@ -8,7 +8,7 @@
   "confirmatory": "0-15"
  },
  "predeclared_analysis": "tools/make_learning_numbers.py: RMSE over seeds per level of rho_hat and kurt_hat (about the true 0.85 and 3.0); OLS log-slope of RMSE vs t over levels t >= 1.0; ratio slope; the clean arm as the floor",
- "status": "PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659268); PRE-REGISTERED (smoke-tested 15 Sep)",
+ "status": "FROZEN E06 2026-09-15T18:06:04Z; PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659268); PRE-REGISTERED (smoke-tested 15 Sep)",
  "registered": "2026-09-15",
  "hpc_runs": [
   {
@@ -28,5 +28,20 @@
     "levels": 659255
    }
   }
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E06/levels.csv": "c26bd6013493964638083493ffc6d8b39fb722f20da8738df29e8652e8101c71",
+  "outputs/E06/params_levels.json": "0b7fb04204ceda702c62561f95f944451b8d23aeb7d1c37c99a330835c0518cb"
+ },
+ "frozen_at": {
+  "E06": "2026-09-15T18:06:04Z"
+ },
+ "frozen_commit": {
+  "E06": "aa6226885520152660f148741d4961234cb1caeb"
+ },
+ "frozen_run_commits": {
+  "E06": [
+   "ea0435a"
+  ]
+ }
 }
