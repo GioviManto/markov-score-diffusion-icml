@@ -1,0 +1,10 @@
+{
+  "id": "E06",
+  "script": "experiments/e06_learning_through_noise.py",
+  "hypothesis": "H6: at fixed M the RMSE of rho_hat grows like e^{2t} and that of the fitted excess kurtosis like e^{4t} with the observation level t beyond t_*; their ratio like e^{2t}",
+  "design": "Laplace chain, M = 512 sequences all observed at one level t in (0.05,0.1,0.2,0.4,0.7,1.0,1.4,2.0) plus the clean arm (t = 0), C = 8, EM ladder (10..400) selected on a same-level validation bundle (bulk), 16 seeds; records fitted rho/variance/kurtosis, Hellinger to the truth, and the twelve-level test risk",
+  "seeds": {"dev": "10000-10003", "confirmatory": "0-15"},
+  "predeclared_analysis": "tools/make_learning_numbers.py: RMSE over seeds per level of rho_hat and kurt_hat (about the true 0.85 and 3.0); OLS log-slope of RMSE vs t over levels t >= 1.0; ratio slope; the clean arm as the floor",
+  "status": "PRE-REGISTERED (smoke-tested 15 Sep)",
+  "registered": "2026-09-15"
+}

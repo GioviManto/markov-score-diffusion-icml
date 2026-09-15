@@ -128,14 +128,15 @@ def _oracle_rows(bundle, grid, weights, sigma0, base):
             al, de = alpha_delta(t)
             m_lm = theory.lmmse_posterior_mean(X, sigma0, t)
             pairs_lm.append(_sq(m_lm, m_ref, X, t, sl))
-            m_iso = np.zeros_like(X) + (X - X) + (al * 0.0)  # isotropic score -x  <=>  m = (x - Delta x)/alpha
+            # isotropic score -x  <=>  posterior mean m = (x - Delta x)/alpha
             m_iso = (X - de * X) / al
             pairs_iso.append(_sq(m_iso, m_ref, X, t, sl))
         for arm, pairs in (("lmmse_true", pairs_lm), ("isotropic", pairs_iso)):
             rows.append({**base, "arm": arm, "components": 0, "checkpoint": -1, "at_cap": False,
                          "stop_reason": "oracle", "region": region,
                          "sq_err": sum(e for e, _ in pairs), "sq_ref": sum(r for _, r in pairs), "risk": _risk(pairs),
-                         "n_params": 0, "fit_rho": np.nan, "fit_ivar": np.nan, "fit_kurt": np.nan, "resolved": True})
+                         "n_params": 0, "fit_rho": np.nan, "fit_ivar": np.nan, "fit_kurt": np.nan, "resolved": True,
+                         "val_risk_selected": np.nan, "val_curve": ""})
     return rows
 
 
@@ -159,7 +160,7 @@ def _em_fit_and_score(cfg, C, A, val, test, grid, weights, seed_tags, base):
         if r < best_risk:
             best, best_risk = it, r
     kb = saved[best]
-    mom = kb.innovation_moments()
+    mom = kb.innovation_moments
     diag = kb.scale_diagnostics(grid)
     rows = []
     for region in REGIONS:
@@ -168,7 +169,7 @@ def _em_fit_and_score(cfg, C, A, val, test, grid, weights, seed_tags, base):
                      "stop_reason": trace.stop_reason, "region": region,
                      "sq_err": sum(e for e, _ in pairs), "sq_ref": sum(r for _, r in pairs), "risk": _risk(pairs),
                      "n_params": int(len(kb.theta)), "fit_rho": float(kb.rho),
-                     "fit_ivar": float(mom["variance"]), "fit_kurt": float(mom["innovation_excess_kurtosis"]),
+                     "fit_ivar": float(mom["innovation_var"]), "fit_kurt": float(mom["innovation_excess_kurtosis"]),
                      "resolved": bool(diag["resolved"]), "val_risk_selected": best_risk,
                      "val_curve": ";".join(f"{k}:{v:.5f}" for k, v in sorted(val_curve.items()))})
     return rows, kb

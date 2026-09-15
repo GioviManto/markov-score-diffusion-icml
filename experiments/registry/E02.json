@@ -1,0 +1,12 @@
+{
+  "id": "E02",
+  "script": "experiments/e02_capacity.py",
+  "hypothesis": "H2: on the headline task the mixture kernel's pooled error lies below the LMMSE floor at every M and a C = 1 kernel does not; on the generalised-Gaussian family the C = 8 vs C = 1 gap tracks the exact-BP vs LMMSE gap",
+  "parts": {"capacity": "Laplace chain, sizes (32,128,512,2048), C in (1,2,4,8), exp31 bundles (n_val 1024, n_test 2048), EM ladder (10..400) selected on val bulk, scored all/bulk/centre; oracles lmmse_true and isotropic on the same test bundle",
+            "family": "generalised-Gaussian beta in (1,1.25,1.5,2,3,6), M = 512, C in (1,8), same ladder and selection, Hellinger of fitted vs true kernel"},
+  "seeds": {"dev": "10000-10003 (design only; no headline number)", "confirmatory": "0-15, untouched until the config is frozen"},
+  "predeclared_analysis": "tools/make_capacity_numbers.py: per (M, C) mean +/- s.e. over seeds of the all-site pooled risk; paired per-seed differences C=8 minus C=1 with a 20000-resample seed bootstrap; per-seed ratio LMMSE_true / EM-BP(C); the window head's risk from outputs/frozen/exp_31_confirm_merged/confirm.csv joined on (seed, n_chains, region) after the test-bundle hash is verified equal",
+  "frozen_on": null,
+  "status": "DEV PASS RUNNING (15 Sep); confirmatory config frozen after the dev pass and before the 16-seed run",
+  "registered": "2026-09-15"
+}
