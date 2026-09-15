@@ -82,8 +82,11 @@ def main() -> int:
             commit = ",".join(sorted(rec["commits"])) + (" (dirty)" if rec["dirty"] else "")
             txt = re.sub(rf"(\| {re.escape(i)} \|[^\n]*\| )[^|\n]*(\|\s*)$", lambda m: f"{m.group(1)}`{commit}` {m.group(2)}", txt, flags=re.M)
         DOC.write_text(txt); print("registry document synced")
+    if args.check:
+        from freeze import check as freeze_check
+        bad += freeze_check()
     if args.check and bad:
-        print(f"{bad} registered output(s) with rows but without clean provenance"); return 1
+        print(f"{bad} problem(s): registered output(s) without clean provenance or frozen outputs that changed"); return 1
     return 0
 
 

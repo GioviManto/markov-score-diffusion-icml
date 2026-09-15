@@ -53,6 +53,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import apply_overrides, experiment_parser, provenance, run_cells, select_parts  # noqa: E402
 from frozen_config import FROZEN  # noqa: E402
+from protocol import PROTOCOL  # noqa: E402
 from markov_score.bp_grid import grid_bp_batch, make_grid  # noqa: E402
 from markov_score.noising import alpha_delta  # noqa: E402
 from markov_score.priors import LaplaceAR1  # noqa: E402
@@ -73,15 +74,15 @@ GRIDS = {
 }
 
 SETTINGS = dict(
-    sizes=(32, 128, 512, 2048), screen_sizes=(32, 2048),
-    seeds=tuple(range(16)), dev_seeds=(10_000, 10_001),
-    n_val=1024, n_test=2048,
+    sizes=PROTOCOL.sizes, screen_sizes=PROTOCOL.screen_sizes,
+    seeds=PROTOCOL.seeds, dev_seeds=PROTOCOL.dev_seeds,
+    n_val=PROTOCOL.n_val, n_test=PROTOCOL.n_test,
     grid_size=FROZEN.n_grid, half_width=FROZEN.half_width,
-    net_steps=32_000, net_checkpoints=(500, 1000, 2000, 4000, 8000, 16000, 32000),
-    lrs=(1e-3, 3e-3), parameterizations=("eps", "x0"), batch_size=64, grad_clip=1.0,
-    screen_restarts=1, screen_steps=16_000, archs=tuple(GRIDS),
+    net_steps=PROTOCOL.net_steps, net_checkpoints=PROTOCOL.net_checkpoints,
+    lrs=PROTOCOL.lrs, parameterizations=PROTOCOL.parameterizations, batch_size=PROTOCOL.batch_size, grad_clip=PROTOCOL.grad_clip,
+    screen_restarts=PROTOCOL.screen_restarts, screen_steps=PROTOCOL.screen_steps, archs=tuple(GRIDS),
     winners=None,                       # confirm: dict arch -> hp, or "auto:<screen.csv>"
-    matched_archs=("window", "transformer"), matched_steps=32_000,
+    matched_archs=("window", "transformer"), matched_steps=PROTOCOL.net_steps,
     lengths=(64, 128, 256),
     torch_threads=1,
 )

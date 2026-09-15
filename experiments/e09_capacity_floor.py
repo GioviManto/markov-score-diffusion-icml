@@ -32,6 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import apply_overrides, experiment_parser, provenance, run_cells, select_parts  # noqa: E402
 from e02_capacity import REGIONS, T_SCHEDULE, _bundle, _bundle_hash, _risk, _sq  # noqa: E402
 from frozen_config import FROZEN  # noqa: E402
+from protocol import PROTOCOL  # noqa: E402
 from markov_score.bp_grid import grid_bp_batch, make_grid  # noqa: E402
 from markov_score.kernels import MixtureInnovationKernel  # noqa: E402
 from markov_score.noising import alpha_delta  # noqa: E402
@@ -41,7 +42,7 @@ from markov_score.utils import ensure_dir, write_csv, write_json  # noqa: E402
 N_SITES = FROZEN.n_sites
 
 SETTINGS = dict(
-    components=(1, 2, 4, 8, 16), seeds=tuple(range(16)), n_test=2048,
+    components=PROTOCOL.capacities, seeds=PROTOCOL.seeds, n_test=PROTOCOL.n_test,
     grid_size=FROZEN.n_grid, half_width=FROZEN.half_width,
     fit_grid=4001, fit_halfwidth_b=14.0, em_iters=3000, em_tol=1e-12, inits=8,
 )

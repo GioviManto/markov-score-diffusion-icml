@@ -36,6 +36,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import apply_overrides, experiment_parser, provenance, run_cells, select_parts  # noqa: E402
 from frozen_config import FROZEN  # noqa: E402
+from protocol import PROTOCOL  # noqa: E402
 from markov_score import theory  # noqa: E402
 from markov_score.bp_grid import grid_bp_batch, make_grid  # noqa: E402
 from markov_score.em import fit_em  # noqa: E402
@@ -54,7 +55,7 @@ SETTINGS = dict(
                 "ar2": (0.0, 0.1, 0.2, 0.3, 0.4), "sitevar": (0.0, 0.05, 0.1, 0.2)},
     sizes=(512, 2048), seeds=tuple(range(8)),
     n_val=512, n_test=1024, grid_size=FROZEN.n_grid, half_width=FROZEN.half_width,
-    em_components=8, em_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400), em_init_rho=0.3, em_init_var=0.8,
+    em_components=8, em_checkpoints=PROTOCOL.em_checkpoints, em_init_rho=PROTOCOL.em_init_rho, em_init_var=PROTOCOL.em_init_var,
     window_hp=dict(radius=2, width=64), window_lr=1e-3, window_mode="eps", window_steps=16_000,
     window_checkpoints=(500, 1000, 2000, 4000, 8000, 16000), batch_size=64, torch_threads=1,
     arms=("em_bp", "window", "lmmse_ar1", "isotropic"),

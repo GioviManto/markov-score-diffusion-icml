@@ -1,2 +1,23 @@
-{"id": "E07", "script": "experiments/e07_phase_diagram.py", "hypothesis": "H7: the LMMSE floor surface over (rho, family, t) organises the learned estimators; the crossover t_*(rho) locates where the floor collapses",
- "design": "deterministic oracle ladder, rho in (0, 0.3, 0.6, 0.85, 0.95), four non-Gaussian families, twelve levels, 512 chains x 2 replicates, N_g = 401", "status": "PRE-REGISTERED (smoke-tested 15 Sep)", "registered": "2026-09-15"}
+{
+ "id": "E07",
+ "script": "experiments/e07_phase_diagram.py",
+ "hypothesis": "H7: the LMMSE floor surface over (rho, family, t) organises the learned estimators; the crossover t_*(rho) locates where the floor collapses",
+ "design": "deterministic oracle ladder, rho in (0, 0.3, 0.6, 0.85, 0.95), four non-Gaussian families, twelve levels, 512 chains x 2 replicates, N_g = 401",
+ "status": "FROZEN E07 2026-09-15T10:43:15Z; PRE-REGISTERED (smoke-tested 15 Sep)",
+ "registered": "2026-09-15",
+ "frozen_outputs": {
+  "outputs/E07/ladder.csv": "394287377d4373e7a7e7c684212eef8787552a8a5d822f6df15a345df9045022",
+  "outputs/E07/params_ladder.json": "26d8ea084b793de6b33ffb55bff23b12c9f2ec94d32e6507321bc7e4e0255b01"
+ },
+ "frozen_at": {
+  "E07": "2026-09-15T10:43:15Z"
+ },
+ "frozen_commit": {
+  "E07": "3499da26f2b35618a54b4fdb50b6261d0f9562ce"
+ },
+ "frozen_run_commits": {
+  "E07": [
+   "8003dfc"
+  ]
+ }
+}

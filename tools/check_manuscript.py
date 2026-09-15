@@ -121,11 +121,24 @@ def unresolved_refs() -> int:
     return failures
 
 
+def frozen_sources() -> int:
+    """Every registered output a generator reads must be frozen (tools/freeze.py) and unchanged:
+    the manuscript's numbers come from immutable artefacts, not from whatever the directory holds."""
+    sys.path.insert(0, str(ROOT / "tools"))
+    from freeze import check, is_frozen
+    failures = check(verbose=False)
+    for gen, src in OPTIONAL.items():
+        if (ROOT / src).exists() and not is_frozen(src):
+            print(f"[FAIL] {src} exists and feeds {gen} but is not frozen (python tools/freeze.py <id>)"); failures += 1
+    return failures
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--regenerate", action="store_true")
     ap.add_argument("--diff", action="store_true")
     ap.add_argument("--no-literals", action="store_true")
+    ap.add_argument("--no-freeze", action="store_true", help="skip the frozen-source check (development only)")
     args = ap.parse_args()
     failures = 0
     if args.regenerate:
@@ -133,6 +146,8 @@ def main() -> int:
     if not args.no_literals:
         failures += typed_literals()
     failures += unresolved_refs()
+    if not args.no_freeze:
+        failures += frozen_sources()
     print("OK" if failures == 0 else f"{failures} failure(s)")
     return 1 if failures else 0
 
