@@ -47,7 +47,9 @@ cmd_for() {
 submit_one() {
   local name=$1 dep=${2:-}
   local cmd; cmd=$(cmd_for "$name"); cmd=${cmd//\{OUT\}/\$HOME/$MSD_OUT}
-  local depflag=""; [[ -n "$dep" ]] && depflag="--dependency=afterok:$dep"
+  local depflag=""; [[ -n "$dep" ]] && depflag="--dependency=afterok:$dep"     # dep may be "id1:id2"
+  local workers_flag='--workers \$SLURM_CPUS_PER_TASK'                       # e04/e05 are serial scripts
+  case "$name" in e04|e05) workers_flag="";; esac
   local jid
   jid=$(ssh -o BatchMode=yes "$MSD_HPC_HOST" "sbatch --parsable $depflag" <<SB
 #!/bin/bash
@@ -60,7 +62,7 @@ export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM
 export PYTHONPATH=\$HOME/$MSD_SRC/src
 cd \$HOME/$MSD_SRC/experiments
 echo "start=\$(date -Is) host=\$(hostname) job=\$SLURM_JOB_ID cpus=\$SLURM_CPUS_PER_TASK"; cat ../REVISION
-\$HOME/$MSD_HPC_ROOT/venv/bin/python $cmd --workers \$SLURM_CPUS_PER_TASK
+\$HOME/$MSD_HPC_ROOT/venv/bin/python $cmd $workers_flag
 echo "done=\$(date -Is)"
 SB
 )
@@ -76,6 +78,6 @@ case "$WHAT" in
     submit_one e03-length "$J_CONF"
     submit_one e06 "$AFTER"; submit_one e02b "$AFTER"; submit_one e08 "$AFTER"
     submit_one e04 "$J_E02A"
-    submit_one e05 "$J_CONF";;
+    submit_one e05 "$J_E02A:$J_CONF";;
   *) submit_one "$WHAT" "$AFTER";;
 esac
