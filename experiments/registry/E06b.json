@@ -8,6 +8,19 @@
  "seeds": {
   "confirmatory": "0-15"
  },
- "status": "REGISTERED 2026-09-15 19:30 before running",
- "registered": "2026-09-15"
+ "status": "PROTOCOL v2 SUBMITTED to HPC 15 Sep 19:15 (job 659813); REGISTERED 2026-09-15 19:30 before running",
+ "registered": "2026-09-15",
+ "hpc_runs": [
+  {
+   "protocol_version": "2",
+   "deployment": "68d6221-20260915T181418Z",
+   "partition": "defq",
+   "cpus": 24,
+   "slurm_jobs": {
+    "levels": 659813
+   },
+   "submitted": "2026-09-15T19:15 BST",
+   "note": "job 659801 (submitted against the previous deployment, whose script had no rho setting) was cancelled before it ran"
+  }
+ ]
 }
