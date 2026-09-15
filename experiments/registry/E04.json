@@ -1,4 +1,22 @@
-{"id": "E04", "script": "experiments/e04_refinement.py", "hypothesis": "H4: the headline cells move by < 1% at N_g = 801 and < 2% at 1601 (A = 8) and < 1% at A = 10, on the actual fitted kernels and the actual held-out bundles",
+{
+ "id": "E04",
+ "script": "experiments/e04_refinement.py",
+ "hypothesis": "H4: the headline cells move by < 1% at N_g = 801 and < 2% at 1601 (A = 8) and < 1% at A = 10, on the actual fitted kernels and the actual held-out bundles",
  "design": "E02a fits (theta) at M in (32, 2048), C in (1, 8), 16 seeds, re-scored at (N_g, A) in ((401,8),(801,8),(1601,8),(801,10)) with the reference recomputed at each resolution; the reference's own movement reported",
  "predeclared_analysis": "tools/make_refinement_numbers.py: per (M, C) the relative change of the pooled risk between consecutive ladder rungs, max over seeds; the reference movement",
- "status": "PRE-REGISTERED (smoke-tested 15 Sep); runs after E02a", "registered": "2026-09-15"}
+ "status": "PROTOCOL v2 SUBMITTED to HPC 15 Sep 12:53 (jobs 659244); PRE-REGISTERED (smoke-tested 15 Sep); runs after E02a",
+ "registered": "2026-09-15",
+ "hpc_runs": [
+  {
+   "protocol_version": "2",
+   "deployment": "ea0435a-20260915T104955Z",
+   "partition": "defq",
+   "cpus": 24,
+   "slurm_jobs": {
+    "refine": 659244
+   },
+   "submitted": "2026-09-15T12:53 BST",
+   "note": "2026-09-15 12:53 BST: protocol version 2 (experiments/protocol.py; EM ladder to 1200, capacities 1-16, full screen) submitted to the Bocconi HPC (defq, 24 cpus/job) from the clean deployment ea0435a (hpc/.last_deploy.env; source archive sha256 98bde0c3...); outputs land in ~/msd-icml/outputs/ea0435a-20260915T104955Z/<E>/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. The laptop runs of 07:58 (protocol v1: E02a, E03 screen) continue as replications under the shorter ladder; the local E06/E02b chain was cancelled at 11:49 before starting."
+  }
+ ]
+}

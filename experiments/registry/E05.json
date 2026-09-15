@@ -1,4 +1,32 @@
-{"id": "E05", "script": "experiments/e05_generation.py", "hypothesis": "H5: samplers driven by the fitted kernel reproduce the excess kurtosis, the lag fourth cumulant and the true-law log-likelihood of the data; LMMSE and the networks do not",
+{
+ "id": "E05",
+ "script": "experiments/e05_generation.py",
+ "hypothesis": "H5: samplers driven by the fitted kernel reproduce the excess kurtosis, the lag fourth cumulant and the true-law log-likelihood of the data; LMMSE and the networks do not",
  "design": "reverse SDE (Euler-Maruyama, geometric grid, t_max 3, t_min 0.02, 400 steps after the paired step study), 2000 chains, common Brownian path across arms; arms exact / em_bp (E02a C=8, M in (128, 2048)) / lmmse / isotropic / networks (E03 confirm winners); reference sample 4000 chains from the true law at t_min; 4 seeds",
- "metrics_predeclared": ["innovation excess kurtosis + bootstrap s.e.", "marginal W1", "sliced W2 (256 projections)", "energy distance", "covariance Frobenius and worst-lag error", "lag-1..5 residual autocorrelation error", "lag fourth cumulant of residuals", "histogram KL of residuals", "mean log-likelihood under the true P_{t_min} by exact BP evidence (headline) and its gap to the reference sample"],
- "status": "PRE-REGISTERED (smoke-tested 15 Sep); runs after E02a and E03", "registered": "2026-09-15"}
+ "metrics_predeclared": [
+  "innovation excess kurtosis + bootstrap s.e.",
+  "marginal W1",
+  "sliced W2 (256 projections)",
+  "energy distance",
+  "covariance Frobenius and worst-lag error",
+  "lag-1..5 residual autocorrelation error",
+  "lag fourth cumulant of residuals",
+  "histogram KL of residuals",
+  "mean log-likelihood under the true P_{t_min} by exact BP evidence (headline) and its gap to the reference sample"
+ ],
+ "status": "PROTOCOL v2 SUBMITTED to HPC 15 Sep 12:53 (jobs 659245); PRE-REGISTERED (smoke-tested 15 Sep); runs after E02a and E03",
+ "registered": "2026-09-15",
+ "hpc_runs": [
+  {
+   "protocol_version": "2",
+   "deployment": "ea0435a-20260915T104955Z",
+   "partition": "defq",
+   "cpus": 24,
+   "slurm_jobs": {
+    "generation": 659245
+   },
+   "submitted": "2026-09-15T12:53 BST",
+   "note": "2026-09-15 12:53 BST: protocol version 2 (experiments/protocol.py; EM ladder to 1200, capacities 1-16, full screen) submitted to the Bocconi HPC (defq, 24 cpus/job) from the clean deployment ea0435a (hpc/.last_deploy.env; source archive sha256 98bde0c3...); outputs land in ~/msd-icml/outputs/ea0435a-20260915T104955Z/<E>/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. The laptop runs of 07:58 (protocol v1: E02a, E03 screen) continue as replications under the shorter ladder; the local E06/E02b chain was cancelled at 11:49 before starting."
+  }
+ ]
+}

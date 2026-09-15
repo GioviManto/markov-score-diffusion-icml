@@ -1,4 +1,22 @@
-{"id": "E08", "script": "experiments/e08_misspecification.py", "hypothesis": "H8: the structured estimator's advantage degrades gracefully in a measurable misspecification parameter and reverses at a locatable eps*; the statistical gain (small M) and the asymptotic bias (large M) separate",
+{
+ "id": "E08",
+ "script": "experiments/e08_misspecification.py",
+ "hypothesis": "H8: the structured estimator's advantage degrades gracefully in a measurable misspecification parameter and reverses at a locatable eps*; the statistical gain (small M) and the asymptotic bias (large M) separate",
  "design": "Gaussian truths with exact scores: rank-one global latent beta in (0,0.1,0.25,0.5,1), long-range precision coupling gamma in (0,0.05,0.1,0.2,0.4), AR(2) with second coefficient in (0,0.1,0.2,0.3,0.4) at fixed lag-one correlation, site-dependent rho with amplitude in (0,0.05,0.1,0.2); arms EM-BP (AR(1) mixture kernel, misspecified), window head (torch, E03 recipe), LMMSE of the AR(1) covariance, isotropic; sizes (512, 2048); 8 seeds; all-site pooled risk against the exact score",
  "predeclared_analysis": "tools/make_misspec_numbers.py: per (mechanism, eps, M) mean +/- s.e. of each arm; the paired ratio window/EM-BP; break-even eps by linear interpolation of the log-ratio between the bracketing grid points, with the bracket reported, never a fitted crossing",
- "status": "PRE-REGISTERED", "registered": "2026-09-15"}
+ "status": "PROTOCOL v2 SUBMITTED to HPC 15 Sep 12:53 (jobs 659243); PRE-REGISTERED",
+ "registered": "2026-09-15",
+ "hpc_runs": [
+  {
+   "protocol_version": "2",
+   "deployment": "ea0435a-20260915T104955Z",
+   "partition": "defq",
+   "cpus": 24,
+   "slurm_jobs": {
+    "sweep": 659243
+   },
+   "submitted": "2026-09-15T12:53 BST",
+   "note": "2026-09-15 12:53 BST: protocol version 2 (experiments/protocol.py; EM ladder to 1200, capacities 1-16, full screen) submitted to the Bocconi HPC (defq, 24 cpus/job) from the clean deployment ea0435a (hpc/.last_deploy.env; source archive sha256 98bde0c3...); outputs land in ~/msd-icml/outputs/ea0435a-20260915T104955Z/<E>/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. The laptop runs of 07:58 (protocol v1: E02a, E03 screen) continue as replications under the shorter ladder; the local E06/E02b chain was cancelled at 11:49 before starting."
+  }
+ ]
+}
