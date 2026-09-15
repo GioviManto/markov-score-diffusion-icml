@@ -31,10 +31,14 @@ smoke:           ## one quick pass of the headline experiment with --quick
 figures:         ## regenerate every paper figure from registered outputs
 	$(PY) tools/make_figures.py
 
-tables:          ## regenerate every generated .tex fragment under paper/sections
+tables:          ## regenerate every generated .tex fragment under paper/sections (new generators run only if their outputs exist)
 	$(PY) tools/make_tab_efficiency.py && $(PY) tools/make_tab_structured.py && $(PY) tools/make_tab_screening.py \
 	  && $(PY) tools/make_aggregation_structured.py && $(PY) tools/make_aggregation_robustness.py \
-	  && $(PY) tools/make_convergence_numbers.py && $(PY) tools/make_rate_analysis.py && $(PY) tools/make_tab_hellinger.py
+	  && $(PY) tools/make_convergence_numbers.py && $(PY) tools/make_rate_analysis.py && $(PY) tools/make_tab_hellinger.py \
+	  && $(PY) tools/make_theory_numbers.py && $(PY) tools/make_oracle_numbers.py
+	@for g in capacity:E02a/capacity.csv learning:E06/levels.csv generation:E05/generation.csv refinement:E04/refinement.csv misspec:E08/misspecification.csv baseline:E03/confirm.csv; do \
+	  n=$${g%%:*}; f=outputs/$${g#*:}; if [ -f $$f ]; then $(PY) tools/make_$${n}_numbers.py; fi; done
+	@if [ -f outputs/E07/ladder.csv ]; then $(PY) tools/make_fig_phase.py; fi
 
 paper:           ## build paper/main.pdf with tectonic (runs bibtex itself)
 	cd paper && tectonic -X compile main.tex
