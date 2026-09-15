@@ -94,6 +94,13 @@ def main() -> int:
             macros[f"capEm{CAP_TAG.get(C, _mac(str(C)))}{tag}se"] = f"{r.std(ddof=1) / np.sqrt(len(r)):.3f}"
             kurt = sub[(sub.arm == "em_bp") & (sub.components == C)].fit_kurt
             macros[f"capKurt{CAP_TAG.get(C, _mac(str(C)))}{tag}"] = f"{kurt.mean():.2f}"
+            # seeds whose selected checkpoint is the top of the ladder: the arm was still improving
+            # at the cap, so its reported error is an upper bound on what a longer ladder gives
+            atcap = sub[(sub.arm == "em_bp") & (sub.components == C)].at_cap.astype(str).str.lower().eq("true")
+            macros[f"capAtCap{CAP_TAG.get(C, _mac(str(C)))}{tag}"] = str(int(atcap.sum()))
+        best_C = min(em, key=lambda C: em[C].mean())
+        macros[f"capBestCap{tag}"] = str(int(best_C))
+        macros[f"capEmbest{tag}"] = f"{em[best_C].mean():.3f}"
         if 1 in em and 8 in em:
             d = (em[1] - em[8]).dropna()
             lo, hi = boot_ci(d.values)
