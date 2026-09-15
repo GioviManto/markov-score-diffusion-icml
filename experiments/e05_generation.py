@@ -30,7 +30,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import apply_overrides, experiment_parser, provenance, select_parts  # noqa: E402
+from common import apply_overrides, experiment_parser, provenance, run_cells, select_parts  # noqa: E402
 from frozen_config import FROZEN  # noqa: E402
 from markov_score import gen_metrics, theory  # noqa: E402
 from markov_score.bp_grid import grid_bp_batch, make_grid  # noqa: E402
@@ -102,31 +102,38 @@ def _arms(cfg, seed, n, grid, weights, log_k_true, sigma0):
     return arms
 
 
-def part_generate(cfg, out):
+def _gen_cell(args):
+    """One (seed, size): every arm driven by the SAME Brownian path and initialisation, so the
+    arms are paired within the cell; the reference sample is drawn from its own stream."""
+    cfg, seed, n = args
     grid, weights = make_grid(cfg["half_width"], cfg["grid_size"])
     prior = LaplaceAR1(FROZEN.rho)
     log_k_true = prior.log_transition_matrix(grid)
     sigma0 = theory.chain_covariance(FROZEN.rho, FROZEN.innovation_variance, N_SITES)
     times = time_grid(cfg["t_max"], cfg["t_min"], cfg["n_steps"])
+    rng = rng_for("e05-gen", seed, n)
+    x_init = rng.standard_normal((cfg["n_generate"], N_SITES))
+    dW = np.sqrt(np.diff(-times))[:, None, None] * rng.standard_normal((len(times) - 1, cfg["n_generate"], N_SITES))
+    rng_ref = rng_for("e05-ref", seed)
+    A = np.stack([prior.sample(rng_ref, N_SITES) for _ in range(cfg["n_reference"])])
+    al, de = alpha_delta(cfg["t_min"])
+    R = al * A + np.sqrt(de) * rng_ref.standard_normal(A.shape)
     rows = []
-    for seed in cfg["seeds"]:
-        for n in cfg["sizes"]:
-            rng = rng_for("e05-gen", seed, n)
-            x_init = rng.standard_normal((cfg["n_generate"], N_SITES))
-            dW = np.sqrt(np.diff(-times))[:, None, None] * rng.standard_normal((len(times) - 1, cfg["n_generate"], N_SITES))
-            rng_ref = rng_for("e05-ref", seed)
-            A = np.stack([prior.sample(rng_ref, N_SITES) for _ in range(cfg["n_reference"])])
-            al, de = alpha_delta(cfg["t_min"])
-            R = al * A + np.sqrt(de) * rng_ref.standard_normal(A.shape)
-            for arm, score in _arms(cfg, seed, n, grid, weights, log_k_true, sigma0).items():
-                G = reverse_sde_with_increments(x_init, score, times, dW)
-                m = gen_metrics.compare(G, R, FROZEN.rho, sigma0, grid, weights, log_k_true, cfg["t_min"], seed=seed)
-                rows.append(dict(seed=seed, n_chains=n, arm=arm, n_steps=cfg["n_steps"], **m))
-                print(f"  [E05] seed={seed} n={n} {arm:10s} kurt {m['kurt_gen']:.3f} (ref {m['kurt_ref']:.3f})  loglik gap {m['loglik_gap']:.3f}  sw2 {m['sw2']:.4f}", flush=True)
+    for arm, score in _arms(cfg, seed, n, grid, weights, log_k_true, sigma0).items():
+        G = reverse_sde_with_increments(x_init, score, times, dW)
+        m = gen_metrics.compare(G, R, FROZEN.rho, sigma0, grid, weights, log_k_true, cfg["t_min"], seed=seed)
+        rows.append(dict(seed=seed, n_chains=n, arm=arm, n_steps=cfg["n_steps"], **m))
+        print(f"  [E05] seed={seed} n={n} {arm:10s} kurt {m['kurt_gen']:.3f} (ref {m['kurt_ref']:.3f})  loglik gap {m['loglik_gap']:.3f}  sw2 {m['sw2']:.4f}", flush=True)
+    return rows
+
+
+def part_generate(cfg, out, workers):
+    cells = [(cfg, s, n) for s in cfg["seeds"] for n in cfg["sizes"]]
+    rows = run_cells(cells, _gen_cell, workers, out, "generation.csv")
     write_csv(out / "generation.csv", rows)
 
 
-def part_steps(cfg, out):
+def part_steps(cfg, out, workers=1):
     """Exact arm at nested resolutions on one Brownian path: strong error against the finest."""
     grid, weights = make_grid(cfg["half_width"], cfg["grid_size"])
     prior = LaplaceAR1(FROZEN.rho)
@@ -159,6 +166,7 @@ PARTS = {"steps": part_steps, "generate": part_generate}
 
 def main():
     ap = experiment_parser("e05_generation", "reverse-SDE generation under exact, fitted, LMMSE, isotropic and network scores")
+    ap.add_argument("--workers", type=int, default=1)
     args = ap.parse_args()
     if args.list_parts:
         print("\n".join(PARTS)); return
@@ -169,7 +177,7 @@ def main():
     out = ensure_dir(Path(args.output_dir))
     for name, fn in select_parts(PARTS, args.only).items():
         print(f"[e05] part {name}", flush=True)
-        fn(cfg, out)
+        fn(cfg, out, args.workers)
         write_json(out / f"params_{name}.json", {**provenance(), "settings": {k: (v if not isinstance(v, dict) else str(v)) for k, v in cfg.items()}, "quick": bool(args.quick), "frozen": FROZEN.as_dict()})
 
 
