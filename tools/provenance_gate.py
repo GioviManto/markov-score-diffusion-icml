@@ -206,9 +206,12 @@ def import_closure(entry, root=None) -> set[str]:
             if isinstance(node, ast.Import):
                 mods = [a.name for a in node.names]
             elif isinstance(node, ast.ImportFrom) and node.module:
-                mods = [node.module]
+                # `from pkg import name` may name a submodule (from markov_score import em)
+                mods = [node.module] + [f"{node.module}.{a.name}" for a in node.names]
             for m in mods:
-                for cand in (root / (m.replace(".", "/") + ".py"),
+                rel = m.replace(".", "/")
+                for cand in (root / (rel + ".py"), root / rel / "__init__.py",
+                             root / "src" / (rel + ".py"), root / "src" / rel / "__init__.py",
                              root / "experiments" / (m + ".py")):
                     if cand.exists():
                         stack.append(cand.resolve())
