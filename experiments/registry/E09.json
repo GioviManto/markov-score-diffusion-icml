@@ -1,0 +1,14 @@
+{
+ "id": "E09",
+ "script": "experiments/e09_capacity_floor.py",
+ "hypothesis": "Capacity resolution (companion to E02a): the infinite-data KL-optimal C-component mixture as a reference for each capacity's error on the identical test bundles",
+ "parts": {
+  "floor": "C in (1,2,4,8,16); weighted EM on a 4001-point quadrature grid of the Laplace innovation (best of 8 initialisations: scale-mixture + random means); scored by tree-exact BP on the exp31 test bundles of seeds 0-15 (2048 chains, twelve levels), regions all/bulk/centre"
+ },
+ "seeds": {
+  "confirmatory": "0-15 (test bundles only; the fit is deterministic and seed-free)"
+ },
+ "predeclared_analysis": "tools/make_capacity_numbers.py: per C the mean risk over seeds as an extra table row 'population KL fit (infinite data)'; the C = 1 row must equal the LMMSE floor (consistency); the ratio E02a(C) / population(C) at M = 2048 per C",
+ "status": "REGISTERED 2026-09-15 11:40 before running; deterministic; launched on one worker beside the queue",
+ "registered": "2026-09-15"
+}
