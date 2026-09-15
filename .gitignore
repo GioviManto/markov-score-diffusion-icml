@@ -6,7 +6,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 # Lean build products (mathlib cache is fetched by `lake exe cache get`)
-lean/.lake/
+lean/.lake
 *.olean
 # TeX build intermediates
 paper/*.aux
