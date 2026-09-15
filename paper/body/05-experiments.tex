@@ -27,19 +27,10 @@ for every capacity the effect is unambiguous (\cref{app:capacity}).
 closure gap, the $\ncomp=8$ vs $1$ gap, and the window head's error against $\kfour$}
 
 \paragraph{Baselines under one recipe.}
-\needsdata{E03: screen and confirmatory table---MLP, window head, TCN, biGRU,
-transformer, U-Net---parameters, steps, selected checkpoints, pooled error $\pm$ s.e.;
-what weight sharing, locality and global propagation buy}
-
-\paragraph{Information-matched training.}
-\needsdata{E03 matched: implicit score matching from the one-view noisy bundle; the
-one-corruption DSM arm}
+\IfFileExists{sections/baseline-numbers.tex}{\input{body/05d-baselines}}{\needsdata{E03 pending: screen and confirmatory table; information-matched arm; length extrapolation}}
 
 \paragraph{Generation.}
 \IfFileExists{sections/generation-numbers.tex}{\input{body/05b-generation}}{\needsdata{E05 pending: reverse-SDE samples under the exact, EM--BP, LMMSE and network scores}}
-
-\paragraph{Length extrapolation.}
-\needsdata{E03 length: kernels fitted at $\nsites=32$ evaluated at $64$, $128$, $256$}
 
 \paragraph{Misspecification.}
 \IfFileExists{sections/misspec-numbers.tex}{\input{body/05c-misspec}}{\needsdata{E08 pending: advantage against a misspecification parameter; break-even}}

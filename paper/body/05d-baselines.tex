@@ -1,0 +1,34 @@
+%% Included by 05-experiments.tex only when sections/baseline-numbers.tex exists (E03 done).
+\input{sections/tab-baselines}
+\Cref{tab:baselines} compares six architectures trained under one recipe (per-example
+noise level, batch $64$, Adam with clipping, both output parameterisations, checkpoint
+selected on validation), each with the configuration that won its family's screen on the
+development seeds (\cref{tab:screen}, \cref{app:protocol}), on the same test bundles as
+the capacity experiment. Weight sharing is what the fully connected network lacks: the
+window head reaches $\baseWindowD$ against the MLP's $\baseMlpD$ at $\nseq=2048$. Global
+propagation adds little at these sizes: the dilated TCN, the bidirectional recurrence,
+the transformer and the U-Net reach $\baseTcnD$, $\baseBigruD$, $\baseTransformerD$ and
+$\baseUnetD$. Every network sits at or above the second-order floor $\baseLmmseD$; the
+structured estimator sits at $\capEmeightD$, a factor $\baseRatioWindowD$
+($[\baseRatioWindowDlo,\baseRatioWindowDhi]$) below the best network at $\nseq=2048$ and
+$\baseRatioWindowA$ at $\nseq=32$.
+
+\paragraph{Information-matched training.}
+Trained by implicit score matching on the one-view noisy bundle that EM--BP sees, with
+the checkpoint selected on the implicit objective of a held-out noisy bundle and the
+true score used only to report, the window head reaches
+$\matchedIsmoneviewWindowD$ and the transformer $\matchedIsmoneviewTransformerD$ at
+$\nseq=2048$; with clean targets but a single fixed corruption per sequence they reach
+$\matchedDsmonecorruptionWindowD$ and $\matchedDsmonecorruptionTransformerD$. The
+distance between these and the standard-recipe rows is the value of the clean signal
+and of fresh corruptions; the distance to EM--BP at the same interface is the value of
+the structure.
+
+\paragraph{Length extrapolation.}
+\input{sections/tab-length}
+Fitted at $\nsites=32$ and evaluated at $\nsites=256$, the EM--BP kernel's error moves
+from $\lenEmbpDLthreetwo$ to $\lenEmbpDLtwofivesix$: the learned law is local and the
+inference is exact at any length. The window head, also local, moves from
+$\lenWindowDLthreetwo$ to $\lenWindowDLtwofivesix$; the transformer with relative
+positions from $\lenTransformerDLthreetwo$ to $\lenTransformerDLtwofivesix$
+(\cref{tab:length}).
