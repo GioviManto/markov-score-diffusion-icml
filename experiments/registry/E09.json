@@ -9,7 +9,7 @@
   "confirmatory": "0-15 (test bundles only; the fit is deterministic and seed-free)"
  },
  "predeclared_analysis": "tools/make_capacity_numbers.py: per C the mean risk over seeds as an extra table row 'population KL fit (infinite data)'; the C = 1 row must equal the LMMSE floor (consistency); the ratio E02a(C) / population(C) at M = 2048 per C",
- "status": "PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659261); REGISTERED 2026-09-15 11:40 before running; deterministic; launched on one worker beside the queue",
+ "status": "FROZEN E09 2026-09-15T11:12:59Z; PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659261); REGISTERED 2026-09-15 11:40 before running; deterministic; launched on one worker beside the queue",
  "registered": "2026-09-15",
  "hpc_runs": [
   {
@@ -29,5 +29,21 @@
     "floor": 659249
    }
   }
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E09/floor.csv": "9921e804221c79594faff72dd4ee4c6e11d2297e0b5c09507b55cbfd8ec15141",
+  "outputs/E09/params_floor.json": "ce572369305f88e0c03f5b3b162bdcf6767148a15a41938401f1e2a354f8e444",
+  "outputs/E09/floor_fits.json": "f600fa4bbdae99c7a23e23f7c91308faa5d451734907c9f9e7ea951364977681"
+ },
+ "frozen_at": {
+  "E09": "2026-09-15T11:12:59Z"
+ },
+ "frozen_commit": {
+  "E09": "7cba0618e0c6176f5b8428ab808d5c9e3d13b9ac"
+ },
+ "frozen_run_commits": {
+  "E09": [
+   "ea0435a"
+  ]
+ }
 }
