@@ -38,6 +38,7 @@ learning consequences — not the law itself.
 | Refinement on the actual fitted models | *pending* (E04) | — |
 | Phase diagram of the LMMSE floor over ρ: the pooled floor falls from 0.29 (ρ = 0) to 0.085 (ρ = 0.95) on the Laplace chain; families order by κ₄ at every ρ | done | `outputs/E07/ladder.csv`, `paper/figures/fig_phase.pdf` |
 | Misspecification against a locality-aware baseline | *pending* (E08) | — |
+| Infinite-data KL-optimal mixture per capacity on the E02a bundles (reference for the family; its C = 1 row equals the LMMSE floor) | *running* (E09, registered 11:40) | `outputs/E09/` |
 | Lean: Mehler identity n ≤ 4, κ₄ difference, Gaussian information constant ½‖∂Σ₀‖²_F, scalar score-gap coefficient κ₄/6 | done (green build 15 Sep; algebra only, remainders informal) | `lean/ThesisAudit/PaperTheory.lean`, `lean/README.md` §2 |
 
 ## 3. Original claims: survived, weakened, strengthened, removed
