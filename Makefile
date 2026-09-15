@@ -36,7 +36,7 @@ tables:          ## regenerate every generated .tex fragment under paper/section
 	  && $(PY) tools/make_aggregation_structured.py && $(PY) tools/make_aggregation_robustness.py \
 	  && $(PY) tools/make_convergence_numbers.py && $(PY) tools/make_rate_analysis.py && $(PY) tools/make_tab_hellinger.py \
 	  && $(PY) tools/make_theory_numbers.py && $(PY) tools/make_oracle_numbers.py
-	@for g in capacity:E02a/capacity.csv learning:E06/levels.csv generation:E05/generation.csv refinement:E04/refinement.csv misspec:E08/misspecification.csv baseline:E03/confirm.csv; do \
+	@for g in capacity:E02a/capacity.csv learning:E06/levels.csv generation:E05/generation.csv refinement:E04/refinement.csv misspec:E08/misspecification.csv baseline:E03/confirm.csv family:E02b/family.csv; do \
 	  n=$${g%%:*}; f=outputs/$${g#*:}; if [ -f $$f ]; then $(PY) tools/make_$${n}_numbers.py; fi; done
 	@if [ -f outputs/E07/ladder.csv ]; then $(PY) tools/make_fig_phase.py; fi
 
