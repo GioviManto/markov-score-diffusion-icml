@@ -34,7 +34,13 @@ GENERATORS = [
     "make_tab_efficiency.py", "make_tab_structured.py", "make_tab_screening.py",
     "make_aggregation_structured.py", "make_aggregation_robustness.py",
     "make_convergence_numbers.py", "make_rate_analysis.py", "make_tab_hellinger.py",
+    "make_theory_numbers.py", "make_oracle_numbers.py",
 ]
+# generators that need registered outputs which may not exist yet; skipped if the source is absent
+OPTIONAL = {"make_capacity_numbers.py": "outputs/E02a/capacity.csv", "make_learning_numbers.py": "outputs/E06/levels.csv",
+            "make_generation_numbers.py": "outputs/E05/generation.csv", "make_refinement_numbers.py": "outputs/E04/refinement.csv",
+            "make_fig_phase.py": "outputs/E07/ladder.csv", "make_misspec_numbers.py": "outputs/E08/misspecification.csv",
+            "make_baseline_numbers.py": "outputs/E03/confirm.csv"}
 # Fragments the legacy generators emit that the manuscript may or may not input.
 FRAGMENT_GLOB = "sections/*.tex"
 NUMBER = re.compile(r"(?<![\w\\{])(?:\d+\.\d+|\d+e-?\d+|\d+\s*\\times\s*10\^\{-?\d+\})(?![\w}])")
@@ -53,7 +59,8 @@ def regenerate_and_diff() -> int:
                 continue
             (tmp / item.name).symlink_to(item)
         (tmp / "paper" / "figures").symlink_to(PAPER / "figures")
-        for g in GENERATORS:
+        gens = list(GENERATORS) + [g for g, src in OPTIONAL.items() if (ROOT / src).exists()]
+        for g in gens:
             r = subprocess.run([sys.executable, str(ROOT / "tools" / g)], cwd=tmp, capture_output=True, text=True)
             if r.returncode != 0:
                 print(f"[FAIL] {g} exited {r.returncode}\n{r.stdout[-800:]}\n{r.stderr[-800:]}")

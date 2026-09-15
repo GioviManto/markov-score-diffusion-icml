@@ -225,7 +225,7 @@ def part_screen(cfg, out, workers):
              for s in cfg["dev_seeds"] for n in cfg["screen_sizes"]
              for arch in cfg["archs"] for hp in GRIDS[arch] for lr in cfg["lrs"] for mode in cfg["parameterizations"]]
     print(f"  screen: {len(cells)} cells", flush=True)
-    rows = _run(cells, _screen_cell, workers)
+    rows = _run(cells, _screen_cell, workers, out, "screening.csv")
     write_csv(out / "screening.csv", rows)
 
 
@@ -264,7 +264,7 @@ def part_confirm(cfg, out, workers):
         raise SystemExit("confirm needs --set winners=\"'auto:<screening.csv>'\"")
     write_json(out / "winners.json", w)
     cells = [(cfg, s, n, arch, ww) for s in cfg["seeds"] for n in cfg["sizes"] for arch, ww in w.items()]
-    rows = _run(cells, _confirm_cell, workers)
+    rows = _run(cells, _confirm_cell, workers, out, "confirm.csv")
     write_csv(out / "confirm.csv", rows)
 
 
@@ -336,7 +336,7 @@ def part_matched(cfg, out, workers):
     if isinstance(w, str) and w.startswith("auto:"):
         w = winners_from_screening(w[5:])
     cells = [(cfg, s, n, arch, w[arch]) for s in cfg["seeds"] for n in cfg["sizes"] for arch in cfg["matched_archs"]]
-    rows = _run(cells, _matched_cell, workers)
+    rows = _run(cells, _matched_cell, workers, out, "matched.csv")
     write_csv(out / "matched.csv", rows)
 
 
@@ -367,22 +367,26 @@ def part_length(cfg, out, workers):
     if isinstance(w, str) and w.startswith("auto:"):
         w = winners_from_screening(w[5:])
     cells = [(cfg, s, n, arch, ww) for s in cfg["seeds"] for n in cfg["sizes"] for arch, ww in w.items()]
-    rows = _run(cells, _length_cell, workers)
+    rows = _run(cells, _length_cell, workers, out, "length.csv")
     write_csv(out / "length.csv", rows)
 
 
-def _run(cells, fn, workers):
+def _run(cells, fn, workers, out=None, csv_name=None):
+    """Run cells (serially or in a spawn pool); write the CSV after EVERY cell so a crash
+    loses one cell, not the run. Returns the accumulated rows."""
+    rows = []
+    def _flush():
+        if out is not None and csv_name is not None and rows:
+            write_csv(out / csv_name, rows)
     if workers <= 1:
-        out = []
         for c in cells:
-            out.extend(fn(c))
-        return out
+            rows.extend(fn(c)); _flush()
+        return rows
     import multiprocessing as mp
-    out = []
     with mp.get_context("spawn").Pool(workers) as pool:
         for r in pool.imap_unordered(fn, cells):
-            out.extend(r)
-    return out
+            rows.extend(r); _flush()
+    return rows
 
 
 PARTS = {"screen": part_screen, "confirm": part_confirm, "matched": part_matched, "length": part_length}

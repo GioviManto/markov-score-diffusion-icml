@@ -137,24 +137,28 @@ def _cell(args):
     return [row]
 
 
-def _run(cells, fn, workers):
+def _run(cells, fn, workers, out=None, csv_name=None):
+    """Run cells (serially or in a spawn pool); write the CSV after EVERY cell so a crash
+    loses one cell, not the run. Returns the accumulated rows."""
+    rows = []
+    def _flush():
+        if out is not None and csv_name is not None and rows:
+            write_csv(out / csv_name, rows)
     if workers <= 1:
-        out = []
         for c in cells:
-            out.extend(fn(c))
-        return out
+            rows.extend(fn(c)); _flush()
+        return rows
     import multiprocessing as mp
-    out = []
     with mp.get_context("spawn").Pool(workers) as pool:
         for r in pool.imap_unordered(fn, cells):
-            out.extend(r)
-    return out
+            rows.extend(r); _flush()
+    return rows
 
 
 def part_levels(cfg, out, workers):
     levels = list(cfg["levels"]) + ([0.0] if cfg["include_clean"] else [])
     cells = [(cfg, s, t) for s in cfg["seeds"] for t in levels]
-    rows = _run(cells, _cell, workers)
+    rows = _run(cells, _cell, workers, out, "levels.csv")
     write_csv(out / "levels.csv", rows)
 
 
