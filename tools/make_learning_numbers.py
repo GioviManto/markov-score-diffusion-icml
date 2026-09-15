@@ -35,7 +35,7 @@ def main() -> int:
     ap.add_argument("--src", default="outputs/E06")
     args = ap.parse_args()
     src = ROOT / args.src
-    dev = "dev" in src.name or "quick" in src.name
+    dev = "dev" in src.name or "quick" in src.name or "scratch" in src.parts
     sec = ROOT / ("outputs/scratch/sections_dev" if dev else "paper/sections")
     figdir = ROOT / ("outputs/scratch/figures_dev" if dev else "paper/figures")
     sec.mkdir(parents=True, exist_ok=True); figdir.mkdir(parents=True, exist_ok=True)

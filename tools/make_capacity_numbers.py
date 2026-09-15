@@ -47,7 +47,7 @@ def main() -> int:
     ap.add_argument("--dest", default="paper/sections")
     args = ap.parse_args()
     src = ROOT / args.src
-    dev = "dev" in src.name
+    dev = "dev" in src.name or "quick" in src.name or "scratch" in src.parts
     dest = ROOT / ("outputs/scratch/sections_dev" if dev else args.dest)
     dest.mkdir(parents=True, exist_ok=True)
     df = pd.read_csv(src / "capacity.csv")

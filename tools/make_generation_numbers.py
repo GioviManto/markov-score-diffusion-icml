@@ -29,7 +29,7 @@ def _mac(s):
 def main() -> int:
     ap = argparse.ArgumentParser(); ap.add_argument("--src", default="outputs/E05"); args = ap.parse_args()
     src = ROOT / args.src
-    dev = "dev" in src.name or "quick" in src.name
+    dev = "dev" in src.name or "quick" in src.name or "scratch" in src.parts
     dest = ROOT / ("outputs/scratch/sections_dev" if dev else "paper/sections"); dest.mkdir(parents=True, exist_ok=True)
     df = pd.read_csv(src / "generation.csv")
     metrics = ["loglik_gap", "kurt_gen", "cum4_lag_gen", "sw2", "w1_marginal", "energy", "cov_fro", "acf_err_max", "hist_kl_resid"]

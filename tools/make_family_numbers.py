@@ -39,7 +39,7 @@ def boot_ci(x, n=20000, seed=20260915):
 def main() -> int:
     ap = argparse.ArgumentParser(); ap.add_argument("--src", default="outputs/E02b"); args = ap.parse_args()
     src = ROOT / args.src
-    dev = "dev" in src.name or "quick" in src.name
+    dev = "dev" in src.name or "quick" in src.name or "scratch" in src.parts
     sec = ROOT / ("outputs/scratch/sections_dev" if dev else "paper/sections"); figdir = ROOT / ("outputs/scratch/figures_dev" if dev else "paper/figures")
     sec.mkdir(parents=True, exist_ok=True); figdir.mkdir(parents=True, exist_ok=True)
     df = pd.read_csv(src / "family.csv"); df = df[df.region == "all"]

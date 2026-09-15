@@ -24,7 +24,7 @@ RUNG_TAG = {(401, 8.0): "prod", (801, 8.0): "fine", (1601, 8.0): "finest", (801,
 def main() -> int:
     ap = argparse.ArgumentParser(); ap.add_argument("--src", default="outputs/E04"); args = ap.parse_args()
     src = ROOT / args.src
-    dev = "dev" in src.name or "quick" in src.name
+    dev = "dev" in src.name or "quick" in src.name or "scratch" in src.parts
     dest = ROOT / ("outputs/scratch/sections_dev" if dev else "paper/sections"); dest.mkdir(parents=True, exist_ok=True)
     df = pd.read_csv(src / "refinement.csv")
     macros = {}
