@@ -1,0 +1,19 @@
+\section{Limitations and conclusion}
+\label{sec:conclusion}
+
+The model is a chain in one dimension with a linear autoregressive form; the theorem
+holds for any law with the stated moments, but the exact verification and the learning
+results are for chains. The estimator's advantage is the correctness of its
+factorisation: under a non-Markov truth it is misspecified in a way more data does not
+repair, and \cref{sec:experiments} locates where that begins. Inference costs
+$O(\nsites\ngrid^2)$ per sequence, far above a network forward pass, so the advantage is
+in data and understanding, not in wall-clock. The comparison with denoisers equalises
+the number of clean sequences under each method's standard recipe and, separately,
+matches the information interface; it does not rank learning algorithms in general.
+
+What the laboratory teaches is general: diffusion noise erases statistical structure
+order by order, at rates fixed by Hermite degree, so a score learner that reaches only
+second order is bounded away from the truth by an $e^{-8t}$-scaled term and a learner
+of shape pays $e^{4t}$ in samples per level. Explicit structure is the way to recover
+what the data still carry; the price of the wrong structure is a bias that no sample
+size removes.

@@ -27,6 +27,14 @@ DEST = ROOT / "paper" / "sections" / "theory-numbers.tex"
 T_STAR_085 = None
 
 
+
+_DIGITS = {"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine"}
+
+
+def _mac(name: str) -> str:
+    """LaTeX macro names cannot contain digits: spell them out (t3p0 -> tthreepzero)."""
+    return "".join(_DIGITS.get(ch, ch) for ch in name).replace(".", "p")
+
 def _slope(t, y):
     t, y = np.asarray(t, float), np.log(np.asarray(y, float))
     return float(np.polyfit(t, y, 1)[0])
@@ -91,13 +99,13 @@ def main() -> int:
              "%% Slopes: OLS of log(quantity) on t over the levels with t >= t_* + 1 (t_* = %.2f at rho = 0.85)." % ts085,
              "%% Ratios: measured / (C_4 e^{-8t}) with C_4 = ||kappa_4||_F^2 / 6."]
     for k, v in macros.items():
-        lines.append(f"\\newcommand{{\\{k}}}{{{v}}}")
+        lines.append(f"\\newcommand{{\\{_mac(k)}}}{{{v}}}")
     DEST.parent.mkdir(parents=True, exist_ok=True)
     DEST.write_text("\n".join(lines) + "\n")
     print(f"wrote {DEST.relative_to(ROOT)}: {len(macros)} macros")
     for k in ("gaussSlopeRho85", "shapeSlopeBeta2", "shapeSlopeBeta3", "shapeSlopeBeta1", "closureSlopeSqlaplace",
               "closureRatiolaplacet3p0", "closureRatiobimodalt4p0", "closureSlopeRellaplace"):
-        print(f"  \\{k} = {macros[k]}")
+        print(f"  \\{_mac(k)} = {macros[k]}")
     return 0
 
 

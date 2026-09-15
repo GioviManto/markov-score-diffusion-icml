@@ -1,0 +1,30 @@
+\section{The oracle ladder}
+\label{app:oracles}
+
+\begin{table}[h]
+\centering
+\caption{Schedule-pooled relative score error of the two oracles against the tree-exact
+reference, 512 chains per family at the frozen configuration. The LMMSE column is the
+floor of every second-order estimator (\cref{prop:lmmse}).}
+\begin{tabular}{lccc}
+\toprule
+family & excess kurtosis & isotropic $-\vx$ & LMMSE, true $\Sig_0$ \\
+\midrule
+Laplace & $+3$ & \isoFloorLaplace & \lmmseFloorLaplace \\
+Student-$t_5$ & $+6$ & \isoFloorStudent & \lmmseFloorStudent \\
+uniform & $-1.2$ & \isoFloorUniform & \lmmseFloorUniform \\
+bimodal & $-0.72$ & \isoFloorBimodal & \lmmseFloorBimodal \\
+Gaussian & $0$ & \isoFloorGaussian & \lmmseFloorGaussian \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Capacity: the previous reading and the stopping-rule artefact}
+\label{app:capacity}
+\needsdata{The exp\_32 protocol (validation on initialisation only; tolerance stop firing
+at $\ncomp=1$ in 31/32 cells and never at $\ncomp\ge4$), and the E02 table under identical
+checkpoint selection.}
+
+\section{Additional tables}
+\label{app:additional}
+\needsdata{Aggregation robustness; rates; screening details.}

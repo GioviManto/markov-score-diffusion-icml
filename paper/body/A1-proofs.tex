@@ -1,0 +1,42 @@
+\section{Proofs}
+\label{app:proofs}
+
+\subsection{\Cref{prop:lmmse}}
+Write $\lmsg^{\mathrm{p}}_i$ for the forward message at site $i$ after projection and
+$\ell_i$ for the Gaussian unary likelihood. We show by induction that every projected
+message equals the corresponding exact message of the covariance-matched Gaussian chain.
+The initial message is Gaussian or projected to the Gaussian with the same first two
+moments, which is the Gaussian chain's initial message. If $\lmsg^{\mathrm{p}}_{i-1}$ is
+that chain's message, with mean $m$ and variance $v$, multiplying by $\ell_{i-1}$ gives
+a Gaussian with the precision-weighted moments, identical in both chains; the transition
+integral against $a_i=\corr a_{i-1}+\varepsilon_i$ is a convolution whose mean and
+variance are $(\corr m,\corr^2v+\ivar)$ for every innovation with moments $(0,\ivar)$, so
+$\Pgauss$ returns the Gaussian chain's next message. The backward sweep runs the same
+argument with the inverted map $(m,v)\mapsto(m/\corr,(v+\ivar)/\corr^2)$, which is where
+$\corr\neq0$ is used, starting from the terminal likelihood $\ell_{\nsites}$ (the flat
+terminal message is not normalisable and contributes no factor). Every projected belief
+is therefore the Gaussian chain's belief, whose posterior mean is linear in $\vx$ and
+coincides with the LMMSE estimator $e^{-t}\Sig_0\Sig_t^{-1}\vx$. Since the recursion
+never read $\innov$ beyond $(0,\ivar)$, the estimator is the same for every such law.
+The algebraic steps (the two moment maps as integrals, the covariance identities, and
+the optimality of the normal-equation gain in arbitrary dimension) are machine-checked
+in Lean~4 (\codefile{lean/README.md}); the projection step itself is not.
+
+\subsection{\Cref{thm:hermite}}
+For $z\sim\normal{0}{1}$ and real $a$, $\alpha$ with $\beta=\sqrt{1-\alpha^2}$, the
+generating function $e^{sx-s^2/2}=\sum_n\Hen{n}(x)s^n/n!$ evaluated at
+$x=\alpha a+\beta z$ and averaged over $z$ gives
+$e^{s\alpha a-s^2\alpha^2/2}=\sum_n\Hen{n}(a)(\alpha s)^n/n!$, hence
+$\E_z\Hen{n}(\alpha a+\beta z)=\alpha^n\Hen{n}(a)$. The coordinates of $\vz$ are
+independent given $\va$, so the product form holds for $H_\nu$; integrating over
+$\va\sim\Pz$ requires only $\E|\va|^{|\nu|}<\infty$. The cases $n\le4$ are verified in
+Lean as polynomial identities under the first four Gaussian moments.
+
+\subsection{\Cref{thm:decay}}
+\needsdata{Full proof: (i) the exact identities for $\Lambda$; (ii) the grading of
+$\Lambda$ by order in $e^{-t}$ and the fourth-order joint cumulants; (iii) the leading
+term of $\score-\Sgauss$ and its $\gamma$-second moment by Wick's theorem, giving
+$\tfrac16\Frob{\kfour}^2$; (iv) the information constants; (v) the remainder: Taylor
+remainder of $\Lambda$ on $|e^{-t}\vx|\le1$ under finite eighth moments, and the tail
+$|e^{-t}\vx|>1$ of probability $\le\exp(-ce^{2t})$ under $\Pt$; (vi) the exact Gaussian
+case.}

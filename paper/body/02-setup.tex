@@ -1,0 +1,67 @@
+\section{Setup: an exactly solvable non-Gaussian laboratory}
+\label{sec:setup}
+
+\paragraph{Data and channel.}
+A clean sequence $\va\in\Reals^{\nsites}$ is a first-order Markov chain,
+\begin{equation}
+  \Pz(\va)=\mu(a_1)\prod_{i=2}^{\nsites}\kernel(a_i\mid a_{i-1}),\quad
+  \kernel(a'\mid a)=\innov(a'-\corr a),
+  \label{eq:prior}
+\end{equation}
+with $a_1\sim\normal{0}{1}$, $|\corr|<1$, and an innovation density $\innov$ of mean zero
+and variance $\ivar=1-\corr^2$. The variance choice makes $\Var(a_i)=1$ and
+$\Cov(a_i,a_j)=\corr^{|i-j|}$ exactly for \emph{every} innovation law, so the families we
+use---Gaussian, Laplace, Student-$t$, uniform, a symmetric two-component mixture, and the
+generalised Gaussian $\innov_\beta(\varepsilon)\propto\exp(-|\varepsilon/s_\beta|^\beta)$
+whose exponent $\beta$ moves the excess kurtosis from $+3$ (Laplace) through $0$
+(Gaussian) to $-1.1$ at fixed variance---share one covariance $\Sig_0$ and differ only
+through cumulants of order four and higher.
+The forward process is the coordinatewise Ornstein--Uhlenbeck channel
+\begin{equation}
+  \vx_t = e^{-t}\va + \sqrt{\Dt}\,\vz,\qquad \Dt=1-e^{-2t},\quad \vz\sim\normal{0}{\Id},
+  \label{eq:channel}
+\end{equation}
+so $\Var(x_{t,i})=1$ at every $t$ and the noised law $\Pt$ tends to $\normal{0}{\Id}$.
+
+\paragraph{The score is a posterior mean, and the posterior is a tree.}
+Tweedie's identity gives $\score(\vx,t)=-(\vx-e^{-t}\pmean{\va})/\Dt$, with
+$\pmean{\va}=\E[\va\mid\vx_t=\vx]$ \citep{robbins1956empirical,efron2011tweedie}. Conditioning
+\cref{eq:prior} on $\vx$ multiplies the prior by one unary factor
+$\like(x_i\mid a_i)\propto\exp[-(x_i-e^{-t}a_i)^2/2\Dt]$ per site: no edge is added among
+the latent variables, the posterior factor graph is the prior's chain, and sum-product
+on it is exact \citep{pearl1988probabilistic,kschischang2001factor}. Two message sweeps,
+\begin{equation}
+\begin{aligned}
+  \lmsg_i(a_i)&\propto\!\int\!\kernel(a_i\mid a_{i-1})\,\like(x_{i-1}\mid a_{i-1})\,\lmsg_{i-1}(a_{i-1})\dd a_{i-1},\\
+  \rmsg_i(a_i)&\propto\!\int\!\kernel(a_{i+1}\mid a_i)\,\like(x_{i+1}\mid a_{i+1})\,\rmsg_{i+1}(a_{i+1})\dd a_{i+1},
+\end{aligned}
+\label{eq:bp}
+\end{equation}
+return the site marginals $\propto\lmsg_i\like\rmsg_i$ and hence the exact score of a
+correlated, non-Gaussian, $\nsites$-dimensional law. Messages are functions on $\Reals$;
+we represent them on a grid of $\ngrid$ points on $[-\halfwidth,\halfwidth]$ with
+trapezoidal quadrature, which makes the recursion exact for the discretised factor model
+and controlled for the continuous one (\cref{app:numerics}: at $\ngrid=401$,
+$\halfwidth=8$ the reference is accurate to $10^{-5}$ relative on ordinary draws for
+every family used). Throughout, ``the score'' means this tree-exact functional inference,
+evaluated by validated grid quadrature.
+
+\paragraph{The covariance twin and the price of second-order closure.}
+The Gaussian chain with the same $\corr$ and $\ivar$ has the closed-form score
+$\Sgauss(\vx,t)=-\Sig_t^{-1}\vx$, $\Sig_t=e^{-2t}\Sig_0+\Dt\Id$, and posterior mean
+$e^{-t}\Sig_0\Sig_t^{-1}\vx$, the linear minimum-mean-square (LMMSE) estimator.
+\begin{proposition}[Gaussian closure computes the LMMSE of the covariance twin]
+\label{prop:lmmse}
+Let $\Pgauss$ project a density onto the Gaussian with its mean and variance, and let
+moment-projected sum-product apply $\Pgauss$ to each message after every transition
+integral in \cref{eq:bp}. For the chain \cref{eq:prior} with $\corr\neq0$ and any
+innovation law of mean zero and variance $\ivar$, it returns exactly the LMMSE estimator
+$e^{-t}\Sig_0\Sig_t^{-1}\vx$, the same for every such law.
+\end{proposition}
+The proof (\cref{app:proofs}) is an induction over the two sweeps: a convolution's first
+two moments depend on the innovation only through its first two moments, so every
+projected message equals the Gaussian chain's message. \Cref{prop:lmmse} turns the gap
+between $\score$ and $\Sgauss$ into an interpretable object: it is precisely what any
+estimator that carries only second-order structure---a Gaussian innovation kernel, a
+linear denoiser, or the Kalman smoother---must leave on the table. \Cref{sec:theory}
+computes its size.

@@ -1,0 +1,72 @@
+\section{Introduction}
+\label{sec:intro}
+
+Generative diffusion produces samples by reversing a noising process, and the reversal
+is driven by the score $\score(\vx,t)=\nabla_{\vx}\log\Pt(\vx)$ of the noised data law
+\citep{sohl2015deep,ho2020denoising,song2021scorebased}. Training regresses a network onto that score through
+denoising \citep{vincent2011connection}, and every question about what such a network has learned
+is a question about the distance between what it computes and the score it should have
+computed. For realistic data the target is unavailable, so a large error cannot be
+separated from a hard target; the tractable alternatives are Gaussian, whose scores are
+linear, or mixtures, whose nonlinearity lives in the mixture index rather than in any
+dependence between coordinates.
+
+We study a family that is neither. A first-order Markov chain with continuous,
+non-Gaussian transitions has a globally dependent, nonlinear score, yet under
+coordinatewise Ornstein--Uhlenbeck noise its posterior factor graph is a tree, so the
+score is computable exactly by two sweeps of functional message passing
+(\cref{sec:setup}). Because the chain's covariance is fixed by two numbers and its
+higher-order structure by the innovation law, the model separates second-order from
+higher-order structure by construction: Gaussian, Laplace, Student-$t$, uniform and
+bimodal innovations, and a one-parameter family that interpolates between them, share
+one covariance exactly.
+
+\paragraph{The question.}
+What information about structured data survives diffusion noise, and how much does
+knowing the structure reduce the data needed to recover the score and the dynamics that
+generate it?
+
+\paragraph{Diffusion noise is a low-pass filter on statistical order.}
+The first answer is a theorem (\cref{sec:theory}). Under the Ornstein--Uhlenbeck channel
+every Hermite mode of degree $m$ is attenuated exactly by $e^{-mt}$, so the Fisher
+information a noised sequence carries about an order-$m$ feature of the data decays as
+$e^{-2mt}$. Correlation lives at degree two and decays as $e^{-4t}$; non-Gaussian shape
+first appears at degree four and decays as $e^{-8t}$; and the gap between the true score
+and the score of the covariance-matched Gaussian---which we prove is exactly what
+single-Gaussian message closure computes (\cref{prop:lmmse})---is
+$\tfrac16\Frob{\kfour}^2e^{-8t}$ to leading order, with an explicit crossover
+$\tstar=\tfrac12\log\lmax(\Sig_0)$ before which the rates are shallower. The exact score
+lets us verify the exponents and the constants (\cref{fig:theory}), and the result
+explains, rather than contradicts, earlier measurements on this model that stopped
+before $\tstar$.
+
+\paragraph{Learning through the channel.}
+The second answer is empirical. We learn the transition law from noised sequences
+alone, by expectation--maximisation around the same exact recursion, with Fisher's
+identity supplying the exact gradient of the marginal likelihood from one
+forward--backward pass (\cref{sec:learning}). The theorem predicts that the shape of the
+innovation law is recovered $e^{4t}$ times more slowly than its correlation at
+observation level $t$; the experiment confirms it, and locates the levels at which shape
+is still learnable. Against denoising networks trained on the clean trajectories---a
+fully connected network, a weight-shared window head, and dilated, recurrent,
+attention-based and multiscale architectures under one training recipe---the
+structured estimator recovers fourth-order structure that the networks do not reach at
+the same number of sequences: at every size tested the learned networks sit at or above
+the second-order floor of \cref{prop:lmmse}, and the structured estimator sits far below
+it (\cref{sec:experiments}). We show that this advantage is earned by the non-Gaussian
+capacity of the innovation model and not only by the Markov factorisation, that it
+transfers to the generated distribution, that it extrapolates in sequence length, and
+that it has a measurable boundary under misspecification.
+
+\paragraph{Contributions.}
+(i)~An exactly solvable non-Gaussian, correlated diffusion laboratory with a validated
+score reference, and the identification of Gaussian message closure with the LMMSE of
+the covariance twin (\cref{prop:lmmse}).
+(ii)~\Cref{thm:hermite,thm:decay}: exact Hermite attenuation and the order-by-order decay
+of score gaps and Fisher information, with constants and crossover, verified with the
+exact score.
+(iii)~Transition learning from noised data by exact-inference EM, with the predicted
+$e^{4t}$ separation of shape from correlation recovery measured.
+(iv)~A controlled comparison against learned denoisers---capacity attribution, fair
+architecture screen, information-matched training, generation, length extrapolation and
+misspecification---showing what explicit structure buys and where it stops.

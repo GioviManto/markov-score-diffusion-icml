@@ -55,7 +55,8 @@ def main():
         if ts > 0:
             y = np.interp(ts, d.t, d.I_rho_scaled)
             ax.plot([ts], [y], marker="|", ms=7, mew=1.2, color=col, zorder=4)
-            ax.text(ts * 1.12, y - 0.02, f"ρ = {rho:g}", color=col, fontsize=7.5, va="top", ha="left")
+            dy = {0.3: -0.02, 0.6: -0.02, 0.85: -0.02, 0.95: -0.11}.get(rho, -0.02)
+            ax.text(ts * 1.12, y + dy, f"ρ = {rho:g}", color=col, fontsize=7.5, va="top", ha="left")
         else:
             ax.text(0.024, 1.0 - 0.03, f"ρ = {rho:g}", color=col, fontsize=7.5, va="top", ha="left")
     ax.axhline(1.0, color=fs.MUTED, lw=0.6, ls=":", zorder=1)

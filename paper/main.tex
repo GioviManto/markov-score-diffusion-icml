@@ -1,0 +1,107 @@
+%% ICML submission. Provisional format: the ICML 2026 kit (paper/style/icml2026), to be
+%% swapped for the 2027 kit when released -- change the three symlinks in paper/ and the
+%% \usepackage line below; nothing else in this file depends on the kit version.
+%% Page geometry, fonts and spacing are the kit's; they are never altered here.
+\documentclass{article}
+
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Submission: anonymous. Camera-ready: \usepackage[accepted]{icml2026}.
+\usepackage{icml2026}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage[capitalize,noabbrev]{cleveref}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\graphicspath{{figures/}}
+\input{notation}
+\newcommand{\kfour}{\kappa_4}
+\newcommand{\Sgauss}{S^{\mathrm{G}}}
+\newcommand{\tstar}{t_\ast}
+\newcommand{\lmax}{\lambda_{\max}}
+\newcommand{\Hen}[1]{\mathrm{He}_{#1}}
+\newcommand{\Frob}[1]{\lVert #1 \rVert_{F}}
+
+%% Generated number macros: every quantitative statement in the body is one of these.
+\input{sections/theory-numbers}
+\input{sections/oracle-numbers}
+\input{sections/efficiency-numbers}
+\input{sections/structured-numbers}
+\input{sections/screening-numbers}
+\input{sections/convergence-numbers}
+\input{sections/rate-numbers}
+\input{sections/structured-aggregation-numbers}
+\input{sections/grid-convergence-numbers}
+\providecommand{\provenanceappendix}{\cref{app:protocol}}
+
+\icmltitlerunning{What survives diffusion noise}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{What Survives Diffusion Noise?\\
+  Exact Scores, Order-by-Order Information Decay, and Transition Learning\\
+  in Non-Gaussian Markov Chains}
+
+\icmlsetsymbol{equal}{*}
+\begin{icmlauthorlist}
+  \icmlauthor{Anonymous Authors}{anon}
+\end{icmlauthorlist}
+\icmlaffiliation{anon}{Anonymous Institution}
+\icmlcorrespondingauthor{Anonymous}{anonymous@example.org}
+\icmlkeywords{diffusion models, score matching, belief propagation, Markov chains, Fisher information, Hermite polynomials}
+\vskip 0.3in
+]
+
+\printAffiliationsAndNotice{}
+
+\begin{abstract}
+\input{body/00-abstract}
+\end{abstract}
+
+\input{body/01-introduction}
+\input{body/02-setup}
+\input{body/03-theory}
+\input{body/04-learning}
+\input{body/05-experiments}
+\input{body/06-related}
+\input{body/07-conclusion}
+
+\section*{Impact statement}
+This paper presents theoretical and empirical work on how diffusion noise erases
+statistical structure and on learning structured dynamics from noised data, evaluated on
+synthetic models with known ground truth. Its societal consequences are those of a better
+understanding of generative diffusion models in general; we see no specific ethical
+concern that requires discussion here.
+
+\bibliography{references}
+\bibliographystyle{icml2026}
+
+\newpage
+\appendix
+\onecolumn
+\input{body/A1-proofs}
+\input{body/A2-numerics}
+\input{body/A3-protocol}
+\input{body/A4-additional}
+
+\end{document}

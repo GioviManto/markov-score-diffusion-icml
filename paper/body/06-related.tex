@@ -1,0 +1,30 @@
+\section{Related work}
+\label{sec:related}
+
+\needsdata{Rewritten from docs/RELATED\_WORK\_SWEEP.md once the sweep is verified.}
+Diffusion and score matching are due to \citet{sohl2015deep,ho2020denoising,song2021scorebased} and
+\citet{hyvarinen2005estimation,vincent2011connection}; the score--posterior-mean identity is Tweedie's
+\citep{robbins1956empirical,efron2011tweedie}. Solvable settings and the statistical mechanics of
+diffusion \citep{biroli2023generative,biroli2024dynamical,cui2025solvable,raya2023spontaneous,ghio2024sampling} analyse memorisation and
+speciation with targets that are Gaussian or mixture-like; hierarchical models supply
+tractable non-Gaussian families \citep{sclocchi2025phase} on which U-Nets and transformers
+implement belief propagation \citep{mei2024unets,garnierbrun2024transformers}. Our chain is the
+degenerate tree of depth $\nsites$, and our estimator is classical: sum-product on a
+chain is forward--backward \citep{baum1970,rabiner1989tutorial}, reducing to Kalman--RTS in the
+Gaussian case; grid quadrature is Kitagawa's smoother \citep{kitagawa1987}; Fisher's
+identity and EM are \citet{dempster1977maximum,cappe2005}. \Cref{thm:decay} belongs to the low-SNR literature. In Gaussian channels the
+mutual information and the MMSE expand in the SNR with fourth-order statistics entering
+at second order \citep{prelov2004second,guo2005mutual,dytso2023meta}; for latent-variable
+models the log-likelihood expands with the order-$k$ term matching $k$-th moments
+\citep{katsevich2023likelihood}, which gives the $\sigma^{2k}$ sample complexity of
+multireference alignment and orbit recovery \citep{perry2019sample,bandeira2023estimation}
+and, most closely, the layered Fisher-information geometry of \citet{balanov2026gmm}.
+\citet{aarts2025cumulants} write the forward-process cumulant attenuation $e^{-nt}$ and
+show that score networks regenerate the cumulants. \citet{wang2024gaussian} and
+\citet{li2024hidden} observe that learned scores are dominated by their Gaussian part
+over a wider noise range than a first-order bound suggests; \cref{eq:scoregap} is the
+sharp rate behind that observation for a non-Gaussian chain, where the Gaussian part is
+exactly the Kalman smoother. New here are the score-level statement with its constant
+and crossover, the Markov (dependent) rather than i.i.d.\ latent structure, the exact
+verification, and the learning consequences with an exact E-step rather than moment
+matching.

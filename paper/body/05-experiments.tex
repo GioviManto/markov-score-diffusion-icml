@@ -1,0 +1,50 @@
+\section{What explicit structure buys, and where it stops}
+\label{sec:experiments}
+
+All comparisons use the frozen configuration of \cref{app:protocol}: Laplace chain,
+$\corr=0.85$, $\nsites=32$, twelve log-spaced levels on $[0.05,3]$, and the
+schedule-pooled relative score error against the tree-exact reference (squared error and
+reference energy summed over levels before the square root). Sixteen paired seeds are
+the inferential unit; architectures and hyperparameters are selected on four development
+seeds that never enter a reported number, and every arm's budget is selected on a
+per-seed validation bundle disjoint from the test bundle.
+
+\paragraph{The oracle ladder.}
+Three reference points bracket every learned estimator (\cref{app:oracles}): the
+isotropic score $-\vx$, which knows only the marginal variance, at pooled error
+$\isoFloorLaplace$; the LMMSE oracle with the true covariance, at $\lmmseFloorLaplace$,
+which by \cref{prop:lmmse} is the floor of every second-order estimator; and the exact
+score at zero.
+
+\paragraph{Capacity: the margin is fourth-order.}
+\needsdata{Table (E02): pooled error of EM--BP at $\ncomp\in\{1,2,4,8\}$ and of the
+oracles on identical test bundles, $\nseq\in\{32,128,512,2048\}$, 16 seeds; paired
+$\ncomp=8$ vs $\ncomp=1$ differences with bootstrap intervals; the screened window head
+on the same bundles}
+A Gaussian-innovation kernel ($\ncomp=1$) lands on the LMMSE floor, as \cref{prop:lmmse}
+requires; the mixture kernel goes far below it. An earlier study of this model concluded
+the opposite from a sweep whose single-Gaussian arm alone stopped at its validation
+optimum while richer arms ran to a fixed cap; with the checkpoint selected identically
+for every capacity the effect is unambiguous (\cref{app:capacity}).
+\needsdata{E02b: the generalised-Gaussian family, $\beta\in\{1,\dots,6\}$: the exact
+closure gap, the $\ncomp=8$ vs $1$ gap, and the window head's error against $\kfour$}
+
+\paragraph{Baselines under one recipe.}
+\needsdata{E03: screen and confirmatory table---MLP, window head, TCN, biGRU,
+transformer, U-Net---parameters, steps, selected checkpoints, pooled error $\pm$ s.e.;
+what weight sharing, locality and global propagation buy}
+
+\paragraph{Information-matched training.}
+\needsdata{E03 matched: implicit score matching from the one-view noisy bundle; the
+one-corruption DSM arm}
+
+\paragraph{Generation.}
+\needsdata{E05: reverse-SDE samples under the exact, EM--BP, LMMSE and network scores;
+predeclared metrics}
+
+\paragraph{Length extrapolation.}
+\needsdata{E03 length: kernels fitted at $\nsites=32$ evaluated at $64$, $128$, $256$}
+
+\paragraph{Misspecification.}
+\needsdata{E08: advantage against a misspecification parameter for a rank-one latent,
+long-range coupling, AR(2) truth, site-dependent $\corr$; break-even}

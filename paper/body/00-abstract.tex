@@ -1,0 +1,22 @@
+%% DRAFT. Every number is a generated macro; the wording is rewritten once §5 is final.
+Diffusion models are trained to approximate the score of a noised data distribution,
+a target that is unknown for almost every distribution of interest. We study a family
+in which it is known exactly and non-trivial: a first-order Markov chain with
+continuous, non-Gaussian transitions under coordinatewise Ornstein--Uhlenbeck noise,
+where conditioning leaves the posterior factor graph a tree and one forward--backward
+sweep of functional message passing returns the exact score. This laboratory lets us
+separate what diffusion noise does to different orders of structure. We prove that the
+channel attenuates every Hermite mode of degree $m$ by $e^{-mt}$, so that the Fisher
+information one noised sequence carries about an order-$m$ feature decays as
+$e^{-2mt}$: correlation (degree two) survives as $e^{-4t}$, non-Gaussian shape (degree
+four) as $e^{-8t}$, and the gap between the true score and that of the covariance-matched
+Gaussian---which we show is exactly what Gaussian message closure computes---is
+$\tfrac16\lVert\kappa_4\rVert_F^2e^{-8t}$, with the crossover set by the covariance
+spectrum. Tree-exact inference verifies the rates and the constants. We then learn the
+transition law from noised sequences alone, by expectation--maximisation around the
+same recursion with Fisher's identity supplying the exact gradient, and show that it
+recovers the fourth-order structure that unstructured and locality-aware denoisers
+trained on the clean data do not reach at the same number of sequences: the learned
+networks sit at or above the second-order floor $\lmmseFloorLaplace$ of the pooled
+score error, the structured estimator far below it. \needsdata{final capacity, baseline,
+generation and misspecification numbers}

@@ -1,0 +1,34 @@
+\section{Numerical representation and its control}
+\label{app:numerics}
+
+Messages are represented on a uniform grid of $\ngrid$ points on
+$[-\halfwidth,\halfwidth]$ with composite trapezoidal weights; the recursion is a scaled
+linear-domain forward--backward whose discarded constants are accumulated so the
+evidence $\log\Pt(\vx)$ of the discretised model is exact to floating point. Three
+levels of exactness are kept apart: sum-product is exact at the level of functional
+messages; forward--backward is exact for the discretised factor model; and that model
+approximates the continuous chain with truncation (mass outside $[-\halfwidth,\halfwidth]$)
+and quadrature (second order in the spacing) errors that are measured, not assumed.
+
+\paragraph{Validation where the answer is known.}
+At $\ngrid=401$, $\halfwidth=8$ the recursion reproduces the Gaussian closed form and
+brute-force enumeration of the discretised posterior on short chains to double
+precision (\codefile{tests/test\_gaussian\_bp\_equivalence.py},
+\codefile{tests/test\_fisher\_bruteforce.py}). Against a finer reference
+($\ngrid=1601$, $\halfwidth=12$) the worst relative score error over the twelve levels
+and four innovation families on ordinary draws is $\gcworstord$; under a
+three-standard-deviation displacement the heavy-tailed families lose two orders
+(\gcworstshift). The worst forward-message boundary occupancy is $\gcfwdedge$ and the
+worst belief edge occupancy $\gcbeledge$ over $\gccells$ production cells.
+
+\paragraph{Refinement on the reported estimands.}
+\needsdata{E04: movement of the headline cells under $\ngrid\in\{401,801,1601\}$,
+$\halfwidth\in\{8,10\}$ on the actual fitted kernels and held-out bundles}
+
+\paragraph{Floors in the theory verification.}
+The outer-product information estimate of a shape coordinate is a small residual of
+order-one quantities; for the kinked Laplace density its quadrature floor is reached
+near $t=2.5$ at $\ngrid=801$ (the replicate spread stops shrinking), which is why
+\cref{fig:theory}b reports the asymptotic slope on the smooth members of the family. The
+closure gap of the uniform family reaches the double-precision floor of the BP means
+near $t=3.5$, where its squared gap is $10^{-13}$ per chain.
