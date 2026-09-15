@@ -17,10 +17,7 @@ which by \cref{prop:lmmse} is the floor of every second-order estimator; and the
 score at zero.
 
 \paragraph{Capacity: the margin is fourth-order.}
-\needsdata{Table (E02): pooled error of EM--BP at $\ncomp\in\{1,2,4,8\}$ and of the
-oracles on identical test bundles, $\nseq\in\{32,128,512,2048\}$, 16 seeds; paired
-$\ncomp=8$ vs $\ncomp=1$ differences with bootstrap intervals; the screened window head
-on the same bundles}
+\IfFileExists{sections/capacity-numbers.tex}{\input{body/05a-capacity}}{\needsdata{E02a running: capacity table and paired differences}}
 A Gaussian-innovation kernel ($\ncomp=1$) lands on the LMMSE floor, as \cref{prop:lmmse}
 requires; the mixture kernel goes far below it. An earlier study of this model concluded
 the opposite from a sweep whose single-Gaussian arm alone stopped at its validation
