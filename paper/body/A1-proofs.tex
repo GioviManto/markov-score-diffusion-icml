@@ -33,10 +33,95 @@ $\va\sim\Pz$ requires only $\E|\va|^{|\nu|}<\infty$. The cases $n\le4$ are verif
 Lean as polynomial identities under the first four Gaussian moments.
 
 \subsection{\Cref{thm:decay}}
-\needsdata{Full proof: (i) the exact identities for $\Lambda$; (ii) the grading of
-$\Lambda$ by order in $e^{-t}$ and the fourth-order joint cumulants; (iii) the leading
-term of $\score-\Sgauss$ and its $\gamma$-second moment by Wick's theorem, giving
-$\tfrac16\Frob{\kfour}^2$; (iv) the information constants; (v) the remainder: Taylor
-remainder of $\Lambda$ on $|e^{-t}\vx|\le1$ under finite eighth moments, and the tail
-$|e^{-t}\vx|>1$ of probability $\le\exp(-ce^{2t})$ under $\Pt$; (vi) the exact Gaussian
-case.}
+\label{app:proof-decay}
+
+\paragraph{Exact identities.}
+With $\alpha=e^{-t}$ and $\Dt=1-\alpha^2$, Bayes' rule gives
+$\Pt(\vx)=\gamma_{\Dt}(\vx)\,\E_{\Pz}\exp\bigl(\alpha\vx\cdot\va/\Dt-\alpha^2|\va|^2/2\Dt\bigr)$,
+where $\gamma_{\Dt}$ is the $\normal{0}{\Dt\Id}$ density. Hence
+$\log\Pt(\vx)=\log\gamma_{\Dt}(\vx)+\Lambda(s,b)$ with $s=\alpha\vx/\Dt$, $b=\alpha^2/\Dt$
+and $\Lambda(s,b)=\log\E_{\Pz}\exp(s\cdot\va-b|\va|^2/2)$. For $b>0$ the tilted measure
+is integrable for every $s$, so $\Lambda$ is real-analytic in $(s,b)$ on
+$\Reals^{\nsites}\times(0,\infty)$, and its Taylor coefficients at the origin are the
+joint cumulants of the linear form $s\cdot\va$ and the quadratic form $|\va|^2/2$;
+$\E[\va\mid\vx]=\nabla_s\Lambda$ and $\score=-\vx/\Dt+(\alpha/\Dt)\nabla_s\Lambda$.
+
+\paragraph{Grading.}
+Expand $\Lambda$ in $(s,b)$ at the origin and grade a monomial $s^{j}b^{k}$ by $j+2k$;
+since $s=O(\alpha)$ and $b=O(\alpha^2)$, the grade is the order in $\alpha$. By the
+symmetry of $\Pz$ under $\va\mapsto-\va$ only even grades occur:
+$\Lambda=\Lambda_2+\Lambda_4+R_6$, with
+$\Lambda_2=\tfrac12s^{\!\top}\Sig_0s-\tfrac b2\operatorname{tr}\Sig_0$ and
+\[
+  \Lambda_4=\tfrac1{24}\kfour[s,s,s,s]
+   -\tfrac b4\sum_i\operatorname{cum}(s\!\cdot\!\va,s\!\cdot\!\va,a_i,a_i)
+   +\tfrac{b^2}8\sum_{ij}\operatorname{cum}(a_i,a_i,a_j,a_j),
+\]
+where $\operatorname{cum}$ is the joint cumulant under $\Pz$. Every fourth-order joint
+cumulant of linear forms in $\va$ equals its value under the covariance twin plus a
+linear contraction of $\kfour$, so $\Lambda_4-\Lambda_4^{\mathrm{G}}$ is linear in
+$\kfour$ and $\Lambda_2=\Lambda_2^{\mathrm{G}}$. The remainder $R_6$ is the Taylor
+remainder of grade six; on $\{|\alpha\vx|\le1\}$ it is bounded by
+$C\alpha^6(1+|\vx|)^6$ with $C$ depending on the moments of $\Pz$ up to order eight.
+
+\paragraph{Leading term of the score gap.}
+$\score-\Sgauss=(\alpha/\Dt)\nabla_s(\Lambda-\Lambda^{\mathrm{G}})
+=(\alpha/\Dt)\bigl[\nabla_s(\Lambda_4-\Lambda_4^{\mathrm{G}})+\nabla_sR_6-\nabla_sR_6^{\mathrm{G}}\bigr]$.
+Substituting $s=\alpha\vx/\Dt$, $b=\alpha^2/\Dt$ and expanding in $\alpha$, the
+grade-four term is
+$\alpha^4\,\nabla_{\vx}\bigl[\tfrac1{24}\sum_{ijkl}\kfour[ijkl]\,{:}x_ix_jx_kx_l{:}\bigr]+O(\alpha^6(1+|\vx|)^5)$,
+where ${:}\cdot{:}$ is the Wick (Hermite) product: the three contributions of $\Lambda_4$
+combine into the Hermite form because $b=\alpha^2(1+O(\alpha^2))$ and the cumulant
+contractions with $\delta_{ii}$ are exactly the terms that convert monomials into Hermite
+polynomials. The $m$-th component is $\alpha^4\,\tfrac16\sum_{jkl}\kfour[mjkl]\,{:}x_jx_kx_l{:}$.
+
+\paragraph{Second moment.}
+Under $\gamma$, Wick's theorem gives
+$\E_\gamma[{:}x_jx_kx_l{:}\,{:}x_{j'}x_{k'}x_{l'}{:}]$ equal to the number of perfect
+matchings of $\{j,k,l\}$ with $\{j',k',l'\}$ respecting indices; contracted with the
+symmetric tensor this yields
+$\E_\gamma\bigl[(\tfrac16\sum_{jkl}\kfour[mjkl]{:}x_jx_kx_l{:})^2\bigr]
+=\tfrac{3!}{36}\sum_{jkl}\kfour[mjkl]^2$, and summing over $m$,
+$\E_\gamma\lVert\text{leading term}\rVert^2=\tfrac16\Frob{\kfour}^2\alpha^8$. Replacing
+$\E_\gamma$ by $\E_{\Pt}$ costs a factor $1+O(\alpha^2\lmax)$: on the bulk,
+$\Pt/\gamma=1+\alpha^2\tfrac12\langle\Sig_0-\Id,{:}\vx\vx^{\!\top}{:}\rangle+O(\alpha^4\lmax^2(1+|\vx|)^4)$,
+and the degree-2 correction has zero $\gamma$-mean against the square of a degree-3
+polynomial up to terms of relative size $\alpha^2\lmax$. The cross term between the
+leading term and the grade-six remainder is $O(\alpha^{10}\lmax)$ by Cauchy--Schwarz and
+the moment bound.
+
+\paragraph{Tail.}
+On $\{|\alpha\vx|>1\}$ the expansion is not used. There $|\score-\Sgauss|\le
+2|\vx|/\Dt+\alpha(\E[|\va|\,|\vx]+|\E^{\mathrm G}[\va|\vx]|)/\Dt\le C(1+|\vx|)/\Dt$
+because the tilted mean is bounded by a polynomial in $|\vx|$ under the moment
+condition, while $\Pt(|\alpha\vx|>1)\le\exp(-c/\alpha^2)$ since $\vx_t$ is a Gaussian
+convolution with variance at most one per coordinate. The tail contribution is therefore
+$O(\exp(-c'e^{2t}))$, below every power of $\alpha$. Together,
+$\E_{\Pt}\lVert\score-\Sgauss\rVert^2=\tfrac16\Frob{\kfour}^2e^{-8t}(1+O(e^{-2t}\lmax))$,
+which is \cref{eq:scoregap}.
+
+\paragraph{Information.}
+$\partial_\theta\log\Pt=\partial_\theta\Lambda$. If $\partial_\theta\Sig_0\neq0$ the
+grade-two term $\tfrac{\alpha^2}2\langle\partial_\theta\Sig_0,{:}\vx\vx^{\!\top}{:}\rangle$
+leads, and $\E_\gamma$ of its square is
+$\tfrac{\alpha^4}4\cdot2\Frob{\partial_\theta\Sig_0}^2$ by Wick, giving \cref{eq:info2}.
+If $\partial_\theta\Sig_0=0$ the grade-four term
+$\tfrac{\alpha^4}{24}\sum\partial_\theta\kfour[ijkl]{:}x_ix_jx_kx_l{:}$ leads, with
+$\gamma$-second moment $\tfrac{4!}{24^2}\Frob{\partial_\theta\kfour}^2\alpha^8$, giving
+\cref{eq:info4}; the corrections and the tail are handled as above. Since
+${:}\vx\vx^{\!\top}{:}$ and the degree-four Hermite polynomials are $\gamma$-orthogonal,
+the leading cross-information between a degree-2 and a degree-4 coordinate vanishes, so
+the leading term of the efficient information of the degree-4 coordinate equals that of
+its raw information. For the Gaussian chain $\vx_t\sim\normal{0}{\Sig_t(\theta)}$ exactly
+and the stated trace formula is the Gaussian Fisher information; its limit
+$e^{4t}I_t\to\tfrac12\Frob{\partial_\theta\Sig_0}^2$ follows from $\Sig_t\to\Id$ and
+$\partial_\theta\Sig_t=\alpha^2\partial_\theta\Sig_0$, and is machine-checked in Lean
+(\codefile{lean/README.md}, target~3).
+
+\paragraph{The crossover.}
+The expansion of $\Pt/\gamma$ used above is an expansion in $\alpha^2\Sig_0$, i.e.\ in
+$\alpha^2\lmax(\Sig_0)$ in operator norm; for the chain $\lmax\le(1+\corr)/(1-\corr)$ by
+the Toeplitz bound $\lmax\le\sum_k\corr^{|k|}$. This is the source of the factor
+$\lmax$ in every remainder and of $\tstar=\tfrac12\log\lmax$; for the Gaussian chain the
+exact formula shows the same scale directly, since $\Sig_t^{-1}$ is within
+$\alpha^2\lmax$ of $\Id$ in operator norm.

@@ -109,7 +109,7 @@ def _cell(args):
     def _val_risk(kernel):
         lk = kernel.log_transition_matrix(grid)
         m, _ = grid_bp_batch(grid, weights, lk, Xv, al, de)
-        return _risk([_sq(m, mv_ref, Xv, al and t_obs if t_obs > 0 else 1e-3, BULK)])
+        return _risk([_sq(m, mv_ref, Xv, t_obs if t_obs > 0 else 1e-3, BULK)])
 
     best, best_risk = None, np.inf
     for it in sorted(saved):
@@ -132,7 +132,7 @@ def _cell(args):
                true_rho=FROZEN.rho, true_ivar=FROZEN.innovation_variance, true_kurt=3.0,
                resolved=bool(kb.scale_diagnostics(grid)["resolved"]),
                test_risk_schedule=_risk(pairs), val_risk=best_risk,
-               **{f"hellinger_{k}": float(v) for k, v in hd.items() if np.isscalar(v)})
+               **{k: float(v) for k, v in hd.items() if np.isscalar(v)})
     print(f"  [E06] seed={seed} t_obs={t_obs} ckpt={best} rho={row['fit_rho']:.4f} kurt={row['fit_kurt']:.3f} risk={row['test_risk_schedule']:.4f}", flush=True)
     return [row]
 

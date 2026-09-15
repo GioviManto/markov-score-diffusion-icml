@@ -136,7 +136,7 @@ def _oracle_rows(bundle, grid, weights, sigma0, base):
                          "stop_reason": "oracle", "region": region,
                          "sq_err": sum(e for e, _ in pairs), "sq_ref": sum(r for _, r in pairs), "risk": _risk(pairs),
                          "n_params": 0, "fit_rho": np.nan, "fit_ivar": np.nan, "fit_kurt": np.nan, "resolved": True,
-                         "val_risk_selected": np.nan, "val_curve": ""})
+                         "val_risk_selected": np.nan, "val_curve": "", "theta": ""})
     return rows
 
 
@@ -171,6 +171,7 @@ def _em_fit_and_score(cfg, C, A, val, test, grid, weights, seed_tags, base):
                      "n_params": int(len(kb.theta)), "fit_rho": float(kb.rho),
                      "fit_ivar": float(mom["innovation_var"]), "fit_kurt": float(mom["innovation_excess_kurtosis"]),
                      "resolved": bool(diag["resolved"]), "val_risk_selected": best_risk,
+                     "theta": ";".join(f"{v:.10g}" for v in np.asarray(kb.theta).ravel()),
                      "val_curve": ";".join(f"{k}:{v:.5f}" for k, v in sorted(val_curve.items()))})
     return rows, kb
 
@@ -231,7 +232,7 @@ def _family_cell(args):
         r, kb = _em_fit_and_score(cfg, C, A, val, test, grid, weights, tags, base)
         hd = transition_hellinger(kb.log_transition_matrix(grid), log_k, grid, weights)
         for row in r:
-            row.update({f"hellinger_{k}": float(v) for k, v in hd.items() if np.isscalar(v)})
+            row.update({k: float(v) for k, v in hd.items() if np.isscalar(v)})
         rows.extend(r)
         print(f"  [E02 family] beta={beta} seed={seed} C={C} ckpt={r[0]['checkpoint']} risk(all)={r[0]['risk']:.4f} kurt={r[0]['fit_kurt']:.2f}", flush=True)
     return rows
