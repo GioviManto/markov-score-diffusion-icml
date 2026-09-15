@@ -56,7 +56,6 @@ def main() -> int:
         if ts > 0:
             y = np.interp(ts, d.t, d.rel_lmmse); ax.plot([ts], [y], marker="|", ms=6, mew=1.1, color=col)
     ax.legend(loc="lower left", fontsize=6.5, frameon=False, handlelength=1.6, borderaxespad=0.2)
-    ax.text(0.06, 2e-5, "Laplace chain; ticks: $t_*(\\rho)$", fontsize=6.5, color=fs.INK2)
     ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlabel("diffusion time  $t$"); ax.set_ylabel("LMMSE floor, per level")
     ax.set_xticks([0.05, 0.1, 0.3, 1, 3]); ax.set_xticklabels(["0.05", "0.1", "0.3", "1", "3"])
     from matplotlib.ticker import NullFormatter

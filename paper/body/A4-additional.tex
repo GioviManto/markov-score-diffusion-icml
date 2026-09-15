@@ -21,10 +21,28 @@ Gaussian & $0$ & \isoFloorGaussian & \lmmseFloorGaussian \\
 
 \section{Capacity: the previous reading and the stopping-rule artefact}
 \label{app:capacity}
-\needsdata{The exp\_32 protocol (validation on initialisation only; tolerance stop firing
-at $\ncomp=1$ in 31/32 cells and never at $\ncomp\ge4$), and the E02 table under identical
-checkpoint selection.}
+An earlier study of this model compared innovation mixtures of $\ncomp\in\{1,2,4,8,16\}$
+at $\nseq\in\{128,512\}$ over sixteen seeds and concluded that no capacity improved on a
+single Gaussian innovation, attributing the estimator's margin over the networks to the
+Markov factorisation and its covariance alone. Two facts overturn that reading. First,
+\cref{prop:lmmse} bounds every Gaussian-innovation kernel by the LMMSE floor, which on
+the Laplace chain is $\lmmseFloorLaplace$ pooled over the schedule, whereas the same
+study's own headline estimator reported errors between two and nine times smaller.
+Second, its sweep selected only the initialisation on validation and ran every capacity
+to a fixed cap of $1200$ iterations unless a $10^{-9}$ likelihood tolerance stopped it
+first; the tolerance fired in $31$ of $32$ single-Gaussian cells, at a median of $71$
+iterations, close to the validation optimum that the headline protocol selects for these
+sizes, and in none of the $96$ cells with $\ncomp\ge4$, which therefore reported
+checkpoints an order of magnitude past their optimum. ``The single Gaussian is as good''
+was ``the single Gaussian is the only arm that stopped in the right place''. The
+capacity experiment of \cref{sec:experiments} selects the checkpoint identically for every
+capacity on a per-seed validation bundle and reports the untouched confirmatory seeds.
 
-\section{Additional tables}
+\section{Aggregation robustness of the archival comparison}
 \label{app:additional}
-\needsdata{Aggregation robustness; rates; screening details.}
+The archival comparison against the unstructured network (sixteen seeds, eight sizes) is
+retained here under its five aggregations, because the ratio of two errors is not
+invariant to the order of averaging; the schedule-pooled paired per-seed ratio is the one
+the text quotes.
+\input{sections/tab-aggregation}
+\input{sections/tab-aggregation-structured}
