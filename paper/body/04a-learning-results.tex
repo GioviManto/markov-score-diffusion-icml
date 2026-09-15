@@ -1,11 +1,23 @@
 %% Included by 04-learning.tex only when sections/learning-numbers.tex exists (E06 done).
-\Cref{fig:learning} measures both with $\nseq=\learnSize$ Laplace-chain sequences and
-$\learnSeeds$ replicates per level. Above $\tstar$ the fitted log-slopes of the two
-errors against the observation level are $\learnSlopeRho$ for $\widehat\corr$ and
-$\learnSlopeKurt$ for $\widehat\kfour$, against the predicted $2$ and $4$; their
-difference, $\learnSlopeRatio$, is the $e^{2t}$ separation of \cref{cor:samples}. At
-$t=0.1$ the fitted excess kurtosis is recovered to $\learnRmseKurtTzeropone$ RMSE and
-the transition law to Hellinger distance $\learnHellTzeropone$; at $t=2$ the RMSE is
-$\learnRmseKurtTtwo$ against a true value of $3$, while $\widehat\corr$ is still within
-$\learnRmseRhoTtwo$. The clean-data fit (no channel) gives the optimiser's own floor,
-$\learnRmseRhoTzero$ and $\learnRmseKurtTzero$.
+\Cref{fig:learning} measures both with $\nseq=\learnSize$ Laplace-chain sequences at
+$\corr=\learnRho$ and $\learnSeeds$ replicates per level, against the information
+reference read from the exact-score computation of \cref{sec:theory}: the Cram\'er--Rao
+bound $1/\sqrt{\nseq\,I_t}$ for the correlation and, through the chain rule at the
+Laplace member of the one-parameter shape family, for the excess kurtosis. The
+estimator sits at the bound: its error is $\learnEffRhoMean\times$ the bound for
+$\widehat\corr$ and $\learnEffKurtMean\times$ for $\widehat\kfour$, averaged over the
+levels at which either is informative. What the channel does is therefore read off the
+bound itself. The shape bound grows as $e^{4t}$ and crosses the full range of the
+coordinate ($3$) at $t=\learnKurtBoundCross$; at $t=1$ the fitted excess kurtosis is
+$\learnRmseKurtTone$ from the truth, the fit having collapsed to a Gaussian innovation,
+while $\widehat\corr$ is still within $\learnRmseRhoTone$. Correlation is lost only past
+the crossover $\tstar=\learnTstar$: $\learnRmseRhoTonepfour$ at $t=1.4$ and
+$\learnRmseRhoTtwo$ at $t=2$, where the estimator also leaves the bound. Below the
+crossover both errors grow more slowly than the asymptotic rates, as
+\cref{sec:theory} predicts (fitted log-slopes $\learnPreSlopeRho$ and
+$\learnPreSlopeKurt$ on $[\learnPreLo,\learnPreHi]$ against $2$ and $4$); the asymptotic
+window itself lies beyond the reach of $\nseq=\learnSize$ sequences at this
+correlation, because the shape estimate saturates before $\tstar$. At $t=0.1$ the
+transition law is recovered to Hellinger distance $\learnHellTzeropone$, and the
+clean-data fit gives the optimiser's own floor, $\learnRmseRhoTzero$ and
+$\learnRmseKurtTzero$.

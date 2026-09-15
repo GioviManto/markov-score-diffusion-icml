@@ -1,0 +1,13 @@
+{
+ "id": "E06b",
+ "script": "experiments/e06_learning_through_noise.py",
+ "hypothesis": "Corollary (sample complexity by order) in its asymptotic window: at rho = 0.5 the crossover is t_* = 0.55, so the e^{2t} / e^{4t} regime of the two RMSEs is reachable before the shape estimate saturates; M = 2048 keeps the shape coordinate informative to t ~ 1.2",
+ "design": "as E06 (Laplace chain, one-view single-level EM-BP with C = 8, protocol-2 ladder, checkpoint on a same-level validation bundle) with --set rho=0.5 --set n_chains=2048 --set levels='(0.3, 0.45, 0.6, 0.75, 0.9, 1.05, 1.2, 1.4)'; 16 seeds; clean-data arm included",
+ "why_registered": "E06 at rho = 0.85 (t_* = 1.17) shows shape lost by t = 1 (kurtosis RMSE saturates at 3 while rho is still within 0.01) but cannot show the asymptotic e^{4t} slope: the shape estimate saturates before the crossover. Registered 15 Sep 19:30 after seeing E06 and before running; E06 stays the reported headline curve, E06b tests the asymptotic rates.",
+ "predeclared_analysis": "tools/make_learning_numbers.py --src outputs/E06b: RMSE per level; log-slopes fitted on the levels with t >= t_*(rho) whose kurtosis RMSE is below 2 (informative window), for both coordinates; ratio; the window bounds reported",
+ "seeds": {
+  "confirmatory": "0-15"
+ },
+ "status": "REGISTERED 2026-09-15 19:30 before running",
+ "registered": "2026-09-15"
+}

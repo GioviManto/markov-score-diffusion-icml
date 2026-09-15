@@ -22,8 +22,10 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT / "tools")); sys.path.insert(0, str(ROOT / "src")); sys.path.insert(0, str(ROOT / "experiments"))
 import figstyle as fs  # noqa: E402
+from frozen_config import FROZEN  # noqa: E402
+from markov_score import theory  # noqa: E402
 
 
 def _mac(s):
@@ -53,13 +55,58 @@ def main() -> int:
     }).reset_index()
     print(summ.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
     noisy = summ[summ.t_obs > 0]
-    fit = noisy[noisy.t_obs >= 1.0]
     macros = {}
-    if len(fit) >= 2:
-        s_rho = float(np.polyfit(fit.t_obs, np.log(fit.rmse_rho), 1)[0])
-        s_k = float(np.polyfit(fit.t_obs, np.log(fit.rmse_kurt), 1)[0])
+    rho = float(df.true_rho.iloc[0]); L = int(FROZEN.n_sites); M = int(df.n_chains.iloc[0])
+    t_star = float(theory.crossover_time(rho, L=L))
+    macros["learnTstar"] = f"{t_star:.2f}"; macros["learnRho"] = f"{rho:g}"
+    # --- the information reference: per-sequence efficient information of the frozen E01 shape
+    # table at beta = 1 (the Laplace member of the generalised-Gaussian family, same rho), read at
+    # the E06 levels; the Cramer-Rao bound for rho is 1/sqrt(M I_rho) and for the excess kurtosis
+    # |d kappa4 / d beta| / sqrt(M I_beta) (chain rule at beta = 1). It is the bound for an unbiased
+    # estimator in that one-parameter family, quoted as a reference for the mixture estimator.
+    crlb = None
+    e01 = ROOT / "outputs/E01/shape_information.csv"
+    if e01.exists() and abs(rho - float(FROZEN.rho)) < 1e-12:
+        from scipy.special import gamma as G
+        sh = pd.read_csv(e01); sh = sh[sh.beta == 1.0].groupby("t")[["eff_rho", "eff_beta"]].mean()
+        K = lambda b: G(5 / b) * G(1 / b) / G(3 / b) ** 2 - 3
+        dK = abs((K(1.0005) - K(0.9995)) / 0.001)
+        tt = np.array(sh.index)
+        crlb = pd.DataFrame({"t_obs": tt, "crlb_rho": 1 / np.sqrt(M * sh.eff_rho.values), "crlb_kurt": dK / np.sqrt(M * sh.eff_beta.values)})
+        at = lambda col, t: float(np.exp(np.interp(t, tt, np.log(crlb[col].values))))
+        ratios_rho, ratios_k = [], []
+        for _, r in noisy.iterrows():
+            rr, rk = r.rmse_rho / at("crlb_rho", r.t_obs), r.rmse_kurt / at("crlb_kurt", r.t_obs)
+            tag = _mac(f"{r.t_obs:g}")
+            macros[f"learnCrlbRhoT{tag}"] = f"{at('crlb_rho', r.t_obs):.4f}"; macros[f"learnCrlbKurtT{tag}"] = f"{at('crlb_kurt', r.t_obs):.3f}"
+            macros[f"learnEffRhoT{tag}"] = f"{rr:.2f}"; macros[f"learnEffKurtT{tag}"] = f"{rk:.2f}"
+            if r.rmse_kurt < 2.0:
+                ratios_k.append(rk)
+            if r.rmse_rho < 0.1:
+                ratios_rho.append(rr)
+        macros["learnEffRhoMean"] = f"{np.mean(ratios_rho):.2f}"; macros["learnEffKurtMean"] = f"{np.mean(ratios_k):.2f}"
+        macros["learnEffRhoMax"] = f"{np.max(ratios_rho):.2f}"; macros["learnEffKurtMax"] = f"{np.max(ratios_k):.2f}"
+        # the level at which the shape bound crosses the full range of the coordinate (3)
+        cross = tt[np.argmax(crlb.crlb_kurt.values >= 3.0)] if (crlb.crlb_kurt.values >= 3.0).any() else np.nan
+        macros["learnKurtBoundCross"] = f"{cross:.2f}"
+        print(f"efficiency vs CRLB: rho {np.mean(ratios_rho):.2f} (max {np.max(ratios_rho):.2f}), kurt {np.mean(ratios_k):.2f} (max {np.max(ratios_k):.2f}); shape bound reaches 3 at t = {cross:.2f}")
+    sat = noisy[noisy.rmse_kurt >= 2.0]
+    macros["learnSatLevel"] = f"{float(sat.t_obs.min()):g}" if len(sat) else "none"
+    win = noisy[(noisy.t_obs >= t_star) & (noisy.rmse_kurt < 2.0)]
+    macros["learnWindowN"] = str(int(len(win)))
+    if len(win) >= 3:
+        s_rho = float(np.polyfit(win.t_obs, np.log(win.rmse_rho), 1)[0]); s_k = float(np.polyfit(win.t_obs, np.log(win.rmse_kurt), 1)[0])
         macros["learnSlopeRho"] = f"{s_rho:.2f}"; macros["learnSlopeKurt"] = f"{s_k:.2f}"; macros["learnSlopeRatio"] = f"{s_k - s_rho:.2f}"
-        print(f"slopes on t>=1: rho {s_rho:.2f} (pred +2), kurt {s_k:.2f} (pred +4), ratio {s_k - s_rho:.2f} (pred +2)")
+        macros["learnWindowLo"] = f"{float(win.t_obs.min()):g}"; macros["learnWindowHi"] = f"{float(win.t_obs.max()):g}"
+        print(f"slopes on the informative window t in [{win.t_obs.min():g}, {win.t_obs.max():g}] (t_* = {t_star:.2f}): rho {s_rho:.2f} (pred +2), kurt {s_k:.2f} (pred +4)")
+    else:
+        print(f"no informative window above t_* = {t_star:.2f} (kurtosis saturates at t = {macros['learnSatLevel']}): asymptotic slopes not fitted")
+    pre = noisy[(noisy.t_obs < t_star) & (noisy.rmse_kurt < 2.0) & (noisy.t_obs >= 0.2)]
+    if len(pre) >= 3:
+        macros["learnPreSlopeRho"] = f"{float(np.polyfit(pre.t_obs, np.log(pre.rmse_rho), 1)[0]):.2f}"
+        macros["learnPreSlopeKurt"] = f"{float(np.polyfit(pre.t_obs, np.log(pre.rmse_kurt), 1)[0]):.2f}"
+        macros["learnPreLo"] = f"{float(pre.t_obs.min()):g}"; macros["learnPreHi"] = f"{float(pre.t_obs.max()):g}"
+        print(f"pre-asymptotic slopes on [{pre.t_obs.min():g}, {pre.t_obs.max():g}]: rho {macros['learnPreSlopeRho']}, kurt {macros['learnPreSlopeKurt']}")
     for _, r in summ.iterrows():
         tag = _mac(f"{r.t_obs:g}")
         macros[f"learnRmseRhoT{tag}"] = f"{r.rmse_rho:.4f}"; macros[f"learnRmseKurtT{tag}"] = f"{r.rmse_kurt:.3f}"
@@ -67,26 +114,33 @@ def main() -> int:
     macros["learnSeeds"] = str(int(summ.n_seeds.max())); macros["learnSize"] = str(int(df.n_chains.iloc[0]))
     (sec / "learning-numbers.tex").write_text("%% GENERATED by tools/make_learning_numbers.py -- do not hand-edit.\n" + "\n".join(f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in macros.items()) + "\n")
 
-    # figure: two panels, RMSE of rho and of kurtosis vs t_obs with guides and the clean floor
+    # figure: two panels, RMSE of rho and of kurtosis against t_obs, the estimator (points and mean)
+    # against the information bound read from E01 (dashed), the clean-data floor (dotted) and, for the
+    # shape coordinate, its full range (3): the estimator sits on the bound until the bound leaves the range
     fs.apply()
     fig, axes = plt.subplots(1, 2, figsize=(fs.COL_W, 1.9), gridspec_kw=dict(wspace=0.5))
-    for ax, col, lab, slope, colr in ((axes[0], "rmse_rho", r"RMSE of $\hat\rho$", 2, fs.CAT[0]), (axes[1], "rmse_kurt", r"RMSE of $\hat\kappa_4$", 4, fs.CAT[1])):
-        ax.plot(noisy.t_obs, noisy[col], color=colr, marker="o", ms=3, lw=1.3)
-        # per-seed points, light
+    for ax, col, lab, colr, bcol, tru in ((axes[0], "rmse_rho", r"RMSE of $\hat\rho$", fs.CAT[0], "crlb_rho", rho), (axes[1], "rmse_kurt", r"RMSE of $\hat\kappa_4$", fs.CAT[1], "crlb_kurt", 3.0)):
         for t, d in df[df.t_obs > 0].groupby("t_obs"):
             key = "fit_rho" if col == "rmse_rho" else "fit_kurt"
-            tru = 0.85 if col == "rmse_rho" else 3.0
             ax.plot([t] * len(d), np.abs(d[key] - tru), ls="none", marker=".", ms=2, color=colr, alpha=0.25)
+        ax.plot(noisy.t_obs, noisy[col], color=colr, marker="o", ms=3, lw=1.3, label="EM–BP")
+        if crlb is not None:
+            m = (crlb.t_obs >= noisy.t_obs.min() * 0.9) & (crlb.t_obs <= noisy.t_obs.max() * 1.05)
+            ax.plot(crlb.t_obs[m], crlb[bcol][m], color=fs.INK2, lw=0.9, ls="--", label="information bound")
         clean = summ[summ.t_obs == 0]
         if len(clean):
             ax.axhline(float(clean[col].iloc[0]), color=fs.MUTED, lw=0.7, ls=":")
             ax.text(noisy.t_obs.min(), float(clean[col].iloc[0]) * 1.15, "clean data", fontsize=7, color=fs.INK2)
-        if len(fit) >= 2:
-            t0 = fit.t_obs.min(); y0 = float(fit[col].iloc[0])
-            tt = np.linspace(t0, noisy.t_obs.max(), 20)
-            ax.plot(tt, y0 * np.exp(slope * (tt - t0)) * 0.8, color=fs.INK2, lw=0.8, ls="--")
-            ax.text(tt[-1], y0 * np.exp(slope * (tt[-1] - t0)) * 0.8, f"$e^{{{slope}t}}$", fontsize=7.5, color=fs.INK2, ha="right", va="bottom")
-        ax.set_yscale("log"); ax.set_xlabel("observation level  $t$"); ax.set_ylabel(lab)
+        ax.set_yscale("log")
+        lo = float(df[df.t_obs > 0][("fit_rho" if col == "rmse_rho" else "fit_kurt")].sub(tru).abs().replace(0, np.nan).min()) * 0.5
+        if col == "rmse_kurt":
+            ax.axhline(3.0, color=fs.MUTED, lw=0.7, ls="-.")
+            ax.text(noisy.t_obs.max(), 3.0 * 1.25, "range of $\\kappa_4$", fontsize=7, color=fs.INK2, ha="right")
+            ax.set_ylim(max(lo, 1e-2), max(30.0, float(noisy[col].max()) * 3))
+        else:
+            ax.set_ylim(max(lo, 1e-4), max(1.0, float(noisy[col].max()) * 3))
+        ax.set_xlabel("observation level  $t$"); ax.set_ylabel(lab)
+    axes[0].legend(loc="upper left", fontsize=6.5, frameon=False, handlelength=1.8, borderaxespad=0.2)
     fs.panel_label(axes[0], "(a)", x=-0.35); fs.panel_label(axes[1], "(b)", x=-0.35)
     fig.savefig(figdir / "fig_learning.pdf"); fig.savefig(figdir / "fig_learning.png", dpi=220)
     print("wrote", sec / "learning-numbers.tex", "and", figdir / "fig_learning.pdf")

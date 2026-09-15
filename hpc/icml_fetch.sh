@@ -4,7 +4,7 @@
 #   hpc/icml_fetch.sh E02a [E03 ...]
 set -euo pipefail
 cd "$(dirname "$0")/.."
-source hpc/.last_deploy.env
+source "${MSD_DEPLOY_ENV:-hpc/.last_deploy.env}"   # MSD_DEPLOY_ENV=hpc/.deploy_<tag>.env fetches from an older deployment
 for E in "$@"; do
   mkdir -p "outputs/$E"
   rsync -az --include='*.csv' --include='*.json' --exclude='*' "$MSD_HPC_HOST:$MSD_OUT/$E/" "outputs/$E/"

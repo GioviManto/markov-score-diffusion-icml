@@ -46,6 +46,7 @@ BULK = slice(4, N_SITES - 4)
 
 SETTINGS = dict(
     levels=(0.05, 0.1, 0.2, 0.4, 0.7, 1.0, 1.4, 2.0),
+    rho=FROZEN.rho,
     n_chains=512, n_val=512, n_test=1024,
     seeds=tuple(range(16)),
     components=8,
@@ -73,7 +74,7 @@ def _risk(pairs):
 def _cell(args):
     cfg, seed, t_obs = args
     grid, weights = make_grid(cfg["half_width"], cfg["grid_size"])
-    prior = LaplaceAR1(FROZEN.rho)
+    prior = LaplaceAR1(cfg["rho"])
     log_k_true = prior.log_transition_matrix(grid)
     rng = rng_for("e06-train", seed, t_obs)
     A = np.stack([prior.sample(rng, N_SITES) for _ in range(cfg["n_chains"])])
@@ -130,7 +131,7 @@ def _cell(args):
     row = dict(seed=seed, t_obs=t_obs, n_chains=cfg["n_chains"], components=cfg["components"],
                checkpoint=best, at_cap=best == max(saved), stop_reason=trace.stop_reason,
                fit_rho=float(kb.rho), fit_ivar=float(mom["innovation_var"]), fit_kurt=float(mom["innovation_excess_kurtosis"]),
-               true_rho=FROZEN.rho, true_ivar=FROZEN.innovation_variance, true_kurt=3.0,
+               true_rho=cfg["rho"], true_ivar=1.0 - cfg["rho"] ** 2, true_kurt=3.0,
                resolved=bool(kb.scale_diagnostics(grid)["resolved"]),
                test_risk_schedule=_risk(pairs), val_risk=best_risk,
                **{k: float(v) for k, v in hd.items() if np.isscalar(v)})

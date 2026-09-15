@@ -27,3 +27,4 @@ outputs/_determinism/
 outputs/**/cells/
 outputs/**/ckpts/
 hpc/.last_deploy.env
+hpc/.deploy_*.env
