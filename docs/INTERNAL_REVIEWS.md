@@ -111,6 +111,6 @@ ships with the theory alone.
 * Theorem 2's paragraph and related work cite Katsevich–Bandeira, Balanov et al., Aarts
   et al., Wang–Vastola and Li–Dai–Qu; novelty claims narrowed to the score-level
   statement, the crossover, verification and learning consequences (done, `d5005c8`).
-* Appendix proof of Theorem 2 with remainder: open (A1-proofs placeholder).
-* General-m remark: open.
+* Appendix proof of Theorem 2 with remainder: written (`paper/body/A1-proofs.tex`, 15 Sep); the remainder bound is a sketch with the moment condition and the tail estimate stated, not a fully quantified constant.
+* General-m remark: added after Theorem 2.
 * E02 confirmatory, E03, E05, E06, E07, E09: scheduled (`RESEARCH_PLAN.md` §5).
