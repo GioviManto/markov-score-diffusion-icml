@@ -163,8 +163,15 @@ def _em_fit_and_score(cfg, C, A, val, test, grid, weights, seed_tags, base):
     mom = kb.innovation_moments
     diag = kb.scale_diagnostics(grid)
     rows = []
+    # one BP pass per test level, scored on every region
+    log_kb = kb.log_transition_matrix(grid)
+    means = {}
+    for t in T_SCHEDULE:
+        X, m_ref = test[t]
+        al, de = alpha_delta(t)
+        means[t], _ = grid_bp_batch(grid, weights, log_kb, X, al, de)
     for region in REGIONS:
-        pairs = _eval_kernel(kb, test, grid, weights, region)
+        pairs = [_sq(means[t], test[t][1], test[t][0], t, REGIONS[region]) for t in T_SCHEDULE]
         rows.append({**base, "arm": "em_bp", "components": C, "checkpoint": best, "at_cap": best == max(saved),
                      "stop_reason": trace.stop_reason, "region": region,
                      "sq_err": sum(e for e, _ in pairs), "sq_ref": sum(r for _, r in pairs), "risk": _risk(pairs),
