@@ -1,0 +1,7 @@
+{"id": "E03", "script": "experiments/e03_baselines.py", "hypothesis": "H3/H10/H9: under one recipe, what weight sharing, locality, global propagation and explicit factorisation buy; the information-matched arm; length extrapolation",
+ "parts": {"screen": "dev seeds 10000-10003, sizes (32, 2048), six architectures x hyper-grid x lr {1e-3,3e-3} x {eps,x0}, 3 restarts, 32k steps, selected on validation bulk; winner per architecture family by pooled bulk risk",
+           "confirm": "seeds 0-15, sizes (32,128,512,2048), winners frozen from the screen, checkpoint selected per cell on validation, scored on all/bulk/centre; exp_31 bundles",
+           "matched": "implicit score matching on the one-view noisy bundle (EM-BP's interface), selection on the ISM objective of a held-out noisy bundle; plus one-corruption DSM",
+           "length": "length-agnostic winners fitted at L=32 evaluated at L in (64,128,256) against true-kernel BP"},
+ "seeds": {"dev": "10000-10003", "confirmatory": "0-15"}, "predeclared_analysis": "tools/make_baseline_numbers.py: per (arch, M) mean +/- s.e. of all-site pooled risk; parameters, steps, selected checkpoint, wall-clock; the ladder isotropic/LMMSE/networks/EM-BP/exact; paired ratios vs EM-BP(C=8) from E02a on identical bundles",
+ "status": "PRE-REGISTERED (smoke-tested 15 Sep); screen to run after E02a/E06/E02b", "registered": "2026-09-15"}

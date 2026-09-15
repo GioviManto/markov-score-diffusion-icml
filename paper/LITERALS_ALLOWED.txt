@@ -1,0 +1,13 @@
+# Typed numbers permitted in the manuscript prose (tools/check_manuscript.py).
+# token   justification
+10^{-5}   grid accuracy statement, appendix A2 (\gcworstord order of magnitude)
+10^{-9}   finite-difference check of Fisher's identity, tests/test_fisher_bruteforce.py
+0.85      the frozen rho (definition)
+0.05      lower end of the frozen schedule (definition)
+3.0       upper end of the frozen schedule (definition)
+1.6       the archival information schedule's endpoint, quoted as prior literature
+1.2       t_* at rho = 0.85 quoted approximately in the theory paragraph
+2.5       the level at which the Laplace shape estimate reaches its floor (descriptive)
+3.5       the level at which the uniform closure gap reaches double precision (descriptive)
+0.3       EM initialisation of rho (protocol)
+1.0       gradient clipping (protocol)

@@ -1,0 +1,4 @@
+{"id": "E04", "script": "experiments/e04_refinement.py", "hypothesis": "H4: the headline cells move by < 1% at N_g = 801 and < 2% at 1601 (A = 8) and < 1% at A = 10, on the actual fitted kernels and the actual held-out bundles",
+ "design": "E02a fits (theta) at M in (32, 2048), C in (1, 8), 16 seeds, re-scored at (N_g, A) in ((401,8),(801,8),(1601,8),(801,10)) with the reference recomputed at each resolution; the reference's own movement reported",
+ "predeclared_analysis": "tools/make_refinement_numbers.py: per (M, C) the relative change of the pooled risk between consecutive ladder rungs, max over seeds; the reference movement",
+ "status": "PRE-REGISTERED (smoke-tested 15 Sep); runs after E02a", "registered": "2026-09-15"}

@@ -219,7 +219,10 @@ theorem paperSig_tendsto (S0 : Matrix (Fin n) (Fin n) ℝ) :
   have h2 := (tendsto_const_nhds.sub paper_exp_neg_two_tendsto).smul_const
     (1 : Matrix (Fin n) (Fin n) ℝ)
   have h := h1.add h2
-  simpa [paperSig] using h
+  have hfun : paperSig S0 = fun t =>
+      Real.exp (-2 * t) • S0 + (1 - Real.exp (-2 * t)) • (1 : Matrix (Fin n) (Fin n) ℝ) := rfl
+  rw [hfun]
+  simpa using h
 
 /-- `Σ_t⁻¹ → I` entrywise as `t → ∞` (matrix inversion is continuous at the identity, whose
 determinant `1` is a unit). -/
@@ -238,17 +241,19 @@ theorem paperSig_inv_tendsto (S0 : Matrix (Fin n) (Fin n) ℝ) :
 theorem paper_exp_mul_fisher (S0 dS : Matrix (Fin n) (Fin n) ℝ) (t : ℝ) :
     Real.exp (4 * t) * paperFisher S0 dS t
       = (1 / 2) * Matrix.trace ((paperSig S0 t)⁻¹ * dS * (paperSig S0 t)⁻¹ * dS) := by
-  unfold paperFisher
-  simp only [Matrix.mul_smul, Matrix.smul_mul, smul_smul, Matrix.trace_smul, smul_eq_mul]
+  have hM : (paperSig S0 t)⁻¹ * (Real.exp (-2 * t) • dS) * (paperSig S0 t)⁻¹
+        * (Real.exp (-2 * t) • dS)
+      = (Real.exp (-2 * t) * Real.exp (-2 * t))
+          • ((paperSig S0 t)⁻¹ * dS * (paperSig S0 t)⁻¹ * dS) := by
+    simp only [Matrix.mul_smul, Matrix.smul_mul, smul_smul]
   have h : Real.exp (4 * t) * (Real.exp (-2 * t) * Real.exp (-2 * t)) = 1 := by
     rw [← Real.exp_add, ← Real.exp_add]
     have : 4 * t + (-2 * t + -2 * t) = 0 := by ring
     rw [this, Real.exp_zero]
-  calc Real.exp (4 * t) * (1 / 2 * (Real.exp (-2 * t) * Real.exp (-2 * t)
-        * Matrix.trace ((paperSig S0 t)⁻¹ * dS * (paperSig S0 t)⁻¹ * dS)))
-      = (Real.exp (4 * t) * (Real.exp (-2 * t) * Real.exp (-2 * t))) * (1 / 2
-        * Matrix.trace ((paperSig S0 t)⁻¹ * dS * (paperSig S0 t)⁻¹ * dS)) := by ring
-    _ = _ := by rw [h, one_mul]
+  unfold paperFisher
+  rw [hM, Matrix.trace_smul, smul_eq_mul]
+  linear_combination
+    (1 / 2 * Matrix.trace ((paperSig S0 t)⁻¹ * dS * (paperSig S0 t)⁻¹ * dS)) * h
 
 /-- **Target 3 (THEORY_NOTES §2, B3; the constant `½‖∂_θΣ₀‖²_F`).**
 
@@ -272,13 +277,15 @@ theorem paper_gaussian_fisher_rate (S0 dS : Matrix (Fin n) (Fin n) ℝ) (hdS : d
       ((((continuous_id.matrix_mul continuous_const).matrix_mul continuous_id).matrix_mul
         continuous_const).matrix_trace)
   have h := (hg.tendsto 1).comp (paperSig_inv_tendsto S0)
-  have hlim : (1 / 2) * Matrix.trace ((1 : Matrix (Fin n) (Fin n) ℝ) * dS * 1 * dS)
+  have h2 : Filter.Tendsto (fun t => Real.exp (4 * t) * paperFisher S0 dS t) Filter.atTop
+      (nhds ((fun M : Matrix (Fin n) (Fin n) ℝ => (1 / 2) * Matrix.trace (M * dS * M * dS)) 1)) := by
+    refine h.congr fun t => ?_
+    simp only [Function.comp_apply]
+    exact (paper_exp_mul_fisher S0 dS t).symm
+  have hlim : (fun M : Matrix (Fin n) (Fin n) ℝ => (1 / 2) * Matrix.trace (M * dS * M * dS)) 1
       = (1 / 2) * Matrix.trace (dSᵀ * dS) := by
-    rw [hdS, Matrix.one_mul, Matrix.mul_one]
-  rw [hlim] at h
-  refine h.congr fun t => ?_
-  simp only [Function.comp]
-  exact (paper_exp_mul_fisher S0 dS t).symm
+    simp only [Matrix.one_mul, Matrix.mul_one, hdS]
+  rwa [hlim] at h2
 
 /-- Frobenius form of the limit, through the audit's `ch05b_frobSq`
 (`‖A‖²_F = Σ A_{ij}² = tr(Aᵀ A)`, `ch05b_g_frob`). -/
@@ -295,7 +302,7 @@ theorem paperSig_isUnit_det (S0 : Matrix (Fin n) (Fin n) ℝ) (hS0 : S0.PosSemid
     (t : ℝ) (ht : 0 < t) : IsUnit (paperSig S0 t).det := by
   have hpos : 0 < 1 - Real.exp (-2 * t) := by
     have : Real.exp (-2 * t) < 1 := by
-      rw [Real.exp_lt_one]; linarith
+      rw [Real.exp_lt_one_iff]; linarith
     linarith
   have hA : (Real.exp (-2 * t) • S0).PosSemidef := hS0.smul (Real.exp_pos _).le
   have hB : ((1 - Real.exp (-2 * t)) • (1 : Matrix (Fin n) (Fin n) ℝ)).PosDef :=
@@ -324,11 +331,7 @@ theorem paper_Lam4diff_hasDerivAt (β k4 s : ℝ) :
     simpa using hasDerivAt_pow 2 s
   have h := (((h4.const_mul (1 / 24)).sub (h2.const_mul ((1 / 4) * β))).add_const
     ((1 / 8) * β ^ 2)).const_mul k4
-  convert h using 1
-  · funext s
-    simp only [paperLam4diff]
-    ring
-  · ring
+  exact h.congr_deriv (by ring)
 
 /-- **Target 4 (THEORY_NOTES §2, B1; scalar unit-variance leading coefficient `κ₄/6`).**
 

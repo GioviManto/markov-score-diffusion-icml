@@ -1,0 +1,2 @@
+{"id": "E07", "script": "experiments/e07_phase_diagram.py", "hypothesis": "H7: the LMMSE floor surface over (rho, family, t) organises the learned estimators; the crossover t_*(rho) locates where the floor collapses",
+ "design": "deterministic oracle ladder, rho in (0, 0.3, 0.6, 0.85, 0.95), four non-Gaussian families, twelve levels, 512 chains x 2 replicates, N_g = 401", "status": "PRE-REGISTERED (smoke-tested 15 Sep)", "registered": "2026-09-15"}
