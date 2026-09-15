@@ -28,3 +28,4 @@ outputs/**/cells/
 outputs/**/ckpts/
 hpc/.last_deploy.env
 hpc/.deploy_*.env
+paper/figures/*.png
