@@ -33,7 +33,7 @@ learning consequences — not the law itself.
 | Capacity on the headline task under identical checkpoint selection (C ∈ {1,2,4,8,16}, 16 seeds, 1200-iteration ladder): the Gaussian-innovation kernel sits on the LMMSE floor at every size (0.174, 0.168, 0.168, 0.167 against a floor of 0.167); every richer capacity goes far below it, reaching 0.022 at M = 2048 (7.9× under the floor); the paired C = 1 minus C = 8 difference favours the mixture in 16 of 16 seeds at every size; the best capacity rises from C = 2 at M = 32 to C = 16 at M = 2048 | done, frozen (E02a on the HPC, 8h54m, commit ea0435a) | `outputs/E02a/capacity.csv`, `paper/sections/tab-capacity.tex` |
 | Learning through noise (E06, ρ = 0.85, M = 512, 16 seeds): the EM estimator sits at the Cramér–Rao reference computed from the frozen E01 information (1.02× the bound for ρ̂ and for κ̂₄ over the informative levels); the shape bound crosses the range of κ₄ at t = 0.98 and the fit collapses to a Gaussian innovation there while ρ̂ is still within 0.01; ρ̂ is lost past t_* = 1.17. The asymptotic e^{2t}/e^{4t} slopes are not observable at this (ρ, M): the shape estimate saturates before t_*. E06b (ρ = 0.5, M = 2048) registered to test them. | done, frozen (E06); E06b running | `outputs/E06/levels.csv`, `paper/figures/fig_learning.pdf` |
 | Tunable non-Gaussian family: C = 8 vs C = 1 gap tracks the exact closure gap | *queued* (E02b) | — |
-| Fair baselines (six architectures, one recipe), information-matched arm, length extrapolation | *screen running* (E03, 272 configurations on 2 workers) | `outputs/E03/` |
+| Fair baselines (six architectures, one recipe), information-matched arm, length extrapolation: EM–BP ahead at every size (2.83× below the best network at M = 2048, 16/16 seeds) and 7.3× ahead at matched information; the window head plateaus at 0.118 while global architectures reach 0.060; the transformer fails to extrapolate in length while the fitted kernel is flat | done, frozen (E03 on the HPC: screen 9h26m, confirm 4h, matched 4h22m, length 37m) | `outputs/E03/*.csv` |
 | Generation with paired noise and the exact-evidence log-likelihood metric | *pending* (E05) | — |
 | Refinement on the actual fitted models | *pending* (E04) | — |
 | Phase diagram of the LMMSE floor over ρ: the pooled floor falls from 0.29 (ρ = 0) to 0.085 (ρ = 0.95) on the Laplace chain; families order by κ₄ at every ρ | done | `outputs/E07/ladder.csv`, `paper/figures/fig_phase.pdf` |
@@ -51,7 +51,11 @@ learning consequences — not the law itself.
   correlation" went from a one-seed pre-asymptotic measurement in a companion document
   to a theorem with constants, verified on the chain.
 * **Weakened / reframed:** "against a screened window head the advantage is 2.3–6.1×" —
-  the screen was unequal; the number is retained as archival until E03 replaces it.
+  the screen was unequal; E03 replaces it with 2.83× against the best of six architectures
+  under one recipe, and 7.3× at matched information.
+* **Refuted by our own data:** "the learned networks sit at or above the second-order floor"
+  (drafted in the abstract and introduction). At M = 2048 five of six architectures are below
+  it. See `NEGATIVE_RESULTS.md`; the claim is replaced by the information-interface statement.
 * **Removed:** "the margin is earned by the Markov factorisation and its covariance, not
   by the mixture's capacity" (Appendix L of the starting manuscript) — contradicted by
   the LMMSE floor and by the first E02 cells; its origin (asymmetric stopping) is
