@@ -44,7 +44,7 @@ cmd_for() {
     e09)         echo "e09_capacity_floor.py --output-dir {OUT}/E09";;
     e10)         echo "e10_capacity_evidence.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E10";;
     e04)         echo "e04_refinement.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E04";;
-    e05)         echo "e05_generation.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E05";;
+    e05)         echo "e05_generation.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --set net_dir=\"'{OUT}/E03/ckpts'\" --output-dir {OUT}/E05";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }

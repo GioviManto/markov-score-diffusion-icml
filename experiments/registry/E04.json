@@ -24,5 +24,8 @@
     "refine": 659258
    }
   }
+ ],
+ "amendments": [
+  "2026-09-16 21:05: held-out bundle reduced from 2048 to 512 sequences. The refinement estimand is the MOVEMENT of an error between two grid resolutions, computed on the same chains at both, so it is paired and 512 sequences resolve it far below the effects it must bound. The first attempt (job 659957) had produced no completed cell after 19 h of a 23 h allocation, because the Ng = 1601 pass over a 2048-chain bundle, six arms deep, on 24 workers sharing memory bandwidth, dominates everything else. Amended before any cell completed and before any number was read."
  ]
 }

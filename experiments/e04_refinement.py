@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 """E4 — numerical refinement of the reported estimands on the ACTUAL fitted models.
 
+Bundle size. The movement of an estimand between two grid resolutions is computed on the SAME
+chains at both, so it is a paired quantity and 512 held-out sequences resolve it far more finely
+than the effects it has to bound. The first attempt used 2048 (matching E02a's test bundle) and the
+Ng = 1601 pass over that bundle -- sixteen times the cost of the Ng = 401 pass, six arms deep, on
+twenty-four workers sharing memory bandwidth -- had produced no completed cell after nineteen hours
+of a twenty-three hour allocation. Amended to 512 on 16 September, before any cell completed and
+before any number was read.
+
 For the E02 cells at the requested sizes, re-score the validation-selected EM-BP kernel
 (theta from outputs/E02a/capacity.csv), the LMMSE oracle and the isotropic score on the
 same held-out test bundle (same chains, same noise) at every (N_g, A) in the ladder,
@@ -34,7 +42,7 @@ T_SCHEDULE = tuple(FROZEN.t_grid)
 SETTINGS = dict(
     sizes=(32, 2048), components=(1, 8), seeds=tuple(range(16)),
     ladder=((401, 8.0), (801, 8.0), (1601, 8.0), (801, 10.0)),
-    n_test=2048, em_source="outputs/E02a/capacity.csv", chunk=512,
+    n_test=512, em_source="outputs/E02a/capacity.csv", chunk=256,
 )
 QUICK = dict(sizes=(32,), components=(1, 8), seeds=(10_000,), ladder=((201, 8.0), (401, 8.0)), n_test=64, em_source="outputs/scratch/e02_quick/capacity.csv")
 

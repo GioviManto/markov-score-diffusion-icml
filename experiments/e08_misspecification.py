@@ -53,7 +53,7 @@ REGIONS = {"all": slice(0, N_SITES), "bulk": BULK}
 SETTINGS = dict(
     mechanisms={"global": (0.0, 0.1, 0.25, 0.5, 1.0), "longrange": (0.0, 0.05, 0.1, 0.2, 0.4),
                 "ar2": (0.0, 0.1, 0.2, 0.3, 0.4), "sitevar": (0.0, 0.05, 0.1, 0.14)},
-    sizes=(512, 2048), seeds=tuple(range(8)),
+    sizes=(512, 2048), seeds=PROTOCOL.seeds,
     n_val=512, n_test=1024, grid_size=FROZEN.n_grid, half_width=FROZEN.half_width,
     em_components=8, em_checkpoints=PROTOCOL.em_checkpoints, em_init_rho=PROTOCOL.em_init_rho, em_init_var=PROTOCOL.em_init_var,
     window_hp=dict(radius=2, width=64), window_lr=1e-3, window_mode="eps", window_steps=16_000,

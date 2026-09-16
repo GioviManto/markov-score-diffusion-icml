@@ -26,7 +26,8 @@
   }
  ],
  "amendments": [
-  "2026-09-16 08:40: the site-varying mechanism's largest registered strength, delta = 0.2, is not a valid chain at rho = 0.85 -- the site coefficients reach 1.05, so the innovation variance 1 - rho_k^2 is negative and the 'covariance' is not positive definite. All 16 such cells raised in the Cholesky and produced no number; the other 281 cells of the run are unaffected and were kept. The grid for this mechanism is amended to (0.0, 0.05, 0.1, 0.14), 0.14 being the largest strength with every |rho_k| < 1 (minimum eigenvalue 0.0101), and _sitevar_cov now refuses an invalid strength with a clear error instead of failing later in a matrix factorisation. No result from delta = 0.2 exists or will be reported."
+  "2026-09-16 08:40: the site-varying mechanism's largest registered strength, delta = 0.2, is not a valid chain at rho = 0.85 -- the site coefficients reach 1.05, so the innovation variance 1 - rho_k^2 is negative and the 'covariance' is not positive definite. All 16 such cells raised in the Cholesky and produced no number; the other 281 cells of the run are unaffected and were kept. The grid for this mechanism is amended to (0.0, 0.05, 0.1, 0.14), 0.14 being the largest strength with every |rho_k| < 1 (minimum eigenvalue 0.0101), and _sitevar_cov now refuses an invalid strength with a clear error instead of failing later in a matrix factorisation. No result from delta = 0.2 exists or will be reported.",
+  "2026-09-16 21:05: seeds raised from 8 to the protocol's 16, for consistency with every other confirmatory experiment. The 8-seed run of 16 Sep stays frozen until replaced."
  ],
  "frozen_outputs": {
   "outputs/E08/misspecification.csv": "56f9a559baa308a7180fb4f8a75214bf3ab0d62c5c440aa5c5b2a0807963e95d",

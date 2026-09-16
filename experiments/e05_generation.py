@@ -32,6 +32,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import apply_overrides, experiment_parser, provenance, run_cells, select_parts  # noqa: E402
 from frozen_config import FROZEN  # noqa: E402
+from protocol import PROTOCOL  # noqa: E402
 from markov_score import gen_metrics, theory  # noqa: E402
 from markov_score.bp_grid import grid_bp_batch, make_grid  # noqa: E402
 from markov_score.kernels import MixtureInnovationKernel  # noqa: E402
@@ -43,13 +44,15 @@ from markov_score.utils import ensure_dir, rng_for, write_csv, write_json  # noq
 N_SITES = FROZEN.n_sites
 
 SETTINGS = dict(
-    sizes=(128, 2048), components=8, seeds=tuple(range(4)),
+    sizes=(128, 2048), components=8, seeds=PROTOCOL.seeds,
     n_generate=2000, n_reference=4000,
     t_max=3.0, t_min=0.02, n_steps=400,
     steps_ladder=(100, 200, 400, 800),
     grid_size=FROZEN.n_grid, half_width=FROZEN.half_width,
     em_source="outputs/E02a/capacity.csv",
-    net_ckpts=None,
+    net_ckpts=None,            # {name: {arch, hp, mode, path}} for a single fixed checkpoint
+    net_dir=None,              # E03 confirm checkpoint directory: <seed>_<n>_<arch>.pt per cell
+    net_archs=("bigru", "window"),
 )
 QUICK = dict(sizes=(32,), seeds=(10_000,), components=8, n_generate=64, n_reference=128, n_steps=20, steps_ladder=(10, 20), grid_size=201,
              em_source="outputs/scratch/e02_quick/capacity.csv")
@@ -92,6 +95,24 @@ def _arms(cfg, seed, n, grid, weights, log_k_true, sigma0):
         arms["em_bp"] = _score_bp(kb.log_transition_matrix(grid), grid, weights)
     except SystemExit as e:
         print("  ", e)
+    if cfg.get("net_dir"):
+        # The network arm must be the checkpoint fitted on THIS cell's (seed, size), so the
+        # comparison stays paired: E03's confirm part saved one per cell, and winners.json carries
+        # the configuration each architecture was screened into.
+        import json
+        import torch
+        from markov_score import nn_torch as nt
+        d = Path(cfg["net_dir"])
+        win = json.loads((d.parent / "winners.json").read_text()) if (d.parent / "winners.json").exists() else {}
+        for arch in cfg["net_archs"]:
+            ck = d / f"{seed}_{n}_{arch}.pt"
+            if not ck.exists() or arch not in win:
+                print(f"   no checkpoint for {arch} at seed={seed} n={n}", flush=True)
+                continue
+            w = win[arch]
+            model = nt.build(arch, N_SITES, **w["hp"]); model.load_state_dict(torch.load(ck))
+            den = nt.Denoiser(model, w["mode"])
+            arms[f"net:{arch}"] = (lambda dn: (lambda X, t: -(X - np.exp(-t) * dn.posterior_mean(X, t)) / (1 - np.exp(-2 * t))))(den)
     if cfg.get("net_ckpts"):
         import torch
         from markov_score import nn_torch as nt

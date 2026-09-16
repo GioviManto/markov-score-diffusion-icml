@@ -51,5 +51,8 @@
   "E05": [
    "29a9ffe"
   ]
- }
+ },
+ "amendments": [
+  "2026-09-16 21:05: seeds raised from 4 to the protocol's 16, and the network arms are now resolved per cell from E03's confirm checkpoints (<seed>_<n>_<arch>.pt with the configuration from winners.json) instead of one fixed checkpoint, so the network arm is paired with the other arms within a cell. The 4-seed run of 16 Sep stays frozen as outputs/E05 until the 16-seed run replaces it; its numbers are superseded, not deleted."
+ ]
 }
