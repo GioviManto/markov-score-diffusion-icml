@@ -1,0 +1,28 @@
+{
+ "id": "E02a_v1",
+ "script": "experiments/e02_capacity.py",
+ "hypothesis": "Robustness of the capacity result to the EM iteration ladder: the protocol-1 ladder (to 400 iterations, capacities to 8) should reproduce the protocol-2 result (to 1200, capacities to 16) wherever the two designs overlap. If it does, the reversal of the thesis's conclusion is attributable to selecting the checkpoint equally and not to running longer.",
+ "design": "identical to E02a except --set components='(1,2,4,8)' and --set em_checkpoints='(10,...,400)'; same seeds, sizes, bundles and selection rule; run on the laptop (5 workers) while the cluster ran protocol 2",
+ "seeds": {
+  "confirmatory": "0-15"
+ },
+ "outcome": "Agrees with E02a to 0.001 or better in every one of the 16 overlapping (size, capacity) cells; the largest discrepancy anywhere is 0.001. The capacity conclusion does not depend on the ladder length.",
+ "status": "FROZEN E02a_v1 2026-09-16T22:15:10Z; DONE 16 Sep, frozen; robustness companion to E02a",
+ "registered": "2026-09-16",
+ "script_sha256": "5a6454f9d5be8696356ec870fe6c0e7a31c16b65a40226c2bb2d42147f8c5f4f",
+ "frozen_outputs": {
+  "outputs/E02a_v1/capacity.csv": "5a28a1b7b532eb0e1329dbfa877f23e8426d28d903287f16ab0e38acb7c19e81",
+  "outputs/E02a_v1/params_capacity.json": "327669ea38c684b27f343dd2401f00bc3f0df73847cdcd584ed8ccd59ab03270"
+ },
+ "frozen_at": {
+  "E02a_v1": "2026-09-16T22:15:10Z"
+ },
+ "frozen_commit": {
+  "E02a_v1": "9de9e2444bfa6a67b0da6aa9378b037022b16797"
+ },
+ "frozen_run_commits": {
+  "E02a_v1": [
+   "29a9ffe"
+  ]
+ }
+}
