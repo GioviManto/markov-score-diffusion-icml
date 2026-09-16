@@ -58,8 +58,13 @@ submit_one() {
 #SBATCH --job-name=msd-$name
 #SBATCH --partition=$PART
 #SBATCH --nodes=1 --ntasks=1 --cpus-per-task=$cpus --mem=$MEM --time=$TIME
+#SBATCH --propagate=NONE
 #SBATCH --output=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.out --error=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.err
 set -euo pipefail
+# The login shell carries RLIMIT_CPU = 600 s. Without --propagate=NONE SLURM hands that
+# limit to every process in the job, which kills a multi-worker run partway through with
+# 'CPU time limit exceeded' (E05, 15 Sep) or leaves the job holding an idle node (E06b).
+ulimit -t unlimited 2>/dev/null || true
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
 export PYTHONPATH=\$HOME/$MSD_SRC/src
 cd \$HOME/$MSD_SRC/experiments

@@ -4,7 +4,7 @@
  "hypothesis": "H8: the structured estimator's advantage degrades gracefully in a measurable misspecification parameter and reverses at a locatable eps*; the statistical gain (small M) and the asymptotic bias (large M) separate",
  "design": "Gaussian truths with exact scores: rank-one global latent beta in (0,0.1,0.25,0.5,1), long-range precision coupling gamma in (0,0.05,0.1,0.2,0.4), AR(2) with second coefficient in (0,0.1,0.2,0.3,0.4) at fixed lag-one correlation, site-dependent rho with amplitude in (0,0.05,0.1,0.2); arms EM-BP (AR(1) mixture kernel, misspecified), window head (torch, E03 recipe), LMMSE of the AR(1) covariance, isotropic; sizes (512, 2048); 8 seeds; all-site pooled risk against the exact score",
  "predeclared_analysis": "tools/make_misspec_numbers.py: per (mechanism, eps, M) mean +/- s.e. of each arm; the paired ratio window/EM-BP; break-even eps by linear interpolation of the log-ratio between the bracketing grid points, with the bracket reported, never a fitted crossing",
- "status": "PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659270); PRE-REGISTERED",
+ "status": "PARTIAL RUN 15 Sep (281/297 cells; the 16 sitevar delta=0.2 cells are invalid by construction, see amendments); resuming 16 Sep with the amended grid. PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659270); PRE-REGISTERED",
  "registered": "2026-09-15",
  "hpc_runs": [
   {
@@ -24,5 +24,8 @@
     "sweep": 659257
    }
   }
+ ],
+ "amendments": [
+  "2026-09-16 08:40: the site-varying mechanism's largest registered strength, delta = 0.2, is not a valid chain at rho = 0.85 -- the site coefficients reach 1.05, so the innovation variance 1 - rho_k^2 is negative and the 'covariance' is not positive definite. All 16 such cells raised in the Cholesky and produced no number; the other 281 cells of the run are unaffected and were kept. The grid for this mechanism is amended to (0.0, 0.05, 0.1, 0.14), 0.14 being the largest strength with every |rho_k| < 1 (minimum eigenvalue 0.0101), and _sitevar_cov now refuses an invalid strength with a clear error instead of failing later in a matrix factorisation. No result from delta = 0.2 exists or will be reported."
  ]
 }

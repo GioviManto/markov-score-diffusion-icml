@@ -52,7 +52,7 @@ REGIONS = {"all": slice(0, N_SITES), "bulk": BULK}
 
 SETTINGS = dict(
     mechanisms={"global": (0.0, 0.1, 0.25, 0.5, 1.0), "longrange": (0.0, 0.05, 0.1, 0.2, 0.4),
-                "ar2": (0.0, 0.1, 0.2, 0.3, 0.4), "sitevar": (0.0, 0.05, 0.1, 0.2)},
+                "ar2": (0.0, 0.1, 0.2, 0.3, 0.4), "sitevar": (0.0, 0.05, 0.1, 0.14)},
     sizes=(512, 2048), seeds=tuple(range(8)),
     n_val=512, n_test=1024, grid_size=FROZEN.n_grid, half_width=FROZEN.half_width,
     em_components=8, em_checkpoints=PROTOCOL.em_checkpoints, em_init_rho=PROTOCOL.em_init_rho, em_init_var=PROTOCOL.em_init_var,
@@ -92,8 +92,17 @@ def _ar2_cov(rho1, rho2, L):
 
 
 def _sitevar_cov(rho, delta, L):
-    """Cov of a_1 ~ N(0,1), a_i = rho_i a_{i-1} + eps_i with Var eps_i = 1 - rho_i^2 (unit variances)."""
+    """Cov of a_1 ~ N(0,1), a_i = rho_i a_{i-1} + eps_i with Var eps_i = 1 - rho_i^2 (unit variances).
+
+    The construction needs every site coefficient inside (-1, 1): at rho = 0.85 a strength above
+    0.15 pushes rho_k past 1, the innovation variance 1 - rho_k^2 turns negative and the matrix is
+    not a covariance at all. That is a property of the mechanism, not of a particular draw, so it
+    is refused here rather than surfacing later as a Cholesky failure (which is how the
+    delta = 0.2 cells of 15 September died)."""
     rhos = rho + delta * np.cos(2 * np.pi * np.arange(L) / L)
+    if np.abs(rhos).max() >= 1.0:
+        raise ValueError(f"sitevar strength {delta} at rho {rho} gives |rho_k| = {np.abs(rhos).max():.3f} >= 1: "
+                         "not a valid chain (innovation variance would be negative)")
     # Cov(a_i, a_j) = prod_{k=i+1}^{j} rho_k  (unit variances at every site)
     S = np.eye(L)
     for i in range(L):

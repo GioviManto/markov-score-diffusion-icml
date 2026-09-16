@@ -8,7 +8,7 @@
  "seeds": {
   "confirmatory": "0-15"
  },
- "status": "PROTOCOL v2 SUBMITTED to HPC 15 Sep 19:15 (job 659813); REGISTERED 2026-09-15 19:30 before running",
+ "status": "RESUBMITTED 16 Sep after a scheduler-level failure produced nothing; PROTOCOL v2 SUBMITTED to HPC 15 Sep 19:15 (job 659813); REGISTERED 2026-09-15 19:30 before running",
  "registered": "2026-09-15",
  "hpc_runs": [
   {
@@ -22,5 +22,8 @@
    "submitted": "2026-09-15T19:15 BST",
    "note": "job 659801 (submitted against the previous deployment, whose script had no rho setting) was cancelled before it ran"
   }
+ ],
+ "amendments": [
+  "2026-09-16 08:35: job 659813 was cancelled after 10 h having produced no cell. SLURM reported it RUNNING while its compute node sat idle with no process of ours: the login shell's RLIMIT_CPU of 600 s was propagated into the job and killed the workers (the same cause as E05's 'CPU time limit exceeded'). hpc/icml_submit.sh now sets --propagate=NONE and ulimit -t unlimited. No result was produced, the design is unchanged, and the experiment is resubmitted as registered."
  ]
 }
