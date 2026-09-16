@@ -14,7 +14,7 @@
   "histogram KL of residuals",
   "mean log-likelihood under the true P_{t_min} by exact BP evidence (headline) and its gap to the reference sample"
  ],
- "status": "PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659283); PRE-REGISTERED (smoke-tested 15 Sep); runs after E02a and E03",
+ "status": "FROZEN E05 2026-09-16T18:41:17Z; PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659283); PRE-REGISTERED (smoke-tested 15 Sep); runs after E02a and E03",
  "registered": "2026-09-15",
  "hpc_runs": [
   {
@@ -34,5 +34,22 @@
     "generation": 659259
    }
   }
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E05/generation.csv": "6a5034d3f35df048e6457a0297bd0b1c6d894fb8123071453d6b9f130fe31649",
+  "outputs/E05/steps.csv": "0f32e07f0b0d8909aeaf83483ec9934db0a5eb2645d392c4018e50a4c8b98441",
+  "outputs/E05/params_generate.json": "c09e1f88880caf3562829d7446f80e3bc52542f43a958498d147d7abd88c8a13",
+  "outputs/E05/params_steps.json": "fb258e7ea2d01584c4e47385ef84cf441a2100dee23abc771a6e00c9f7a91504"
+ },
+ "frozen_at": {
+  "E05": "2026-09-16T18:41:17Z"
+ },
+ "frozen_commit": {
+  "E05": "0ddfa8bfe95122c6ad34aef0dfc93aea0aae2cd0"
+ },
+ "frozen_run_commits": {
+  "E05": [
+   "29a9ffe"
+  ]
+ }
 }

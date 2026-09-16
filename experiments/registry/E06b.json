@@ -8,7 +8,7 @@
  "seeds": {
   "confirmatory": "0-15"
  },
- "status": "RESUBMITTED 16 Sep after a scheduler-level failure produced nothing; PROTOCOL v2 SUBMITTED to HPC 15 Sep 19:15 (job 659813); REGISTERED 2026-09-15 19:30 before running",
+ "status": "DONE 16 Sep (9h00m, 144 cells, frozen); outcome inconclusive, see `outcome`",
  "registered": "2026-09-15",
  "hpc_runs": [
   {
@@ -25,5 +25,21 @@
  ],
  "amendments": [
   "2026-09-16 08:35: job 659813 was cancelled after 10 h having produced no cell. SLURM reported it RUNNING while its compute node sat idle with no process of ours: the login shell's RLIMIT_CPU of 600 s was propagated into the job and killed the workers (the same cause as E05's 'CPU time limit exceeded'). hpc/icml_submit.sh now sets --propagate=NONE and ulimit -t unlimited. No result was produced, the design is unchanged, and the experiment is resubmitted as registered."
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E06b/levels.csv": "edfda132e4e6ce4edf075fa82beee959c004af0cae6b253e4cab163fa2b4f019",
+  "outputs/E06b/params_levels.json": "fd7c18bd66f3cbb6373ca58e5c487b60282eb93cea36c56198e7154120fb5240"
+ },
+ "frozen_at": {
+  "E06b": "2026-09-16T18:41:18Z"
+ },
+ "frozen_commit": {
+  "E06b": "0ddfa8bfe95122c6ad34aef0dfc93aea0aae2cd0"
+ },
+ "frozen_run_commits": {
+  "E06b": [
+   "29a9ffe"
+  ]
+ },
+ "outcome": "INCONCLUSIVE for its stated purpose (16 Sep): the window between the crossover t_* = 0.54 and the onset of saturation is three levels wide (t in [0.6, 0.9]); fitted slopes 3.26 and 5.97 against predicted 2 and 4, ratio 2.71 against 2. The ordering is confirmed, the exponents are not. Recorded in docs/NEGATIVE_RESULTS.md with what would be needed to test them properly."
 }

@@ -7,7 +7,22 @@
  "seeds": {
   "confirmatory": "0-15 (test bundles of E02a)"
  },
- "status": "REGISTERED 2026-09-16 09:10 before running at scale (quick pass at 1 seed shows the reversal; no confirmatory number used yet)",
+ "status": "FROZEN E10 2026-09-16T18:41:18Z; REGISTERED 2026-09-16 09:10 before running at scale (quick pass at 1 seed shows the reversal; no confirmatory number used yet)",
  "registered": "2026-09-16",
- "script_sha256": "0c2ad09fa89f4ce9c7da6b80f295f202c59c7f1e46ce77bdefae45e8d23cd6b8"
+ "script_sha256": "0c2ad09fa89f4ce9c7da6b80f295f202c59c7f1e46ce77bdefae45e8d23cd6b8",
+ "frozen_outputs": {
+  "outputs/E10/evidence.csv": "d68633fb937147f6dd20dab3c33f949e5f41f0a428526095792d64f8e4d3d401",
+  "outputs/E10/params_evidence.json": "58e08a0303144594aeba6c3c9be0517350b1a24ef328a97254382f7422684d63"
+ },
+ "frozen_at": {
+  "E10": "2026-09-16T18:41:18Z"
+ },
+ "frozen_commit": {
+  "E10": "0ddfa8bfe95122c6ad34aef0dfc93aea0aae2cd0"
+ },
+ "frozen_run_commits": {
+  "E10": [
+   "eefc55d"
+  ]
+ }
 }

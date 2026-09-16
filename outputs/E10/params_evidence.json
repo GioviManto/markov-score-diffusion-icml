@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-09-16 10:44:56",
+  "git_commit": "eefc55d18fa158809914e3c284ea70f193b6d9da",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "f07232e2d15f534b48d8bc27e21f5ec250960ddf9702ae6f4544815b560e3bc5",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode01",
+  "slurm_job_id": "660209",
+  "slurm_array_task_id": "",
+  "cpu_count": "24",
+  "blas_threads": "1",
+  "settings": {
+    "sizes": [
+      32,
+      128,
+      512,
+      2048
+    ],
+    "components": [
+      1,
+      2,
+      4,
+      8,
+      16
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "n_test": 2048,
+    "grid_size": 401,
+    "half_width": 8.0,
+    "em_source": "/home/3164542/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv"
+  },
+  "quick": false,
+  "workers": 24
+}

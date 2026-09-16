@@ -79,3 +79,44 @@ sizes for this reason.
 
 **Status.** Development seeds; the confirmatory table (E03 confirm, running) replaces these
 numbers. The direction is a factor of three and is not a seed effect.
+
+## The asymptotic exponents are not observable in this laboratory (16 September 2026)
+
+**What was predicted.** The sample-complexity corollary says the error of an estimate of the
+correlation from data observed at level t grows like e^{2t} and that of the innovation's fourth
+cumulant like e^{4t}, so their ratio grows like e^{2t}.
+
+**Why E06 could not test it.** At the frozen rho = 0.85 the crossover sits at t_* = 1.17, and the
+shape estimate saturates at t = 1: its RMSE reaches 3, the whole distance from a Gaussian
+innovation to the truth, because the Cramer-Rao bound for that coordinate has already crossed the
+coordinate's own range at t = 0.98. There is no window in which the estimate is both asymptotic and
+informative. Fitting slopes anyway would have returned 3.64 and 0.09 against predictions of 2 and 4
+-- the second being nothing but the saturation plateau -- so the analysis reports no slope and says
+why.
+
+**E06b, registered to fix this, does not fix it.** Moving to rho = 0.5 (t_* = 0.54) with M = 2048
+and 16 seeds opens a window, but only a three-level one: t in [0.6, 0.9], since the kurtosis RMSE
+is already 1.85 at t = 0.9. The fitted log-slopes are 3.26 for the correlation and 5.97 for the
+kurtosis, against predictions of 2 and 4, with a ratio of 2.71 against a predicted 2.
+
+**The honest reading.** The predicted ORDERING holds and is not in doubt -- shape is lost faster
+than correlation, at every configuration measured. The predicted EXPONENTS are not confirmed by
+these runs: both measured slopes are steeper than predicted by about the same amount, on a window
+three levels wide whose upper end is already bending into saturation. Two mechanisms plausibly
+explain the overshoot and neither is tested here: RMSE contains a bias term that the Cramer-Rao
+bound does not describe, and the upper levels of the window are already leaving the regime where
+the estimator is efficient.
+
+**What would actually test it.** The window's width is set by the gap between the crossover
+t_* = 0.5 log lambda_max(Sigma_0) and the level at which the bound crosses the coordinate's range,
+which moves only logarithmically in M. Reaching a decade of window needs a much smaller rho
+together with a much larger M, or an estimand that does not saturate (the dispersion of the
+estimate across seeds rather than its RMSE, which drops the bias term and is a different claim).
+Neither is in the current budget.
+
+**What is claimed instead.** E01 establishes the information rates exactly, by computation rather
+than by fitting. E06 establishes that the estimator attains the bound (1.02x). Those two together
+give the corollary its content wherever the coordinate remains identifiable, and the point at which
+identifiability is lost is itself measured (t = 0.98 at rho = 0.85). The paper states the rates as
+a property of the channel, verified directly, and does not claim a fitted confirmation of the
+exponents from estimator error.
