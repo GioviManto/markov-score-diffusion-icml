@@ -396,18 +396,18 @@ every arm is scored against the truth of the perturbed model rather than against
 \begin{table}[htbp]
 \centering
 \small
-\caption{Misspecification: ratio of the window head's pooled error to EM--BP's, at the largest and
-smallest strength of each mechanism. Above $1$ the misspecified chain estimator still wins. Eight
-seeds, sizes $512$ and $2048$ pooled.}
+\caption{Misspecification: ratio of the window head's pooled error to EM--BP's, at zero strength
+and at the largest strength swept. Above $1$ the misspecified chain estimator still wins; the last
+column interpolates where the ratio crosses $1$. Eight seeds, sizes $512$ and $2048$ pooled.}
 \label{tab:misspec}
-\begin{tabular}{l l dd l}
+\begin{tabular}{l l d d d l}
 \toprule
-mechanism & what it breaks & $\varepsilon=0$ & largest $\varepsilon$ & break-even \\
+mechanism & what it breaks & \multicolumn{1}{c}{$\varepsilon=0$} & \multicolumn{1}{c}{$\varepsilon_{\max}$} & \multicolumn{1}{c}{ratio there} & break-even \\
 \midrule
-rank-one global latent   & nothing structural      & 10.5 & 3.96 ($\varepsilon=1.0$)  & not reached \\
-AR(2) second coefficient & the order               & 10.9 & 0.97 ($\varepsilon=0.4$)  & $\approx0.40$ \\
-long-range coupling      & the precision band      & 7.9  & 1.00 ($\varepsilon=0.4$)  & $\approx0.40$ \\
-site-varying $\rho$      & homogeneity             & 9.8  & 0.99 ($\varepsilon=0.14$) & $\approx0.14$ \\
+rank-one global latent   & nothing structural & 10.5 & 1.00 & 3.96 & not reached \\
+AR(2) second coefficient & the order          & 10.9 & 0.40 & 0.97 & $\approx0.40$ \\
+long-range coupling      & the precision band & 7.9  & 0.40 & 1.00 & $\approx0.40$ \\
+site-varying $\rho$      & homogeneity        & 9.8  & 0.14 & 0.99 & $\approx0.14$ \\
 \bottomrule
 \end{tabular}
 \end{table}
