@@ -29,3 +29,8 @@ outputs/**/ckpts/
 hpc/.last_deploy.env
 hpc/.deploy_*.env
 paper/figures/*.png
+
+# Internal reports (LaTeX, compiled with tectonic)
+reports/*.aux
+reports/*.log
+reports/*.out
