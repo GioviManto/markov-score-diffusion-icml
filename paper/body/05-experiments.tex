@@ -7,14 +7,10 @@ schedule-pooled relative score error against the tree-exact reference (squared e
 reference energy summed over levels before the square root). Sixteen paired seeds are
 the inferential unit; architectures and hyperparameters are selected on two development
 seeds that never enter a reported number, and every arm's budget is selected on a
-per-seed validation bundle disjoint from the test bundle.
-
-\paragraph{The oracle ladder.}
-Three reference points bracket every learned estimator (\cref{app:oracles}): the
-isotropic score $-\vx$, which knows only the marginal variance, at pooled error
-$\isoFloorLaplace$; the LMMSE oracle with the true covariance, at $\lmmseFloorLaplace$,
-which by \cref{prop:lmmse} is the floor of every second-order estimator; and the exact
-score at zero.
+per-seed validation bundle disjoint from the test bundle. Three reference points bracket
+every estimator (\cref{app:oracles}): the isotropic score $-\vx$ at $\isoFloorLaplace$, the
+LMMSE oracle with the true covariance at $\lmmseFloorLaplace$---the floor of every
+second-order estimator, by \cref{prop:lmmse}---and the exact score at zero.
 
 \paragraph{Capacity: the margin is fourth-order.}
 \IfFileExists{sections/capacity-numbers.tex}{\input{body/05a-capacity}}{\needsdata{E02a running: capacity table and paired differences}}
@@ -31,7 +27,6 @@ for every capacity the effect is unambiguous (\cref{app:capacity}).
 \paragraph{Generation.}
 \IfFileExists{sections/generation-numbers.tex}{\input{body/05b-generation}}{\needsdata{E05 pending: reverse-SDE samples under the exact, EM--BP, LMMSE and network scores}}
 
-\IfFileExists{sections/phase-numbers.tex}{\input{body/05f-phase}}{\needsdata{E07 pending: the floor across correlation}}
 
 \paragraph{Misspecification.}
 \IfFileExists{sections/misspec-numbers.tex}{\input{body/05c-misspec}}{\needsdata{E08 pending: advantage against a misspecification parameter; break-even}}

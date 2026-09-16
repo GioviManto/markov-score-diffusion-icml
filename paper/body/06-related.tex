@@ -6,19 +6,15 @@ Diffusion and score matching are due to \citet{sohl2015deep,ho2020denoising,song
 and \citet{hyvarinen2005estimation,vincent2011connection}; the score--posterior-mean identity is
 Tweedie's \citep{robbins1956empirical,efron2011tweedie}. Exactly solvable targets have been
 Gaussian \citep{pierret2024gaussian}, mean-field or mixture-like
-\citep{biroli2023generative,biroli2024dynamical,raya2023spontaneous,cui2025solvable,ghio2024sampling},
-or hierarchical with discrete leaves \citep{sclocchi2025phase,sclocchi2025probing}, on which
-U-Nets and transformers implement belief propagation
-\citep{mei2024unets,mei2023deep,garnierbrun2024transformers,favero2025compositional}. A recurrent
+\citep{biroli2023generative,biroli2024dynamical,cui2025solvable}, or hierarchical with discrete
+leaves \citep{sclocchi2025phase}, on which U-Nets and transformers implement belief propagation
+\citep{mei2024unets,mei2023deep,garnierbrun2024transformers}. A recurrent
 empirical observation is that learned scores are dominated by their Gaussian part over a wide
-noise range \citep{wang2024gaussian,li2024hidden,kadkhodaie2024generalization,wang2026rmt}, and
-that downstream statistics of generated data depend on the first two moments alone
-\citep{ghane2025universality}. Our chain is the degenerate tree of depth $\nsites$ with
+noise range \citep{wang2024gaussian,li2024hidden,kadkhodaie2024generalization,wang2026rmt}, and that
+downstream statistics depend on the first two moments alone \citep{ghane2025universality}. Our chain is the degenerate tree of depth $\nsites$ with
 continuous non-Gaussian states; the Gaussian part of its score is the Kalman smoother of the
-covariance twin (\cref{prop:lmmse}), and \cref{eq:scoregap} is the sharp rate, with constant and
-crossover, behind the dominance those papers report. Kamb and Ganguli's local-score machines
-\citep{kamb2024analytic} are the analogous closed form for convolutional image models; here the
-closed form is exact.
+covariance twin (\cref{prop:lmmse}), and \cref{eq:scoregap} is the sharp rate, with its constant and
+crossover, behind the dominance those papers report.
 
 \paragraph{What survives noise: the low-SNR literature.}
 \Cref{thm:decay} belongs to the low-SNR expansions of estimation theory. In Gaussian channels the
@@ -56,10 +52,7 @@ Spectral and moment methods for hidden Markov models \citep{hsu2012spectral} are
 high-noise competitor that \cref{cor:samples} suggests.
 
 \paragraph{Sequence denoisers and length.}
-The baselines of \cref{sec:experiments} follow the standard sequence architectures
-\citep{bai2018tcn,vaswani2017attention,ronneberger2015unet}; length extrapolation of
-attention-based models depends on the positional encoding
-\citep{press2022alibi,kazemnejad2023positional}, and sequence diffusion models that generalise
-past the training horizon do so by construction \citep{chen2024diffusionforcing}. Here the
-reference at every length is the exact score, so length generalisation is measured rather than
-assumed.
+The baselines of \cref{sec:experiments} are the standard sequence architectures
+\citep{bai2018tcn,vaswani2017attention,ronneberger2015unet}; that attention-based length
+extrapolation turns on the positional encoding \citep{press2022alibi,kazemnejad2023positional}
+is visible in \cref{tab:length}, here against an exact reference at every length.
