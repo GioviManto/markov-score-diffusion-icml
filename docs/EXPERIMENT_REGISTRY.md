@@ -24,6 +24,7 @@ not re-registered; their status there is authoritative.
 | E08 | `experiments/e08_misspecification.py` | H8 (misspecification) | `experiments/registry/E08.json` | 0–7 | PRE-REGISTERED (smoke-tested) | `outputs/E08/` | — |
 | E09 | `experiments/e09_capacity_floor.py` | capacity resolution: infinite-data KL-optimal mixture per C on the E02a test bundles (reference, not a bound) | `experiments/registry/E09.json` | test bundles of 0–15 | REGISTERED 15 Sep 11:40, running (1 worker) | `outputs/E09/` | — |
 | E06b | `experiments/e06_learning_through_noise.py --set rho=0.5 --set n_chains=2048` | H6 in its asymptotic window (t_* = 0.55 at ρ = 0.5) | `experiments/registry/E06b.json` | 0–15 | REGISTERED 15 Sep 19:30 after E06 and before running; on the HPC | `outputs/E06b/` | — |
+| E10 | `experiments/e10_capacity_evidence.py` | the thesis's capacity conclusion re-scored in its own estimand (held-out log-evidence per edge) under equal stopping | `experiments/registry/E10.json` | 0–15 | REGISTERED 16 Sep 09:10, on the HPC | `outputs/E10/` | — |
 
 Dev seeds are 10000–10003 everywhere; confirmatory seeds 0–15. A confirmatory row's
 config file is committed before the run starts, and the commit that produced the

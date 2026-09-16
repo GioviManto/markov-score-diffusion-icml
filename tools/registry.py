@@ -21,13 +21,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REG = ROOT / "experiments" / "registry"
 DOC = ROOT / "docs" / "EXPERIMENT_REGISTRY.md"
-OUTPUT_DIRS = {"E01": "E01", "E02": "E02a", "E02a": "E02a", "E02b": "E02b", "E03": "E03", "E04": "E04", "E05": "E05", "E06": "E06", "E07": "E07", "E08": "E08", "E09": "E09", "E06b": "E06b"}
+OUTPUT_DIRS = {"E01": "E01", "E02": "E02a", "E02a": "E02a", "E02b": "E02b", "E03": "E03", "E04": "E04", "E05": "E05", "E06": "E06", "E07": "E07", "E08": "E08", "E09": "E09", "E06b": "E06b", "E10": "E10"}
 MAIN_CSV = {"E01": "closure_gap.csv", "E02a": "capacity.csv", "E02b": "family.csv", "E03": "confirm.csv", "E04": "refinement.csv",
-            "E05": "generation.csv", "E06": "levels.csv", "E07": "ladder.csv", "E08": "misspecification.csv", "E09": "floor.csv", "E06b": "levels.csv"}
+            "E05": "generation.csv", "E06": "levels.csv", "E07": "ladder.csv", "E08": "misspecification.csv", "E09": "floor.csv", "E06b": "levels.csv", "E10": "evidence.csv"}
 
 
 SCRIPTS = {"E01": "e01_information_decay.py", "E02a": "e02_capacity.py", "E02b": "e02_capacity.py", "E03": "e03_baselines.py", "E04": "e04_refinement.py",
-           "E05": "e05_generation.py", "E06": "e06_learning_through_noise.py", "E07": "e07_phase_diagram.py", "E08": "e08_misspecification.py", "E09": "e09_capacity_floor.py", "E06b": "e06_learning_through_noise.py"}
+           "E05": "e05_generation.py", "E06": "e06_learning_through_noise.py", "E07": "e07_phase_diagram.py", "E08": "e08_misspecification.py", "E09": "e09_capacity_floor.py", "E06b": "e06_learning_through_noise.py", "E10": "e10_capacity_evidence.py"}
 
 
 def inspect(out_id: str) -> dict:
