@@ -39,22 +39,16 @@ $\pmean{\va}=\E[\va\mid\vx_t=\vx]$ \citep{robbins1956empirical,efron2011tweedie}
 \cref{eq:prior} on $\vx$ multiplies the prior by one unary factor
 $\like(x_i\mid a_i)\propto\exp[-(x_i-e^{-t}a_i)^2/2\Dt]$ per site: no edge is added among
 the latent variables, the posterior factor graph is the prior's chain, and sum-product
-on it is exact \citep{pearl1988probabilistic,kschischang2001factor}. Two message sweeps,
-\begin{equation}
-\begin{aligned}
-  \lmsg_i(a)&\propto\!\int\!\kernel(a\mid a')\,\like(x_{i-1}\mid a')\,\lmsg_{i-1}(a')\dd a',\\
-  \rmsg_i(a)&\propto\!\int\!\kernel(a''\mid a)\,\like(x_{i+1}\mid a'')\,\rmsg_{i+1}(a'')\dd a'',
-\end{aligned}
-\label{eq:bp}
-\end{equation}
-return the site marginals $\propto\lmsg_i\like\rmsg_i$ and hence the exact score of a
-correlated, non-Gaussian, $\nsites$-dimensional law. Messages are functions on $\Reals$;
-we represent them on a grid of $\ngrid$ points on $[-\halfwidth,\halfwidth]$ with
-trapezoidal quadrature, which makes the recursion exact for the discretised factor model
-and controlled for the continuous one (\cref{app:numerics}: at $\ngrid=401$,
-$\halfwidth=8$ the reference is accurate to $10^{-5}$ relative on ordinary draws for
-every family used). Throughout, ``the score'' means this tree-exact functional inference,
-evaluated by validated grid quadrature.
+on it is exact \citep{pearl1988probabilistic,kschischang2001factor}. Two sweeps of the
+functional messages $\lmsg_i(a)\propto\int\kernel(a\mid a')\like(x_{i-1}\mid
+a')\lmsg_{i-1}(a')\dd a'$ and its mirror image $\rmsg_i$ (\cref{app:numerics},
+\cref{eq:bp}) return the site marginals $\propto\lmsg_i\like\rmsg_i$, and hence the exact
+score of a correlated, non-Gaussian, $\nsites$-dimensional law. Messages are functions on
+$\Reals$; we carry them on a grid of $\ngrid$ points on $[-\halfwidth,\halfwidth]$ with
+trapezoidal quadrature, exact for the discretised factor model and controlled for the
+continuous one (at $\ngrid=401$, $\halfwidth=8$ the reference is accurate to $10^{-5}$
+relative on ordinary draws for every family used). Throughout, ``the score'' means this
+tree-exact inference, evaluated by validated quadrature.
 
 \paragraph{The covariance twin and the price of second-order closure.}
 The Gaussian chain with the same $\corr$ and $\ivar$ has the closed-form score

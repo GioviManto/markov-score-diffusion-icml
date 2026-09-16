@@ -1,5 +1,18 @@
 \section{Numerical representation and its control}
 \label{app:numerics}
+\paragraph{The recursion.}
+The two message sweeps of \cref{sec:setup} are
+\begin{equation}
+\begin{aligned}
+  \lmsg_i(a)&\propto\!\int\!\kernel(a\mid a')\,\like(x_{i-1}\mid a')\,\lmsg_{i-1}(a')\dd a',\\
+  \rmsg_i(a)&\propto\!\int\!\kernel(a''\mid a)\,\like(x_{i+1}\mid a'')\,\rmsg_{i+1}(a'')\dd a'',
+\end{aligned}
+\label{eq:bp}
+\end{equation}
+with $\lmsg_1\equiv\rmsg_{\nsites}\equiv1$; the site marginal is $\propto\lmsg_i\like\rmsg_i$
+and Tweedie's identity turns its mean into the score.
+
+
 
 Messages are represented on a uniform grid of $\ngrid$ points on
 $[-\halfwidth,\halfwidth]$ with composite trapezoidal weights; the recursion is a scaled
