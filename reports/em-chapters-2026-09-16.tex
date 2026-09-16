@@ -69,6 +69,13 @@ $M=32$ and the worst of the five weight-shared architectures at $M=2048$, moving
 $0.121\rightarrow0.118$ as data quadruples. A bounded receptive field cannot represent a message
 that has crossed the chain --- which is exactly what the chain's score is.
 
+\item \hi{Score accuracy transfers to generation, and the second-order score fails there
+visibly.} Driven through the same reverse SDE on identical Brownian paths, the fitted kernel
+produces sequences whose innovation excess kurtosis is $1.887$ against the reference's $1.896$,
+with a log-likelihood gap of $0.022$ under the true law. The covariance-matched score gives
+$-0.008$ --- an essentially Gaussian chain --- at a gap of $1.71$, and the isotropic score a gap of
+$46.2$.
+
 \item \hi{A claim of ours was refuted by our own data, and is recorded as such.} ``The learned
 networks sit at or above the second-order floor'' had been drafted into the new abstract. At
 $M=2048$ five of six architectures sit below it. The defensible statement is about the information
@@ -341,6 +348,78 @@ The capacity result should be stated as retired rather than quietly dropped, tog
 diagnosis of why it arose. The same applies to the claim of ours that our own screen refuted this
 week. The project keeps a negative-results record for exactly this, and both entries are in it.
 
+\section{Generation and the boundary of the advantage}\label{sec:gen}
+
+Two results completed while this report was being written. Both were pre-registered and both
+address questions Chapter~10 raises but does not settle.
+
+\paragraph{Does score accuracy transfer to generation?}
+Every arm drives the same reverse SDE from the same initialisation along the same Brownian path, so
+the comparison is paired within a seed and the integrator is common to all of them. The
+discretisation was measured separately and is not what separates the arms: against an $800$-step
+reference the strong error is $0.0190$, $0.0087$ and $0.0033$ at $100$, $200$ and $400$ steps,
+roughly halving per doubling, while the excess kurtosis of the generated sequences is stable at
+$2.00$--$2.05$ across the whole ladder.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Generation at $M=2048$, four seeds, common Brownian paths. Log-likelihood gap is the mean
+deficit in $\log p_{t_{\min}}$ per sequence against the reference sample, computed by exact
+belief-propagation evidence under the true law. The reference sample has excess kurtosis $1.896$.}
+\label{tab:generation}
+\begin{tabular}{l dd dd}
+\toprule
+score driving the sampler & log-lik.\ gap & exc.\ kurtosis & sliced $W_2$ & cov.\ error \\
+\midrule
+exact (tree BP)              & 0.041  & 1.833  & 0.046 & 0.068 \\
+EM--BP ($C=8$), fitted       & 0.022  & 1.887  & 0.051 & 0.072 \\
+LMMSE (covariance twin)      & 1.710  & $-0.008$ & 0.047 & 0.067 \\
+isotropic                    & 46.20  & 0.003  & 0.239 & 0.909 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The fitted score and the exact score are indistinguishable on this evidence: the fitted kernel's
+log-likelihood gap is if anything the smaller of the two, and its generated kurtosis is nearer the
+reference. The second-order score is the instructive failure. On the metrics that see only two
+moments --- sliced $W_2$, the covariance error --- it is as good as the exact score, which is what
+Proposition~1 predicts. On the fourth cumulant it produces $-0.008$ where the truth is $1.896$: it
+generates a Gaussian chain with the right covariance. A generative model evaluated only on
+second-order distances would score it as a success.
+
+\paragraph{Where does the advantage stop?}
+The structured estimator assumes a first-order Markov chain. Four Gaussian departures from that
+assumption were swept, each with a scalar strength $\varepsilon$ and an exact score of its own, so
+every arm is scored against the truth of the perturbed model rather than against the chain.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Misspecification: ratio of the window head's pooled error to EM--BP's, at the largest and
+smallest strength of each mechanism. Above $1$ the misspecified chain estimator still wins. Eight
+seeds, sizes $512$ and $2048$ pooled.}
+\label{tab:misspec}
+\begin{tabular}{l l dd l}
+\toprule
+mechanism & what it breaks & $\varepsilon=0$ & largest $\varepsilon$ & break-even \\
+\midrule
+rank-one global latent   & nothing structural      & 10.5 & 3.96 ($\varepsilon=1.0$)  & not reached \\
+AR(2) second coefficient & the order               & 10.9 & 0.97 ($\varepsilon=0.4$)  & $\approx0.40$ \\
+long-range coupling      & the precision band      & 7.9  & 1.00 ($\varepsilon=0.4$)  & $\approx0.40$ \\
+site-varying $\rho$      & homogeneity             & 9.8  & 0.99 ($\varepsilon=0.14$) & $\approx0.14$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The pattern is clean and interpretable. A rank-one global latent is absorbed by the fitted
+correlation and never reverses the ordering, because it does not break the conditional
+independence structure the estimator exploits. The three mechanisms that do break it --- adding an
+order, widening the precision band, or making the chain inhomogeneous --- each reverse it at a
+measurable strength, and the site-varying mechanism reverses it soonest. This gives the chapter the
+boundary it currently lacks: the advantage is not a general property of ``having structure'', it is
+specific to the structure being approximately right, and how wrong it can be is now quantified.
+
 \section{Status of the evidence, and what is still running}\label{sec:status}
 
 \begin{table}[htbp]
@@ -362,23 +441,19 @@ E06  & learning through noise, against the information bound    & frozen \\
 E07  & the second-order floor across correlation                & frozen \\
 E09  & infinite-data reference per capacity                     & frozen \\
 \midrule
-E10  & capacity in the thesis's own estimand                    & running \\
+E10  & capacity in the thesis's own estimand                    & frozen \\
 E04  & grid refinement on the fitted models                     & running \\
-E05  & generation under each score, paired noise                & running \\
-E08  & misspecification and its break-even                      & running \\
-E06b & the asymptotic exponents at $\rho=0.5$                   & queued \\
+E05  & generation under each score, paired noise                & frozen \\
+E08  & misspecification and its break-even                      & frozen \\
+E06b & the asymptotic exponents at $\rho=0.5$                   & frozen, inconclusive \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Two partial readings are already usable. \emph{Refinement}: doubling the quadrature grid from $401$
-to $801$ points moves the reference score, and every arm's error, by less than $10^{-4}$ relative
-on the cells completed so far, so the numbers above are not grid artefacts. \emph{Sampler error}:
-the reverse-SDE discretisation study is complete and separates cleanly from the score error ---
-against an $800$-step reference the strong error is $0.0190$, $0.0087$ and $0.0033$ at $100$, $200$
-and $400$ steps, roughly halving per doubling, while the innovation excess kurtosis of the
-generated sequences is stable at $2.00$--$2.05$ across the ladder. The generation comparison
-therefore measures the scores and not the integrator.
+One reading is still partial. \emph{Refinement}: doubling the quadrature grid from $401$ to $801$
+points moves the reference score, and every arm's error, by less than $10^{-4}$ relative on the
+cells completed so far, so the numbers in this report are not grid artefacts. The full ladder, which
+adds $1601$ points and a wider domain, is the one run still going.
 
 \paragraph{Three infrastructure faults, for the record.}
 Jobs were inheriting the login shell's $600$-second CPU limit, which killed one run outright and
@@ -410,10 +485,19 @@ The remainder bounds are analysis and would be a substantial effort; the project
 Proposition~1 is the one load-bearing step still in prose. Is the current scope the right stopping
 point?
 
-\item \hi{Is $\rho=0.5$ the right place to test the asymptotic exponents?} At the thesis's
-$\rho=0.85$ the shape estimate saturates before the crossover, so $e^{2t}$ and $e^{4t}$ cannot be
-observed. The queued run moves to $\rho=0.5$ with $M=2048$. It is cheap to change before it
-reports.
+\item \hi{Do we pursue the asymptotic exponents, or claim the rates only where they are
+established?} The run at $\rho=0.5$ has reported and the window it opens is three levels wide, too
+narrow to pin an exponent (Section~\ref{sec:ch9}). The window grows only logarithmically in $M$, so
+closing it properly means a much smaller $\rho$ and a much larger $M$, or switching to an estimand
+that does not saturate --- which is a different claim. The alternative, which is what the write-up
+currently does, is to establish the rates exactly by computation and the estimator's efficiency by
+measurement, and to state the sample-complexity consequence only where the coordinate is still
+identifiable.
+\item \hi{Does the misspecification boundary belong in Chapter~10 or in the conclusions?} It is
+the cleanest statement we have about when the method should \emph{not} be used --- a rank-one
+global latent never reverses the ordering, while breaking the order, the precision band or the
+homogeneity each reverse it at a measurable strength. It reads as a limitation, but it is a
+measured one, which is unusual enough to be worth foregrounding.
 \end{enumerate}
 
 \vspace{1.4em}
