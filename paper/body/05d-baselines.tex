@@ -4,35 +4,42 @@
 level, batch $64$, Adam with clipping, both output parameterisations, checkpoint selected on
 validation), each with the configuration that won its family's screen on the development
 seeds (\cref{tab:screen}, \cref{app:protocol}), on the test bundles of the capacity
-experiment. Weight sharing is what separates the architectures at small $\nseq$: the fully
-connected network reaches only $\baseWorstA$ at $\nseq=32$ against $\baseBestA$ for the
-$\baseBestArchA$. Which shared architecture wins depends on the sample size---the
-$\baseBestArchA$ at $\nseq=32$, the $\baseBestArchD$ at $\nseq=2048$---so locality is a
-useful prior when sequences are scarce and a constraint when they are not.
+experiment. Three things separate them. Weight sharing separates the fully connected network
+from the rest at every size ($\baseWorstA$ against $\baseBestA$ at $\nseq=32$). Locality is
+the better prior when sequences are scarce---the window head is the best network at
+$\nseq=32$---but it is a ceiling rather than a prior once they are not: the window head moves
+only from $\baseWindowC$ to $\baseWindowD$ between $\nseq=512$ and $\nseq=2048$, while the
+global architectures keep improving, the best reaching $\baseBestD$. A radius-$4$ window
+cannot represent a message that has travelled the length of the chain, and the chain's exact
+score is exactly such a message.
 
-Given enough clean sequences the networks pass the second-order floor: at $\nseq=2048$,
-$\baseBelowFloorND$ of the six sit below $\baseLmmseD$ (\cref{prop:lmmse}), the best at
-$\baseBestD$. They are not held at second order by anything intrinsic; they simply need the
-data. The structured estimator is nonetheless ahead at every size---$\capEmeightD$ at
-$\nseq=2048$, a paired factor $\baseRatioBestD$
+Given enough clean sequences the networks pass the second-order floor: $\baseBelowFloorND$
+of the six sit below $\baseLmmseD$ at $\nseq=2048$ (\cref{prop:lmmse}). Nothing intrinsic
+holds them at second order; they need data. The structured estimator is ahead at every size
+nonetheless---$\capEmeightD$ at $\nseq=2048$, a paired factor $\baseRatioBestD$
 ($[\baseRatioBestDlo,\baseRatioBestDhi]$, favouring EM--BP in $\baseWinsBestD$ of
-$\baseSeeds$ seeds) below the best network, and $\baseRatioBestA$ at $\nseq=32$---and it is
-ahead while seeing strictly less of each sequence, which is what the next paragraph measures.
+$\baseSeeds$ seeds) below the best network---but that comparison is not
+information-matched: the networks see clean sequences and a fresh corruption at every
+gradient step, EM--BP one noised view per sequence and no clean chain at all.
 
-\paragraph{Information-matched training.}
-Trained by implicit score matching on the one-view noisy bundle that EM--BP sees, with the
-checkpoint selected on the implicit objective of a held-out noisy bundle and the true score
-used only to report, the window head reaches $\matchedIsmoneviewWindowD$ and the transformer
-$\matchedIsmoneviewTransformerD$ at $\nseq=2048$; with clean targets but a single fixed
-corruption per sequence they reach $\matchedDsmonecorruptionWindowD$ and
-$\matchedDsmonecorruptionTransformerD$. The distance between these and the standard-recipe
-rows is the value of the clean signal and of fresh corruptions; the distance that remains to
-EM--BP at the same interface is the value of the structure.
+\paragraph{The comparison at matched information.}
+Trained at EM--BP's own interface, the same architectures lose most of their advantage from
+scale. The best matched arm at $\nseq=2048$ is the $\matchedBestArchD$ at
+$\matchedBestD$---$\matchedBestArmD$---against EM--BP's $\capEmeightD$ on the same bundles, a
+paired factor $\matchedRatioBestD$ ($[\matchedRatioBestDlo,\matchedRatioBestDhi]$). Implicit
+score matching on the one-view bundle, which uses no clean target at all, is worse again
+($\matchedIsmoneviewWindowD$ for the window head, $\matchedIsmoneviewTransformerD$ for the
+transformer). The gap between the standard-recipe rows and these is the value of clean data
+with fresh corruptions; the factor of $\matchedRatioBestD$ that remains is what the
+factorisation and the exact E-step are worth at equal information.
 
 \paragraph{Length extrapolation.}
 \input{sections/tab-length}
-Fitted at $\nsites=32$ and evaluated at $\nsites=256$, the EM--BP kernel's error moves from
-$\lenEmbpDLthreetwo$ to $\lenEmbpDLtwofivesix$: the learned law is local and the inference is
-exact at any length. The window head, also local, moves from $\lenWindowDLthreetwo$ to
-$\lenWindowDLtwofivesix$; the transformer with relative positions from
-$\lenTransformerDLthreetwo$ to $\lenTransformerDLtwofivesix$ (\cref{tab:length}).
+Fitted at $\nsites=32$ and evaluated against the exact score of longer chains
+(\cref{tab:length}), the EM--BP kernel holds $\lenEmbpDLthreetwo$ at $\nsites=32$ and
+$\lenEmbpDLtwofivesix$ at $\nsites=256$: the law is local, so inference at any length is the
+same exact recursion. The convolutional and recurrent networks improve slightly, as they
+should---longer chains have proportionally fewer boundary sites. The transformer with
+learned relative positions does not: it degrades from $\lenTransformerDLthreetwo$ to
+$\lenTransformerDLtwofivesix$, a failure of the positional encoding beyond its training
+length rather than of the score it learned \citep{press2022alibi,kazemnejad2023positional}.

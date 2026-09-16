@@ -13,7 +13,7 @@
   "confirmatory": "0-15"
  },
  "predeclared_analysis": "tools/make_baseline_numbers.py: per (arch, M) mean +/- s.e. of all-site pooled risk; parameters, steps, selected checkpoint, wall-clock; the ladder isotropic/LMMSE/networks/EM-BP/exact; paired ratios vs EM-BP(C=8) from E02a on identical bundles",
- "status": "PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659262, 659263, 659264, 659265); PRE-REGISTERED (smoke-tested 15 Sep); screen amended 15 Sep 08:20 before running; screen to run on 2 workers alongside the EM queue",
+ "status": "FROZEN E03 2026-09-16T06:33:30Z; PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659262, 659263, 659264, 659265); PRE-REGISTERED (smoke-tested 15 Sep); screen amended 15 Sep 08:20 before running; screen to run on 2 workers alongside the EM queue",
  "registered": "2026-09-15",
  "amendments": [
   "2026-09-15 08:20 (before any screen run): screen budget cut from (4 dev seeds, 3 restarts, 32k steps) to (2 dev seeds, 1 run, 16k steps) after measuring 1-16 min per 32k-step single-thread run (136 core-hours for the original screen). Selection stage only; confirm/matched/length untouched. The conv layers of nn_torch were reimplemented as gather+matmul (FastConv1d, identical maths, tests/test_nn_torch.py) because this PyTorch build's conv1d kernel was 10-100x slower than a matmul of the same size.",
@@ -47,5 +47,27 @@
     "length": 659254
    }
   }
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E03/confirm.csv": "9f7ef67d85f8c4d66b8520571d7cc66e8f782d43c25bf7bca7b93054b58b20f2",
+  "outputs/E03/length.csv": "ed55ef90093b67cbdb36be555c02f6756c406352b2637a8660745c22705bf3f2",
+  "outputs/E03/matched.csv": "54bee3da0267bf8824822471457617b73543f0373807adb06a9837c825bc9815",
+  "outputs/E03/screening.csv": "7b52d496adf79ca8d868870edb27ec9589873e5c580b0b2171101f2062b88aa5",
+  "outputs/E03/params_confirm.json": "7b07dea146508d57f4788a06169810966919b75350fa309afe8f16c95e5cbbd7",
+  "outputs/E03/params_length.json": "79cec707e98c4fe0601c359f2d957cce271a007f042d8c48f8eec63c2accd551",
+  "outputs/E03/params_matched.json": "5cc2f18642ef4064d9815b9e8c8000db03e5d0e198dd63a95ee96575fc22116d",
+  "outputs/E03/params_screen.json": "a21c151c4da44b05026a19f04d0719f716f98bd05e02ca35f5d4a00c5561518a",
+  "outputs/E03/winners.json": "ade51ff7b7c1e6876d5d60ec05ca65a53e72dfeea1c9aca960121335208f8157"
+ },
+ "frozen_at": {
+  "E03": "2026-09-16T06:33:30Z"
+ },
+ "frozen_commit": {
+  "E03": "29a9ffe4bb33f951aafcd666256789bea539994c"
+ },
+ "frozen_run_commits": {
+  "E03": [
+   "ea0435a"
+  ]
+ }
 }
