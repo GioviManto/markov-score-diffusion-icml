@@ -42,6 +42,7 @@ cmd_for() {
     e06b)        echo "e06_learning_through_noise.py --set rho=0.5 --set n_chains=2048 --set levels=\"(0.3, 0.45, 0.6, 0.75, 0.9, 1.05, 1.2, 1.4)\" --output-dir {OUT}/E06b";;
     e08)         echo "e08_misspecification.py --output-dir {OUT}/E08";;
     e09)         echo "e09_capacity_floor.py --output-dir {OUT}/E09";;
+    e10)         echo "e10_capacity_evidence.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E10";;
     e04)         echo "e04_refinement.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E04";;
     e05)         echo "e05_generation.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E05";;
     *) echo "unknown experiment $1" >&2; exit 2;;
