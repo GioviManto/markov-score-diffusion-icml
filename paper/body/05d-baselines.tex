@@ -6,7 +6,7 @@ validation), each with the configuration that won its family's screen on the dev
 seeds (\cref{tab:screen}, \cref{app:protocol}), on the test bundles of the capacity
 experiment. Three things separate them. Weight sharing separates the fully connected network
 from the rest at every size ($\baseWorstA$ against $\baseBestA$ at $\nseq=32$). Locality is
-the better prior when sequences are scarce---the window head is the best network at
+the better prior when sequences are scarce---the \baseBestArchA{} is the best network at
 $\nseq=32$---but it is a ceiling rather than a prior once they are not: the window head moves
 only from $\baseWindowC$ to $\baseWindowD$ between $\nseq=512$ and $\nseq=2048$, while the
 global architectures keep improving, the best reaching $\baseBestD$. A radius-$4$ window
@@ -24,8 +24,8 @@ gradient step, EM--BP one noised view per sequence and no clean chain at all.
 
 \paragraph{The comparison at matched information.}
 Trained at EM--BP's own interface, the same architectures lose most of their advantage from
-scale. The best matched arm at $\nseq=2048$ is the $\matchedBestArchD$ at
-$\matchedBestD$---$\matchedBestArmD$---against EM--BP's $\capEmeightD$ on the same bundles, a
+scale. The best matched arm at $\nseq=2048$ is the \matchedBestArchD{} trained on \matchedBestArmD{},
+at $\matchedBestD$ against EM--BP's $\capEmeightD$ on the same bundles, a
 paired factor $\matchedRatioBestD$ ($[\matchedRatioBestDlo,\matchedRatioBestDhi]$). Implicit
 score matching on the one-view bundle, which uses no clean target at all, is worse again
 ($\matchedIsmoneviewWindowD$ for the window head, $\matchedIsmoneviewTransformerD$ for the
