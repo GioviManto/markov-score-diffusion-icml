@@ -4,7 +4,7 @@
  "hypothesis": "H4: the headline cells move by < 1% at N_g = 801 and < 2% at 1601 (A = 8) and < 1% at A = 10, on the actual fitted kernels and the actual held-out bundles",
  "design": "E02a fits (theta) at M in (32, 2048), C in (1, 8), 16 seeds, re-scored at (N_g, A) in ((401,8),(801,8),(1601,8),(801,10)) with the reference recomputed at each resolution; the reference's own movement reported",
  "predeclared_analysis": "tools/make_refinement_numbers.py: per (M, C) the relative change of the pooled risk between consecutive ladder rungs, max over seeds; the reference movement",
- "status": "PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659282); PRE-REGISTERED (smoke-tested 15 Sep); runs after E02a",
+ "status": "FROZEN E04 2026-09-17T06:53:59Z; PROTOCOL v2 RUNNING on HPC since 15 Sep 13:12 (jobs 659282); PRE-REGISTERED (smoke-tested 15 Sep); runs after E02a",
  "registered": "2026-09-15",
  "hpc_runs": [
   {
@@ -27,5 +27,20 @@
  ],
  "amendments": [
   "2026-09-16 21:05: held-out bundle reduced from 2048 to 512 sequences. The refinement estimand is the MOVEMENT of an error between two grid resolutions, computed on the same chains at both, so it is paired and 512 sequences resolve it far below the effects it must bound. The first attempt (job 659957) had produced no completed cell after 19 h of a 23 h allocation, because the Ng = 1601 pass over a 2048-chain bundle, six arms deep, on 24 workers sharing memory bandwidth, dominates everything else. Amended before any cell completed and before any number was read."
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E04/refinement.csv": "efe628a7df69973c5ac9b2faecc16331c8fc24e84978876bdbc5654fb1a5d2cb",
+  "outputs/E04/params_refine.json": "3e04a32ede7974d53a35e15d31f4b3afc41514163b2d3c6e18a771cd806aaef0"
+ },
+ "frozen_at": {
+  "E04": "2026-09-17T06:53:59Z"
+ },
+ "frozen_commit": {
+  "E04": "e9e11f3bc489d5c671cbd43c2bdb500853524b92"
+ },
+ "frozen_run_commits": {
+  "E04": [
+   "9de9e24"
+  ]
+ }
 }

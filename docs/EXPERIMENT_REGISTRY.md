@@ -25,6 +25,8 @@ not re-registered; their status there is authoritative.
 | E09 | `experiments/e09_capacity_floor.py` | capacity resolution: infinite-data KL-optimal mixture per C on the E02a test bundles (reference, not a bound) | `experiments/registry/E09.json` | test bundles of 0–15 | REGISTERED 15 Sep 11:40, running (1 worker) | `outputs/E09/` | — |
 | E06b | `experiments/e06_learning_through_noise.py --set rho=0.5 --set n_chains=2048` | H6 in its asymptotic window (t_* = 0.55 at ρ = 0.5) | `experiments/registry/E06b.json` | 0–15 | REGISTERED 15 Sep 19:30 after E06 and before running; on the HPC | `outputs/E06b/` | — |
 | E10 | `experiments/e10_capacity_evidence.py` | the thesis's capacity conclusion re-scored in its own estimand (held-out log-evidence per edge) under equal stopping | `experiments/registry/E10.json` | 0–15 | REGISTERED 16 Sep 09:10, on the HPC | `outputs/E10/` | — |
+| E11 | `experiments/e11_grid_validation.py` | is the quadrature reference valid across families, correlations and levels, or only at the frozen point | `experiments/registry/E11.json` | 0–3 | REGISTERED 17 Sep, queued | `outputs/E11/` | — |
+| E12 | `experiments/e12_sample_complexity.py` | sample complexity by order: M*(t) for each coordinate, predicted e^{4t} and e^{8t} | `experiments/registry/E12.json` | 0–7 | REGISTERED 17 Sep, queued | `outputs/E12/` | — |
 
 Dev seeds are 10000–10003 everywhere; confirmatory seeds 0–15. A confirmatory row's
 config file is committed before the run starts, and the commit that produced the

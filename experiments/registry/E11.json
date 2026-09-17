@@ -1,0 +1,13 @@
+{
+ "id": "E11",
+ "script": "experiments/e11_grid_validation.py",
+ "hypothesis": "The quadrature reference (N_g = 401 on [-8,8]) is valid across every configuration the project uses, not only at the frozen point where it was validated: five innovation families x four correlations x twelve levels.",
+ "design": "For each (family, rho, L, seed) the same 256 chains are scored on seven candidate grids and on a finer reference grid (3201 points on [-12,12]); three diagnostics per grid: the worst-chain posterior mass in the outermost 2% of the domain (truncation), max_j |sum_i K(g_i|g_j) w_i - 1| (quadrature error at source), and the relative RMS difference of the posterior-mean field against the reference grid on the same chains (what a reported number would move by). 4 seeds.",
+ "predeclared_analysis": "tools/make_grid_numbers.py: the worst drift over all (family, rho, level) at the frozen grid, and the grid at which drift first falls below 1e-4; the table is the maximum over configurations, not the mean, because the claim is a bound.",
+ "seeds": {
+  "confirmatory": "0-3 (deterministic diagnostics; seeds are chain draws)"
+ },
+ "status": "REGISTERED 2026-09-17 before running",
+ "registered": "2026-09-17",
+ "script_sha256": "119ab153c63781f906abc2f35d8680b68e46d83dd80bbaa3a2431a5932650aaa"
+}
