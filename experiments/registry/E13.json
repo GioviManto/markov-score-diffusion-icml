@@ -1,0 +1,13 @@
+{
+ "id": "E13",
+ "script": "experiments/e13_regime_sweep.py",
+ "hypothesis": "The capacity result is a property of the estimator, not of the frozen corner of parameter space. Across correlations and chain lengths: the C = 1 kernel should sit on the LMMSE floor everywhere (Proposition 1, so this is also a check on the apparatus), and C = 8 should sit below it everywhere, with the margin varying smoothly.",
+ "design": "rho in (0.3, 0.5, 0.7, 0.85, 0.95) x L in (16, 32, 64), Laplace innovation, M = 512, 8 seeds; C in (1, 8) plus the LMMSE and isotropic oracles on the same held-out bundles; protocol ladder and validation selection; the crossover t_*(rho, L) is recorded per cell.",
+ "predeclared_analysis": "per (rho, L): the ratio of the C = 1 error to the LMMSE floor, which Proposition 1 puts at 1 everywhere; the paired C1 - C8 difference with a seed bootstrap; and whether the margin tracks t_* or the fixed schedule.",
+ "seeds": {
+  "confirmatory": "0-7"
+ },
+ "status": "REGISTERED 2026-09-17 before running",
+ "registered": "2026-09-17",
+ "script_sha256": "e82450fb4663d5f6e9f0aaed36fef7edfdb74f908b018aea241a3d4d39cb882b"
+}

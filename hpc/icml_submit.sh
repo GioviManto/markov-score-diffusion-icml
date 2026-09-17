@@ -43,6 +43,7 @@ cmd_for() {
     e08)         echo "e08_misspecification.py --output-dir {OUT}/E08";;
     e09)         echo "e09_capacity_floor.py --output-dir {OUT}/E09";;
     e11)         echo "e11_grid_validation.py --output-dir {OUT}/E11";;
+    e13)         echo "e13_regime_sweep.py --output-dir {OUT}/E13";;
     e12)         echo "e12_sample_complexity.py --output-dir {OUT}/E12";;
     e10)         echo "e10_capacity_evidence.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E10";;
     e04)         echo "e04_refinement.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E04";;

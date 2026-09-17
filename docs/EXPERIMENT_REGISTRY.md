@@ -27,6 +27,7 @@ not re-registered; their status there is authoritative.
 | E10 | `experiments/e10_capacity_evidence.py` | the thesis's capacity conclusion re-scored in its own estimand (held-out log-evidence per edge) under equal stopping | `experiments/registry/E10.json` | 0–15 | REGISTERED 16 Sep 09:10, on the HPC | `outputs/E10/` | — |
 | E11 | `experiments/e11_grid_validation.py` | is the quadrature reference valid across families, correlations and levels, or only at the frozen point | `experiments/registry/E11.json` | 0–3 | REGISTERED 17 Sep, queued | `outputs/E11/` | — |
 | E12 | `experiments/e12_sample_complexity.py` | sample complexity by order: M*(t) for each coordinate, predicted e^{4t} and e^{8t} | `experiments/registry/E12.json` | 0–7 | REGISTERED 17 Sep, queued | `outputs/E12/` | — |
+| E13 | `experiments/e13_regime_sweep.py` | does the capacity contrast survive other correlations and chain lengths | `experiments/registry/E13.json` | 0–7 | REGISTERED 17 Sep, queued | `outputs/E13/` | — |
 
 Dev seeds are 10000–10003 everywhere; confirmatory seeds 0–15. A confirmatory row's
 config file is committed before the run starts, and the commit that produced the

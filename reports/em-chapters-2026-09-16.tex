@@ -364,29 +364,33 @@ $2.00$--$2.05$ across the whole ladder.
 \begin{table}[htbp]
 \centering
 \small
-\caption{Generation at $M=2048$, four seeds, common Brownian paths. Log-likelihood gap is the mean
-deficit in $\log p_{t_{\min}}$ per sequence against the reference sample, computed by exact
-belief-propagation evidence under the true law. The reference sample has excess kurtosis $1.896$.}
+\caption{Generation at $M=2048$, sixteen seeds, every arm on the same Brownian path within a seed.
+The deficit is the paired difference in mean $\log p_{t_{\min}}$ per sequence against the arm driven
+by the exact score, in nats, with a seed bootstrap; the kurtosis column is $|$generated $-$
+reference$|$, the reference sample having excess kurtosis $1.936$.}
 \label{tab:generation}
-\begin{tabular}{l dd dd}
+\begin{tabular}{l l dd}
 \toprule
-score driving the sampler & log-lik.\ gap & exc.\ kurtosis & sliced $W_2$ & cov.\ error \\
+score driving the sampler & deficit vs exact (nats) & \multicolumn{1}{c}{kurt.\ error} & \multicolumn{1}{c}{cov.\ error} \\
 \midrule
-exact (tree BP)              & 0.041  & 1.833  & 0.046 & 0.068 \\
-EM--BP ($C=8$), fitted       & 0.022  & 1.887  & 0.051 & 0.072 \\
-LMMSE (covariance twin)      & 1.710  & $-0.008$ & 0.047 & 0.067 \\
-isotropic                    & 46.20  & 0.003  & 0.239 & 0.909 \\
+exact (tree BP)         & ---                        & 0.119 & 0.070 \\
+EM--BP ($C=8$), fitted  & $+0.09$\ \ $[+0.00,+0.19]$ & 0.177 & 0.077 \\
+bidirectional GRU       & $+0.32$\ \ $[+0.17,+0.46]$ & 0.385 & 0.102 \\
+window head             & $+1.05$\ \ $[+0.79,+1.31]$ & 0.474 & 0.290 \\
+LMMSE (covariance twin) & $+1.70$\ \ $[+1.68,+1.71]$ & 1.939 & 0.069 \\
+isotropic               & $+46.2$                    & 1.936 & 0.908 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The fitted score and the exact score are indistinguishable on this evidence: the fitted kernel's
-log-likelihood gap is if anything the smaller of the two, and its generated kurtosis is nearer the
-reference. The second-order score is the instructive failure. On the metrics that see only two
-moments --- sliced $W_2$, the covariance error --- it is as good as the exact score, which is what
-Proposition~1 predicts. On the fourth cumulant it produces $-0.008$ where the truth is $1.896$: it
-generates a Gaussian chain with the right covariance. A generative model evaluated only on
-second-order distances would score it as a success.
+The ordering is the one the score errors predict, and the fitted kernel is nearest the exact score
+by a wide margin: its deficit is $0.09$ nats against $0.32$ for the best network and $1.70$ for the
+covariance twin. The deficit is small but real --- an earlier four-seed run suggested the fitted
+score matched the exact one, and sixteen seeds show it does not. The second-order score is the
+instructive failure. On the covariance error it is the best arm in the
+table, marginally ahead of the exact score, which is what Proposition~1 predicts. On the fourth
+cumulant it is the worst: it generates an essentially Gaussian chain with the right covariance. A
+generative model evaluated only on second-order distances would score it a success.
 
 \paragraph{Where does the advantage stop?}
 The structured estimator assumes a first-order Markov chain. Four Gaussian departures from that
@@ -450,10 +454,13 @@ E06b & the asymptotic exponents at $\rho=0.5$                   & frozen, inconc
 \end{tabular}
 \end{table}
 
-One reading is still partial. \emph{Refinement}: doubling the quadrature grid from $401$ to $801$
-points moves the reference score, and every arm's error, by less than $10^{-4}$ relative on the
-cells completed so far, so the numbers in this report are not grid artefacts. The full ladder, which
-adds $1601$ points and a wider domain, is the one run still going.
+\emph{Refinement} is now complete and is as clean as this kind of check gets. Over the whole ladder
+--- $401$, $801$ and $1601$ grid points, half-widths $8$ and $10$ --- every arm's error agrees to
+five decimal places and the reference field itself moves by at most $10^{-5}$; the worst seed's
+spread in the headline number is zero at that precision. No number in this report is an artefact of
+the quadrature at the frozen configuration. Whether the same holds at the other correlations,
+families and chain lengths the project uses is a separate question, and a registered sweep is now
+running to answer it rather than assume it.
 
 \paragraph{Three infrastructure faults, for the record.}
 Jobs were inheriting the login shell's $600$-second CPU limit, which killed one run outright and

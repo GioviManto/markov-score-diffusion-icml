@@ -55,8 +55,12 @@ class Protocol:
     # --- EM arm ------------------------------------------------------------------
     capacities: tuple = (1, 2, 4, 8, 16)
     em_checkpoints: tuple = (10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200)
-    """Iteration ladder; the checkpoint is selected on the validation bundle (bulk), for
-    every capacity identically. No tolerance stopping."""
+    """Iteration ladder; the checkpoint is selected on the validation bundle (bulk), for every
+    capacity identically. EM also carries the frozen likelihood tolerance (1e-9 nats per
+    transition, `FrozenConfig.em_loglik_tol`), which can end a run before the last rung; what
+    changed relative to the archival sweep is not that the tolerance is gone but that the reported
+    checkpoint is chosen by validation among the rungs reached, rather than being whichever rung the
+    tolerance happened to stop on."""
     em_init_rho: float = 0.3
     em_init_var: float = 0.8
     one_view: bool = True
