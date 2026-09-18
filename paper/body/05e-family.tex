@@ -8,7 +8,9 @@
   Gaussian-innovation kernel tracks the LMMSE floor, which is the exact price of
   second-order closure for each member; the mixture kernel tracks the exact score, and
   the two meet at the Gaussian member, where there is nothing beyond second order to
-  learn.}
+  learn. At that member the floor is exactly zero---the covariance twin \emph{is} the
+  truth---which a log axis cannot show; the line is broken there and the caret marks the
+  point.}
   \label{fig:family}
 \end{figure}
 Moving the innovation from Laplace (excess kurtosis $+3$) through the Gaussian to the

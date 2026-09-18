@@ -39,8 +39,15 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: python -m pip install --upgrade pip && pip install -e ".[dev]"
-      - name: regenerate every generated .tex fragment and diff against the committed copy
-        run: python tools/check_manuscript.py --regenerate --diff
+      # the check now builds the paper and fails on any table or figure wider than its
+      # environment (tools/check_manuscript.py overfull_boxes), so it needs the engine
+      - uses: wtfjoke/setup-tectonic@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: regenerate every generated fragment, diff against the committed copy, build, and gate on Overfull boxes
+        run: python tools/check_manuscript.py
+      - name: independent re-derivation of every headline number from the frozen outputs
+        run: python tools/audit_claims.py
 
   paper:
     name: paper compiles (ICML style, provisional 2026 kit)

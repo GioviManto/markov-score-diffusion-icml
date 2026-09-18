@@ -94,11 +94,13 @@ $0.121\rightarrow0.118$ as data quadruples. A bounded receptive field cannot rep
 that has crossed the chain --- which is exactly what the chain's score is.
 
 \item \hi{Score accuracy transfers to generation, and the second-order score fails there
-visibly.} Driven through the same reverse SDE on identical Brownian paths, the fitted kernel
-produces sequences whose innovation excess kurtosis is $1.887$ against the reference's $1.896$,
-with a log-likelihood gap of $0.022$ under the true law. The covariance-matched score gives
-$-0.008$ --- an essentially Gaussian chain --- at a gap of $1.71$, and the isotropic score a gap of
-$46.2$.
+visibly.} Driven through the same reverse SDE on identical Brownian paths over sixteen seeds, the
+fitted kernel produces sequences whose innovation excess kurtosis is $1.80$ against the
+reference's $1.94$, at a log-likelihood deficit of $+0.09$ nats per sequence against the arm
+driven by the exact score (interval $[+0.00,\,+0.19]$). The covariance-matched score gives
+$0.00$ --- an essentially Gaussian chain --- at a deficit of $+1.70$, and the isotropic score
+$+46.2$. An earlier four-seed reading had the fitted kernel level with the exact score; sixteen
+seeds show a small, real deficit (Section~\ref{sec:gen}).
 
 \item \hi{A claim of ours was refuted by our own data, and is recorded as such.} ``The learned
 networks sit at or above the second-order floor'' had been drafted into the new abstract. At
@@ -609,7 +611,7 @@ cells out of forty. At that level the experiment measured the optimiser's budget
 size.
 
 Two one-sided statements survive, and they are worth having because they come from opposite
-directions: the covariance coordinate's log-slope is $5.40$ with interval $[2.13,\,7.57]$, which
+directions: the covariance coordinate's log-slope is $5.40$ with interval $[2.28,\,7.72]$, which
 \emph{excludes} the shape prediction of $8$ and contains its own prediction of $4$; and the shape
 coordinate fails to reach the accuracy threshold at $t=1$ even at $M=8192$, which forces its
 log-slope above $5.54$ and \emph{excludes} $4$. The two coordinates are therefore separated, which

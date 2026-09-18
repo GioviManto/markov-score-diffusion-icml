@@ -45,6 +45,7 @@ paper:           ## build paper/main.pdf with tectonic (runs bibtex itself)
 
 check:           ## consistency checks between generated results and the manuscript
 	$(PY) tools/check_manuscript.py
+	$(PY) tools/audit_claims.py
 
 clean:
 	rm -rf outputs/scratch paper/*.aux paper/*.bbl paper/*.blg paper/*.log paper/*.out

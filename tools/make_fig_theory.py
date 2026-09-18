@@ -76,10 +76,10 @@ def main():
     # a height the others have already left, rotated to the local slope and haloed.
     for (rho, d, col, ts), at, off in zip(curves, LABEL_HEIGHTS, LABEL_SIDES):
         if ts > 0:
-            fs.label_on_curve(ax, d.t.to_numpy(), d.I_rho_scaled.to_numpy(), f"ρ = {rho:g}",
+            fs.label_on_curve(ax, d.t.to_numpy(), d.I_rho_scaled.to_numpy(), f"$\\rho = {rho:g}$",
                               at_y=at, color=col, fontsize=7, offset=off, zorder=6)
         else:
-            t = ax.text(0.024, 0.965, f"ρ = {rho:g}", color=col, fontsize=7, va="top", ha="left", zorder=6)
+            t = ax.text(0.024, 0.965, f"$\\rho = {rho:g}$", color=col, fontsize=7, va="top", ha="left", zorder=6)
             fs.halo(t)
     fs.panel_label(ax, "(a)")
 
@@ -113,11 +113,15 @@ def main():
     # the curve instead, on the near-flat small-t section where the two series are three
     # decades apart; the guide lines carry the degree, so the names can stay short.
     lab_rho = m_lab["rho"]; lab_beta = m_lab["beta"]
-    fs.label_on_curve(ax, lab_rho[0], lab_rho[1], "ρ  (correlation)", at_x=0.16,
+    fs.label_on_curve(ax, lab_rho[0], lab_rho[1], r"$\rho$ (correlation)", at_x=0.16,
                       color=fs.CAT[0], fontsize=7.5, offset=5.0, zorder=6)
-    fs.label_on_curve(ax, lab_beta[0], lab_beta[1], "β  (shape)", at_x=0.16,
+    fs.label_on_curve(ax, lab_beta[0], lab_beta[1], r"$\beta$ (shape)", at_x=0.16,
                       color=fs.CAT[1], fontsize=7.5, offset=5.0, zorder=6)
-    ax.text(0.05, 6e-8, "solid: Laplace (β = 1)\ndashed: β = 3", fontsize=7, color=fs.INK2, va="bottom")
+    # the line-style key is a legend with real handles, not a sentence in the panel
+    from matplotlib.lines import Line2D
+    ax.legend([Line2D([], [], color=fs.INK2, ls="-", lw=1.2), Line2D([], [], color=fs.INK2, ls="--", lw=1.2)],
+              [r"Laplace, $\beta=1$", r"$\beta=3$"], loc="lower left", fontsize=7, frameon=False,
+              handlelength=1.8, borderaxespad=0.3, labelspacing=0.25)
     fs.panel_label(ax, "(b)")
 
     # ---- (c) closure gap, measured / predicted
@@ -159,8 +163,7 @@ def main():
     fs.panel_label(ax, "(c)")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT / "fig_theory.pdf")
-    fig.savefig(OUT / "fig_theory.png", dpi=220)
+    fs.save(fig, OUT / "fig_theory.pdf")
     print("wrote", OUT / "fig_theory.pdf")
 
 

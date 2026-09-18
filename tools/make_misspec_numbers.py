@@ -24,7 +24,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import figstyle as fs  # noqa: E402
 SIZE_TAG = {64: "Q", 512: "C", 2048: "D"}
-MECH_NAME = {"global": "rank-one latent  β", "longrange": "long-range coupling  γ", "ar2": "AR(2) coefficient  ρ₂", "sitevar": "site-varying ρ  (amplitude)"}
+# axis labels: every symbol in $...$ so the math engine sets it (FIGURE_TABLE_STANDARDS F2)
+MECH_NAME = {"global": r"rank-one latent $\beta$", "longrange": r"long-range coupling $\gamma$",
+             "ar2": r"AR(2) coefficient $\rho_2$", "sitevar": r"site-varying $\rho$ (amplitude)"}
 
 
 def _mac(s):
@@ -100,7 +102,7 @@ def main() -> int:
     if handles and handles[0]:
         fig.legend(*handles, loc="upper center", bbox_to_anchor=(0.5, 1.06), ncol=2,
                    fontsize=7, frameon=False, columnspacing=1.6, handletextpad=0.5)
-    fig.savefig(figdir / "fig_misspec.pdf"); fig.savefig(figdir / "fig_misspec.png", dpi=220)
+    fs.save(fig, figdir / "fig_misspec.pdf")
     print("wrote", figdir / "fig_misspec.pdf", f"({len(macros)} macros)")
     return 0
 

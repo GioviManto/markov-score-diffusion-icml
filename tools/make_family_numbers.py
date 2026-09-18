@@ -91,19 +91,13 @@ def main() -> int:
     floor_pos = summ.Lmmse[~zero]
     lo = min(float(floor_pos.min()), float(summ.C8.min()), float(summ.C1.min())) / 6
     ax.set_ylim(lo, 1.5)
-    xlo, xhi = float(x.min()) - 0.35, float(x.max()) + 2.35
+    xlo, xhi = float(x.min()) - 0.35, float(x.max()) + 1.9
     ax.set_xlim(xlo, xhi)
-    # the zero point: a caret on the floor line at the axis bottom, and one note in the
-    # empty lower-right corner with a leader back to it -- never text laid over the curves
+    # the zero point: a caret at the axis bottom marks where the floor is exactly zero and
+    # the line is broken. What it means is said in the caption, not in the panel
+    # (FIGURE_TABLE_STANDARDS F1, F6).
     for i in summ.index[zero]:
-        xg = float(x.loc[i])
-        ax.plot([xg], [lo * 1.45], marker="v", ms=4, color=fs.INK2, clip_on=False, zorder=5)
-        ax.annotate("LMMSE floor $=0$ exactly here:\nthe covariance twin is the truth",
-                    xy=(xg + 0.06, lo * 1.5), xycoords="data",
-                    xytext=(xhi - 0.15, lo * 1.9), textcoords="data",
-                    color=fs.INK2, fontsize=6.4, va="center", ha="right", linespacing=1.2,
-                    arrowprops=dict(arrowstyle="-", color=fs.INK2, lw=0.5, alpha=0.55,
-                                    shrinkA=2, shrinkB=1))
+        ax.plot([float(x.loc[i])], [lo * 1.45], marker="v", ms=4.5, color=fs.INK2, clip_on=False, zorder=5)
     # right-margin labels, repelled in log space: the floor and the C=1 curve coincide
     # (Proposition 1 -- they are the same estimator), so both still need a readable label
     labels.sort()
@@ -116,7 +110,7 @@ def main() -> int:
                         if abs(yl - np.log10(v)) > 0.03 else None)
         fs.halo(t, lw=1.8)
     ax.axvline(0, color=fs.GRID, lw=0.8, zorder=0)
-    fig.savefig(figdir / "fig_family.pdf"); fig.savefig(figdir / "fig_family.png", dpi=220)
+    fs.save(fig, figdir / "fig_family.pdf")
     print("wrote", figdir / "fig_family.pdf", f"({len(macros)} macros)")
     return 0
 

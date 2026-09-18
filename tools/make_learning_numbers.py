@@ -165,7 +165,7 @@ def main() -> int:
                         color=fs.INK2, ha="right", va="top", zorder=6))
     axes[0].legend(loc="upper left", fontsize=6.5, frameon=False, handlelength=1.8, borderaxespad=0.2)
     fs.panel_label(axes[0], "(a)", x=-0.35); fs.panel_label(axes[1], "(b)", x=-0.35)
-    fig.savefig(figdir / "fig_learning.pdf"); fig.savefig(figdir / "fig_learning.png", dpi=220)
+    fs.save(fig, figdir / "fig_learning.pdf")
     print("wrote", sec / "learning-numbers.tex", "and", figdir / "fig_learning.pdf")
     return 0
 

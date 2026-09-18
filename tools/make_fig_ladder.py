@@ -96,7 +96,7 @@ def main() -> int:
     ax.xaxis.set_minor_formatter(NullFormatter())
     ax.set_xlim(sizes[0] / 1.3, sizes[-1] * 3.2)
     ax.set_xlabel("sequences  $M$"); ax.set_ylabel("pooled relative score error")
-    fig.savefig(ROOT / (args.out + ".pdf")); fig.savefig(ROOT / (args.out + ".png"), dpi=220)
+    fs.save(fig, ROOT / (args.out + ".pdf"))
     print("wrote", args.out + ".pdf")
     return 0
 

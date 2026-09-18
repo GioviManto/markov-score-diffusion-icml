@@ -165,7 +165,7 @@ still travelling when it is cut off, so more data does not help: the experiment 
 budget, not the sample complexity.
 
 What the run does support, stated as such: the covariance coordinate's log-slope is 5.40
-[2.13, 7.57] over three levels, which excludes 8 and contains the predicted 4; and the shape
+[2.28, 7.72] over three levels, which excludes 8 and contains the predicted 4; and the shape
 coordinate never reaches the threshold at t = 1.0 even at M = 8192, which gives a one-sided bound
 of d log M*/dt > 5.54, excluding 4. The two together separate the coordinates from opposite sides.
 The point estimates where a crossing exists are 7.54 and 8.53 for the shape coordinate against a

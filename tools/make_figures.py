@@ -21,7 +21,8 @@ from statistics import median
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
+import figstyle as fs  # noqa: E402
 import numpy as np  # noqa: E402
 
 # This file sits at research/nongaussian-bp/tools/, so:
@@ -134,7 +135,7 @@ def save(fig, name: str) -> None:
     out = FIG if name in ADMITTED else FIG / "exploratory"
     out.mkdir(parents=True, exist_ok=True)
     for ext in ("pdf", "png"):
-        fig.savefig(out / f"{name}.{ext}")
+        fs.save(fig, out / f"{name}.pdf") if ext == "pdf" else None
     plt.close(fig)
     where = "" if name in ADMITTED else " (exploratory/)"
     print(f"  wrote {name}.pdf / .png{where}")

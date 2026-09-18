@@ -133,21 +133,57 @@ def frozen_sources() -> int:
     return failures
 
 
+_OVERFULL = re.compile(r"warning: ([^:\s]+):(\d+): Overfull \\hbox \(([\d.]+)pt too wide\)")
+BODY_TOLERANCE_PT = 10.0     # a body paragraph a few points over is LaTeX's ordinary noise
+
+
+def overfull_boxes() -> int:
+    """Build the paper and fail on any table or figure that does not fit its environment.
+
+    tectonic reports every Overfull \\hbox with the file it came from. Any such box in a
+    generated table (sections/tab-*) or a figure file is a violation of
+    docs/FIGURE_TABLE_STANDARDS.md T1/F4 -- the table runs past its column or the figure
+    past the text width -- and fails the check. Elsewhere, a box more than BODY_TOLERANCE_PT
+    too wide is also a failure; smaller ones in prose are reported and tolerated.
+    """
+    r = subprocess.run(["tectonic", "-X", "compile", "main.tex"], cwd=ROOT / "paper",
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        print("[FAIL] the paper does not build:\n" + "\n".join(r.stderr.splitlines()[-8:]))
+        return 1
+    bad = 0
+    for m in _OVERFULL.finditer(r.stderr):
+        f, line, pt = m.group(1), int(m.group(2)), float(m.group(3))
+        hard = f.startswith("sections/tab-") or f.startswith("figures/") or pt > BODY_TOLERANCE_PT
+        print(f"[{'FAIL' if hard else 'note'}] Overfull \\hbox {pt:.1f}pt too wide at {f}:{line}"
+              + ("  -- a table or figure must fit its environment (FIGURE_TABLE_STANDARDS T1/F4)" if hard else ""))
+        bad += int(hard)
+    return bad
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--regenerate", action="store_true")
-    ap.add_argument("--diff", action="store_true")
+    # Regeneration is ON by default: on 18 Sep a generated table shipped with numbers from
+    # a superseded run while the paragraph beside it carried the frozen ones, because the
+    # table file had not been rebuilt after the fetch. A stale generated file is a science
+    # error, not a formatting one, and the check that catches it must not be optional.
+    ap.add_argument("--no-regenerate", action="store_true", help="skip regenerating every generated file and diffing it (development only)")
+    ap.add_argument("--regenerate", action="store_true", help="(kept for compatibility; regeneration is the default)")
+    ap.add_argument("--diff", action="store_true", help="(kept for compatibility; the diff always runs with regeneration)")
     ap.add_argument("--no-literals", action="store_true")
     ap.add_argument("--no-freeze", action="store_true", help="skip the frozen-source check (development only)")
+    ap.add_argument("--no-build", action="store_true", help="skip the build and its Overfull-box gate (development only)")
     args = ap.parse_args()
     failures = 0
-    if args.regenerate:
+    if not args.no_regenerate:
         failures += regenerate_and_diff()
     if not args.no_literals:
         failures += typed_literals()
     failures += unresolved_refs()
     if not args.no_freeze:
         failures += frozen_sources()
+    if not args.no_build:
+        failures += overfull_boxes()
     print("OK" if failures == 0 else f"{failures} failure(s)")
     return 1 if failures else 0
 
