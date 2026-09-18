@@ -11,12 +11,24 @@
   \label{fig:misspec}
 \end{figure}
 Every departure is Gaussian so that its score is exact, and every arm is scored against
-that score. A rank-one global latent is absorbed by the chain's fitted $\corr$ and never
-reverses the ordering (ratio $\misRatioGlobalEonepzeroD$ at $\beta=1$); long-range
-precision coupling reverses it between $\gamma=\misBreakLoLongrangeD$ and
-$\misBreakHiLongrangeD$ at $\nseq=2048$ (interpolated crossing
-$\misBreakLongrangeD$) and between $\misBreakLoLongrangeC$ and $\misBreakHiLongrangeC$
-at $\nseq=512$; an AR(2) second coefficient reverses it at
-$\misBreakArtwoD$. The two sizes separate the statistical gain of the structure at
-small $\nseq$ from its asymptotic bias at large $\nseq$: where the ratio falls with
-$\nseq$, the chain estimator has converged to a wrong law and more data no longer helps.
+that score. The ordering degrades smoothly in each mechanism and the strength at which
+it breaks even is a property of the mechanism, not a single number. A rank-one global
+latent is absorbed by the chain's fitted $\corr$ and never reverses the ordering in the
+swept range: the ratio falls only from $\misRatioGlobalEzeropzeroD$ to
+$\misRatioGlobalEonepzeroD$ across the swept range, up to $\beta=\misEpsMaxGlobal$. An AR(2) second coefficient
+reverses it between $\misBreakLoArtwoD$ and $\misBreakHiArtwoD$ at both sizes, and a
+site-dependent $\corr$ between $\misBreakLoSitevarD$ and $\misBreakHiSitevarD$ at
+$\nseq=2048$. Long-range precision coupling does not reverse it anywhere we swept: the
+ratio decays to $\misRatioLongrangeEzeropfourD$ at $\gamma=\misEpsMaxLongrange$, a tie rather than a
+crossing. We report brackets and not fitted crossings, because with
+$\misSeeds$ seeds the paired log-ratio is resolved to a few thousandths and the
+crossing sits between grid points either way.
+
+The two sizes separate the statistical gain of the structure at small $\nseq$ from its
+asymptotic bias at large $\nseq$. At zero strength the EM--BP error falls from
+$\misArtwoEmbpEzeropzeroC$ to $\misArtwoEmbpEzeropzeroD$ between $\nseq=512$ and
+$2048$, which is estimation; at the largest AR(2) strength it moves from
+$\misArtwoEmbpEzeropfourC$ to $\misArtwoEmbpEzeropfourD$, which is not. Past the
+break-even the chain estimator has converged to a wrong law and more data no longer
+buys anything back --- exactly the behaviour \cref{sec:theory} attributes to a model
+whose bias, not whose variance, is binding.

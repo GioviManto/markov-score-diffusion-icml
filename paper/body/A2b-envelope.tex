@@ -1,0 +1,34 @@
+%% Included by A2-numerics.tex only when sections/grid-envelope.tex exists (E11 done).
+The validation above fixes the grid at the frozen configuration. Every other
+configuration this paper touches---the other innovation families, the correlations of
+the family ladder, the longer chains of the length study---inherits it, so we measured
+it instead: $\gridFamilies$ innovation families $\times$ $\gridRhos$ correlations
+$\times$ twelve levels $\times$ $\gridSeeds$ seeds, seven candidate grids against a
+reference at $\ngrid=\gridRefN$, $\halfwidth=\gridRefA$.
+
+At the frozen configuration the operating grid is comfortable: the pooled drift of the
+posterior-mean field is $\gridFrozenDrift$, the worst single level $\gridFrozenDriftWorstLevel$,
+and $\gridFrozenBoundary$ of the belief mass lies in the outermost $2\%$ of the domain.
+Nothing reported at that configuration is in question.
+
+Over the whole sweep the picture is different, and the difference is instructive: at
+half-width $\gridHalfWidth$ the worst-case drift is \emph{flat} in the number of grid
+points, $\gridFlatLo$ at $\ngrid=\gridFlatNlo$ and $\gridFlatHi$ at
+$\ngrid=\gridFlatNhi$, and falls only when the domain widens---$\gridWiderADrift$ at
+$(\gridWiderAN,\gridWiderAA)$ and $\gridWiderBDrift$ at $(\gridWiderBN,\gridWiderBA)$.
+That is the signature of truncation rather than of quadrature, and it means refinement
+in $\ngrid$ alone, which is what refinement has meant in this literature, cannot fix it.
+The binding cell is the $\gridWorstFamily$ family at $\corr=\gridWorstRho$, where
+$\gridWorstBoundary$ of the belief mass falls outside the domain and the drift is
+$\gridWorstDrift$: heavy tails and no correlation to pull them in. That cell lies in the
+family ladder of \cref{app:phase}, and its entries are flagged there pending a
+recomputation at a wider domain; no claim in the body rests on it.
+
+A second observation from the same sweep cuts the other way. The column-mass defect of
+the discretised kernel, $\max_j|\sum_i \kernel(g_i\mid g_j)w_i-1|$, grows with
+correlation, from $\gridColMassLo$ at $\corr=\gridColMassLoRho$ to $\gridColMassHi$ at
+$\corr=\gridColMassHiRho$, because a narrow transition kernel is poorly resolved by a
+fixed grid. It is nonetheless not predictive of the error: at
+$\corr=\gridColMassHiRho$ the drift is $\gridColMassDriftHiRho$. The defect is nearly
+uniform across the grid and the recursion renormalises it away. We report it as a
+diagnostic and not as an error bar.
