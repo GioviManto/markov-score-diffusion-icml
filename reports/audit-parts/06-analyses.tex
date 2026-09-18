@@ -105,7 +105,21 @@ Running: eight seeds at $M=32$, the size at which the choice of rung matters mos
 
 \subsection{Moment estimators (E19)}
 \label{sec:e19}
-Same chains and noise draws as E06, $M=512$, sixteen seeds. RMSE of $\hat\rho$: $0.031, 0.023, 0.030, 0.039, 0.049, 0.060, 0.16, 0.39$ at the eight levels against EM--BP's $0.005, 0.005, 0.006, 0.008, 0.011, 0.009, 0.03, 0.34$; RMSE of $\hat\kappa_4$: $1.42, 1.21, 1.82, 1.84, 3.78, 15, 12700, 1220$ against $0.28, 0.48, 0.33, 0.73, 1.55, 2.79, 2.92, 3.06$. Unbiased (bias $\le0.4$ up to $t=0.4$), never collapsing, $5$--$30\times$ the reference in dispersion at the informative levels, and with the asymptotic growth visible where the estimate is already useless: OLS log-slopes on $t\ge1$ of $1.83$ ($\hat\rho$, predicted $2$) and $3.73$ ($\hat\kappa_4$, predicted $4$). This is the high-noise competitor of the brief's Part~VII.6, and it answers cleanly: rate-correct, inefficient, and the inefficiency is the value of exact inference below the crossover (at high $t$ the MLE's score is itself the degree-4 Hermite statistic, so the two estimators become asymptotically equivalent---one sentence in the paper).
+Same chains and noise draws as E06, $M=512$, sixteen seeds.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+$t$ & 0.05 & 0.1 & 0.2 & 0.4 & 0.7 & 1.0 & 1.4 & 2.0 \\
+\midrule
+RMSE $\hat\rho$, moments & 0.031 & 0.023 & 0.030 & 0.039 & 0.049 & 0.060 & 0.16 & 0.39 \\
+RMSE $\hat\rho$, EM--BP & 0.005 & 0.005 & 0.006 & 0.008 & 0.011 & 0.009 & 0.03 & 0.34 \\
+RMSE $\hat\kappa_4$, moments & 1.42 & 1.21 & 1.82 & 1.84 & 3.78 & 15 & 12700 & 1220 \\
+RMSE $\hat\kappa_4$, EM--BP & 0.28 & 0.48 & 0.33 & 0.73 & 1.55 & 2.79 & 2.92 & 3.06 \\
+\bottomrule
+\end{tabular}
+\end{center}
+ Unbiased (bias $\le0.4$ up to $t=0.4$), never collapsing, $5$--$30\times$ the reference in dispersion at the informative levels, and with the asymptotic growth visible where the estimate is already useless: OLS log-slopes on $t\ge1$ of $1.83$ ($\hat\rho$, predicted $2$) and $3.73$ ($\hat\kappa_4$, predicted $4$). This is the high-noise competitor of the brief's Part~VII.6, and it answers cleanly: rate-correct, inefficient, and the inefficiency is the value of exact inference below the crossover (at high $t$ the MLE's score is itself the degree-4 Hermite statistic, so the two estimators become asymptotically equivalent---one sentence in the paper).
 
 \subsection{The information curve at $\rho=0.5$ (E21, part ``curve'')}
 \label{sec:e21}

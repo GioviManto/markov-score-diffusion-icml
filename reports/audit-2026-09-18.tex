@@ -107,7 +107,8 @@ This report audits two documents as primary sources: the ICML manuscript \emph{W
 
 Severity: \sev{blocker} = a referee can reject on it; \sev{major} = must be fixed before submission; \sev{moderate} = must be fixed, low risk; \sev{minor} = editorial. ``Exp.'' says whether a new experiment is required.
 
-\begin{longtable}{@{}p{0.8cm}p{2.4cm}p{6.6cm}p{5.2cm}p{0.9cm}@{}}
+{\setlength{\tabcolsep}{3pt}\small
+\begin{longtable}{@{}p{1.4cm}p{2.0cm}p{6.4cm}p{4.3cm}p{0.9cm}@{}}
 \toprule
 sev. & where & problem and reason & fix & exp. \\
 \midrule
@@ -131,7 +132,7 @@ sev. & where & problem and reason & fix & exp. \\
 \sev{minor} & Abstract & \texttt{[PENDING]}; ``Correlation \ldots decays as $e^{-2t}$'' (amplitude) beside ``information decays as $e^{-4t}$'' without the dictionary. & Rewrite; add the amplitude/information/samples dictionary once. & no \\
 \sev{minor} & \S6 related work & ``what is not in that literature'' lists five items; two are specialisations. & Claim the synthesis precisely (Section~13 of the brief; here Section~8.3). & no \\
 \bottomrule
-\end{longtable}
+\end{longtable}}
 
 %% ------------------------------------------------------------------------------------
 \section{Mathematical audit}
