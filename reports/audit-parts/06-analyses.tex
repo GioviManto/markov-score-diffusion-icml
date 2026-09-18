@@ -82,9 +82,9 @@ Laplace chain, fraction of the squared closure gap closed by $\Sg+\nabla\epsilon
 \subsection{Closed-form misspecification bias (E17)}
 \label{sec:e17}
 \begin{center}\small
-\begin{tabular}{@{}lrrrrrrr@{}}
+{\small\setlength{\tabcolsep}{4pt}\begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
-mechanism & $\varepsilon$ & $\rho^\ast$ & EM $\hat\rho$ (2048) & $b(\varepsilon)$ & lag-1 plug-in & EM--BP 512 / 2048 & predicted 512 / 2048 \\
+mechanism & $\varepsilon$ & $\rho^\ast$ & EM $\hat\rho$ & $b(\varepsilon)$ & lag-1 plug-in & EM--BP $512/2048$ & pred.\ $512/2048$ \\
 \midrule
 AR(2) & 0.1 & 0.867 & 0.855 & 0.060 & 0.052 & 0.056 / 0.055 & 0.063 / 0.061 \\
  & 0.4 & 0.916 & 0.888 & 0.248 & 0.216 & 0.214 / 0.214 & 0.248 / 0.248 \\
@@ -95,9 +95,10 @@ long-range & 0.1 & 0.792 & 0.746 & 0.139 & 0.111 & 0.120 / 0.120 & 0.140 / 0.139
 rank-one & 0.5 & 0.886 & 0.884 & 0.028 & 0.022 & 0.030 / 0.027 & 0.034 / 0.030 \\
  & 1.0 & 0.937 & 0.932 & 0.065 & 0.048 & 0.055 / 0.052 & 0.068 / 0.066 \\
 \midrule
-\multicolumn{8}{@{}l}{small-$\varepsilon$ law: AR(2) $b\approx0.60\,\varepsilon$; site-varying $1.75\,\varepsilon$; long-range $1.07\,\varepsilon^{0.8\to1.0}$; rank-one $0.15\,\beta^{2.00}$}\\
+\multicolumn{8}{@{}l}{small-$\varepsilon$ laws: AR(2) $b\approx0.60\,\varepsilon$; site-varying $b\approx1.75\,\varepsilon$;}\\
+\multicolumn{8}{@{}l}{long-range $b\approx1.07\,\varepsilon^{0.8\to1.0}$; rank-one $b\approx0.15\,\beta^{2.00}$}\\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{center}
 The KL projection under the one-view protocol reproduces EM--BP's $M=2048$ error within $0.003$ for site-varying $\rho$ and within $10$--$15\%$ for AR(2) and long-range, where the lag-one plug-in AR(1) (E08's \texttt{lmmse\_ar1} arm) is the closer match: the fitted $\hat\rho$ sits between the two projections because the $C=8$ kernel is not exactly Gaussian and the finite-sample fit under-shoots the KL optimum. Either way the asymptotic bias is a closed-form function of $\varepsilon$ and $L$; its order is $\varepsilon^1$ for the three mechanisms that perturb $O(L)$ directions of the covariance and $\varepsilon^2$ (in $\beta$) for the rank-one latent, which perturbs one. With $v=0.2$ from the well-specified cells, $\sqrt{b^2+v/M}$ predicts the two-size pattern of E08 at every strength.
 
@@ -141,10 +142,17 @@ BP inference, one sequence, one level & 0.8 ms & 1.8 ms & 6.2 ms \\
 E-step, one sequence & 1.0 ms & 2.5 ms & 9.1 ms \\
 mixture M-step ($C=8$), per EM iteration & 1.5 s & 5.2 s & 22 s \\
 \midrule
-network forward pass, one sequence, one level & \multicolumn{3}{l}{window 0.11 ms; bi-GRU 0.20; U-Net 0.22; TCN 0.33; transformer 0.41} \\
-network training, 32k steps (frozen \texttt{wall}) & \multicolumn{3}{l}{window 113 s; transformer 481 s; bi-GRU 525 s; U-Net 630 s; TCN 641 s} \\
-ISM training, 32k steps & \multicolumn{3}{l}{transformer 1{,}700 s (Hutchinson); window 3{,}400 s (exact divergence)} \\
 \bottomrule
-\end{tabular}
+\end{tabular}\\[6pt]
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & window & bi-GRU & U-Net & TCN & transformer \\
+\midrule
+forward pass, one sequence, one level & 0.11 ms & 0.20 ms & 0.22 ms & 0.33 ms & 0.41 ms \\
+training, 32k steps (frozen \texttt{wall}) & 113 s & 525 s & 630 s & 641 s & 481 s \\
+ISM training, 32k steps & 3{,}400 s$^\dagger$ & --- & --- & --- & 1{,}700 s$^\ddagger$ \\
+\bottomrule
+\end{tabular}\\[2pt]
+{\footnotesize $^\dagger$ exact divergence; $^\ddagger$ Hutchinson estimator.}
 \end{center}
 So at the operating grid: inference over the twelve-level schedule costs EM--BP $\approx21$ ms per sequence against $1$--$5$ ms for a network (a factor $5$--$20$); an EM--BP fit at $M=2048$ with $\approx1000$ iterations costs $\approx(5+5)\,\mathrm{s}\times1000\approx3$ hours single-threaded against $2$--$11$ minutes for a network (a factor $\approx20$--$100$), with the mixture M-step, not the E-step, dominating below $M\approx2000$; memory is $O(N_g^2)$ per kernel and $O(ML N_g)$ per E-step chunk. The Pareto sentence for the paper: a factor $\approx8$ in error at equal data, bought with one structural assumption (priced by E17) and one to two orders of magnitude of compute. Scaling: linear in $L$ and $M$, quadratic in $N_g$, linear in $C$ for the M-step.

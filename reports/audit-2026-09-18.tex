@@ -108,7 +108,7 @@ This report audits two documents as primary sources: the ICML manuscript \emph{W
 Severity: \sev{blocker} = a referee can reject on it; \sev{major} = must be fixed before submission; \sev{moderate} = must be fixed, low risk; \sev{minor} = editorial. ``Exp.'' says whether a new experiment is required.
 
 {\setlength{\tabcolsep}{3pt}\small
-\begin{longtable}{@{}p{1.4cm}p{2.0cm}p{6.4cm}p{4.3cm}p{0.9cm}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{1.75cm}>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{6.05cm}>{\raggedright\arraybackslash}p{4.3cm}>{\raggedright\arraybackslash}p{0.9cm}@{}}
 \toprule
 sev. & where & problem and reason & fix & exp. \\
 \midrule
@@ -195,7 +195,14 @@ $\E_{P_0}e^{\lambda|a|}<\infty$ for some $\lambda>0$.
 \end{assumption}
 Then: (i) $\Lambda(s,b)$ is finite and real-analytic in $s$ on $|s|<\lambda$ jointly with $b\ge0$ (the integrand is dominated by $e^{\lambda|a|}$), so the Taylor expansion at $(0,0)$ with a Lagrange remainder is legitimate on $\{|s|\le\lambda/2\}$, i.e.\ on the bulk $\{|x|\le\lambda\Delta/2\alpha\}$, with all tilted moments bounded uniformly there; (ii) the tail $\{|x|>\lambda\Delta/2\alpha\}\subset\{\alpha|a|>c/\alpha\}\cup\{\sqrt\Delta|z|>c/\alpha\}$ has probability $\le e^{-\lambda c/\alpha^2}\E e^{\lambda|a|}+e^{-c^2/2\alpha^2}$, which \emph{is} $\exp(-c'/\alpha^2)$; (iii) on the tail $|S-\Sg|^2$ is bounded by $C(1+|x|^2+\E[|a|^2\mid x])/\Delta^2$ and $\E[\E[|a|^2\mid x]\mathbf 1_{\text{tail}}]=\E[|a|^2\mathbf 1_{\text{tail}}]$ by the tower property, so Cauchy--Schwarz with the exponential tail probability makes the tail contribution below every power of $\alpha$. The rest of Appendix A.3 (grading, Wick, the leading terms) is correct as written. Every family in the paper's laboratory except Student-$t$ satisfies (E); Student-$t$ is the family whose behaviour the theorem does not cover and Section~6.2 shows it does not follow the theorem beyond $t\approx4$. The sentence ``Student-$t_5$, whose sixth moment is infinite, departs as the moment condition predicts'' becomes ``Student-$t_5$ violates Assumption~(E); Proposition~\ref{prop:heavy} gives its rate''.
 
-\paragraph{Constants.} Tensor conventions: $\Frob{\kappa_4}^2=\sum_{ijkl}\kappa_4[ijkl]^2$ over ordered index tuples; the code (\texttt{theory.score\_gap\_constant}) sums the full $(L,L,L,L)$ tensor, and the chain measurement reproduces $\tfrac16\Frob{\kappa_4}^2$ to $1$--$6\%$, so the convention is consistent. Wick multiplicities: $\E_\gamma[(\tfrac16\sum_{jkl}T_{mjkl}{:}x_jx_kx_l{:})^2]=\tfrac{3!}{36}\sum_{jkl}T_{mjkl}^2$ for symmetric $T$, giving $\tfrac16\Frob{\kappa_4}^2$; for the information, $\E_\gamma[(\tfrac1{24}\sum T_{ijkl}{:}x_ix_jx_kx_l{:})^2]=\tfrac{4!}{24^2}\Frob{T}^2=\tfrac1{24}\Frob{T}^2$. Both checked by hand and, for the shape constant, by scalar quadrature to $0.25\%$ (Section~6.5). Hermite normalisation: probabilists', $\E_\gamma\Hen{n}^2=n!$; consistent throughout.
+\paragraph{Constants.} Tensor conventions: $\Frob{\kappa_4}^2=\sum_{ijkl}\kappa_4[ijkl]^2$ over ordered index tuples; the code (\texttt{theory.score\_gap\_constant}) sums the full $(L,L,L,L)$ tensor, and the chain measurement reproduces $\tfrac16\Frob{\kappa_4}^2$ to $1$--$6\%$, so the convention is consistent. Wick multiplicities, for symmetric $T$:
+\[
+\E_\gamma\Bigl[\bigl(\tfrac16\textstyle\sum_{jkl}T_{mjkl}{:}x_jx_kx_l{:}\bigr)^2\Bigr]=\tfrac{3!}{36}\sum_{jkl}T_{mjkl}^2,
+\]
+\[
+\E_\gamma\Bigl[\bigl(\tfrac1{24}\textstyle\sum T_{ijkl}{:}x_ix_jx_kx_l{:}\bigr)^2\Bigr]=\tfrac{4!}{24^2}\Frob{T}^2=\tfrac1{24}\Frob{T}^2,
+\]
+giving $\tfrac16\Frob{\kappa_4}^2$ for the score gap and $\tfrac1{24}\Frob{T}^2$ for the information. Both checked by hand and, for the shape constant, by scalar quadrature to $0.25\%$ (Section~6.5). Hermite normalisation: probabilists', $\E_\gamma\Hen{n}^2=n!$; consistent throughout.
 
 \paragraph{Nuisance projection.} The efficient information of a degree-4 coordinate after eliminating degree-2 nuisances is $I_{44}-I_{42}I_{22}^{-1}I_{24}$ with $I_{42}=O(\alpha^8)$ (the $\alpha^6$ term vanishes by $\gamma$-orthogonality), $I_{22}=\Theta(\alpha^4)$, so the correction is $O(\alpha^{12})\ll\alpha^8$. Correct. But the manuscript should say \emph{which} nuisances: the argument covers nuisances of lower Hermite degree. A nuisance of the \emph{same} degree (another shape coordinate, as in the $C=8$ mixture) reduces the efficient information by an $O(1)$ factor, which is one reason the one-parameter bound of Section~4 is only a reference.
 
