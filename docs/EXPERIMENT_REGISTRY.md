@@ -34,7 +34,7 @@ not re-registered; their status there is authoritative.
 | E17 | `experiments/e17_misspec_bias.py` | closed-form asymptotic bias under each E08 mechanism; order in eps | `experiments/registry/E17.json` | deterministic | REGISTERED 18 Sep (audit), laptop | `outputs/E17/` | `a44c2ab` (frozen) |
 | E18 | `experiments/e18_closure_wide.py` | closure gap on a wide domain; heavy-tailed regime | `experiments/registry/E18.json` | reps 0–1 | REGISTERED 18 Sep (audit), laptop | `outputs/E18/` | `a44c2ab` (frozen) |
 | E19 | `experiments/e19_moment_estimators.py` | moment estimators on E06's data: the high-noise competitor | `experiments/registry/E19.json` | 0–15 | REGISTERED 18 Sep (audit), laptop | `outputs/E19/` | `a44c2ab` (frozen) |
-| E20 | `experiments/e20_evidence_selection.py` | EM-BP checkpoint selection without the true score | `experiments/registry/E20.json` | 0–15 (M=32), 0–3 (M=512) | REGISTERED 18 Sep (audit), laptop | `outputs/E20/` | — |
+| E20 | `experiments/e20_evidence_selection.py` | EM-BP checkpoint selection without the true score | `experiments/registry/E20.json` | 0–7 (M=32); the M=512 arm dropped for cost (5 s per M-step iteration at N_g=401) | DONE 19 Sep (8 cells, frozen) | `outputs/E20/` | `c0a0125` (frozen) |
 | E21 | `experiments/e21_information_curve.py` | exact information curve at rho = 0.5 (E12b's reference); scalar shape constant | `experiments/registry/E21.json` | reps 0–3 | REGISTERED 18 Sep (audit), laptop | `outputs/E21/` | `a44c2ab` (frozen) |
 
 Dev seeds are 10000–10003 everywhere; confirmatory seeds 0–15. A confirmatory row's

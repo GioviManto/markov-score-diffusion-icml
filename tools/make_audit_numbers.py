@@ -134,6 +134,8 @@ def main() -> int:
             tag = {32: "A", 128: "B", 512: "C", 2048: "D"}.get(int(Mn), str(int(Mn)))
             M[f"audSelOracle{tag}"] = f"{g.test_oracle.mean():.3f}"; M[f"audSelEvidence{tag}"] = f"{g.test_evidence.mean():.3f}"; M[f"audSelLast{tag}"] = f"{g.test_last.mean():.3f}"
             M[f"audSelDiff{tag}"] = f"{(g.test_evidence - g.test_oracle).mean():+.4f}"; M[f"audSelSame{tag}"] = str(int((g.ckpt_oracle == g.ckpt_evidence).sum())); M[f"audSelN{tag}"] = str(len(g))
+            M[f"audSelMaxAbsDiff{tag}"] = f"{(g.test_evidence - g.test_oracle).abs().max():.4f}"
+            M[f"audSelLastLo{tag}"] = f"{g.test_last.min():.3f}"; M[f"audSelLastHi{tag}"] = f"{g.test_last.max():.3f}"
     # ---- E21 information curve + scalar constant
     p = ROOT / "outputs/E21/information.csv"
     if p.exists():
