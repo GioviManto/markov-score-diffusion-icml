@@ -78,7 +78,9 @@ def part_bias(cfg, out):
             lag1 = float(np.mean(np.diag(S, 1)))
             bias_lag1 = pooled_err(S, lag1 ** np.abs(np.subtract.outer(np.arange(L), np.arange(L))))
             row = dict(mechanism=mech, eps=eps, rho_proj=rho_h, q_proj=q_h, bias_kl=bias, bias_lag1=bias_lag1,
-                       pred_512=np.sqrt(bias**2 + cfg["v_const"] / 512), pred_2048=np.sqrt(bias**2 + cfg["v_const"] / 2048))
+                       pred_512=np.sqrt(bias**2 + cfg["v_const"] / 512), pred_2048=np.sqrt(bias**2 + cfg["v_const"] / 2048),
+                       em_512=np.nan, em_2048=np.nan, rho_em_512=np.nan, rho_em_2048=np.nan,
+                       small_eps="", small_bias="", local_slope=np.nan, coefficient=np.nan)
             if emp is not None:
                 for n in (512, 2048):
                     row[f"em_{n}"] = float(emp.loc[(mech, eps, n), "em_bp"]) if (mech, eps, n) in emp.index else np.nan
@@ -92,6 +94,7 @@ def part_bias(cfg, out):
         b = np.array(b); sm = np.array(cfg["small"])
         sl = np.diff(np.log(b)) / np.diff(np.log(sm)) if len(b) > 1 else np.array([np.nan])
         rows.append(dict(mechanism=mech, eps=-1.0, bias_kl=np.nan, bias_lag1=np.nan, rho_proj=np.nan, q_proj=np.nan, pred_512=np.nan, pred_2048=np.nan,
+                         em_512=np.nan, em_2048=np.nan, rho_em_512=np.nan, rho_em_2048=np.nan,
                          small_eps=";".join(f"{x:g}" for x in sm), small_bias=";".join(f"{x:.4e}" for x in b),
                          local_slope=float(sl[-1]), coefficient=float(b[-1] / sm[-1] ** sl[-1]) if np.isfinite(sl[-1]) else np.nan))
         print(f"  [E17] {mech}: bias ~ eps^{sl[-1]:.2f}, coefficient {rows[-1]['coefficient']:.3f}", flush=True)
