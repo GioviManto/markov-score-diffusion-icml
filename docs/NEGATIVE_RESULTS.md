@@ -252,5 +252,9 @@ exact information curve.
 
 **N-21. Two-thirds of the window head's plateau is the boundary.** On the interior sites
 the head's error at M = 2048 is 0.075 against 0.118 on all sites, and it improves from
-0.118 to 0.082 as the chain lengthens to 256 (zero padding). Its relation to the exact
-radius-4 floor is E15 (see the audit report for the verdict).
+0.118 to 0.082 as the chain lengthens to 256 (zero padding). E15 computes the exact
+radius-4 floor at ρ = 0.85: 0.030 pooled (peak 0.065 at t ≈ 0.7–1.0), against the head's 0.118
+(0.075 interior) and EM–BP's 0.023. **"Locality is a ceiling" is withdrawn**: the radius costs
+0.030 of information; the plateau is the one-layer architecture's. The manuscript's sentence
+"a radius-4 window cannot represent a message that has travelled the length of the chain" is
+replaced by the floor.

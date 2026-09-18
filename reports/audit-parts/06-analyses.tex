@@ -32,15 +32,43 @@ uniform & any & $-7.52$ & $-6.25$ & $-4.62$ & $-4.08$ & 3.8 & 148 \\
 \end{tabular}
 \end{center}
 
-Three readings. (i) Every departure from $-8$ on the $(801,8)$ grid for the Student-$t$ families is removed by widening the domain: it was the truncated prior in the reference, not the moment condition. (ii) The uniform family's departure is identical on every grid: it is the double-precision floor of the BP posterior means (a squared gap of $\sim10^{-13}$ per chain), which every family reaches near $t\approx5$; the figure must shade it. (iii) On a domain wide enough for the sample, Student-$t_5$ follows $e^{-8t}$ through $t=5$. The expected tail term $\propto e^{-\nu t}$ of Proposition~\ref{prop:heavy} is carried by chains with $|a|\gtrsim1/\alpha^2$, whose probability at $t=5$ is $\sim10^{-16}$ per site: no sample sees them, and only an untruncated quadrature does (part ``scalar'', running). The paper's Student-$t$ sentence should say that the constant is reached and that the heavy-tailed correction is an expectation over events invisible in practice---which is the more interesting statement.
+Three readings. (i) Every departure from $-8$ on the $(801,8)$ grid for the Student-$t$ families is removed by widening the domain: it was the truncated prior in the reference, not the moment condition. (ii) The uniform family's departure is identical on every grid: it is the double-precision floor of the BP posterior means (a squared gap of $\sim10^{-13}$ per chain), which every family reaches near $t\approx5$; the figure shades it. (iii) On a domain wide enough for the sample, Student-$t_5$ follows $e^{-8t}$ through $t=5$ and reaches the constant. The untruncated \emph{scalar} quadrature (part ``scalar'', adaptive domain $3X/\alpha$) tells the other half: for the unit-variance $t_5$ law the local slope of the expected gap is $-5.9, -6.1, -5.9, -5.6, -5.5, -5.4, -5.3, -5.3$ on consecutive half-unit intervals from $t=1$, converging to $-\nu=-5$, and its ratio to $\tfrac16\kappa_4^2e^{-8t}$ grows as $e^{3t}$ ($0.7, 2.0, 5.0, 14, 48, 170, 630, 2400, 9400$ at $t=1,\dots,5$); for $t_7$ the ratio is $1.0$--$1.4$ through $t=5$ (its crossover is later), for $t_9$ it is $1.00$. The expected tail term is carried by sites with $|a|\gtrsim e^{2t}$: at $t=3$ a site contributing to it has probability $\sim10^{-9}$, and $8192\times32$ sites contain none. Proposition~\ref{prop:heavy} is therefore confirmed in expectation and irrelevant in any sample of practical size; the paper says both.
 
 \subsection{The closure constant, and how precisely it is verified (E18, part ``constant'')}
 \label{sec:const}
-The per-chain squared gap is a degree-six polynomial in nearly Gaussian variables and is heavy-tailed: over $8192$ chains its maximum is $\approx300$ times its median. A 512-chain mean therefore carries a relative standard error of $\approx15\%$: two 512-chain replicates of E01's Laplace closure at $t=3$ give ratios $0.83$ and $1.14$, two 256-chain replicates $1.77$ and $1.33$. E01's ``$0.99$ at $t=3$'' is the mean of four such replicates and its precision is $\approx\pm10\%$, not $1\%$. With $8192$ chains at $(1601,16)$: Laplace $0.92$ $[0.84,1.01]$ at $t=3$ and $0.99$ $[0.91,1.08]$ at $t=4$ (chain bootstrap); the other families are running. The paper should quote the constant with that interval. This does not touch the rates, which are paired and measured to $\pm0.05$.
+The per-chain squared gap is a degree-six polynomial in nearly Gaussian variables and is heavy-tailed: over $8192$ chains its maximum is $\approx300$ times its median. A 512-chain mean therefore carries a relative standard error of $\approx15\%$: two 512-chain replicates of E01's Laplace closure at $t=3$ give ratios $0.83$ and $1.14$, two 256-chain replicates $1.77$ and $1.33$. E01's ``$0.99$ at $t=3$'' is the mean of four such replicates and its precision is $\approx\pm10\%$, not $1\%$. With $8192$ chains at $(1601,16)$ and a chain bootstrap:
+
+\begin{center}\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+family & ratio at $t=3$ & ratio at $t=4$ \\
+\midrule
+Laplace & 0.92 [0.84, 1.01] & 0.99 [0.91, 1.08] \\
+bimodal & 0.93 [0.83, 1.05] & 0.98 [0.88, 1.11] \\
+uniform & 0.96 [0.89, 1.04] & 3.6 (floor) \\
+Student-$t_5$ & 0.70 [0.62, 0.79] & 1.03 [0.99, 1.09] \\
+Student-$t_7$ & 0.90 [0.82, 0.98] & 0.96 [0.88, 1.04] \\
+Student-$t_9$ & 0.88 [0.81, 0.96] & 0.93 [0.86, 1.01] \\
+\bottomrule
+\end{tabular}
+\end{center}
+Every family with an exponential moment is within its interval of $1$ at $t=4$ (the uniform family has hit the double-precision floor there, ratio $3.6$ with a tiny interval---a floor, not a sample); the heavy-tailed members approach from below and $t_5$ is at $1.03$ at $t=4$. The paper quotes these intervals; this does not touch the rates, which are paired and measured to $\pm0.05$.
 
 \subsection{The locality floor (E15)}
 \label{sec:e15}
-At $\rho=0.5$ (complete$^\dagger$): pooled floors $0.42, 0.068, 0.016, 0.0049, 0.0017, 0.0003$ for $r=0,1,2,3,4,6$ against the LMMSE floor $0.264$; the Gaussian twin's windowed LMMSE reaches the full LMMSE by $r=3$ ($0.2639$), so everything a window beyond $r=3$ buys is non-Gaussian information. At $\rho=0.85$ (running): at $t=0.15$ and $0.22$ the radius-4 floor is $0.018$ and $0.028$, rising with $t$. \textsc{[pending: pooled floors at $\rho=0.85$ and $0.95$; the verdict on the window head's $0.118$ (all-site) / $0.075$ (bulk).]}
+Pooled over the schedule, the error of the exact best radius-$r$ estimator (sum-product on the window with the exact marginal of its first site):
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrrrrrrrr@{}}
+\toprule
+$\rho$ & $r=0$ & $1$ & $2$ & $3$ & $4$ & $6$ & $8$ & $12$ & $16$ & LMMSE (full) \\
+\midrule
+0.5 & 0.419 & 0.068 & 0.016 & 0.005 & 0.002 & 0.0003 & 0.0000 & 0.0000 & 0.0000 & 0.264 \\
+0.85 & 0.666 & 0.216 & 0.094 & 0.050 & 0.030 & 0.013 & 0.007 & 0.002 & 0.0006 & 0.170 \\
+\bottomrule
+\end{tabular}
+\end{center}
+($\rho=0.95$ running.) The Gaussian twin's windowed LMMSE reaches its full value by $r=3$ at $\rho=0.5$, so everything a wider window buys is non-Gaussian information. At $\rho=0.85$ the radius-4 floor peaks at $0.065$ around $t\approx0.7$--$1.0$ and is $0.030$ pooled---\emph{below} the window head's $0.118$ (all sites) and $0.075$ (interior) by a factor of two and a half to four, and close to EM--BP's $0.023$. Verdict: locality is \emph{not} the ceiling the manuscript and the report describe. A radius-4 estimator can in principle come within $0.007$ pooled of the exact-inference estimator; the window head's plateau is a property of that one-layer architecture and its training under the recipe, and the manuscript's sentence ``a radius-4 window cannot represent a message that has travelled the length of the chain'' is withdrawn (the message's information beyond radius 4 is worth $0.030$). What survives, sharpened: locality is a good prior at small $M$, and the plateau of the local architecture at large $M$ is an approximation limit that the exact floor now quantifies. The TCN (receptive radius 15) at $0.068$ and the global architectures at $0.060$ are likewise far above their floors ($0.0006$ at $r=16$; $0$ for the full chain), which says the same thing about all of them: at $M=2048$ under this recipe, every network is limited by approximation and optimisation, not by what its receptive field carries.
 
 \subsection{The shape-information constant (E21, part ``constant'')}
 \label{sec:scalar-const}

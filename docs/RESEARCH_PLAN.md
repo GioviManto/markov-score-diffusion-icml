@@ -211,3 +211,10 @@ figure, baseline table, ladder figure, generation, misspecification. The cut, in
 
 Not cut under any circumstance: the verification paragraph of §3 (the range and the
 failing family), the protocol sentence of §5, the limitations section.
+* 2026-09-19 — full audit (reports/audit-2026-09-18.pdf). Theorem 3 restated under an
+  exponential moment; general-order theorem and LAN corollary added; the matched-interface
+  headline moved to the ISM arm (7.9×); the efficiency claim replaced by the per-level
+  collapse account; Student-t and envelope paragraphs corrected; seven audit experiments
+  registered (E15–E21) and folded into the body and a new appendix. The cut order above
+  still applies; the aggregation appendix is dropped. E14/E06c/E07b-c/E11b/E12b remain
+  queued on the cluster; E12b's analysis plan was amended before data (registry).

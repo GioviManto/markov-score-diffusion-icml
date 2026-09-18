@@ -1,0 +1,149 @@
+{
+  "timestamp": "2026-09-18 23:31:51",
+  "git_commit": "9dc700471e0d8385f15e24feb0bcf09222f7e920",
+  "git_branch": "claude/audit-2026-09-18",
+  "git_dirty": "M docs/NEGATIVE_RESULTS.md\n M docs/SCIENCE_AUDIT.md\n M paper/LITERALS_ALLOWED.txt\n M paper/body/00-abstract.tex\n M paper/body/01-introduction.tex\n M paper/body/02-setup.tex\n M paper/body/03-theory.tex\n M paper/body/04-learning.tex\n M paper/body/04a-learning-results.tex\n M paper/body/05-experiments.tex\n M paper/body/05c-misspec.tex\n M paper/body/05d-baselines.tex\n M paper/body/05g-regimes.tex\n M paper/body/06-related.tex\n M paper/body/07-conclusion.tex\n M paper/body/A1-proofs.tex\n M paper/body/A2b-envelope.tex\n M paper/body/A3-protocol.tex\n M paper/body/A4-additional.tex\n M paper/main.tex\n M paper/sections/baseline-numbers.tex\n M reports/audit-2026-09-18.tex\n M tools/make_baseline_numbers.py\n?? outputs/E06c_partial/\n?? outputs/E16/\n?? outputs/E17/\n?? outputs/E18/\n?? outputs/E19/\n?? outputs/E21/\n?? outputs/logs/\n?? paper/body/A5-audit.tex\n?? paper/sections/audit-numbers.tex\n?? reports/audit-2026-09-18.pdf\n?? reports/audit-parts/\n?? tools/make_audit_numbers.py",
+  "source_archive_sha256": "",
+  "source_is_clean": false,
+  "revision_source": "git",
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "platform": "macOS-14.1.1-arm64-arm-64bit-Mach-O",
+  "hostname": "MacBook-Air-160.local",
+  "slurm_job_id": "",
+  "slurm_array_task_id": "",
+  "cpu_count": "8",
+  "blas_threads": "1",
+  "settings": {
+    "rho": 0.85,
+    "levels": [
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      3.5,
+      4.0,
+      4.5,
+      5.0
+    ],
+    "grids": [
+      [
+        801,
+        8.0
+      ],
+      [
+        1601,
+        16.0
+      ],
+      [
+        3201,
+        32.0
+      ]
+    ],
+    "n_chains": 256,
+    "reps": 2,
+    "families": [
+      "laplace",
+      "bimodal",
+      "uniform",
+      "student5",
+      "student7",
+      "student9"
+    ],
+    "scalar_families": [
+      "t5",
+      "t7",
+      "t9",
+      "t12",
+      "laplace"
+    ],
+    "scalar_levels": [
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      3.5,
+      4.0,
+      4.5,
+      5.0
+    ],
+    "scalar_A": 250.0,
+    "scalar_n": 125001,
+    "scalar_X": 40.0,
+    "scalar_nx": 4001,
+    "const_families": [
+      "laplace",
+      "bimodal",
+      "uniform",
+      "student5",
+      "student7",
+      "student9"
+    ],
+    "const_levels": [
+      3.0,
+      4.0
+    ],
+    "const_grid": [
+      1601,
+      16.0
+    ],
+    "const_chains": 8192,
+    "const_chunk": 512
+  },
+  "quick": false,
+  "frozen": {
+    "rho": 0.85,
+    "n_sites": 32,
+    "innovation": "laplace",
+    "n_grid": 401,
+    "half_width": 8.0,
+    "t_grid": [
+      0.05,
+      0.0725,
+      0.1053,
+      0.1527,
+      0.2216,
+      0.3215,
+      0.4665,
+      0.6769,
+      0.9821,
+      1.425,
+      2.0676,
+      3.0
+    ],
+    "n_seeds": 16,
+    "sizes": [
+      32,
+      128,
+      256,
+      512,
+      1024,
+      2048,
+      4096
+    ],
+    "efficiency_sizes": [
+      32,
+      64,
+      128,
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "n_heldout": 256,
+    "heldout_seed_offset": 1000000,
+    "em_max_iters": 400,
+    "em_loglik_tol": 1e-09,
+    "em_shape_tol": 0.001,
+    "n_components": 8,
+    "ring_n_frames": 12,
+    "ring_sigma": 0.3,
+    "ring_lambda": 0.05,
+    "ring_r_star": 1.0,
+    "ring_psi_true": 0.5235987755982988,
+    "ring_n_psi": 128,
+    "base_seed": 20260816
+  }
+}

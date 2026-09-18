@@ -139,12 +139,18 @@ $-4$ and $-8$.
 Student-$t_\nu$ innovations violate \cref{ass:exp}. For a regularly varying tail of index
 $\nu$ the expected squared gap acquires a term of order $e^{-\nu t}$ carried by
 sequences with $|\va|\gtrsim e^{2t}$, whose probability is itself of order $e^{-\nu t}$:
-in expectation the Hermite law holds while $\tfrac16\Frob{\kfour}^2e^{-8t}$ dominates it,
-and on any sample of practical size the Hermite law is all that is seen
-(\cref{app:numerics}). We state this as an observation supported by quadrature, not as a
-theorem; the moment condition of \cref{thm:decay} is not merely technical, and
-\cref{fig:theory}c shows Student-$t_5$ reaching the constant on a domain wide enough to
-hold its samples.
+in expectation the tail term leads once it exceeds $\tfrac16\Frob{\kfour}^2e^{-8t}$, and
+on any sample of practical size the Hermite law is all that is seen, because the events
+that carry the tail term are never drawn. Both halves are visible in the numbers
+(\cref{app:audit}): for the scalar $t_5$ law an untruncated quadrature gives a local
+slope of $\audScalarSlopeTfiveTfourpfive$ on the last interval and a ratio to the Hermite
+term of $\audScalarRatioTfiveTfive$ at $t=5$, while the $t_5$ chain sampled with
+$\audConstChains$ sequences on a domain wide enough to hold them sits at
+$\audConstRatioStudentfiveTfour$
+$[\audConstRatioLoStudentfiveTfour,\audConstRatioHiStudentfiveTfour]$ of the constant at
+$t=4$ (\cref{fig:theory}c). We state the heavy-tailed rate as an observation supported by
+quadrature, not as a theorem; the moment condition of \cref{thm:decay} is not merely
+technical.
 
 \begin{figure*}[t]
   \centering
