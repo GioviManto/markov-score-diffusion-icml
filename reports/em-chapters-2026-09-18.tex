@@ -1,0 +1,750 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2.6cm]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+
+\definecolor{rulegrey}{gray}{0.45}
+\titleformat{\section}{\large\bfseries}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.7em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+\setlist[itemize]{leftmargin=1.2em,itemsep=0.25em,topsep=0.3em}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=0.45em,topsep=0.4em}
+\newcommand{\hi}[1]{\textbf{#1}}
+\newcolumntype{d}{>{\raggedleft\arraybackslash}p{1.45cm}}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries The EM chapters, re-examined}\\[0.45em]
+{\large Confirmatory evidence for Chapters 8--11}\\[0.9em]
+{\small Internal report for discussion with Jerome and Marc \quad$\cdot$\quad 18 September 2026}\\[0.25em]
+{\footnotesize Second revision. Changes against the 16 September draft are listed on this page.}
+\end{center}
+
+\vspace{0.4em}
+\hrule height 0.8pt
+\vspace{1.2em}
+
+\noindent
+This report states what sixteen-seed confirmatory runs, executed on the Bocconi cluster over the
+past four days, say about the chapters from EM onwards. Three of the four chapters survive intact;
+one conclusion reverses; one comparison the thesis explicitly declared out of reach has now been
+made. Section~\ref{sec:summary} is the short version, Section~\ref{sec:method} states what we are
+doing and why it is trustworthy, Sections~\ref{sec:ch8}--\ref{sec:ch11} go chapter by chapter,
+Section~\ref{sec:robust} reports what four further runs say about how far the results travel, and
+Section~\ref{sec:ask} lists the decisions that need taking.
+
+\medskip
+\noindent
+\textbf{What changed since the 16 September draft.} Four runs have reported. Two of them confirm
+and extend; two of them require corrections that are made here and not buried.
+\begin{itemize}[topsep=0.25em]
+\item The misspecification sweep was repeated at sixteen seeds. \textbf{One of its four
+conclusions does not survive}: long-range coupling was reported as reversing the ordering near
+$\gamma\approx0.4$; at sixteen seeds it does not reverse anywhere in the swept range. The
+remaining three mechanisms are unchanged and two of them now have tighter brackets
+(Section~\ref{sec:gen}).
+\item The capacity contrast was re-run across five correlations and three chain lengths and holds
+at all fifteen, with the apparatus checking itself at every one (Section~\ref{sec:regimes}).
+\item A sweep of the quadrature found that the reference grid's accuracy is bounded by the
+\emph{domain}, not by the number of points, and that one configuration the phase appendix reports
+--- the heavy-tailed family at zero correlation --- lies outside the validated envelope
+(Section~\ref{sec:grid}). Those entries are flagged and not cited pending a recomputation.
+\item An audit of the EM iteration budget across all runs \textbf{flags one reported claim}: the
+statement that the estimator leaves the information bound at the two highest noise levels is
+confounded with the ladder running out there (Section~\ref{sec:budget}). The capacity conclusion
+is cleared by the same audit.
+\end{itemize}
+
+\section{Summary}\label{sec:summary}
+
+\begin{enumerate}
+\item \hi{The capacity conclusion of Chapter~10 reverses.} It was an artefact of a stopping rule
+that fired for the single-Gaussian arm and for no other. Under a protocol that selects the
+checkpoint identically for every capacity, the single Gaussian sits exactly on the second-order
+floor at every sample size ($0.167$) and every richer capacity goes far below it ($0.023$ at
+$M=2048$), favouring the mixture in $16$ of $16$ seeds at every size.
+
+\item \hi{The two rates of Chapter~9 are a property of the channel, not of the optimiser.} The EM
+estimator attains the Cram\'er--Rao bound of the noised likelihood to within a factor $1.02$ on
+average. The shape coordinate is not slow because EM is slow; the data stop carrying it. Its
+information bound crosses the coordinate's own range at $t=0.98$, and that is precisely where the
+fit collapses to a Gaussian innovation.
+
+\item \hi{The comparison of Chapter~10 now runs at a matched information interface.} The thesis
+attached a scope condition saying it could not do this. Given the same single noised view per
+sequence that the estimator sees, the best network reaches $0.155$ against the estimator's
+$0.023$: a paired factor $7.3$, interval $[6.2,8.7]$. The unmatched comparison, at $2.83\times$,
+\emph{understates} the gap.
+
+\item \hi{Locality is a ceiling, not only a prior.} The radius-4 window head is the best network at
+$M=32$ and the worst of the five weight-shared architectures at $M=2048$, moving only
+$0.121\rightarrow0.118$ as data quadruples. A bounded receptive field cannot represent a message
+that has crossed the chain --- which is exactly what the chain's score is.
+
+\item \hi{Score accuracy transfers to generation, and the second-order score fails there
+visibly.} Driven through the same reverse SDE on identical Brownian paths, the fitted kernel
+produces sequences whose innovation excess kurtosis is $1.887$ against the reference's $1.896$,
+with a log-likelihood gap of $0.022$ under the true law. The covariance-matched score gives
+$-0.008$ --- an essentially Gaussian chain --- at a gap of $1.71$, and the isotropic score a gap of
+$46.2$.
+
+\item \hi{A claim of ours was refuted by our own data, and is recorded as such.} ``The learned
+networks sit at or above the second-order floor'' had been drafted into the new abstract. At
+$M=2048$ five of six architectures sit below it. The defensible statement is about the information
+interface, not about a barrier the networks cannot pass.
+
+\item \hi{The capacity result travels, and checks the apparatus while it does.} Across five
+correlations and three chain lengths the mixture beats the Gaussian kernel in all fifteen cells,
+with every interval excluding zero and the margin shrinking smoothly with $\rho$ as the marginal's
+excess kurtosis does. In the same fifteen cells the $C=1$ arm lands on the LMMSE of the true
+covariance to $0.01$, as Proposition~1 requires --- a simultaneous check on the grid, the message
+passing, the EM and the scoring, passed at fifteen independent configurations.
+
+\item \hi{Two corrections, both found by us and both made here.} Long-range coupling does
+\emph{not} reverse the ordering at sixteen seeds, though the eight-seed draft said it did; and
+the statement that the estimator leaves the information bound at the two highest noise levels is
+confounded with the EM ladder running out there. The first is settled and rewritten, the second is
+flagged with a control queued. A third finding of the same kind is about our instrument rather
+than our results: the reference grid's accuracy is limited by the width of its domain rather than
+by the number of points, and one configuration the phase appendix reports lies outside the
+validated envelope.
+\end{enumerate}
+
+\section{What we are doing, and why the numbers can be trusted}\label{sec:method}
+
+Three changes to how the work is run account for why these results settle questions the thesis
+left open.
+
+\paragraph{One frozen protocol, one varied factor.}
+Everything the arms share is now a single frozen object: the bundle sizes and their random
+streams, the sizes $M\in\{32,128,512,2048\}$, the sixteen confirmatory seeds and four development
+seeds, the EM iteration ladder and its initialisation, the network training recipe and screen
+budget, the estimand, and the scoring regions. Each experiment varies exactly one declared factor
+against that background, so a difference between two arms is attributable to that factor. Two arms
+that differ in more than one thing are not compared; where a comparison genuinely needs two
+factors to move, the intermediate arm is run as well.
+
+\paragraph{Pairing by construction.}
+Every row records the SHA-256 of the validation and test bundles it was scored on. Rows from
+different experiments are joined on (seed, size, bundle hash), and a generator that is handed rows
+with mismatched hashes refuses to emit a number. This is what makes ``EM--BP against the best
+network'' a paired comparison across two experiments rather than two averages.
+
+\paragraph{Frozen outputs.}
+A result becomes citable only when its output directory is pinned: every CSV and provenance file
+hashed into the registry entry together with the commit that produced it. After that, any byte
+change fails the build, and the manuscript refuses to compile if a generated number disagrees with
+the artefact it came from. A re-run is a new artefact under a new key, never an overwrite.
+Confirmatory seeds are declared before the run and never used for selection; development seeds
+never enter a reported number.
+
+\paragraph{Amendments are recorded, not absorbed.}
+Two design changes were made this week before the runs that used them, and both are in the
+registry with timestamps: the EM ladder was extended from $400$ to $1200$ iterations because $400$
+was binding at the largest sample size, and the largest strength of the site-varying
+misspecification mechanism was removed because it is not a valid chain --- at $\rho=0.85$ its site
+coefficients exceed $1$ and the implied covariance is not positive definite. No number from the
+invalid point exists.
+
+\section{Chapter 8 --- EM for the parameters: holds}\label{sec:ch8}
+
+Nothing in the derivation needed revision. Fisher's identity still gives the exact gradient of the
+discretised marginal log-likelihood from one forward--backward pass, and the finite-difference
+check agrees to about $10^{-9}$. Two things were added.
+
+The algebra is now machine-checked where checking is cheap. A Lean~4 module builds against Mathlib
+with no \texttt{sorry} and no axiom, covering four constants: the Hermite attenuation for degrees
+up to four, the fourth-cumulant difference under variance matching, the factor $\tfrac12$ in the
+Gaussian information rate, and the coefficient $\kappa_4/6$ in the score gap. It verifies the
+algebraic skeleton and not the analysis: the remainder bounds and the measure-level statements
+remain informal, and the write-up says so in those words rather than claiming more.
+
+The confirmatory ladder was extended to $1200$ iterations. At $M=2048$ the richer capacities were
+still selecting the top of the $400$-iteration ladder; they still select the top of the extended
+one in $10$ of $16$ seeds, so the errors reported for those arms in Table~\ref{tab:capacity}
+remain upper bounds. That can only understate the effect described there.
+
+\section{Chapter 9 --- the two rates: same fact, better reason}\label{sec:ch9}
+
+The chapter explains the asymmetry through EM's fixed-point map: the Jacobian is the missing
+information and the shape coordinate has the smaller eigenvalue, so the fitted innovation shape
+settles at a median of $229$ updates against $80$ for the correlation. That measurement stands,
+and the stopping-rule warning built on it stands with it.
+
+What is new is that the asymmetry is no longer only a statement about the optimiser. Two results
+bracket it.
+
+\paragraph{The channel, from theory.}
+Under the Ornstein--Uhlenbeck channel every Hermite mode of degree $m$ is attenuated exactly by
+$e^{-mt}$, so the Fisher information one noised sequence carries about order-$m$ structure decays
+as $e^{-2mt}$: correlation as $e^{-4t}$, non-Gaussian shape as $e^{-8t}$. Computed on the chain by
+exact inference the measured slopes are $-3.97$ and $-8.01$ against the predicted $-4$ and $-8$,
+and the constant in the score gap between the true score and that of the covariance-matched
+Gaussian is reproduced to within one per cent.
+
+\paragraph{The estimator, from measurement.}
+Fitting the transition law from sequences observed at a single level $t$ ($M=512$, $16$ seeds, one
+noised view per sequence), the EM estimator sits \emph{at} the Cram\'er--Rao bound of the noised
+likelihood: a ratio of $1.02$ on average over the levels where either coordinate is informative,
+never worse than $1.18$ for the correlation or $1.51$ for the fourth cumulant.
+
+\medskip
+\noindent
+Taken together these say the chapter's phenomenon belongs to the channel. If the estimator is
+efficient, the two rates cannot be blamed on EM. The bound for the shape coordinate grows as
+$e^{4t}$ and crosses the coordinate's own range ($\kappa_4=3$) at $t=0.98$; the fit collapses to a
+Gaussian innovation at exactly that level, while the correlation estimate is still within $0.009$
+of the truth and survives past the crossover $t_*=1.17$.
+
+\paragraph{One limitation, stated plainly.}
+The corollary predicts errors growing as $e^{2t}$ and $e^{4t}$, and this run cannot test those
+exponents. At $\rho=0.85$ the shape estimate saturates before the crossover, so the asymptotic
+window does not exist at this configuration. Fitting slopes through a saturated estimate would
+have returned $3.64$ and $0.09$ against predictions of $2$ and $4$; the analysis therefore reports
+no slope, and a companion run at $\rho=0.5$ with $M=2048$ --- where the crossover falls at $0.55$
+and the window is reachable --- is registered and queued.
+
+\section{Chapter 10 --- the comparison: one reversal, one replacement, two new facts}\label{sec:ch10}
+
+\subsection{The capacity sweep reverses}
+
+The chapter concluded that no mixture capacity improves on a single Gaussian innovation, and
+flagged its own caveat in the accompanying figure: the share of fits stopped at the iteration cap,
+and with a narrowest component below the grid's resolution floor, both climbed steeply with $C$.
+That caveat was the entire effect. In the archival sweep the likelihood tolerance fired in $31$ of
+$32$ single-Gaussian cells at a median of $71$ iterations --- close to where a validation protocol
+would stop --- and in none of the $96$ cells with $C\ge4$, which therefore reported checkpoints an
+order of magnitude past their optimum. ``The single Gaussian is as good'' was ``the single Gaussian
+is the only arm that stopped in the right place''.
+
+Table~\ref{tab:capacity} re-runs the sweep with the checkpoint selected on a per-seed validation
+bundle identically for every capacity.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Capacity under equal stopping. Schedule-pooled relative score error on all sites, mean
+over $16$ seeds, every arm on identical held-out bundles. The last column is the same capacity
+fitted to the innovation law itself --- the $C$-component mixture closest in Kullback--Leibler
+divergence --- an infinite-data reference for the family rather than a bound. The isotropic score
+is at $0.669$ at every size.}
+\label{tab:capacity}
+\begin{tabular}{l dddd c d}
+\toprule
+& \multicolumn{4}{c}{sequences $M$} & & \\
+\cmidrule(lr){2-5}
+kernel & 32 & 128 & 512 & 2048 & & $M=\infty$ \\
+\midrule
+LMMSE floor      & 0.167 & 0.167 & 0.167 & 0.167 & & 0.167 \\
+$C=1$            & 0.174 & 0.168 & 0.168 & 0.167 & & 0.167 \\
+$C=2$            & 0.084 & 0.050 & 0.035 & 0.028 & & 0.039 \\
+$C=4$            & 0.093 & 0.053 & 0.037 & 0.025 & & 0.0057 \\
+$C=8$            & 0.099 & 0.055 & 0.036 & 0.023 & & 0.0022 \\
+$C=16$           & 0.100 & 0.056 & 0.036 & 0.022 & & 0.0007 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three readings follow. The single-Gaussian kernel lands on the second-order floor at every sample
+size, which is Proposition~1 read as a statement about an estimator rather than about a
+projection. Every richer capacity goes below that floor, by a factor $7.9$ at the largest size; the
+paired difference between $C=1$ and $C=8$ is $0.144$ with bootstrap interval $[0.141,0.147]$ and
+favours the mixture in $16$ of $16$ seeds. And the best capacity rises with the data, from $C=2$ at
+$M=32$ to $C=16$ at $M=2048$ --- the ordinary variance-to-bias trade, visible now that the stopping
+rule no longer masks it.
+
+\paragraph{The check that closes the loop.}
+Two things changed at once between the thesis sweep and this one: the protocol, and the estimand
+(held-out log-evidence per edge there, relative score error here). Two simultaneous changes are not
+an explanation. A registered run now scores the \emph{same frozen fits} in the thesis's own
+estimand, leaving the protocol as the only difference. A single-seed pass already shows the
+reversal --- log-evidence per edge $-1.3116$ for $C=8$ against $-1.3146$ for $C=1$, with the true
+kernel at $-1.3076$ --- and the sixteen-seed result is running.
+
+\subsection{The data-efficiency comparison is replaced}
+
+The chapter reports $6.6$--$10.9\times$ against unstructured denoising score matching and
+$2.3$--$6.1\times$ against a baseline given locality and weight sharing, with three scope
+conditions, the sharpest being that the arms are asymmetric in supplied information and that the
+comparison therefore does not rank learning algorithms at a matched interface.
+
+Six architectures were screened under one recipe --- $68$ configurations, four development seeds,
+three restarts, $32{,}000$ steps each --- and the winner of each family was run on the sixteen
+confirmatory seeds (Table~\ref{tab:baselines}).
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Under one training recipe, $16$ confirmatory seeds, identical held-out bundles. All-site
+schedule-pooled relative score error. The upper block is trained on clean sequences with a fresh
+corruption at every gradient step; the lower block sees what the estimator sees.}
+\label{tab:baselines}
+\begin{tabular}{l dd l}
+\toprule
+estimator & $M=32$ & $M=2048$ & information supplied \\
+\midrule
+fully connected              & 0.517 & 0.208 & clean, fresh corruption \\
+window head ($r=4$)          & 0.186 & 0.118 & clean, fresh corruption \\
+bidirectional GRU            & 0.201 & 0.060 & clean, fresh corruption \\
+transformer                  & 0.231 & 0.063 & clean, fresh corruption \\
+1-D U-Net                    & 0.227 & 0.066 & clean, fresh corruption \\
+dilated TCN                  & 0.223 & 0.068 & clean, fresh corruption \\
+\midrule
+best matched-interface net   & ---   & 0.155 & one noised view \\
+EM--BP ($C=8$)               & 0.099 & 0.023 & one noised view \\
+\midrule
+\textit{LMMSE floor}         & \textit{0.167} & \textit{0.167} & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two numbers replace the thesis's ranges. Against the best of six architectures under the standard
+recipe, the estimator is ahead by a paired factor $2.83$, interval $[2.37,3.42]$, in $16$ of $16$
+seeds at $M=2048$, and by $2.07$ at $M=32$. Against the best network trained at the estimator's own
+interface --- one noised view per sequence, no clean chain, checkpoint selected on the implicit
+objective of a held-out noisy bundle and never on the true score --- the factor is $7.3$, interval
+$[6.2,8.7]$. Implicit score matching on that bundle, which uses no clean target at all, lands at
+$0.165$.
+
+The second number is the one the thesis said was out of reach, and it is the stronger claim: the
+gap is not an artefact of giving the networks less, because when they are given the same, the gap
+widens.
+
+It also follows that one sentence drafted for the new paper is false and has been withdrawn.
+``Every network sits at or above the second-order floor'' holds only at the smallest sample size;
+at $M=2048$ five of the six sit below it. Given enough clean sequences and fresh corruptions a
+neural denoiser plainly does learn fourth-order structure. The honest statement concerns the
+information interface.
+
+\subsection{Two facts the thesis does not contain}
+
+\paragraph{Locality is a ceiling.}
+The window head is the best network at $M=32$ and the worst of the five weight-shared
+architectures at $M=2048$, moving only from $0.121$ to $0.118$ as the data quadruples, against a
+standard error of $0.001$, while the global architectures continue to $0.060$. A radius-4 window
+cannot represent a message that has travelled the length of the chain, and the chain's exact score
+is precisely such a message. This connects the architecture comparison to the bulk-posterior
+analysis the chapter already contains.
+
+\paragraph{Length extrapolation separates the arms cleanly.}
+Fitted at $L=32$ and evaluated against the exact score of longer chains
+(Table~\ref{tab:length}), the fitted kernel is flat: the law is local, so inference at any length
+is the same exact recursion. The convolutional and recurrent networks improve slightly, as they
+should, since longer chains have proportionally fewer boundary sites. The transformer with learned
+relative positions degrades by an order of magnitude --- a failure of the positional encoding
+beyond its training length, not of the score it learned.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Length extrapolation at $M=2048$: pooled relative score error of estimators fitted at
+$L=32$ and evaluated against the tree-exact score at longer chains, mean over $16$ seeds.}
+\label{tab:length}
+\begin{tabular}{l dddd}
+\toprule
+estimator & $L=32$ & $L=64$ & $L=128$ & $L=256$ \\
+\midrule
+EM--BP ($C=8$)     & 0.023 & 0.023 & 0.023 & 0.023 \\
+bidirectional GRU  & 0.060 & 0.057 & 0.057 & 0.056 \\
+1-D U-Net          & 0.066 & 0.064 & 0.062 & 0.062 \\
+dilated TCN        & 0.068 & 0.066 & 0.065 & 0.064 \\
+window head        & 0.118 & 0.099 & 0.088 & 0.082 \\
+transformer        & 0.063 & 0.243 & 0.514 & 0.703 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Chapter 11 --- which answers change}\label{sec:ch11}
+
+\paragraph{RQ5, recovering an unknown transition.}
+The answer holds and gains a sentence. The E-step is structurally exact, recovery is demonstrated
+numerically over the studied regime, and the uneven settling of the coordinates is real. We can now
+add that the estimator is statistically efficient, so the unevenness belongs to the channel and not
+to the algorithm. The stopping-rule warning becomes sharper rather than weaker: a rule read off the
+correlation trace certifies a kernel whose shape coordinate the data may no longer identify at all.
+
+\paragraph{RQ6, what supplying the Markov assumption is worth.}
+The answer changes in its numbers and in its scope. The ranges $6.6$--$10.9\times$ and
+$2.3$--$6.1\times$ are superseded by $2.83\times$ against the best of six architectures under one
+recipe. The third scope condition --- that the comparison does not rank methods at a matched
+information interface --- can be removed, because that comparison now exists and gives
+$7.3\times$. The capacity subsection of the same chapter must be rewritten in the opposite
+direction.
+
+\paragraph{The retired claim.}
+The capacity result should be stated as retired rather than quietly dropped, together with the
+diagnosis of why it arose. The same applies to the claim of ours that our own screen refuted this
+week. The project keeps a negative-results record for exactly this, and both entries are in it.
+
+\section{Generation and the boundary of the advantage}\label{sec:gen}
+
+Two results completed while this report was being written. Both were pre-registered and both
+address questions Chapter~10 raises but does not settle.
+
+\paragraph{Does score accuracy transfer to generation?}
+Every arm drives the same reverse SDE from the same initialisation along the same Brownian path, so
+the comparison is paired within a seed and the integrator is common to all of them. The
+discretisation was measured separately and is not what separates the arms: against an $800$-step
+reference the strong error is $0.0190$, $0.0087$ and $0.0033$ at $100$, $200$ and $400$ steps,
+roughly halving per doubling, while the excess kurtosis of the generated sequences is stable at
+$2.00$--$2.05$ across the whole ladder.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Generation at $M=2048$, sixteen seeds, every arm on the same Brownian path within a seed.
+The deficit is the paired difference in mean $\log p_{t_{\min}}$ per sequence against the arm driven
+by the exact score, in nats, with a seed bootstrap; the kurtosis column is $|$generated $-$
+reference$|$, the reference sample having excess kurtosis $1.936$.}
+\label{tab:generation}
+\begin{tabular}{l l dd}
+\toprule
+score driving the sampler & deficit vs exact (nats) & \multicolumn{1}{c}{kurt.\ error} & \multicolumn{1}{c}{cov.\ error} \\
+\midrule
+exact (tree BP)         & ---                        & 0.119 & 0.070 \\
+EM--BP ($C=8$), fitted  & $+0.09$\ \ $[+0.00,+0.19]$ & 0.177 & 0.077 \\
+bidirectional GRU       & $+0.32$\ \ $[+0.17,+0.46]$ & 0.385 & 0.102 \\
+window head             & $+1.05$\ \ $[+0.79,+1.31]$ & 0.474 & 0.290 \\
+LMMSE (covariance twin) & $+1.70$\ \ $[+1.68,+1.71]$ & 1.939 & 0.069 \\
+isotropic               & $+46.2$                    & 1.936 & 0.908 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The ordering is the one the score errors predict, and the fitted kernel is nearest the exact score
+by a wide margin: its deficit is $0.09$ nats against $0.32$ for the best network and $1.70$ for the
+covariance twin. The deficit is small but real --- an earlier four-seed run suggested the fitted
+score matched the exact one, and sixteen seeds show it does not. The second-order score is the
+instructive failure. On the covariance error it is the best arm in the
+table, marginally ahead of the exact score, which is what Proposition~1 predicts. On the fourth
+cumulant it is the worst: it generates an essentially Gaussian chain with the right covariance. A
+generative model evaluated only on second-order distances would score it a success.
+
+\paragraph{Where does the advantage stop?}
+The structured estimator assumes a first-order Markov chain. Four Gaussian departures from that
+assumption were swept, each with a scalar strength $\varepsilon$ and an exact score of its own, so
+every arm is scored against the truth of the perturbed model rather than against the chain.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Misspecification at sixteen seeds: ratio of the window head's pooled error to EM--BP's,
+at zero strength and at the largest strength swept, $M=2048$. Above $1$ the misspecified chain
+estimator still wins. The break-even is reported as the bracket between the two grid points that
+straddle it, with the interpolated crossing in parentheses; we do not fit a crossing. The
+long-range row is the correction against the eight-seed draft.}
+\label{tab:misspec}
+\begin{tabular}{@{}l l d d d l@{}}
+\toprule
+mechanism & what it breaks & \multicolumn{1}{c}{$\varepsilon=0$} & \multicolumn{1}{c}{$\varepsilon_{\max}$} & \multicolumn{1}{c}{ratio} & break-even \\
+\midrule
+rank-one global latent   & nothing structural & 15.55 & 1.00 & 3.97 & not reached \\
+AR(2) second coefficient & the order          & 20.78 & 0.40 & 0.96 & $(0.3,\,0.4)$, $0.38$ \\
+long-range coupling      & the precision band & 14.11 & 0.40 & 1.00 & not reached \\
+site-varying $\rho$      & homogeneity        & 14.22 & 0.14 & 0.98 & $(0.10,\,0.14)$, $0.14$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The pattern is interpretable, and it is not quite the one the eight-seed draft reported. A
+rank-one global latent is absorbed by the fitted correlation and never reverses the ordering,
+because it does not break the conditional independence the estimator exploits; that stands. Two
+mechanisms that do break it --- adding an order, and making the chain inhomogeneous --- reverse it
+at a measurable strength, and the brackets are now tight.
+
+Long-range coupling is the correction. At eight seeds its ratio fell below $1$ at
+$\gamma=0.4$ and was reported as a reversal near that point. At sixteen it does not: the paired
+log-ratio is $+0.004$ with interval $[-0.000,\,0.009]$, a tie rather than a crossing, at both
+sample sizes. The eight-seed reading was inside its own noise. This also retires an inherited
+claim: the thesis reports the advantage reversing under long-range coupling near $\gamma\approx
+0.1$, from a single draw per cell against an unscreened baseline. Against a screened baseline with
+sixteen seeds there is no reversal anywhere up to $\gamma=0.4$.
+
+What survives is the boundary the chapter lacked, stated more carefully: the advantage is not a
+general property of ``having structure'', it is specific to the structure being approximately
+right; breaking the order or the homogeneity costs it at a strength we can now name, and breaking
+the precision band or adding a global latent does not cost it within the range we swept. The two
+sample sizes also separate the two failure modes as predicted --- at zero strength the EM--BP error
+halves from $0.019$ to $0.010$ between $M=512$ and $M=2048$, which is estimation; at the largest
+AR(2) strength it moves from $0.2135$ to $0.2136$, which is bias, and no amount of data will move
+it.
+
+\section{How far the results travel}\label{sec:robust}
+
+Everything above is measured at one point of the model's parameter space: a Laplace innovation,
+$\rho=0.85$, chain length $32$. Four further runs ask whether that matters. Two of them strengthen
+the chapters; two of them require corrections, which are made here.
+
+\subsection{The capacity contrast holds in every regime}\label{sec:regimes}
+
+The capacity result is the load-bearing one, so it was re-run across five correlations
+$\rho\in\{0.3,0.5,0.7,0.85,0.95\}$ and three chain lengths $L\in\{16,32,64\}$, eight seeds each,
+everything else at the frozen protocol.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Capacity across regimes: mean pooled relative score error of the Gaussian-innovation
+kernel ($C=1$) and the mixture ($C=8$), and their paired difference with a percentile bootstrap
+over seeds. Negative favours the mixture. Every interval excludes zero. $L=64$ shown; the shorter
+chains agree.}
+\label{tab:regimes}
+\begin{tabular}{l d d d l d}
+\toprule
+$\rho$ & \multicolumn{1}{c}{$t_*$} & \multicolumn{1}{c}{$C=1$} & \multicolumn{1}{c}{$C=8$} & paired difference & \multicolumn{1}{c}{$\kappa_4$ of marginal} \\
+\midrule
+0.30 & 0.31 & 0.286 & 0.033 & $-0.253$\; $[-0.259,-0.246]$ & 2.50 \\
+0.50 & 0.55 & 0.266 & 0.035 & $-0.231$\; $[-0.239,-0.224]$ & 1.80 \\
+0.70 & 0.86 & 0.227 & 0.032 & $-0.195$\; $[-0.198,-0.192]$ & 1.03 \\
+0.85 & 1.22 & 0.167 & 0.028 & $-0.139$\; $[-0.142,-0.135]$ & 0.48 \\
+0.95 & 1.67 & 0.086 & 0.025 & $-0.061$\; $[-0.064,-0.058]$ & 0.15 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two things are worth having. First, the result is a property of the estimator and not of the
+corner: the mixture wins in all fifteen cells with the interval excluding zero, and the margin
+moves smoothly with $\rho$ rather than appearing at one point. Second, and more useful to us, the
+sweep audits the apparatus at every cell. Proposition~1 says the $C=1$ arm \emph{must} coincide
+with the LMMSE of the true covariance; it does, to $0.002$ in the median cell and $0.010$ in the
+worst, and its fitted excess kurtosis is zero to three decimals everywhere. That is a check on the
+grid, the message passing, the EM and the scoring simultaneously, repeated at fifteen independent
+configurations, and it passes at all of them. The $C=8$ arm recovers the innovation's true excess
+kurtosis of $3$ at every correlation ($2.85$ to $3.40$), with its spread across seeds widening from
+$\pm0.33$ at $\rho=0.3$ to $\pm1.38$ at $\rho=0.85$ --- the shape gets harder to see, not
+differently placed, which is the same information story from a third direction.
+
+The margin shrinks monotonically with $\rho$, in the direction the theory gives: a strongly
+correlated chain has a nearly Gaussian marginal, its excess kurtosis falling as
+$3(1-\rho^2)/(1+\rho^2)$ (last column), so there is less fourth-order structure for capacity to
+buy. We report that as a direction and not as a rate. The pooled error runs over a schedule whose
+informative window itself moves with $\rho$, so its trend is not the exponent of the closure
+theorem, and fitting one to it would be over-reading.
+
+\subsection{The reference grid is not uniformly converged}\label{sec:grid}
+
+Every number in this project is measured against tree-exact belief propagation on a grid of $401$
+points on $[-8,8]$. That choice was validated once, at the frozen configuration; every other
+configuration we touch has inherited the validation without earning it. A sweep of five innovation
+families $\times$ four correlations $\times$ twelve levels $\times$ seven candidate grids against a
+$(3201,\,12)$ reference now measures it, and the result has a reassuring half and an uncomfortable
+half.
+
+The reassuring half: \emph{at the frozen configuration the operating grid is excellent}. The
+pooled drift of the posterior-mean field against the reference is $9.2\times10^{-6}$, the worst
+single level $3.7\times10^{-5}$, and $2.8\times10^{-4}$ of the belief mass sits in the outermost
+$2\%$ of the domain. Nothing in Sections~\ref{sec:ch8}--\ref{sec:ch11} is in question.
+
+The uncomfortable half: over the whole sweep, the worst-case drift is \emph{flat in the number of
+grid points}. At half-width $8$ it is $5.411\times10^{-2}$ at $201$ points and
+$5.425\times10^{-2}$ at $1601$ --- refining by a factor of eight buys nothing --- and it falls
+only when the domain widens, to $2.6\times10^{-2}$ at $(401,\,10)$ and $3.0\times10^{-3}$ at
+$(801,\,12)$. That is the signature of truncation, not of quadrature. It matters because
+``refinement'' in this project, and in the thesis before it, has meant increasing the number of
+points, and that operation cannot fix this error.
+
+The binding cell is Student-$t_5$ at $\rho=0$: essentially all of its posterior mass falls outside
+$[-8,8]$, and the drift is $5.4\times10^{-2}$. \emph{That cell is reported}, in the phase appendix
+that orders the families by kurtosis at each correlation. Its entries are now flagged in the
+manuscript, marked in the figure, and excluded from the ordering claim; two recomputations at
+$(801,\,12)$ and $(1601,\,16)$ are queued to establish what they should be. No result in the
+chapters above depends on it --- the chapters live at $\rho=0.85$ with a Laplace innovation --- but
+it is a reported number outside its validated envelope, and it should not have been.
+
+\subsection{The iteration budget, audited across every run}\label{sec:budget}
+
+The capacity reversal was caused by a stopping rule. That made it worth asking, of every run we
+have, how often the validation-selected checkpoint is the \emph{last} rung of the EM ladder ---
+which is the signal that validation was still improving when the ladder ran out, and that a longer
+ladder might have selected differently.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Fraction of cells whose validation-selected checkpoint is the last rung of the
+$1200$-iteration ladder. A high rate does not by itself invalidate a result; it means the result is
+a statement about a budget until something shows otherwise.}
+\label{tab:atcap}
+\begin{tabular}{@{}l l >{\raggedright\arraybackslash}p{6.1cm}@{}}
+\toprule
+run & rate & reading \\
+\midrule
+E02a (capacity)         & up to $0.69$ at $M=2048$            & \emph{cleared}: the $400$-iteration replication reproduces every overlapping cell to $0.001$, so the estimates have plateaued well before the cap \\[0.35em]
+E13 (regimes)           & $\le 0.25$; $C=1$ never             & no action \\[0.2em]
+E08 (misspecification)  & $\approx 0.10$                      & no action \\[0.2em]
+E06 (learning)          & $0.12$--$0.38$ for $t\le1$          & \emph{cleared} at the informative levels \\
+                        & $0.88$ at $t=1.4$, $0.75$ at $t=2$  & \textbf{flagged}, see below \\[0.2em]
+E12 (sample complexity) & $1.00$ at $t=1$, $M\ge4096$         & \textbf{confounded}, see below \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{The flagged claim.} Section~\ref{sec:ch9} states that the estimator attains the
+Cram\'er--Rao bound over the informative levels and leaves it past the crossover, at $t=1.4$ and
+$t=2$. The first half is safe: at every level up to $t=1$, validation stops of its own accord well
+inside the ladder, so the budget is not binding and the efficiency result stands. The second half
+is not: at exactly the two levels where we report the estimator leaving the bound, it is also
+running out of iterations. The departure may be information or it may be budget, and this run
+cannot tell which. The manuscript now says so, and a control with the ladder extended sixfold is
+queued. Nothing else in the chapter depends on it.
+
+\paragraph{The confounded run.} The sample-complexity experiment was designed to escape the
+saturation problem by asking how much data buys back a fixed accuracy as the level rises --- a
+quantity that does not saturate. At $t=0.6$ and $t=0.8$ it worked. At $t=1.0$ it did not: the
+error is flat and \emph{non-monotone} in $M$, and the fitted kurtosis scatters between $0$ and
+$3.4$ across seeds with no concentration, because the EM is censored by the iteration cap in forty
+cells out of forty. At that level the experiment measured the optimiser's budget, not the sample
+size.
+
+Two one-sided statements survive, and they are worth having because they come from opposite
+directions: the covariance coordinate's log-slope is $5.40$ with interval $[2.13,\,7.57]$, which
+\emph{excludes} the shape prediction of $8$ and contains its own prediction of $4$; and the shape
+coordinate fails to reach the accuracy threshold at $t=1$ even at $M=8192$, which forces its
+log-slope above $5.54$ and \emph{excludes} $4$. The two coordinates are therefore separated, which
+is what the corollary asserts. The point estimates where a crossing exists sit on the predictions
+--- $7.54$ and $8.53$ against $8$, and $4.44$ for the paired ratio against $4$ --- but their
+bootstrap intervals exclude nothing at all, and we do not offer them as evidence. A re-run with
+five levels, sixteen seeds and a ladder extended to $8000$ is queued.
+
+\section{Status of the evidence, and what is still running}\label{sec:status}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Confirmatory runs. \emph{Frozen} means every file in the output directory is pinned by
+SHA-256 in its registry entry, with the commit that produced it; a generator refuses to read an
+output that is not frozen or whose bytes have changed.}
+\label{tab:status}
+\begin{tabular}{l l l}
+\toprule
+run & what it establishes & state \\
+\midrule
+E01  & order-by-order decay verified on the chain              & frozen \\
+E02a & capacity under equal stopping                            & frozen \\
+E02b & capacity against innovation shape at fixed covariance    & frozen \\
+E03  & six architectures, matched interface, length             & frozen \\
+E04  & grid refinement on the fitted models                     & frozen \\
+E05  & generation under each score, paired noise                & frozen \\
+E06  & learning through noise, against the information bound    & frozen \\
+E07  & the second-order floor across correlation                & frozen, one cell flagged \\
+E08  & misspecification and its break-even (16 seeds)           & frozen \\
+E09  & infinite-data reference per capacity                     & frozen \\
+E10  & capacity in the thesis's own estimand                    & frozen \\
+E13  & the capacity contrast across $\rho$ and $L$              & frozen \\
+\midrule
+E06b & the asymptotic exponents at $\rho=0.5$                   & frozen, inconclusive \\
+E11  & the quadrature envelope across families and $\rho$       & frozen; found the exclusion \\
+E12  & sample complexity by order                               & frozen, confounded \\
+\midrule
+E06c & the same nine levels, ladder extended sixfold            & queued \\
+E07b, E07c & the family ladder at $(801,12)$ and $(1601,16)$    & queued \\
+E11b & the quadrature envelope at $L=64$ and $128$              & queued \\
+E12b & five levels, sixteen seeds, ladder to $8000$             & queued \\
+E14  & the matched comparison across $\rho$ and $L$             & queued \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Refinement} is complete and is as clean as this kind of check gets. Over the whole ladder ---
+$401$, $801$ and $1601$ grid points, half-widths $8$ and $10$ --- every arm's error agrees to five
+decimal places and the reference field itself moves by at most $10^{-5}$. No number in this report
+is an artefact of the quadrature at the frozen configuration. That sweep has since been extended to
+the other families and correlations, where the answer is less comfortable and is reported in
+Section~\ref{sec:grid}.
+
+Seven jobs are queued on the cluster against pre-registrations written before submission. Four are
+controls for the two problems above; one carries the quadrature envelope to the longer chains. The
+sixth and seventh are the one addition that is about strength rather than repair: \textbf{the
+information-matched comparison, re-run across three correlations and two chain lengths with the
+networks re-screened inside each regime}. That comparison is currently stated at a single point,
+and it is the claim a referee will press on hardest; the capacity result has now been shown to
+travel, and the comparison against networks has not.
+
+\paragraph{Three infrastructure faults, for the record.}
+Jobs were inheriting the login shell's $600$-second CPU limit, which killed one run outright and
+left another holding an idle compute node for ten hours while the scheduler reported it running.
+Two drivers wrote their results only at the very end, so a timeout would have lost everything; both
+now write per cell and resume. And the site-varying misspecification mechanism is undefined at its
+largest registered strength. All three are fixed; the third is a registered amendment.
+
+\section{Decisions requested}\label{sec:ask}
+
+\begin{enumerate}
+\item \hi{How should the capacity reversal be presented?} Either rewrite the capacity section of
+Chapter~10 around the new result and retain the old figure as a documented artefact, or keep both
+and make the diagnosis itself the finding. The second is more honest about how the error surfaced
+and costs roughly a page.
+
+\item \hi{Is the matched-interface comparison the headline, or a robustness check?} It is the
+stronger claim and it removes a scope condition the thesis carried. Promoting it changes the
+framing from ``structure beats networks'' to ``structure beats networks at equal information, and
+the unmatched comparison understates it''.
+
+\item \hi{Where does the efficiency result belong?} The estimator attaining the Cram\'er--Rao bound
+is what turns the two rates from an observation about EM into a statement about information. It
+reads naturally in Chapter~9 or in the theory chapter, and should be stated once with a reference
+from the other.
+
+\item \hi{How far should the Lean verification go?} Four algebraic constants are machine-checked.
+The remainder bounds are analysis and would be a substantial effort; the projection operator behind
+Proposition~1 is the one load-bearing step still in prose. Is the current scope the right stopping
+point?
+
+\item \hi{Do we pursue the asymptotic exponents, or claim the rates only where they are
+established?} Two attempts have now failed for two different reasons. The error-at-fixed-$M$ route
+saturates: the window at $\rho=0.5$ is three levels wide, too narrow to pin an exponent
+(Section~\ref{sec:ch9}). The sample-complexity route avoids saturation by construction but was
+confounded by the iteration budget at its highest level (Section~\ref{sec:budget}); the re-run
+that removes the confound is queued, and if it lands we will have the exponents, and if it does
+not we will have two one-sided statements that separate the coordinates without naming a rate. The
+fallback, which is what the write-up currently does, is to establish the rates exactly by
+computation and the estimator's efficiency by measurement, and to state the sample-complexity
+consequence only where the coordinate is identifiable. \emph{Our recommendation: hold the claim at
+the fallback and let the re-run upgrade it if it can, rather than write the stronger version and
+retract it.}
+\item \hi{Does the misspecification boundary belong in Chapter~10 or in the conclusions?} It is
+the cleanest statement we have about when the method should \emph{not} be used --- breaking the
+order or the homogeneity costs the advantage at a strength we can name, while a global latent and
+a widened precision band do not cost it within the range swept. It reads as a limitation, but it
+is a measured one, which is unusual enough to be worth foregrounding.
+
+\item \hi{Do we wait for the regime sweep of the matched comparison before fixing the framing?}
+The headline factor of $7.3$ is stated at one correlation and one chain length. The capacity
+result has now been shown to travel; this one has not been tested that way, and it is the claim a
+referee will press on. The run is queued and needs roughly two days of cluster time.
+\emph{Our recommendation: yes} --- the cost is small against the risk of building a framing on a
+single point, and the sweep can only strengthen or usefully qualify it.
+
+\item \hi{How should the quadrature exclusion be handled in the write-up?} One reported cell lies
+outside the validated envelope (Section~\ref{sec:grid}). Three options: recompute and replace it
+silently once the queued runs land; recompute and report the movement as a numerical appendix; or
+keep the exclusion visible as a finding about the instrument, since ``refining the grid does not
+fix a domain error'' is a real and transferable observation about this class of method.
+\emph{Our recommendation: the second} --- honest, short, and it does not inflate a housekeeping
+fix into a contribution.
+\end{enumerate}
+
+\vspace{1.4em}
+\hrule height 0.4pt
+\vspace{0.7em}
+\noindent
+{\footnotesize Every number above comes from a registered experiment whose output directory is
+pinned by SHA-256 in its registry entry, together with the commit that produced it and the seeds it
+used. The protocol shared by all arms is a single frozen object, so two arms differ only in the one
+factor each experiment varies. Runs were executed on the Bocconi HPC. Supporting material: the
+claim--evidence matrix, the negative-results record, the experiment registry and the
+reproducibility notes in the project repository.}
+
+\end{document}
