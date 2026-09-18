@@ -18,5 +18,13 @@
    "resources": "compute/40cpu/2-23:00",
    "note": "Submitted from the clean deployment 92da540 (hpc/.last_deploy.env); outputs land in ~/msd-icml/outputs/92da540-20260918T180147Z/E12b/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. Pre-registered before submission; nothing in this entry's hypothesis or analysis may change after the result is seen."
   }
+ ],
+ "amendments": [
+  {
+   "date": "2026-09-18T23:00 BST (job 662796 still PENDING in the queue; no cell has run)",
+   "what": "The pre-declared comparison of the fitted log-slopes of M*(t) with the asymptotic exponents 4 and 8 is replaced by a comparison with the exact information curve: M*(t) is predicted to track 1/I_eff(t) per coordinate, the Cramer-Rao curve computed by Fisher's identity at rho = 0.5 (scratch analysis 18 Sep, to be registered as E21). The asymptotic slopes are the limit of that curve, not its value on the swept levels.",
+   "why": "Computed before any E12b data exist: at rho = 0.5 the local slope d log(1/I_beta)/dt of the shape coordinate over the swept levels t in [0.6, 1.0] is 6.1-6.9 (asymptote 8), and that of the correlation coordinate 3.8-3.9 (asymptote 4), because the expansion parameter e^{-2t} lambda_max is still 0.9-0.4 there. A slope of 6.5 measured on those levels would confirm the corollary, and the original plan would have recorded it as a failure. The slopes 4 and 8 remain the prediction for the limit t -> infinity, which is outside the identifiable window at M <= 8192 (CRB(kappa4) exceeds 1 beyond t = 1.05 at M = 8192).",
+   "unchanged": "Levels, seeds, ladder, M ladder, estimator, the reading of M* by log-linear interpolation, the exactly enumerated seed bootstrap, and the reporting of at_cap rates as a condition of the reading."
+  }
  ]
 }
