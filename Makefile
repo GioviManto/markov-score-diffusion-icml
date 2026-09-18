@@ -39,6 +39,7 @@ tables:          ## regenerate every generated .tex fragment under paper/section
 	@for g in capacity:E02a/capacity.csv learning:E06/levels.csv generation:E05/generation.csv refinement:E04/refinement.csv misspec:E08/misspecification.csv baseline:E03/confirm.csv family:E02b/family.csv; do \
 	  n=$${g%%:*}; f=outputs/$${g#*:}; if [ -f $$f ]; then $(PY) tools/make_$${n}_numbers.py; fi; done
 	@if [ -f outputs/E07/ladder.csv ]; then $(PY) tools/make_fig_phase.py; fi
+	@if [ -f outputs/E15/locality.csv ]; then $(PY) tools/make_fig_locality.py; fi
 
 paper:           ## build paper/main.pdf with tectonic (runs bibtex itself)
 	cd paper && tectonic -X compile main.tex

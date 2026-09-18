@@ -6,8 +6,12 @@
   head's error to EM--BP's against the misspecification strength, for four Gaussian
   departures from the chain with exact reference scores (rank-one global latent,
   long-range precision coupling, an AR(2) second coefficient at fixed lag-one correlation,
-  site-dependent $\corr$), at two sample sizes. Above the dotted line the misspecified
-  chain estimator still wins.}
+  site-dependent $\corr$), at two sample sizes (top row). Above the dotted line the misspecified
+  chain estimator still wins. Bottom row: EM--BP's own error at both sizes (points,
+  paired standard errors) against the closed-form bias $b(\varepsilon)$ of the
+  Kullback--Leibler projection (dotted) and the finite-sample prediction
+  $\sqrt{b(\varepsilon)^2+v/\nseq}$ (lines) with $v$ read from the well-specified cells
+  (\cref{app:audit}).}
   \label{fig:misspec}
 \end{figure*}
 Every departure is Gaussian so that its score is exact, and every arm is scored against

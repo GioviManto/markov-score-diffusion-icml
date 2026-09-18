@@ -77,12 +77,20 @@ def main() -> int:
 
     fs.apply()
     mechs = [m for m in ("global", "longrange", "ar2", "sitevar") if m in summ.mechanism.unique()]
-    # One shared y-axis and one shared legend. Four copies of the same axis label and the
-    # same two-entry legend cost four panels' worth of space and, because every curve
-    # starts high on the left, put the legend on top of the data in each of them. Sharing
-    # the scale also makes the four mechanisms comparable, which is the point of the row.
-    fig, axes = plt.subplots(1, len(mechs), figsize=(fs.FULL_W, 2.05), sharey=True,
-                             gridspec_kw=dict(wspace=0.18), squeeze=False)
+    # The closed-form bias of the one-view KL projection (E17) is drawn under the ratio
+    # row when its frozen output exists: EM-BP's measured error at both sizes against
+    # b(eps) and sqrt(b^2 + v/M). Without E17 the figure is the single ratio row.
+    bias_path = ROOT / "outputs/E17/bias.csv"
+    bias = pd.read_csv(bias_path) if bias_path.exists() else None
+    if bias is not None:
+        bias = bias[bias.eps >= 0]
+    nrows = 2 if bias is not None else 1
+    # One shared y-axis per row and one shared legend. Four copies of the same axis label
+    # and the same two-entry legend cost four panels' worth of space and, because every
+    # curve starts high on the left, put the legend on top of the data in each of them.
+    # Sharing the scale also makes the four mechanisms comparable, which is the point.
+    fig, axes = plt.subplots(nrows, len(mechs), figsize=(fs.FULL_W, 2.05 if nrows == 1 else 3.35),
+                             sharey="row", sharex="col", gridspec_kw=dict(wspace=0.18, hspace=0.10), squeeze=False)
     handles = None
     for k, (ax, mech) in enumerate(zip(axes[0], mechs)):
         for j, n in enumerate(sorted(summ.n_chains.unique())):
@@ -91,7 +99,9 @@ def main() -> int:
                 continue
             ax.plot(d.eps, d.ratio, color=fs.CAT[j], marker=fs.MARKERS[j], ms=3, lw=1.3, ls=fs.LINESTYLES[j], label=f"$M={n}$")
         ax.axhline(1.0, color=fs.MUTED, lw=0.7, ls=":")
-        ax.set_yscale("log"); ax.set_xlabel(MECH_NAME.get(mech, mech))
+        ax.set_yscale("log")
+        if nrows == 1:
+            ax.set_xlabel(MECH_NAME.get(mech, mech))
         ax.margins(x=0.08)
         if k == 0:
             ax.set_ylabel("window / EM–BP error")
@@ -99,8 +109,31 @@ def main() -> int:
     # headroom above the highest point so the legend strip never reaches the curves
     top = summ.ratio.max() if "ratio" in summ else 1.0
     axes[0][0].set_ylim(top=top * 2.4)
+    if bias is not None:
+        for k, (ax, mech) in enumerate(zip(axes[1], mechs)):
+            b = bias[bias.mechanism == mech].sort_values("eps")
+            for j, n in enumerate(sorted(summ.n_chains.unique())):
+                d = summ[(summ.mechanism == mech) & (summ.n_chains == n)].sort_values("eps")
+                if "em_bp" not in d:
+                    continue
+                ax.errorbar(d.eps, d.em_bp, yerr=d.em_bp_se, color=fs.CAT[j], marker=fs.MARKERS[j], ms=3.2,
+                            lw=0, elinewidth=0.8, capsize=1.5, label=f"$M={n}$")
+                col = f"pred_{n}"
+                if col in b and len(b):
+                    ax.plot(b.eps, b[col], color=fs.CAT[j], lw=1.1, ls=fs.LINESTYLES[j],
+                            label=r"$\sqrt{b^2+v/M}$" if j == 0 else None)
+            if len(b):
+                ax.plot(b.eps, b.bias_kl.clip(lower=1e-4), color=fs.INK2, lw=0.9, ls=(0, (1, 1.2)), label=r"$b(\varepsilon)$")
+            ax.set_yscale("log"); ax.set_xlabel(MECH_NAME.get(mech, mech)); ax.margins(x=0.08)
+            if k == 0:
+                ax.set_ylabel("EM–BP error")
+                h, l = ax.get_legend_handles_labels()
+                keep = [(hh, ll) for hh, ll in zip(h, l) if not ll.startswith("$M=")]
+                ax.legend([hh for hh, _ in keep], [ll for _, ll in keep], loc="upper left", fontsize=6.5,
+                          frameon=False, handlelength=2.2, borderaxespad=0.3)
+        axes[1][0].set_ylim(bottom=5e-3)
     if handles and handles[0]:
-        fig.legend(*handles, loc="upper center", bbox_to_anchor=(0.5, 1.06), ncol=2,
+        fig.legend(*handles, loc="upper center", bbox_to_anchor=(0.5, 1.04 if nrows == 2 else 1.06), ncol=2,
                    fontsize=7, frameon=False, columnspacing=1.6, handletextpad=0.5)
     fs.save(fig, figdir / "fig_misspec.pdf")
     print("wrote", figdir / "fig_misspec.pdf", f"({len(macros)} macros)")

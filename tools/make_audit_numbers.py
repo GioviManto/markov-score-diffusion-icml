@@ -43,7 +43,8 @@ def main() -> int:
                 if c.startswith("floor_r") or c.startswith("gauss_r"):
                     M[f"audLoc{_mac(c.replace('_', '')).capitalize()}Rho{tag}"] = f"{r[c]:.3f}"
             M[f"audLocLmmseRho{tag}"] = f"{r.lmmse:.3f}"
-        # level at which the radius-4 floor peaks at rho = 0.85
+        # level at which the radius-4 floor peaks at rho = 0.85 (the sweep fig_locality draws)
+        M["audLocRhoMain"] = f"{0.85:g}"
         s = d[(d.rho == 0.85) & (d.t > 0)]
         if len(s):
             j = s.floor_r4.idxmax(); M["audLocPeakLevel"] = f"{s.loc[j, 't']:.2f}"; M["audLocPeakFloorRfour"] = f"{s.loc[j, 'floor_r4']:.3f}"
