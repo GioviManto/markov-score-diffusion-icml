@@ -7,8 +7,23 @@
  "seeds": {
   "confirmatory": "rep 0 of E01's closure stream"
  },
- "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "status": "FROZEN E16 2026-09-18T22:43:45Z; REGISTERED 2026-09-18 (audit); laptop run",
  "registered": "2026-09-18",
  "script_sha256": "c9880c5f59bfffbf99a06ff51314373526020b6ec06de924c0fede213751d1fc",
- "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance.",
+ "frozen_outputs": {
+  "outputs/E16/edgeworth.csv": "76e04899f2a99e1a4d450d39066f385908b1ddba7383bff639f42367dbea90fc",
+  "outputs/E16/params_oracle.json": "960798e3ed807302b8ad4f870343b95b16119e2b0768715eaa9438c26105ee86"
+ },
+ "frozen_at": {
+  "E16": "2026-09-18T22:43:45Z"
+ },
+ "frozen_commit": {
+  "E16": "538d47a34377f4a659baee31725ab8f2b4afb5ac"
+ },
+ "frozen_run_commits": {
+  "E16": [
+   "de2a224"
+  ]
+ }
 }

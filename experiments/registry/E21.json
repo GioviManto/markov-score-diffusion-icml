@@ -7,8 +7,25 @@
  "seeds": {
   "confirmatory": "reps 0-3 of the tag 'e12b-power'"
  },
- "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "status": "FROZEN E21 2026-09-18T22:43:47Z; REGISTERED 2026-09-18 (audit); laptop run",
  "registered": "2026-09-18",
  "script_sha256": "3bb7826568184f6c88a27afe97fe927e6c38da6502fa1f01970fae05a9b141a1",
- "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance.",
+ "frozen_outputs": {
+  "outputs/E21/information.csv": "c8d354d27741417a5a37ebdd55b492b84e6876c8369d6b15f08c74d636439b6e",
+  "outputs/E21/scalar_constant.csv": "2529e320ad6532175c7b203b525feeaa3387ce568b42eaf76327ec6c2d6a79d6",
+  "outputs/E21/params_constant.json": "2f93e5cbc02416d875a9a11a5f3300090a2fece6b98c5ea5d84853b741cfb539",
+  "outputs/E21/params_curve.json": "eae55a479bba497e089c77f05c615dd878c2d25de425d246aee55d8d0267a97f"
+ },
+ "frozen_at": {
+  "E21": "2026-09-18T22:43:47Z"
+ },
+ "frozen_commit": {
+  "E21": "538d47a34377f4a659baee31725ab8f2b4afb5ac"
+ },
+ "frozen_run_commits": {
+  "E21": [
+   "de2a224"
+  ]
+ }
 }

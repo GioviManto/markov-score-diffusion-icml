@@ -7,8 +7,23 @@
  "seeds": {
   "confirmatory": "none (deterministic)"
  },
- "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "status": "FROZEN E17 2026-09-18T22:43:46Z; REGISTERED 2026-09-18 (audit); laptop run",
  "registered": "2026-09-18",
  "script_sha256": "0edc371c8409582b952667709eb2d0ec33f2b725ce5597fdcc61e70aa05f56e3",
- "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance.",
+ "frozen_outputs": {
+  "outputs/E17/bias.csv": "093039e2d216e4794bb3480d4806df0b54a8071c8860ce36a9a2ce9e6ebf8b54",
+  "outputs/E17/params_bias.json": "cba8179202c5a42f6b39a5ddf02ff943523c4204bdb14e882eb63b6f6670b4db"
+ },
+ "frozen_at": {
+  "E17": "2026-09-18T22:43:46Z"
+ },
+ "frozen_commit": {
+  "E17": "538d47a34377f4a659baee31725ab8f2b4afb5ac"
+ },
+ "frozen_run_commits": {
+  "E17": [
+   "de2a224"
+  ]
+ }
 }

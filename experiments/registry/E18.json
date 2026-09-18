@@ -7,8 +7,28 @@
  "seeds": {
   "confirmatory": "reps 0-1 of the tag 'e18-chain'"
  },
- "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "status": "FROZEN E18 2026-09-18T22:43:46Z; REGISTERED 2026-09-18 (audit); laptop run",
  "registered": "2026-09-18",
  "script_sha256": "9f460874ae1661333aa251258ac0714100125368941f1dce936286404063c079",
- "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance.",
+ "frozen_outputs": {
+  "outputs/E18/closure_wide.csv": "3d089dd95ac487f9d99411d6dca0e45a0a27400ae5b857bea170096dfb37eeaa",
+  "outputs/E18/constant.csv": "6ed8bd402a244045a781daf8299b5d55151a9acca7573c354a08c77d7a8e0cef",
+  "outputs/E18/scalar_gap.csv": "ce26ca7e04e75ad47eed8634cce1010bbb2389c613a5a0d0a46128153196c1f9",
+  "outputs/E18/params_chain.json": "692d40eb2b068b6f81bf274a6cea133b78c35bd744d34cc83a120ba7b784f656",
+  "outputs/E18/params_constant.json": "749c38c81a36e5dfcba9f4d86bd0093fc78eba966078aac2fb1e80ed4a8d36f9",
+  "outputs/E18/params_scalar.json": "19ead65c1b969492508acb0645816d7d076e174ca3cc610bd614e34cf03313e7"
+ },
+ "frozen_at": {
+  "E18": "2026-09-18T22:43:46Z"
+ },
+ "frozen_commit": {
+  "E18": "538d47a34377f4a659baee31725ab8f2b4afb5ac"
+ },
+ "frozen_run_commits": {
+  "E18": [
+   "4986f07",
+   "9dc7004"
+  ]
+ }
 }
