@@ -7,8 +7,23 @@
  "seeds": {
   "confirmatory": "deterministic given the rng tag; one draw of 512 chains per rho"
  },
- "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "status": "FROZEN E15 2026-09-18T22:58:43Z; REGISTERED 2026-09-18 (audit); laptop run",
  "registered": "2026-09-18",
  "script_sha256": "d0e4de1b9be0ee38a164609318def19c9a53583608fb4216fdd67a105ab07d61",
- "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance.",
+ "frozen_outputs": {
+  "outputs/E15/locality.csv": "36c6d4b1fca88a71f926c3bd80f33b99d8e14f14e558b22ef0b2d331b23d64c4",
+  "outputs/E15/params_floor.json": "d200e4ea69f3d9d2f8ba870ffd81041e0bbe126dde6ac1ae773f6dc11343962a"
+ },
+ "frozen_at": {
+  "E15": "2026-09-18T22:58:43Z"
+ },
+ "frozen_commit": {
+  "E15": "dac757e4f7397e4719a4b609f0102bf86006b878"
+ },
+ "frozen_run_commits": {
+  "E15": [
+   "dac757e"
+  ]
+ }
 }
