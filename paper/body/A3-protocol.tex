@@ -6,12 +6,12 @@ Laplace chain unless stated, $\corr=0.85$, $\ivar=1-\corr^2$, $a_1\sim\normal{0}
 $\nsites=32$; grid $\ngrid=401$, $\halfwidth=8$; twelve log-spaced levels
 $t\in[0.05,3.0]$; other families Gaussian, Student-$t$ ($\nu=5$), uniform, symmetric
 two-component mixture ($\kappa=0.6$), generalised Gaussian ($\beta\in[1,6]$), all
-variance-matched. Sixteen confirmatory seeds $0$--$15$; development seeds
-$10000$--$10001$ for every architecture and hyperparameter choice (one $16{,}000$-step
-run per configuration at $\nseq\in\{32,2048\}$, ranked by pooled bulk risk). Validation and test
-bundles are drawn per seed ($1024$ and $2048$ sequences) from streams disjoint from
-every training stream; their hashes are stored with every row so pairing across arms is
-checkable.
+variance-matched. Sixteen confirmatory seeds $0$--$15$ for every comparison at the frozen
+configuration; eight for the regime sweeps; development seeds $10000$--$10001$ for every
+architecture and hyperparameter choice (one $16{,}000$-step run per configuration at
+$\nseq\in\{32,2048\}$, ranked by pooled bulk risk). Validation and test bundles are drawn
+per seed ($1024$ and $2048$ sequences) from streams disjoint from every training stream;
+their hashes are stored with every row so pairing across arms is checkable.
 
 \paragraph{Estimand.}
 Schedule-pooled relative score error
@@ -22,21 +22,29 @@ percentile bootstraps over seeds.
 
 \input{sections/tab-screen}
 
-\paragraph{Arms.}
+\paragraph{Arms and interfaces.}
 EM--BP: mixture-innovation kernel, $\ncomp$ as stated, $\corr$ initialised at $0.3$, one
-noised view per sequence with sequences split evenly across the twelve levels, checkpoint
-ladder $\{10,20,40,60,80,120,160,220,300,400\}$ selected on the validation bundle.
-Networks: trained by denoising score matching on the clean sequences with the level and
-the corruption redrawn at every step, batch $64$, Adam, gradient clipping at $1$, both
-output parameterisations, checkpoint ladder to $32{,}000$ steps selected on the validation
-bundle; the information-matched arm trains by implicit score matching on the same
-one-view noisy bundle as EM--BP and selects on the implicit objective of a held-out noisy
-bundle.
+noised view per sequence with sequences split evenly across the twelve levels
+(interface~C), checkpoint ladder $\{10,20,40,60,80,120,160,220,300,400,600,800,1200\}$
+selected on the validation bundle scored against the true kernel; selecting instead on
+held-out one-view log-evidence, which needs no true score, gives the same test error
+within seed noise (\cref{app:audit}). Networks under interface~A: trained by denoising
+score matching on the clean sequences with the level and the corruption redrawn at every
+step, batch $64$, Adam, gradient clipping at $1$, both output parameterisations,
+checkpoint ladder to $32{,}000$ steps selected on the validation bundle. Interface~B: the
+same objective on one fixed corruption per clean sequence. Interface~C: implicit score
+matching on the same one-view noisy bundle as EM--BP, with the divergence computed
+exactly for the window head and by Hutchinson's estimator otherwise, and the checkpoint
+selected on the implicit objective of a held-out noisy bundle; the true score enters
+only in the final scoring. The misspecification experiment's network is a radius-2,
+width-64 window head trained for $16{,}000$ steps under interface~A.
 
 \paragraph{Provenance.}
 Every run directory carries the commit, the dirty-tree list on the code path, the
 resolved configuration digest, the seeds, host and environment; a generator refuses to
-emit a table from a run whose code path was dirty, from an incomplete design, or from
-cells whose narrowest fitted component is under two grid cells. Every number in this
-paper is a macro emitted by such a generator; the manuscript check
-(\codefile{tools/check\_manuscript.py}) fails the build on any typed decimal.
+emit a table from a run whose code path was dirty or from an incomplete design, and
+flags, without dropping, any cell whose narrowest fitted component is under two grid
+cells. Every number in this paper is a macro emitted by such a generator; the manuscript
+check (\codefile{tools/check\_manuscript.py}) fails the build on any typed decimal, and
+an independent re-derivation of every headline number from the frozen files
+(\codefile{tools/audit\_claims.py}) runs with it.

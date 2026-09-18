@@ -115,6 +115,10 @@ def main() -> int:
         lines += ["\\bottomrule", "\\end{tabular}", "\\end{table*}"]
         (dest / "tab-baselines.tex").write_text("\n".join(lines) + "\n")
         macros["baseSeeds"] = str(int(c.seed.nunique()))
+        # at-cap rates: the fraction of confirmatory cells whose selected checkpoint is the last
+        # rung of the 32k-step ladder -- the network was still improving when training stopped
+        for (a, n), v in c.groupby(["arch", "n_chains"]).at_cap.mean().items():
+            macros[f"baseAtCap{_mac(a).capitalize()}{SIZE_TAG.get(n, str(n))}"] = f"{100*v:.0f}"
         # The best NETWORK at each size, its paired ratio against EM-BP, and whether it is below
         # the second-order floor there. Which architecture wins changes with the sample size, so
         # the text must not name one; and the networks do cross the floor at large M
@@ -151,25 +155,31 @@ def main() -> int:
         for (n, arm, arch), r in m.groupby(["n_chains", "arm", "arch"]).risk.agg(["mean", "sem"]).iterrows():
             macros[f"matched{_mac(arm).capitalize()}{_mac(arch).capitalize()}{SIZE_TAG.get(n, str(n))}"] = f"{r['mean']:.3f}"
         print(m.groupby(["n_chains", "arm", "arch"]).risk.agg(["mean", "sem"]).to_string(float_format=lambda x: f"{x:.4f}"))
-        # The comparison the paper turns on: the BEST network trained at EM-BP's own information
-        # interface (one noised view per sequence, or one fixed corruption of a clean one), against
-        # EM-BP on the same bundles. Unlike the standard-recipe rows this is information-matched.
+        # The comparison the paper turns on is the arm at EM-BP's own information interface: implicit
+        # score matching on one noised view per sequence, no clean chain, checkpoint selected on the
+        # implicit objective of a held-out noisy bundle (interface C). The one-corruption DSM arm sees
+        # the clean chain as a regression target (interface B) and is reported separately as
+        # `matchedFixed*` -- it was the headline until the 18 September audit, mislabelled as matched.
         for n in sorted(m.n_chains.unique()):
             tag = SIZE_TAG.get(n, str(n))
-            sub = m[m.n_chains == n].groupby(["arm", "arch"]).risk.mean().sort_values()
-            if not len(sub):
-                continue
-            (arm, arch), best = sub.index[0], sub.iloc[0]
-            macros[f"matchedBest{tag}"] = f"{best:.3f}"
-            macros[f"matchedBestArch{tag}"] = ARCH_NAME.get(arch, arch)
-            macros[f"matchedBestArm{tag}"] = {"ism_one_view": "implicit score matching on one noised view",
-                                              "dsm_one_corruption": "one fixed corruption of a clean sequence"}.get(arm, arm)
-            if em is not None:
-                j = m[(m.n_chains == n) & (m.arm == arm) & (m.arch == arch)].merge(em, on=["seed", "n_chains", "test_bundle"])
-                if len(j):
-                    ratio = j.risk / j.risk_em; lo, hi = boot_ci(ratio.values)
-                    macros[f"matchedRatioBest{tag}"] = f"{ratio.mean():.1f}"
-                    macros[f"matchedRatioBest{tag}lo"] = f"{lo:.1f}"; macros[f"matchedRatioBest{tag}hi"] = f"{hi:.1f}"
+            for arm, prefix in (("ism_one_view", "matchedBest"), ("dsm_one_corruption", "matchedFixed")):
+                sub = m[(m.n_chains == n) & (m.arm == arm)].groupby("arch").risk.mean().sort_values()
+                if not len(sub):
+                    continue
+                arch, best = sub.index[0], sub.iloc[0]
+                macros[f"{prefix}{tag}"] = f"{best:.3f}"
+                macros[f"{prefix}Arch{tag}"] = ARCH_NAME.get(arch, arch)
+                if em is not None:
+                    j = m[(m.n_chains == n) & (m.arm == arm) & (m.arch == arch)].merge(em, on=["seed", "n_chains", "test_bundle"])
+                    if len(j):
+                        ratio = j.risk / j.risk_em; lo, hi = boot_ci(ratio.values)
+                        macros[f"{prefix.replace('Best', 'RatioBest').replace('Fixed', 'FixedRatio')}{tag}"] = f"{ratio.mean():.1f}"
+                        macros[f"{prefix.replace('Best', 'RatioBest').replace('Fixed', 'FixedRatio')}{tag}lo"] = f"{lo:.1f}"
+                        macros[f"{prefix.replace('Best', 'RatioBest').replace('Fixed', 'FixedRatio')}{tag}hi"] = f"{hi:.1f}"
+                        macros[f"{prefix.replace('Best', 'Wins').replace('Fixed', 'FixedWins')}{tag}"] = str(int((ratio > 1).sum()))
+                        macros[f"{prefix.replace('Best', 'RatioOfMeans').replace('Fixed', 'FixedRatioOfMeans')}{tag}"] = f"{j.risk.mean()/j.risk_em.mean():.1f}"
+        macros["matchedBestArm"] = "implicit score matching on one noised view per sequence"
+        macros["matchedFixedArm"] = "one fixed corruption of a clean sequence"
     # ---- length
     lp = src / "length.csv"
     if lp.exists():

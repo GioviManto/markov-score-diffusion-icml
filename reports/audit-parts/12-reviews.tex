@@ -1,0 +1,44 @@
+%% ------------------------------------------------------------------------------------
+\section{Reviewer simulation}
+\label{sec:reviews}
+
+\subsection{The strongest rejection review (of the paper as submitted on 18 September)}
+
+\emph{Summary.} The paper studies a Markov chain with non-Gaussian innovations under OU noise, proves Hermite attenuation and an order-by-order information decay, learns the transition by EM, and compares with neural denoisers. The laboratory is neat and the experiments are carefully run, but the theoretical contribution is a specialisation of known low-SNR results with a proof that does not hold under its stated hypothesis, and the headline empirical claims are overstated or mislabelled.
+
+\begin{enumerate}
+\item \emph{Novelty.} The $e^{-2mt}$ information law is the SNR$^k$ law of Katsevich--Bandeira and Balanov et al.\ in the diffusion clock; cumulant attenuation is in Aarts et al.; the second-order MMSE expansions of Prelov--Verd\'u and Guo et al.\ hold for arbitrary inputs, dependent ones included, so ``for a Markov rather than i.i.d.\ latent structure'' is not a novelty. What remains is a constant and a synthetic verification. \hi{Valid in part.} Fix: claim the synthesis (Section~\ref{sec:claims}); add what is new beyond the constant---the general-order theorem with its Hermite-norm constant, the heavy-tailed regime, the fourth-order oracle, the closed-form bias---each of which is a statement the cited papers do not make.
+\item \emph{Theorem 3's proof.} Real-analyticity of $\Lambda$ at the origin and $P_t(|\alpha x|>1)\le e^{-c/\alpha^2}$ are false under finite eighth moments. \hi{Valid.} Fixed by Assumption~(E) (Section~\ref{sec:thm3}).
+\item \emph{Sample complexity.} Corollary~5 turns a Fisher information into ``requires''. \hi{Valid.} Fixed by Corollary~\ref{cor:lam}.
+\item \emph{Narrow setting.} One dimension, one chain length in the theory verification, one family in most experiments. \hi{Partly valid.} Answer: the theorems are for any $P_0$ with (E); the regime sweep covers five $\rho$ and three $L$; E14 covers three $\rho$ and two $L$ for the network comparison. Say it as a limitation, not a defence.
+\item \emph{Baseline fairness.} The networks train for 32k steps and the two largest are still improving at the last checkpoint in $88\%$ of cells; the EM ladder was extended when it bound. \hi{Valid.} Fix: state the at-cap rates for the networks and call the standard-interface factor an upper bound; the matched arm is not affected (window head never at cap).
+\item \emph{Information mismatch.} ``Matched'' arm sees the clean chain. \hi{Valid.} Fixed by making ISM the headline; the number grows.
+\item \emph{Numerical approximation.} The reference is a grid; the Student-$t$ cell is flagged; the closure panel departs. \hi{Valid in part.} Fixed by E18 and the exceedance diagnostic; the frozen-configuration validation stands.
+\item \emph{Seeds.} Eight in the sweeps. \hi{Valid as stated.} Fix: say so; the intervals are paired and exclude zero at eight.
+\item \emph{Selection bias.} Every arm but one selects on the true score. \hi{Valid.} Fixed by E20 (and by making the oracle-free ISM arm the headline).
+\item \emph{Computational impracticality.} $O(LN_g^2)$ per sequence. \hi{Valid and admitted.} Fix: the Pareto sentence with numbers (P1.5).
+\item \emph{One parameter point.} The $7.3\times$ at one $(\rho,L)$. \hi{Valid until E14.}
+\item \emph{Estimation vs optimisation.} The efficiency claim mixes EM's early stopping with the channel. \hi{Valid.} Fixed by the per-level table.
+\item \emph{Connection to modern diffusion models.} The chain is far from images. \hi{Valid; not fixable by experiment.} Answer in the conclusion: the theorem is the general statement; the laboratory is what makes it testable to the constant; the Gaussian-dominance observations of Wang--Vastola and Li et al.\ are its images-scale shadow.
+\end{enumerate}
+\emph{Recommendation as submitted: reject; resubmit with the hypothesis fixed, the interfaces named, and the efficiency claim withdrawn.}
+
+\subsection{The strongest acceptance review (of the paper this report recommends)}
+
+\emph{Summary.} An exactly solvable, correlated, non-Gaussian diffusion laboratory; a clean theorem (Hermite attenuation) and a sharp asymptotic (order-by-order information decay with explicit constants, a general-order form, and a crossover that is exact for the Gaussian chain), verified with the exact score to the constant on six innovation laws; a learning experiment in which an exact-inference EM is placed against the information curve and collapses exactly where the curve says the coordinate stops being identifiable; a controlled comparison against six sequence architectures at three declared information interfaces, with the matched interface giving the larger factor and an oracle-free control; a closed-form misspecification bias that reproduces the measured errors and explains which departures bite at which order. The retired claims are recorded with their diagnoses.
+
+\emph{Strengths.} (1) The only setting I know in which a non-Gaussian dependent score is available exactly and the Gaussian part of the score is identified with a named estimator (Proposition~1), turning ``learned scores are dominated by their Gaussian part'' into a rate with a constant. (2) The information theory predicts the experiments five times (collapse level, closure content, break-even, floor, slopes) rather than being fitted to them. (3) The experimental discipline: hashed bundles, paired seeds, registered analyses, an amendment recorded before data, a control for every confound a referee could name. (4) Honesty about what was retired and why.
+
+\emph{Weaknesses.} One dimension; $O(LN_g^2)$ inference; eight seeds in the sweeps; the heavy-tailed case only numerically supported; the sample-complexity exponents measured through the curve, not through the asymptote.
+
+\emph{Recommendation: accept.}
+
+\subsection{Remaining risks after the fixes}
+
+\begin{itemize}
+\item E14 finds a cell where the network ties or wins (e.g.\ $\rho=0.95$, $L=128$, where the marginal is nearly Gaussian). Then the headline becomes ``the advantage tracks the fourth-order structure of the marginal'', which is the theory's prediction and is not a loss.
+\item E15's floor at $\rho=0.85$ is far below the window head. Then the locality paragraph changes from a ceiling to an architecture limit; a referee who checks will find the floor computed, which is better than the present sentence.
+\item E12b's slopes come out at the curve's values ($\approx6.5$, $3.8$) and a referee reads them as ``not 8, not 4''. The amendment, recorded before data, and Table~\ref{tab:crb} are the answer.
+\item The heavy-tailed proposition is challenged as unproved. It is labelled as numerically supported; the scalar quadrature (E18 scalar part) is the evidence; the paper should not promote it to a theorem.
+\item Page budget: the recommended structure is $\approx7.9$ pages of body; the cut order in RESEARCH\_PLAN.md applies.
+\end{itemize}

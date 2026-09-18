@@ -18,11 +18,22 @@ $\ngrid=\gridFlatNhi$, and falls only when the domain widens---$\gridWiderADrift
 $(\gridWiderAN,\gridWiderAA)$ and $\gridWiderBDrift$ at $(\gridWiderBN,\gridWiderBA)$.
 That is the signature of truncation rather than of quadrature, and it means refinement
 in $\ngrid$ alone, which is what refinement has meant in this literature, cannot fix it.
-The binding cell is the $\gridWorstFamily$ family at $\corr=\gridWorstRho$, where
-$\gridWorstBoundary$ of the belief mass falls outside the domain and the drift is
-$\gridWorstDrift$: heavy tails and no correlation to pull them in. That cell lies in the
+The binding cell is the $\gridWorstFamily$ family at $\corr=\gridWorstRho$, and the
+mechanism is a handful of sites: among the $8192$ sites of each seed's bundle,
+$\audExceedCounts$ lie beyond $|a|=\gridHalfWidth$ (the analytic expectation is
+$\audExceedExpected$), the largest at $|a|=\audExceedMax$. A site beyond the domain has
+its posterior pinned to the boundary on every grid, which is the ``belief mass
+$\gridWorstBoundary$ in the outer $2\%$'' of the diagnostic, and at the lowest level its
+score error alone is the drift of $\gridWorstDrift$. For a polynomial tail the
+expected exceedance count is Poisson with mean $\nseq\nsites\,P(|a|>\halfwidth)$, which no
+finite domain makes zero: $\audExceedExpectedTwelve$ per $8192$ sites at
+$\halfwidth=12$, $\audExceedExpectedSixteen$ at $\halfwidth=16$. That cell lies in the
 family ladder of \cref{app:phase}, and its entries are flagged there pending a
-recomputation at a wider domain; no claim in the body rests on it.
+recomputation at a wider domain; no claim in the body rests on it. The same
+consideration governs the closure panel of \cref{fig:theory}: beyond $t\approx3$ the
+reference on the $(801,8)$ grid carries the tail of the \emph{truncated} prior, and the
+heavy-tailed families depart from the constant for that reason alone; on
+$(3201,32)$ they reach it (\cref{app:audit}).
 
 A second observation from the same sweep cuts the other way. The column-mass defect of
 the discretised kernel, $\max_j|\sum_i \kernel(g_i\mid g_j)w_i-1|$, grows with
@@ -31,4 +42,7 @@ $\corr=\gridColMassHiRho$, because a narrow transition kernel is poorly resolved
 fixed grid. It is nonetheless not predictive of the error: at
 $\corr=\gridColMassHiRho$ the drift is $\gridColMassDriftHiRho$. The defect is nearly
 uniform across the grid and the recursion renormalises it away. We report it as a
-diagnostic and not as an error bar.
+diagnostic and not as an error bar. The uniform family is the one exception to the
+quadrature picture: its kernel is discontinuous, the trapezoidal rule is first-order on
+it, and its worst-level drift is largest on the coarsest spacing rather than the
+narrowest domain.

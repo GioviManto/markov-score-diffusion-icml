@@ -186,3 +186,71 @@ The same audit clears two other experiments. In E02a the at_cap rate reaches 0.6
 E02a_v1 -- the same design with the ladder cut from 1200 to 400 -- reproduces every overlapping cell
 to 0.001, so the estimates have plateaued well before the cap and the capacity conclusion does not
 depend on it. In E13 the rate is at most 0.25 and C = 1 never censors.
+
+## From the 18–19 September audit (reports/audit-2026-09-18.pdf)
+
+**N-14. "The estimator attains the Cramér–Rao bound (1.02×)" is withdrawn.** The
+average was over the five levels with RMSE < 2, of ratios 1.16, 1.51, 0.71, 0.87, 0.87 —
+three of them below one, which for a bound on unbiased estimators means bias (−0.29 and
+−0.66 at t = 0.4 and 0.7) or the wrong reference family (one parameter against an
+eight-component mixture). Per level the truth is: unimodal fits with dispersion within the
+sampling error of the one-parameter reference for t ≤ 0.4; a split at t = 0.7 (4/16
+collapsed to a Gaussian innovation, the rest shrunk, dispersion 0.42× the reference);
+15/16 collapsed at t = 1, one level below the level at which the reference crosses the
+coordinate's range (0.98). The paper now reports the per-level table
+(`paper/sections/audit-numbers.tex`, `aud{Collapsed,SdKurt,SdKurtGood,BiasKurt}T*`) and
+says "at the reference while identifiable; collapses where the reference says it must".
+
+**N-15. "Information-matched, 7.3×" was the wrong arm.** The arm behind 7.3 is denoising
+score matching on (a, x_t) pairs with one fixed corruption (interface B): the network sees the
+clean chain. The genuinely matched arm (interface C: implicit score matching on x_t only,
+checkpoint selected on the implicit objective of a held-out noisy bundle, no oracle) is in
+the same frozen file at 0.165, a paired factor 7.9 [6.6, 9.3], 16/16 seeds — larger. The
+generator `tools/make_baseline_numbers.py` used to pick the best of the two arms by risk
+and label it matched; it now emits the ISM arm as `matchedBest*` by definition and the
+fixed-corruption arm as `matchedFixed*`. The ISM window head diverges at M = 32 (risk 1.2,
+the held-out objective rising through the ladder), a known instability of implicit score
+matching on tiny samples; that cell is not a measurement of the architecture.
+
+**N-16. "Student-t5 departs from e^{-8t} as the moment condition predicts" was
+truncation.** E18 recomputes the closure gap at (1601, 16) and (3201, 32): with the same
+chains, Student-t5's local slope on [4, 4.5] is −4.0 on the (801, 8) grid, −5.7 at (1601, 16)
+and −7.9 at (3201, 32), and the ratio to (1/6)‖κ4‖² reaches 1.06 at t = 5 on the widest
+domain; ν = 7 and 9 behave the same way. On (801, 8) the reference carries the tail of the
+truncated prior beyond t ≈ 3. The expected e^{-νt} tail term of a regularly varying law is
+carried by chains with |a| ≳ e^{2t}, of probability ~1e-16 per site at t = 5 — never
+sampled. Fig. 2c is redrawn from E18; the sentence is replaced by the heavy-tails paragraph
+of §3. Theorem 3 is restated under an exponential-moment assumption (the proof needs it).
+
+**N-17. "Essentially all of its belief mass outside the domain" was one site.** E11's
+diagnostic is a maximum over 8192 (chain, site) pairs; regenerating the chains from their
+tags gives 1, 1, 1, 2 sites beyond |a| = 8 per seed (expected 1.2), the largest at 15.4. The
+mechanism (truncation, flat in N_g) is right; the sentence is replaced by the exceedance
+count and its Poisson expectation (0.17 per 8192 sites at A = 12, 0.04 at A = 16).
+
+**N-18. The closure constant was quoted to a precision the sample did not have.** The
+per-chain squared gap is heavy-tailed (maximum ≈ 300× the median over 8192 chains); a
+512-chain mean has ≈15 % relative s.e., and two 512-chain replicates of E01's Laplace
+closure at t = 3 give 0.83 and 1.14. E01's "0.99" was the mean of four such replicates,
+precise to ≈±10 %. E18 part "constant" (8192 chains, chain bootstrap) gives 0.92
+[0.84, 1.01] at t = 3 and 0.99 [0.91, 1.08] at t = 4 for Laplace; the paper quotes the
+interval.
+
+**N-19. The shape-information constant is not reproduced on the chain — and the constant
+is right.** E01's outer-product estimate plateaus at 0.81 (β = 2) and 0.92 (β = 3) of
+(1/24)‖∂κ4‖²; E21's untruncated scalar quadrature reproduces it to 0.25 % at t = 1 and to
+1e-4 by t = 2 for β ∈ {1.5, 2, 3}. The shortfall on the chain is the estimator's floor (a
+cancellation of O(1) terms to α^4 ≈ 1e-5 against 1e-5 grid accuracy). The paper now says
+which constant is verified where.
+
+**N-20. E12b as pre-registered would have refuted the corollary with its own prediction.**
+At ρ = 0.5 the local slope of log(1/I_eff) on E12b's levels [0.6, 1.0] is 6.1–6.9 for the
+shape coordinate and 3.8–3.9 for the correlation (E21), because e^{-2t} λ_max is still of
+order one there; the asymptotic 8 and 4 are the t → ∞ limits. The analysis plan was amended
+before any E12b cell ran (`experiments/registry/E12b.json`): M*(t) is compared with the
+exact information curve.
+
+**N-21. Two-thirds of the window head's plateau is the boundary.** On the interior sites
+the head's error at M = 2048 is 0.075 against 0.118 on all sites, and it improves from
+0.118 to 0.082 as the chain lengthens to 256 (zero padding). Its relation to the exact
+radius-4 floor is E15 (see the audit report for the verdict).

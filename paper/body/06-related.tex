@@ -19,21 +19,24 @@ crossover, behind the dominance those papers report.
 \paragraph{What survives noise: the low-SNR literature.}
 \Cref{thm:decay} belongs to the low-SNR expansions of estimation theory. In Gaussian channels the
 mutual information and the MMSE expand in the SNR with fourth-order statistics entering at second
-order \citep{prelov2004second,guo2005mutual,dytso2023meta,kong2023information}; for latent-variable
+order, for arbitrary input laws \citep{prelov2004second,guo2005mutual,dytso2023meta,kong2023information}; for latent-variable
 models the log-likelihood expands with the order-$k$ term matching $k$-th moments
 \citep{katsevich2023likelihood}, which yields the $\sigma^{2k}$ sample complexity of multireference
 alignment and orbit recovery \citep{perry2019sample,bandeira2023estimation} and, most closely, the
 layered Fisher-information geometry of \citet{balanov2026gmm}, where information about directions
-first identifiable at moment order $k$ scales as $\mathrm{SNR}^k$. Under the OU channel
-$\mathrm{SNR}_t\simeq e^{-2t}$, so that statement and our $e^{-2mt}$ are the same law in different
-clocks. \citet{aarts2025cumulants} write the forward-process cumulant attenuation $e^{-nt}$ and
-show that score networks regenerate the cumulants. What is not in that literature, and is what
-this paper adds, is the score-level statement for a Markov (dependent) rather than i.i.d.\ latent
-structure, its constant $\tfrac16\|\kappa_4\|_F^2$ and crossover $\tstar$, the exact verification
-on a chain, and the learning consequences with an exact E-step. Speciation and collapse times
-\citep{biroli2024dynamical,achilli2026speciation} and the information-restricted Bayesian analysis
-of \citet{hunt2026exact} are second-moment phenomena in this vocabulary; heavy-tailed forward
-processes \citep{pandey2024heavy,tang2026tweedie} change the channel and therefore the ladder.
+first identifiable at moment order $k$ scales as $\mathrm{SNR}^k$ and the method of moments is
+almost efficient. Under the OU channel $\mathrm{SNR}_t\simeq e^{-2t}$, so that statement and our
+$e^{-2mt}$ are the same law in different clocks. \citet{aarts2025cumulants} write the
+forward-process cumulant attenuation $e^{-nt}$ and show that score networks regenerate the
+cumulants. The information law is therefore not new here; what this paper adds is the score-level
+statement with its constant $\tfrac16\|\kappa_4\|_F^2$ and its content (the fourth-order term
+closes the gap), the general-order constant, the hypothesis under which the expansion is a theorem
+and the heavy-tailed regime outside it, the crossover $\tstar$ as an exact scale, the verification
+of rates and constants against an exact non-Gaussian dependent score, and the learning consequences
+with an exact E-step. Speciation and collapse times \citep{biroli2024dynamical,achilli2026speciation}
+and the information-restricted Bayesian analysis of \citet{hunt2026exact} are second-moment phenomena
+in this vocabulary; heavy-tailed forward processes \citep{pandey2024heavy,tang2026tweedie} change the
+channel and therefore the ladder.
 
 \paragraph{Learning from noisy data only.}
 Ambient diffusion learns a clean distribution from corrupted samples by predicting a further
@@ -49,7 +52,8 @@ maximum-likelihood estimator for general-state hidden Markov models is \citet{do
 the identifiability of a Markov signal observed through independent noise, which is what makes
 the one-view protocol of \cref{sec:learning} well posed, is \citet{gassiat2020identifiability}.
 Spectral and moment methods for hidden Markov models \citep{hsu2012spectral} are the natural
-high-noise competitor that \cref{cor:samples} suggests.
+high-noise competitor; the moment estimators of \cref{sec:learning} are their simplest form here,
+rate-correct and inefficient below the crossover.
 
 \paragraph{Sequence denoisers and length.}
 The baselines of \cref{sec:experiments} are the standard sequence architectures

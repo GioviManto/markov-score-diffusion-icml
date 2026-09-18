@@ -51,7 +51,8 @@ score of a correlated, non-Gaussian, $\nsites$-dimensional law. Messages are fun
 $\Reals$; we carry them on a grid of $\ngrid$ points on $[-\halfwidth,\halfwidth]$ with
 trapezoidal quadrature, exact for the discretised factor model and controlled for the
 continuous one (at $\ngrid=401$, $\halfwidth=8$ the reference is accurate to $10^{-5}$
-relative on ordinary draws for every family used). Throughout, ``the score'' means this
+relative on ordinary draws for every family used; the domain, not the spacing, is what a
+heavy-tailed family tests, \cref{app:numerics}). Throughout, ``the score'' means this
 tree-exact inference, evaluated by validated quadrature.
 
 \paragraph{The covariance twin and the price of second-order closure.}
@@ -68,8 +69,14 @@ $e^{-t}\Sig_0\Sig_t^{-1}\vx$, the same for every such law.
 \end{proposition}
 The proof (\cref{app:proofs}) is an induction over the two sweeps: a convolution's first
 two moments depend on the innovation only through its first two moments, so every
-projected message equals the Gaussian chain's message. \Cref{prop:lmmse} turns the gap
-between $\score$ and $\Sgauss$ into an interpretable object: it is precisely what any
-estimator that carries only second-order structure---a Gaussian innovation kernel, a
+projected message equals the Gaussian chain's message. Two consequences are used as
+checks below. Sum-product with \emph{any} Gaussian kernel is a linear map of $\vx$, and
+the LMMSE of the true covariance minimises the posterior-mean error over linear maps,
+so the LMMSE floor bounds every linear estimator; and the Gaussian quasi-likelihood of
+noised data depends on the data only through their covariance
+$e^{-2t}\Sig_0+\Dt\Id$, so a Gaussian-innovation kernel fitted by maximum likelihood is
+consistent for $(\corr,\ivar)$ and lands on that floor. \Cref{prop:lmmse} thus turns the
+gap between $\score$ and $\Sgauss$ into an interpretable object: it is precisely what
+any estimator that carries only second-order structure---a Gaussian innovation kernel, a
 linear denoiser, or the Kalman smoother---must leave on the table. \Cref{sec:theory}
 computes its size.

@@ -16,3 +16,5 @@
 0.72      excess kurtosis of that mixture, -2 kappa^2 with kappa = 0.6 (family definition)
 0.1       an observation level of the learning-through-noise protocol, quoted as the example level (protocol)
 0.95      the strongest correlation of the phase-diagram sweep (protocol)
+0.5       the correlation of the sample-complexity design (E12/E12b/E21) and of the locality sweep (protocol)
+1.5       generalised-Gaussian exponent of the scalar constant check, E21 (family definition)

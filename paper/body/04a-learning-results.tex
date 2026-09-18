@@ -4,27 +4,44 @@ $\corr=\learnRho$ and $\learnSeeds$ replicates per level, against the informatio
 reference read from the exact-score computation of \cref{sec:theory}: the Cram\'er--Rao
 bound $1/\sqrt{\nseq\,I_t}$ for the correlation and, through the chain rule at the
 Laplace member of the one-parameter shape family, for the excess kurtosis. The
-estimator sits at the bound: its error is $\learnEffRhoMean\times$ the bound for
-$\widehat\corr$ and $\learnEffKurtMean\times$ for $\widehat\kfour$, averaged over the
-levels at which either is informative. What the channel does is therefore read off the
-bound itself. The shape bound grows as $e^{4t}$ and crosses the full range of the
-coordinate ($3$) at $t=\learnKurtBoundCross$; at $t=1$ the fitted excess kurtosis is
-$\learnRmseKurtTone$ from the truth, the fit having collapsed to a Gaussian innovation,
-while $\widehat\corr$ is still within $\learnRmseRhoTone$. Correlation is lost only past
-the crossover $\tstar=\learnTstar$: $\learnRmseRhoTonepfour$ at $t=\learnLevelTonepfour$ and
-$\learnRmseRhoTtwo$ at $t=2$, where the estimator also leaves the bound. That last
-departure we report as unresolved rather than as a finding: at $t\ge\learnAtCapHighFrom$
-the validation-selected checkpoint is the last rung of the \textsc{em} ladder in
-$\learnAtCapHighMin$ of cells or more, against at most $\learnAtCapLowMax$ at every
-informative level, so at those two levels the fit is limited by the iteration budget and
-the excess over the bound cannot be attributed to the channel. A control run with the
-ladder extended sixfold is registered (\textsc{e06c}); nothing else in this paragraph
-depends on it. Below the
-crossover both errors grow more slowly than the asymptotic rates, as
-\cref{sec:theory} predicts (fitted log-slopes $\learnPreSlopeRho$ and
-$\learnPreSlopeKurt$ on $[\learnPreLo,\learnPreHi]$ against $2$ and $4$); the asymptotic
-window itself lies beyond the reach of $\nseq=\learnSize$ sequences at this
-correlation, because the shape estimate saturates before $\tstar$. At $t=0.1$ the
+reference is for an unbiased estimator in a one-parameter family; the estimator is an
+eight-component mixture with its iteration count selected on validation, so the
+comparison is a yardstick, not an efficiency theorem, and it has to be read level by
+level. Up to $t=\learnLevelTzeropfour$ every fit recovers the shape (none of the
+$\learnSeeds$ replicates collapses) and the dispersion of $\widehat\kfour$ across
+replicates is $\audSdKurtTzeropzerofive$, $\audSdKurtTzeropone$,
+$\audSdKurtTzeroptwo$, $\audSdKurtTzeropfour$ against a reference of
+$\learnCrlbKurtTzeropzerofive$, $\learnCrlbKurtTzeropone$, $\learnCrlbKurtTzeroptwo$,
+$\learnCrlbKurtTzeropfour$: within the sampling error of a sixteen-replicate standard
+deviation. At $t=\learnLevelTzeropseven$ the fits split: $\audCollapsedTzeropseven$ of
+$\audCollapsedNTzeropseven$ collapse to a Gaussian innovation ($\widehat\kfour\approx0$)
+and the rest are shrunk, with dispersion $\audSdKurtGoodTzeropseven$ against a reference
+of $\learnCrlbKurtTzeropseven$ and a bias of $\audBiasKurtTzeropseven$. At $t=1$,
+$\audCollapsedTone$ of $\audCollapsedNTone$ collapse, and the reference bound has
+crossed the full range of the coordinate ($3$) at $t=\learnKurtBoundCross$: the level at
+which the information runs out is the level at which the estimator stops estimating.
+The correlation is recovered to $\learnRmseRhoTone$ at $t=1$ with dispersion
+$\audSdRhoTone$ against a reference of $\learnCrlbRhoTone$, and is lost only past the
+crossover $\tstar=\learnTstar$: $\learnRmseRhoTonepfour$ at $t=\learnLevelTonepfour$
+and $\learnRmseRhoTtwo$ at $t=2$. Whether the excess over the reference at those two
+levels is information or budget the run cannot say: there the validation-selected
+checkpoint is the last rung of the \textsc{em} ladder in $\learnAtCapHighMin$ of cells
+or more, against at most $\learnAtCapLowMax$ at every informative level, and a control
+with the ladder extended sixfold is registered (\textsc{e06c}). The same coordinates
+estimated from the same data by the method of moments---the lag-one product for
+$\corr$ and the per-site fourth cumulant divided by $e^{-4t}$ for $\kfour$, both
+unbiased by \cref{thm:hermite}---are $\audMomOverEmRhoMin$--$\audMomOverEmRhoMax$
+times worse for $\corr$ and $\audMomOverEmKurtMin$--$\audMomOverEmKurtMax$ times worse
+for $\kfour$ at the informative levels, never collapse, and show the asymptotic growth
+where the estimate is already useless: log-slopes of $\audMomSlopeRho$ and
+$\audMomSlopeKurt$ on $t\ge1$ against the predicted $2$ and $4$ (\cref{app:audit}).
+Exact inference is what buys the efficiency below the crossover; at high noise the two
+estimators coincide, since the likelihood score of a degree-$m$ coordinate is itself the
+degree-$m$ Hermite statistic. Below the crossover both errors grow more slowly than the
+asymptotic rates, as \cref{sec:theory} predicts (fitted log-slopes $\learnPreSlopeRho$
+and $\learnPreSlopeKurt$ on $[\learnPreLo,\learnPreHi]$ against $2$ and $4$); the
+asymptotic window itself lies beyond the reach of $\nseq=\learnSize$ sequences at this
+correlation, because the shape estimate collapses before $\tstar$. At $t=0.1$ the
 transition law is recovered to Hellinger distance $\learnHellTzeropone$, and the
 clean-data fit gives the optimiser's own floor, $\learnRmseRhoTzero$ and
 $\learnRmseKurtTzero$.

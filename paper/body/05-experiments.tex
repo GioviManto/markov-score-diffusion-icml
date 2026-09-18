@@ -4,13 +4,18 @@
 All comparisons use the frozen configuration of \cref{app:protocol}: Laplace chain,
 $\corr=0.85$, $\nsites=32$, twelve log-spaced levels on $[0.05,3]$, and the
 schedule-pooled relative score error against the tree-exact reference (squared error and
-reference energy summed over levels before the square root). Sixteen paired seeds are
-the inferential unit; architectures and hyperparameters are selected on two development
+reference energy summed over levels before the square root). Paired seeds are the
+inferential unit---sixteen in the comparisons at the frozen configuration, eight in the
+sweeps across regimes; architectures and hyperparameters are selected on two development
 seeds that never enter a reported number, and every arm's budget is selected on a
-per-seed validation bundle disjoint from the test bundle. Three reference points bracket
-every estimator (\cref{app:oracles}): the isotropic score $-\vx$ at $\isoFloorLaplace$, the
-LMMSE oracle with the true covariance at $\lmmseFloorLaplace$---the floor of every
-second-order estimator, by \cref{prop:lmmse}---and the exact score at zero.
+per-seed validation bundle disjoint from the test bundle. Three information interfaces
+are distinguished throughout: (A) the standard denoising recipe, clean sequences with a
+fresh corruption at every step; (B) clean sequences with one fixed corruption each;
+(C) one noised view per sequence and nothing else, which is what EM--BP sees.
+Three reference points bracket every estimator (\cref{app:oracles}): the isotropic score
+$-\vx$ at $\isoFloorLaplace$, the LMMSE oracle with the true covariance at
+$\lmmseFloorLaplace$---the floor of every second-order estimator, by
+\cref{prop:lmmse}---and the exact score at zero.
 
 \paragraph{Capacity: the margin is fourth-order.}
 \IfFileExists{sections/capacity-numbers.tex}{\input{body/05a-capacity}}{\needsdata{E02a running: capacity table and paired differences}}

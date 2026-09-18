@@ -3,8 +3,8 @@
 
 Write $\gamma$ for the standard Gaussian on $\Reals^{\nsites}$, $\Hen{k}$ for the
 probabilists' Hermite polynomials and $H_\nu(\vx)=\prod_i\Hen{\nu_i}(x_i)$ for their
-products, of degree $|\nu|$. The channel \cref{eq:channel} acts on Hermite moments
-diagonally.
+products, of degree $|\nu|$, with $\E_\gamma[H_\nu H_\mu]=\nu!\,\delta_{\nu\mu}$. The
+channel \cref{eq:channel} acts on Hermite moments diagonally.
 
 \begin{theorem}[Hermite attenuation]
 \label{thm:hermite}
@@ -22,8 +22,13 @@ because $\lmax(\Sig_0)>2$, for the Gaussian chain at $\corr=0.85$---only finite 
 Two consequences are exact at every $t$: cumulants of order $m\ge3$ scale as $e^{-mt}$
 (Gaussian noise has none), and the degree-4 Hermite moments of two variance-matched laws
 differ exactly by their fourth-cumulant tensors $\kfour$, attenuated by $e^{-4t}$.
-Correlation lives at degree two and decays as $e^{-2t}$; non-Gaussian shape first appears
-at degree four and decays as $e^{-4t}$. \emph{Diffusion noise is a low-pass filter on
+\emph{Three clocks.} For a feature first visible at Hermite degree $m$, its
+\emph{amplitude} decays as $e^{-mt}$ (exact, \cref{thm:hermite}); the \emph{Fisher
+information} a sequence carries about it, a squared amplitude, as $e^{-2mt}$
+(\cref{thm:decay,thm:general}); and the \emph{number of sequences} needed for a fixed
+local precision grows as $e^{2mt}$ (\cref{cor:samples}). Correlation lives at degree two:
+$e^{-2t}$, $e^{-4t}$, $e^{4t}$. Non-Gaussian shape first appears at degree four:
+$e^{-4t}$, $e^{-8t}$, $e^{8t}$. \emph{Diffusion noise is a low-pass filter on
 statistical order.}
 
 The consequence for scores and for learning is an expansion in the signal-to-noise
@@ -32,12 +37,21 @@ $\Lambda(s,b)=\log\E_{\Pz}\exp(s\cdot\va-b|\va|^2/2)$, so that
 $\log\Pt(\vx)=\log\gamma_{\Dt}(\vx)+\Lambda(s,b)$ and
 $\score=-\vx/\Dt+(e^{-t}/\Dt)\nabla_s\Lambda$ exactly. Grading $\Lambda$ by order in
 $e^{-t}$, its second-order part is the same for $\Pz$ and its covariance twin, and its
-fourth-order part differs by a term linear in $\kfour$.
+fourth-order part differs by a term linear in $\kfour$. The expansion is legitimate when
+$\Lambda$ is finite in a neighbourhood of the origin, which is the one hypothesis the
+theorem needs:
+\begin{assumption}[Exponential moment]
+\label{ass:exp}
+$\E_{\Pz}e^{\lambda|\va|}<\infty$ for some $\lambda>0$.
+\end{assumption}
+Every innovation law used below satisfies it except Student-$t$, for which
+$\Lambda(s,0)=+\infty$ at every $s\neq0$; that family is discussed after
+\cref{thm:general}.
 
 \begin{theorem}[Order-by-order information decay]
 \label{thm:decay}
-Let $\Pz$ have finite eighth moments and covariance $\Sig_0$, let $\Sgauss$ be the score
-of its covariance twin, and let $\lmax=\lmax(\Sig_0)$. As $t\to\infty$,
+Let $\Pz$ satisfy \cref{ass:exp} with covariance $\Sig_0$, let $\Sgauss$ be the score
+of its covariance twin, and fix $\nsites$. As $t\to\infty$,
 \begin{align}
   \E_{\Pt}\lVert\score-\Sgauss\rVert^2
    &= \tfrac{1}{6}\Frob{\kfour}^2\,e^{-8t}(1+\epsilon_t),
@@ -49,12 +63,13 @@ of its covariance twin, and let $\lmax=\lmax(\Sig_0)$. As $t\to\infty$,
   \ \text{if }\partial_\theta\Sig_0=0,
   \label{eq:info4}
 \end{align}
-the last with $\partial_\theta\kfour\neq0$, and with $\epsilon_t=O(e^{-2t}\lmax)$,
+the last with $\partial_\theta\kfour\neq0$, and with $\epsilon_t=O(e^{-2t})$,
 where $I_t(\theta)=\E_{\Pt}[(\partial_\theta\log\Pt)^2]$ is the Fisher information one
 noised sequence carries about a parameter $\theta$ of $\Pz$, and $\Frob{\cdot}$ is the
-Frobenius norm of the matrix or symmetric 4-tensor. For a Gaussian chain
-\cref{eq:info2} is exact at every $t$ with
-$I_t=\tfrac12\operatorname{tr}(\Sig_t^{-1}\partial_\theta\Sig_t\Sig_t^{-1}\partial_\theta\Sig_t)$.
+Frobenius norm of the matrix or symmetric 4-tensor over ordered indices. For a Gaussian
+chain \cref{eq:info2} is exact at every $t$ with
+$I_t=\tfrac12\operatorname{tr}(\Sig_t^{-1}\partial_\theta\Sig_t\Sig_t^{-1}\partial_\theta\Sig_t)$
+and $\epsilon_t=O(e^{-2t}\lmax(\Sig_0))$ explicitly.
 \end{theorem}
 The information statements \cref{eq:info2,eq:info4} are the diffusion-time form of a
 principle established for low-SNR latent-variable models: the log-likelihood expands in
@@ -63,39 +78,73 @@ powers of the SNR with the order-$k$ term carrying $k$-th-moment information
 information about directions first identifiable at moment order $k$ scales as
 $\mathrm{SNR}^k$ \citep{balanov2026gmm}; with $\mathrm{SNR}_t\simeq e^{-2t}$ these are
 \cref{eq:info2,eq:info4}. The cumulant attenuation behind \cref{thm:hermite} is also
-written down for the forward process by \citet{aarts2025cumulants}. What is new is
-the score-level statement \cref{eq:scoregap} with its constant, made interpretable by
-\cref{prop:lmmse}; the crossover below; and the exact verification and learning
-consequences that follow. The proof (\cref{app:proofs}) expands $\Lambda$ to fourth order, takes the
+written down for the forward process by \citet{aarts2025cumulants}. What this paper
+adds is the score-level statement \cref{eq:scoregap} with its constant, made
+interpretable by \cref{prop:lmmse}; the general order and its constant below; the
+hypothesis under which the expansion is a theorem and what happens outside it; and the
+exact verification and learning consequences that follow. The proof
+(\cref{app:proofs}) expands $\Lambda$ to fourth order on the bulk $\{|s|\le\lambda/2\}$,
+where \cref{ass:exp} makes it analytic with uniformly bounded tilted moments, takes the
 $\gamma$-second moment of the leading Hermite term by Wick's theorem, and bounds the
-remainder by the moment condition; the scalar leading term of \cref{eq:scoregap} is
-$(\kfour/6)\Hen{3}(x)e^{-4t}$. The leading orders of a degree-2 and a degree-4 coordinate
-do not couple, because $\Hen{2}$ and $\Hen{4}$ are $\gamma$-orthogonal, so the
-\emph{efficient} information of a shape coordinate after the nuisance coordinates are
-estimated has the same rate as its raw information.
+tail, whose probability is $\exp(-c\,e^{2t})$ under \cref{ass:exp}; the scalar leading
+term of \cref{eq:scoregap} is $(\kfour/6)\Hen{3}(x)e^{-4t}$. The leading orders of a
+degree-2 and a degree-4 coordinate do not couple, because $\Hen{2}$ and $\Hen{4}$ are
+$\gamma$-orthogonal, so the \emph{efficient} information of a shape coordinate after
+lower-degree nuisance coordinates are estimated has the same rate and constant as its
+raw information; a nuisance of the same degree costs an $O(1)$ factor.
 
-\begin{remark}[General order]
-The same grading gives, for a coordinate whose lowest non-vanishing Hermite footprint has
-degree $m$, $I_t(\theta)\propto e^{-2mt}$: the leading term of $\partial_\theta\log\Pt$ is
-$e^{-mt}$ times a degree-$m$ Hermite polynomial, whose $\gamma$-second moment is a
-constant. The constants are explicit for $m=2,4$ above.
-\end{remark}
+\begin{theorem}[General order]
+\label{thm:general}
+Let $\Pz^\theta$ satisfy \cref{ass:exp} uniformly near $\theta_0$, and let $m$ be the
+smallest degree at which $\partial_\theta\E_{\Pz}[H_\nu(\va)]\neq0$ for some $|\nu|=m$.
+Then, at fixed $\nsites$,
+\[
+  I_t(\theta)=e^{-2mt}\sum_{|\nu|=m}\frac{\bigl(\partial_\theta\E_{\Pz}[H_\nu(\va)]\bigr)^2}{\nu!}
+  \,\bigl(1+O(e^{-2t})\bigr).
+\]
+\end{theorem}
+The constant is the Hermite norm of the derivative of the degree-$m$ moment tensor; for
+$m=2$ it is $\tfrac12\Frob{\partial_\theta\Sig_0}^2$ and for $m=4$ at fixed covariance
+$\tfrac1{24}\Frob{\partial_\theta\kfour}^2$, since the multiset $\nu$ collects $4!/\nu!$
+ordered index tuples. A direction with no non-vanishing Hermite footprint is not
+identifiable at any noise level; under \cref{ass:exp} the law is determined by its
+moments, so such a direction is null.
 
 \begin{corollary}[Sample complexity by order]
 \label{cor:samples}
-Estimating a covariance coordinate to fixed precision from sequences observed at level
-$t$ needs $\nseq\propto e^{4t}$ of them; a shape coordinate needs $\nseq\propto e^{8t}$.
-The ratio of the two informations is $\propto e^{-4t}$.
+Fix $t$ and let $\theta$ be a coordinate of lowest degree $m$ with efficient information
+$I_t^{\mathrm{eff}}(\theta)$. For $\nseq$ i.i.d.\ sequences observed at level $t$ and any
+estimator sequence, the local asymptotic minimax risk satisfies
+$\liminf_{\nseq}\sup_{|\theta'-\theta|\le c/\sqrt{\nseq}}\nseq\,\E_{\theta'}(\hat\theta-\theta')^2\ge1/I_t^{\mathrm{eff}}(\theta)=\Theta(e^{2mt})$,
+and maximum likelihood attains it. A covariance coordinate therefore needs
+$\nseq\propto e^{4t}$ sequences for a fixed local precision, a shape coordinate
+$\nseq\propto e^{8t}$; the ratio of the two informations is $\propto e^{-4t}$.
 \end{corollary}
+This is H\'ajek--Le Cam for a regular parametric model at fixed $t$; it says nothing
+uniform in $t$ (the limits do not commute), nothing about absolute precision for a bounded
+coordinate once $1/\sqrt{\nseq I_t}$ exceeds its range, and nothing about an optimiser
+at a finite budget. All three caveats are visible in \cref{sec:learning}.
 
 \paragraph{Where the asymptote begins.}
-The expansion parameter is $e^{-2t}\lmax(\Sig_0)$, not $e^{-2t}$, with
-$\lmax\le(1+\corr)/(1-\corr)$ for the chain. Below
-$\tstar=\tfrac12\log\lmax(\Sig_0)$ the long-wavelength covariance modes are still of
-order one and the rates are shallower; above it the exponents of \cref{thm:decay} hold.
-At $\corr=0.85$, $\tstar=\gaussTstareightfive$: a strongly correlated chain keeps its
-correlation information longer, and any measurement stopped near $\tstar$ sees slopes
-short of $-4$ and $-8$.
+For the Gaussian chain the expansion parameter is $e^{-2t}\lmax(\Sig_0)$, with
+$\lmax\le(1+\corr)/(1-\corr)$, and $\tstar=\tfrac12\log\lmax(\Sig_0)$ is an exact scale:
+$\Pt/\gamma\in L^2(\gamma)$ iff $e^{2t}>\lmax-1$, and below $\tstar$ the long-wavelength
+covariance modes are still of order one and the rates are shallower. For non-Gaussian
+laws the same scale is a heuristic that the measurements below support. At $\corr=0.85$,
+$\tstar=\gaussTstareightfive$: a strongly correlated chain keeps its correlation
+information longer, and any measurement stopped near $\tstar$ sees slopes short of
+$-4$ and $-8$.
+
+\paragraph{Heavy tails.}
+Student-$t_\nu$ innovations violate \cref{ass:exp}. For a regularly varying tail of index
+$\nu$ the expected squared gap acquires a term of order $e^{-\nu t}$ carried by
+sequences with $|\va|\gtrsim e^{2t}$, whose probability is itself of order $e^{-\nu t}$:
+in expectation the Hermite law holds while $\tfrac16\Frob{\kfour}^2e^{-8t}$ dominates it,
+and on any sample of practical size the Hermite law is all that is seen
+(\cref{app:numerics}). We state this as an observation supported by quadrature, not as a
+theorem; the moment condition of \cref{thm:decay} is not merely technical, and
+\cref{fig:theory}c shows Student-$t_5$ reaching the constant on a domain wide enough to
+hold its samples.
 
 \begin{figure*}[t]
   \centering
@@ -112,10 +161,10 @@ short of $-4$ and $-8$.
   $\shapeSlopeBetathree$ ($\beta$, at $\beta=3$).
   (c)~The price of second-order closure: $\E\lVert\score-\Sgauss\rVert^2$ measured by
   tree-exact BP, divided by the predicted $\tfrac16\Frob{\kfour}^2e^{-8t}$, for four
-  innovation families. Laplace and the bimodal mixture reach the constant to within
-  $\closureRatiolaplacetthreepzero$--$\closureRatiobimodaltfourpzero$; Student-$t_5$, whose sixth
-  moment is infinite, departs as the moment condition predicts; the uniform family reaches
-  the floor of double precision near $t=3.5$.}
+  innovation families on a domain wide enough for their samples (\cref{app:numerics});
+  the shaded band is the double-precision floor of the posterior means. Laplace, the
+  bimodal mixture and Student-$t_5$ reach the constant; the uniform family reaches the
+  floor first.}
   \label{fig:theory}
 \end{figure*}
 
@@ -128,13 +177,33 @@ estimated from per-sequence scores obtained by Fisher's identity through the tre
 recursion, falls with slope $\shapeSlopeBetatwo$ ($\beta=2$) and $\shapeSlopeBetathree$
 ($\beta=3$) above $\tstar$, against the predicted $-8$, while the correlation
 information falls with slope $\shapeSlopeRhotwo$ against $-4$; the kinked Laplace density
-($\beta=1$) reaches the quadrature floor of the outer-product estimate near $t=2.5$.
-The closure gap on the Laplace chain decays with slope $\closureSlopeSqlaplace$ and
-reproduces the constant $\tfrac16\Frob{\kfour}^2$ ($\closureCfourlaplace$ for
-$\nsites=32$) to $\closureRatiolaplacetthreepzero$ at $t=3$. The theorem also explains a
-measurement the previous literature on this model reported as a discrepancy: information
-slopes of about $-3$ and $-6$ obtained over $t\le1.6$ are the pre-asymptotic values below
-$\tstar=\gaussTstareightfive$, not a failure of the $e^{-4t}$, $e^{-8t}$ law.
+($\beta=1$) reaches the quadrature floor of the outer-product estimate near $t=2.5$. The
+constants are verified at two levels of precision: in the scalar case an untruncated
+quadrature reproduces the shape constant of \cref{eq:info4} to within
+$\audScalarConstWorst\%$ for $\beta\in\{\audScalarBetaList\}$ at
+$t\ge\audScalarFromLevel$ and the covariance constant of \cref{eq:info2} to five digits
+(\cref{app:audit}); on the chain the outer-product estimate reaches the shape constant
+only to within twenty per cent before its floor. The closure gap on the Laplace chain
+decays with slope $\closureSlopeSqlaplace$ and reproduces the constant
+$\tfrac16\Frob{\kfour}^2$ ($\closureCfourlaplace$ for $\nsites=32$) to
+$\audConstRatioLaplaceTfour$ $[\audConstRatioLoLaplaceTfour,\audConstRatioHiLaplaceTfour]$
+at $t=4$ from $\audConstChains$ sequences; the per-sequence gap is heavy-tailed
+(maximum $\audConstMaxOverMedianLaplaceTfour$ times the median), which is why so many are
+needed. The theorem also explains a measurement the previous literature on this model
+reported as a discrepancy: information slopes of about $-3$ and $-6$ obtained over
+$t\le1.6$ are the pre-asymptotic values below $\tstar=\gaussTstareightfive$, not a failure
+of the $e^{-4t}$, $e^{-8t}$ law.
+
+\paragraph{The gap is the fourth-order term.}
+\Cref{eq:scoregap} says what the covariance twin lacks to leading order: the degree-4
+Hermite term carried by $\kfour$. Adding it back exactly---the first Edgeworth correction
+around the twin, with the true $\Sig_0$ and $\kfour$ (\cref{app:audit})---closes
+$\audEdgeClosedLaplaceTzeropsixeight$ of the squared gap at
+$t=\audEdgeLevelTzeropsixeight$, $\audEdgeClosedLaplaceTonepfourthree$ at
+$t=\audEdgeLevelTonepfourthree$ and all of it from $t=2$ on the Laplace chain, and the
+same on the bimodal and uniform chains; below $t=\audEdgeDivergesBelowLaplace$ the
+expansion diverges and the correction hurts. This is the moment-method reading of the
+theorem: above the crossover a score built from the first four moments is the score.
 
 \paragraph{What this says about score learning.}
 An estimator that carries only second-order structure cannot go below the LMMSE floor

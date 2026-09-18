@@ -1,0 +1,99 @@
+%% ------------------------------------------------------------------------------------
+\section{Experimental audit}
+\label{sec:exp}
+
+For every experiment: the question, the varied factor, what is frozen, pairing, the inferential unit, selection, uncertainty, the estimand, and the four confounds (budget, numerics, model selection, generalisation beyond the point). Verdicts use the brief's vocabulary.
+
+\subsection{E01 --- order-by-order decay (theory verification)}
+\hi{Question.} Do the exact score and the exact information curves follow Theorem~3's rates and constants? \hi{Varied.} $t$ (40 fine levels for the Gaussian chain; twelve plus $3.5, 4$ otherwise), $\rho$, $\beta$, family. \hi{Frozen.} $L=32$, grid $(801,8)$ for the non-Gaussian parts. \hi{Unit.} Replicates (8 for the shape information, 4 for the closure gap) with common noise across $t$. \hi{Selection.} None; slopes are fitted by a declared tool on declared windows.
+
+\emph{Gaussian part.} Exact, no Monte Carlo: slope $-4.00$ and scaled information $1.000$ at every $\rho$; the approach to the asymptote is governed by $\tstar$. \sev{verified}.
+
+\emph{Shape information.} Slopes $-7.94$ ($\beta=2$), $-8.01$ ($\beta=3$) on the last intervals; the Laplace member floors at $t\approx2.5$. \sev{verified} for the \emph{rate}. The \emph{constant} of eq.~(5) is \emph{not} reproduced on the chain: the plateau of $I_\beta e^{8t}$ is $0.81$ of the prediction at $\beta=2$ and $0.92$ at $\beta=3$ (Section~6.5), while the scalar quadrature of E21 gives $1.000$. The manuscript's ``verifies the rates and the constants'' must name which constants are verified where: the score-gap constant on the chain to $1$--$6\%$, the covariance-information constant on the chain exactly, the shape-information constant in the scalar case to $0.1\%$ and on the chain to $10$--$20\%$ before the outer-product estimator's floor. \sev{supported but overstated}.
+
+\emph{Closure gap.} Laplace and bimodal reach the constant ($0.99$--$1.06$, $0.88$--$0.98$ at $t\ge3$); uniform hits the double-precision floor at $t\approx3.5$; Student-$t_5$ ``departs''. E18 (Section~6.2) shows the departure on the $(801,8)$ grid is truncation of the prior: at $(3201,32)$ Student-$t_5$ reaches $0.63, 0.74, 1.06$ of the constant at $t=3,4,5$ with slopes $-7.8$ to $-7.9$, and $\nu=7, 9, 12$ reach $1.0$--$1.1$. \sev{confounded} (numerics) for the Student-$t$ curve; the panel must be redrawn from E18.
+
+\subsection{E02a --- capacity}
+\hi{Question.} Does mixture capacity buy score accuracy beyond the covariance? \hi{Varied.} $C\in\{1,2,4,8,16\}$, $M$. \hi{Frozen.} Bundles (hashed), initialisation stream, ladder to $1200$, selection rule. \hi{Paired.} Yes, within (seed, $M$) on identical test bundles. \hi{Unit.} Sixteen seeds. \hi{Selection.} Checkpoint on a validation bundle scored against the true kernel (an oracle, shared by every arm). \hi{Budget.} $C\ge4$ at $M=2048$ selects the last rung in $56$--$69\%$ of cells, but E02a\_v1 (ladder to $400$) reproduces every overlapping cell to $0.001$: the estimates have plateaued (the validation curve moves $0.0147\to0.0145$ over the last $400$ iterations). \sev{verified}. Two things to add: the best capacity rises with $M$ ($C=2$ at $M=32$, $C=16$ at $M=2048$), which the text says; and the ``$M=\infty$'' column is a KL projection, not a score-optimal fit, which the text also says. The fitted excess kurtosis at $M=32$ ranges $0.3$--$8.9$ across seeds---the shape is barely identifiable at $M=32$, and $C=8$'s advantage there ($0.099$ vs $0.174$) is mostly covariance-plus-a-little-shape; worth one clause.
+
+\subsection{E02b --- the family}
+Six members, $M=512$, $C\in\{1,8\}$, sixteen seeds. The $C=1$ arm traces the LMMSE floor's $V$ within its s.e.\ at every member; $C=8$ stays at $0.017$--$0.035$; the gain reverses by $-0.008$ $[-0.011,-0.005]$ at the Gaussian member. \sev{verified}, and the cleanest single figure in the paper. One caveat the caption should carry: at the Gaussian member the floor is exactly zero, so the reversal is ``extra components cost estimation variance'', measured against an exact score, not against a floor.
+
+\subsection{E03 --- baselines, matched interface, length}
+\hi{Screen.} Two development seeds, one run of 16k steps per configuration, 68 configurations, ranked by pooled bulk risk. Adequate for ranking; the confirmatory protocol is separate. The transformer wins its family at lr $0.003$ while every other family wins at $0.001$---fine, the screen is per family.
+
+\hi{Confirm.} Sixteen seeds, four sizes, 32k steps, both parameterisations screened, checkpoint selected on the oracle validation bundle. At $M=2048$ the MLP and the transformer select the last rung in $88\%$ of cells and the bi-GRU in $31\%$: the networks with the most headroom were still improving at 32k steps. \emph{The $2.83\times$ paired factor against the best network is therefore an upper bound on the true advantage under the standard recipe}, exactly as the manuscript says of EM--BP's own at-cap rate in the capacity experiment and does not say here. \sev{supported but overstated} until that sentence is added; the direction is not in doubt (a factor of three at sixteen seeds, and the bi-GRU that carries the comparison is at cap in only a third of cells).
+
+\hi{Matched.} Two arms in \texttt{matched.csv}: \texttt{ism\_one\_view} (implicit score matching on $x_t$ only; checkpoint selected on the ISM objective of a held-out noisy bundle; no clean chain, no true score anywhere) and \texttt{dsm\_one\_corruption} (denoising score matching on $(a,x_t)$ pairs with one fixed corruption; checkpoint selected on the oracle bundle). The generator (\texttt{make\_baseline\_numbers.py}) takes the \emph{best} of the two by risk, which at every size is the DSM arm, and labels it ``the comparison at matched information''. It is not: the DSM arm sees the clean sequence. Table~\ref{tab:matched} gives both, paired with EM--BP $C=8$ on identical bundles.
+
+\begin{table}[h]\centering\small
+\caption{The two ``matched'' arms against EM--BP ($C=8$), all-site pooled error, sixteen seeds, identical test bundles; paired factor = mean over seeds of (network/EM--BP), percentile bootstrap. Source: \texttt{outputs/E03/matched.csv}, \texttt{outputs/E02a/capacity.csv}.}
+\label{tab:matched}
+\begin{tabular}{@{}llrrrrl@{}}
+\toprule
+arm & what the network sees & $M$ & network & EM--BP & paired factor & wins \\
+\midrule
+ISM, one view & $x_t$ only (matched) & 2048 & 0.165 & 0.023 & 7.9 [6.6, 9.3] & 16/16 \\
+ & & 512 & 0.211 & 0.036 & 6.0 [5.5, 6.5] & 16/16 \\
+ & & 128 & 0.401 & 0.055 & 8.1 [6.8, 9.7] & 16/16 \\
+ & & 32 & 1.205 & 0.099 & 13.3 [11.3, 15.7] & 16/16 \\
+DSM, one corruption & $(a, x_t)$: the clean chain too & 2048 & 0.155 & 0.023 & 7.3 [6.2, 8.7] & 16/16 \\
+ & & 512 & 0.206 & 0.036 & 5.9 [5.4, 6.4] & 16/16 \\
+ & & 128 & 0.272 & 0.055 & 5.5 [4.6, 6.7] & 16/16 \\
+ & & 32 & 0.475 & 0.099 & 5.3 [4.5, 6.2] & 16/16 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Classification against the brief: the standard recipe is interface~A; the fixed-corruption arm is interface~B (clean target, no fresh corruption)---strictly more information than EM--BP, less augmentation than A; the ISM arm is interface~C, genuinely observation-matched. The headline must be C. It happens to be larger, and it is the only arm in the paper selected without an oracle. The ISM window head at $M=32$ diverges (risk $1.2$, the ISM objective on the held-out bundle rising from $20$ to $2500$ across the ladder)---known behaviour of implicit score matching on tiny samples---so the $M=32$ ISM number is not a measurement of the architecture; report $M\ge128$ or say why. \sev{contradicted} as worded; \sev{verified} once reworded around C.
+
+\hi{Length.} EM--BP $0.023$ at every length; window head $0.118\to0.082$; bi-GRU/TCN/U-Net improve slightly; transformer $0.063\to0.703$. \sev{verified}. Note that the window head improves \emph{more} than the global architectures with length, which says a sizeable part of its $L=32$ error is at the boundary (zero padding); the ``plateau'' should be read on the bulk region as well (Section~6.4).
+
+\subsection{E05 --- generation}
+Sixteen seeds, common Brownian path within a seed, 400 steps with the discretisation measured separately ($0.019\to0.0033$ strong error from 100 to 400 steps). Deficit of the fitted kernel $+0.09$ nats $[+0.00,+0.19]$; kurtosis $1.80$ vs $1.94$; the covariance twin $+1.70$ with kurtosis $0.00$; the isotropic $+46$. \sev{verified}; the phrase ``small but real'' should be ``$0.09$ nats, interval touching zero''. The report and the paper now agree (the audit tool caught the stale four-seed table).
+
+\subsection{E06 --- learning through noise}
+\hi{Question.} How do the errors of $\hat\rho$ and $\hat\kappa_4$ grow with the observation level? \hi{Varied.} $t$. \hi{Frozen.} $M=512$, $C=8$, ladder to $1200$, one view per sequence. \hi{Unit.} Sixteen seeds per level. \hi{Selection.} Oracle validation risk. \hi{Estimand.} RMSE over seeds of the fitted coordinate---declared. What the data say per level (Table~\ref{tab:e06}):
+
+\begin{table}[h]\centering\small
+\caption{E06 per level: collapse fraction (fitted excess kurtosis $<1$), dispersion and bias of the non-collapsed fits, the one-parameter Cram\'er--Rao reference read from E01, and the fraction of cells whose selected checkpoint is the last rung. Source: \texttt{outputs/E06/levels.csv}; reference from \texttt{outputs/E01/shape\_information.csv}.}
+\label{tab:e06}
+\begin{tabular}{@{}rrrrrrrrr@{}}
+\toprule
+$t$ & collapsed & sd (all) & sd (good) & bias (all) & CRB & RMSE/CRB & sd(good)/CRB & at cap \\
+\midrule
+0.05 & 0/16 & 0.29 & 0.29 & $-0.03$ & 0.24 & 1.16 & 1.19 & 0.25 \\
+0.10 & 0/16 & 0.48 & 0.48 & $+0.14$ & 0.32 & 1.51 & 1.49 & 0.25 \\
+0.20 & 0/16 & 0.34 & 0.34 & $-0.07$ & 0.47 & 0.71 & 0.72 & 0.38 \\
+0.40 & 0/16 & 0.69 & 0.69 & $-0.29$ & 0.84 & 0.87 & 0.83 & 0.25 \\
+0.70 & 4/16 & 1.46 & 0.76 & $-0.66$ & 1.79 & 0.87 & 0.42 & 0.31 \\
+1.00 & 15/16 & 0.98 & --- & $-2.63$ & 3.81 & 0.73 & --- & 0.12 \\
+1.40 & 16/16 & 0.10 & --- & $-2.92$ & 12.6 & 0.23 & --- & 0.88 \\
+2.00 & 16/16 & 0.13 & --- & $-3.05$ & 105 & 0.03 & --- & 0.75 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The ``$1.02\times$'' is the mean of the RMSE/CRB column over the rows with RMSE $<2$: $1.16, 1.51, 0.71, 0.87, 0.87$. Three of those five are \emph{below} one, which for an estimator compared with an unbiased-estimator bound means the estimator is biased (it is: $-0.29$ and $-0.66$) or the reference is for the wrong family (it is: one parameter against a mixture). At $t=0.7$ the surviving cluster has dispersion $0.42$ of the bound and the collapsed quarter sits at the range. The estimator is not ``at the bound''; it is a shrinkage estimator that shrinks toward a Gaussian innovation as the information falls, and the validation-selected early stopping is the shrinkage. \sev{contradicted} as worded. What is \sev{verified}: for $t\le0.4$ the fits are unimodal and their dispersion is within $\pm20\%$ (the sampling error of a 16-seed sd) of the one-parameter reference; collapse starts at $t=0.7$ and is total at $t=1$, one level below the level at which the reference bound crosses the coordinate's range ($0.98$); $\hat\rho$ is within $0.01$ through $t=1$ and its dispersion is at the reference at every level up to $1.4$.
+
+\hi{Budget.} At $t\ge1.4$, $75$--$88\%$ of cells select the last rung; flagged correctly; E06c is running (four cells in; the $t=1.4$ cell converged at iteration $2508$ with the same collapsed fit). \sev{pending}.
+
+\hi{Slopes.} No asymptotic window exists at $\rho=0.85$ with $M=512$: the reference bound crosses the range at $t=0.98$ and $\tstar=1.17$. Pre-asymptotic slopes $1.29$ and $3.03$ on $[0.2,0.7]$ are reported as such. \sev{verified}; the introduction's ``confirms'' is not.
+
+\subsection{E07 --- the family ladder; E11 --- the envelope}
+E07 is deterministic (two replicates of 512 chains). Its Student-$t$ row at $\rho=0$ is flagged because E11 reports ``belief mass in the outer $2\%$ = 1.00''. Section~6.1 reproduces E11's chains: seeds 0--3 have one, one, one and two sites beyond $|a|=8$ among $8192$ each (analytic expectation $1.2$), seed 2's at $|a|=15.4$---beyond the $A=12$ reference too, which is why that seed's ``drift'' at $(801,12)$ is $2.6\times10^{-5}$ while the others' is $3\times10^{-8}$: both grids truncate the same site. The flat-in-$N_g$ drift is exactly the signature of a handful of pinned sites; the pooled relative error at the lowest level is dominated by them because at $t=0.05$ a site pinned at $8$ instead of $15$ carries a score error of $(\alpha/\Delta)\times7\approx70$. The manuscript's mechanism (truncation, not quadrature) is right; its description (``essentially all of its belief mass'') is a misreading of a max statistic. \sev{supported but overstated}. The right diagnostic is the exceedance count $M L\,P(|a|>A)$, which for Student-$t_5$ at $A=8$ is $1.2$ per $8192$ sites and at $A=16$ is $0.04$; E07b ($A=12$) will still see one site in some replicate, E07c ($A=16$) will usually not. The uniform family's $0.115$ worst-level drift at $\rho=0.5$ is a different mechanism (a discontinuous kernel under trapezoidal quadrature, $O(h)$ not $O(h^2)$) and is not mentioned anywhere; it should be, in one sentence.
+
+\subsection{E08 --- misspecification}
+Sixteen seeds, two sizes, four Gaussian mechanisms with exact scores. Verdicts: rank-one latent never reverses (ratio $15.6\to4.0$); AR(2) reverses in $(0.3,0.4)$; site-varying $\rho$ in $(0.10,0.14)$; long-range a tie at $0.4$. \sev{verified}. Two corrections: (i) the ``window head'' is a radius-2, width-64 head trained 16k steps, not E03's screened radius-4 winner---the claim matrix says ``screened'', the text says ``the window head''; name it; (ii) the explanation of the latent's absorption (``does not break the conditional independence'') is wrong---it does break Markovianity---and Section~6.3 gives the right two reasons (even in $\beta$; one direction of 32). With E17 the whole panel gains a theory: EM--BP's error at $M=2048$ is the closed-form bias to $\pm0.003$ at every strength, and the break-even is where $b(\varepsilon)$ meets the network's error.
+
+\subsection{E09, E10 --- capacity references}
+E09: the KL-optimal mixture per $C$ on the test bundles ($0.167, 0.040, 0.0058, 0.0022, 0.0007$); the $C\ge8$ fits have a component under two grid cells and are flagged. E10: the same frozen fits in held-out log-evidence per edge; every $C>1$ beats $C=1$ at every $M$, $16/16$. \sev{verified}; together they close the capacity question in both estimands.
+
+\subsection{E12 --- sample complexity}
+\sev{confounded} at $t=1$ (at cap $100\%$ at $M\ge4096$, kurtosis non-monotone in $M$), as the project already states. The two one-sided statements stand. E12b is queued with a corrected analysis plan (Section~7).
+
+\subsection{E13 --- regimes}
+Fifteen cells, eight seeds. $C=8$ beats $C=1$ everywhere with the interval excluding zero; $C=1$ on the floor to $0.002$ median. \sev{verified}. The $\rho$-trend is reported as a direction, correctly.
+
+\subsection{E14 --- matched comparison across regimes}
+Queued (jobs 662797/662798, scheduled $\approx21$ September). Design is sound: ISM for every arm (interface~C throughout, Hutchinson divergence uniformly), networks re-screened per regime, EM--BP on the same views. Eight seeds. The pre-registration predicts ``EM--BP beats the best screened network at every $(\rho,L)$''; nothing in this audit changes that expectation, but the report's decision~7 (wait for it before fixing the framing) is right.

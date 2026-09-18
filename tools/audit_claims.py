@@ -98,26 +98,29 @@ def audit_baselines():
     w = c[c.arch == "window"].groupby("n_chains").risk.mean()
     check("E03", "window head at M=512", w.get(512), "baseWindowC")
     check("E03", "window head at M=2048", w.get(2048), "baseWindowD")
-    # matched interface
+    # matched interface -- the headline is interface C: implicit score matching on one noised
+    # view per sequence, no clean chain, checkpoint selected on the implicit objective (claim E16
+    # as corrected on 18 Sep); the fixed-corruption DSM arm (interface B, clean target) is reported
+    # separately as matchedFixed*
     m = pd.read_csv(OUT / "E03" / "matched.csv"); m = m[(m.region == "all")]
-    # the headline is the best of BOTH matched arms (one fixed corruption of a clean sequence,
-    # and implicit score matching on one noised view), at M = 2048 -- claim E16
-    best = m[m.n_chains == 2048].groupby(["arm", "arch"]).risk.mean().sort_values()
-    (arm, arch), val = best.index[0], best.iloc[0]
-    check("E03m", "best matched (arm, arch) at M=2048", f"{arm}/{arch}", None)
-    check("E03m", "its mean risk", val, "matchedBestD")
-    ism = m[(m.arm == "ism_one_view") & (m.n_chains == 2048)].groupby("arch").risk.mean().min()
-    check("E03m", "best ISM one-view risk at M=2048 (quoted as 'worse again')", ism, "matchedIsmoneviewWindowD")
-    j = m[(m.arm == arm) & (m.arch == arch) & (m.n_chains == 2048)].merge(
-        em[em.n_chains == 2048][["seed", "test_bundle", "risk"]].rename(columns={"risk": "risk_em"}),
-        on=["seed", "test_bundle"])
-    check("E03m", "paired (seed, bundle) rows joined", int(len(j)), None, fmt="{}")
-    ratio = (j.risk / j.risk_em)
-    check("E03m", "paired factor best-matched / EM-BP at M=2048", ratio.mean(), "matchedRatioBestD", tol=0.06)
-    rng = np.random.default_rng(0); r = ratio.to_numpy()
-    b = np.array([r[rng.integers(0, len(r), len(r))].mean() for _ in range(20000)])
-    check("E03m", "  percentile-bootstrap 2.5%", np.percentile(b, 2.5), "matchedRatioBestDlo", tol=0.15)
-    check("E03m", "  percentile-bootstrap 97.5%", np.percentile(b, 97.5), "matchedRatioBestDhi", tol=0.15)
+    for arm, prefix, rprefix in (("ism_one_view", "matchedBest", "matchedRatioBest"), ("dsm_one_corruption", "matchedFixed", "matchedFixedRatio")):
+        best = m[(m.n_chains == 2048) & (m.arm == arm)].groupby("arch").risk.mean().sort_values()
+        arch, val = best.index[0], best.iloc[0]
+        check("E03m", f"best {arm} arch at M=2048", arch, None)
+        check("E03m", f"its mean risk ({arm})", val, f"{prefix}D")
+        j = m[(m.arm == arm) & (m.arch == arch) & (m.n_chains == 2048)].merge(
+            em[em.n_chains == 2048][["seed", "test_bundle", "risk"]].rename(columns={"risk": "risk_em"}),
+            on=["seed", "test_bundle"])
+        check("E03m", f"paired (seed, bundle) rows joined ({arm})", int(len(j)), None, fmt="{}")
+        ratio = (j.risk / j.risk_em)
+        check("E03m", f"paired factor {arm} / EM-BP at M=2048", ratio.mean(), f"{rprefix}D", tol=0.06)
+        rng = np.random.default_rng(0); r = ratio.to_numpy()
+        b = np.array([r[rng.integers(0, len(r), len(r))].mean() for _ in range(20000)])
+        check("E03m", "  percentile-bootstrap 2.5%", np.percentile(b, 2.5), f"{rprefix}Dlo", tol=0.15)
+        check("E03m", "  percentile-bootstrap 97.5%", np.percentile(b, 97.5), f"{rprefix}Dhi", tol=0.15)
+        check("E03m", f"  wins ({arm})", int((ratio > 1).sum()), f"{prefix.replace('Best', 'Wins').replace('Fixed', 'FixedWins')}D", fmt="{}")
+    ism_tr = m[(m.arm == "ism_one_view") & (m.arch == "transformer") & (m.n_chains == 2048)].risk.mean()
+    check("E03m", "ISM transformer at M=2048", ism_tr, "matchedIsmoneviewTransformerD")
     # length
     l = pd.read_csv(OUT / "E03" / "length.csv")
     tr = l[(l.arch == "transformer") & (l.n_chains == 2048)].groupby("L_test").risk.mean()

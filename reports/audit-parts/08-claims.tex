@@ -1,0 +1,49 @@
+%% ------------------------------------------------------------------------------------
+\section{Recommended final claims}
+\label{sec:claims}
+
+\subsection{The strongest defensible version of each headline claim}
+
+\begin{enumerate}
+\item \hi{Laboratory.} ``For a first-order Markov chain with continuous non-Gaussian transitions under coordinatewise OU noise, the posterior factor graph is a tree and the diffusion score is computed exactly by one forward--backward sweep of functional messages; we carry the messages on a grid whose truncation and quadrature errors are measured, not assumed.''
+\item \hi{Proposition 1.} ``Gaussian message closure computes the LMMSE estimator of the covariance twin for every innovation law with the same first two moments. Consequently every linear estimator, and every Gaussian-innovation kernel fitted by (quasi-)maximum likelihood, is bounded below by the LMMSE floor of the true covariance.''
+\item \hi{Theorem 2.} ``Under the channel every Hermite moment of degree $m$ is attenuated exactly by $e^{-mt}$, assuming only finite $m$-th moments.'' Followed by the dictionary: amplitude $e^{-mt}$, information $e^{-2mt}$, samples $e^{2mt}$.
+\item \hi{Theorem 3 (restated).} ``If $P_0$ has an exponential moment, then as $t\to\infty$ at fixed $L$: $\E\|S-\Sg\|^2=\tfrac16\Frob{\kappa_4}^2e^{-8t}(1+O(e^{-2t}))$; $I_t(\theta)=\tfrac12\Frob{\partial_\theta\Sigma_0}^2e^{-4t}(1+O(e^{-2t}))$ for a covariance coordinate; $I_t(\theta)=\tfrac1{24}\Frob{\partial_\theta\kappa_4}^2e^{-8t}(1+O(e^{-2t}))$ for a shape coordinate; in general $e^{-2mt}$ times the Hermite norm of the derivative of the degree-$m$ moment tensor (Theorem~\ref{thm:general}). For the Gaussian chain the correction is explicitly $O(e^{-2t}\lmax)$ and $\tstar=\tfrac12\log\lmax$ is the exact scale.''
+\item \hi{Verification.} ``The Gaussian-chain rate and constant are reproduced exactly; the score-gap constant to $1$--$6\%$ on the chain for every family on a domain wide enough for its tail, including Student-$t_5$ (to $1\%$ at $t=4$); the shape rate to $-8.01$ and its constant to $0.1\%$ in the scalar case and to $10$--$20\%$ on the chain, where the outer-product estimator's floor limits the check.''
+\item \hi{Heavy tails.} ``For a regularly varying innovation of index $\nu$ the expected gap acquires an $e^{-\nu t}$ term carried by events of probability $\sim e^{-\nu t}$; on a finite sample the Hermite law is what is seen. Theorem~3's hypothesis excludes such laws; the E01 departure at $t\approx3$ was truncation.''
+\item \hi{Corollary (sample complexity).} ``In the local asymptotic minimax sense, at fixed level $t$, estimating a degree-$m$ coordinate to fixed local precision needs $\Theta(e^{2mt})$ sequences, and maximum likelihood attains the constant; a shape coordinate needs $e^{4t}$ times more than a covariance coordinate.''
+\item \hi{Fourth-order correction (new).} ``Adding the degree-4 Hermite term back to the twin closes $96\%$ of the closure gap at $t=0.68$, $99.6\%$ at $1.4$ and all of it by $2$ on the Laplace chain; the correction diverges below $t\approx0.2$; on Student-$t$ it closes $82\%$ at $2.1$ and $8\%$ at $3.5$.''
+\item \hi{Learning through noise.} ``Fitting the transition law from $M=512$ one-view sequences at level $t$: for $t\le0.4$ the fitted shape is unimodal with dispersion within $20\%$ of the one-parameter Cram\'er--Rao reference; at $t=0.7$ a quarter of the fits collapse to a Gaussian innovation and the rest are shrunk; at $t=1$ all but one collapse, one level below the level at which the reference bound crosses the coordinate's range. The correlation is recovered to $0.01$ through $t=1$ with dispersion at the reference. Moment estimators of the same coordinates from the same data are unbiased at $5$--$30\times$ the reference and show the $e^{2t}$, $e^{4t}$ growth.''
+\item \hi{Capacity.} As now: ``$C=1$ sits on the floor at every size and across the family and the regime sweep ($0.01$ worst); $C=8$ is $7.9\times$ below it at $M=2048$; the previous conclusion was a stopping-rule artefact, diagnosed and controlled.''
+\item \hi{Structured vs neural, standard interface.} ``Under one recipe the structured estimator is ahead of six architectures at every size, by a paired $2.8\times$ $[2.4,3.4]$ against the best at $M=2048$; the networks with the most headroom were still improving at 32k steps, so the factor is an upper bound.''
+\item \hi{Structured vs neural, matched interface.} ``At the estimator's own interface---one noised view per sequence, no clean chain, checkpoint selected without the true score---the best network reaches $0.165$ against $0.023$, a paired $7.9\times$ $[6.6,9.3]$ in $16/16$ seeds; even given the clean sequence paired with its single corruption it reaches $0.155$. The advantage at equal information is larger than at the standard interface, not smaller.''
+\item \hi{Locality.} Pending E15's pooled number at $\rho=0.85$. Two candidate sentences: (a) if the radius-4 floor is $\ge0.06$: ``the window head's plateau is within a factor two of the exact radius-4 floor; locality is a ceiling''; (b) if $\le0.03$: ``the exact radius-4 estimator is far below the window head; the plateau is a limit of that architecture and its training, and the information a radius-4 window carries is mostly non-Gaussian and mostly unexploited''.
+\item \hi{Length.} As now.
+\item \hi{Generation.} ``The fitted kernel generates within $0.09$ nats $[0.00,0.19]$ of the exact score and with excess kurtosis $1.80$ against $1.94$; the covariance twin generates a Gaussian chain ($0.00$) at $+1.70$ nats; sliced $W_2$ cannot tell them apart.''
+\item \hi{Misspecification.} ``The asymptotic bias of the chain estimator under a Gaussian departure is a closed-form KL projection that reproduces the $M=2048$ error to $\pm0.003$; it is $\Theta(\varepsilon)$ for AR(2), site-varying $\rho$ and long-range coupling and $\Theta(\varepsilon^2)$ (and $O(1/L)$) for a rank-one latent, which is why the last never reverses the ordering in the swept range and the first two reverse it at $\rho_2\in(0.3,0.4)$ and $\delta\in(0.10,0.14)$.''
+\end{enumerate}
+
+\subsection{Claims that must not appear}
+
+\begin{itemize}
+\item ``The estimator attains the Cram\'er--Rao bound'' / ``$1.02\times$ the bound''.
+\item ``Information-matched'' for the fixed-corruption DSM arm; ``$7.3\times$ at matched information''.
+\item ``The experiment confirms the $e^{4t}$ separation'' / ``the $e^{4t}$ separation \ldots measured''.
+\item ``Student-$t_5$ departs as the moment condition predicts'' (at $t\approx3$).
+\item ``Essentially all of its belief mass outside the domain''.
+\item ``Requires $M\propto e^{8t}$ samples'' without ``local asymptotic minimax''.
+\item ``Finite eighth moments'' as the hypothesis of Theorem~3 with the present proof.
+\item ``What is not in that literature is the score-level statement for a Markov (dependent) rather than i.i.d.\ latent structure'' (the low-SNR expansions are for arbitrary inputs).
+\item ``A radius-4 window cannot represent a message that has travelled the length of the chain'' unless E15 supports it.
+\item ``The generator refuses cells whose narrowest component is under two grid cells'' (it flags them).
+\item ``Sixteen paired seeds are the inferential unit'' as a blanket statement (eight in E13/E14).
+\item ``We are the first''---anywhere.
+\end{itemize}
+
+\subsection{Novelty, stated precisely}
+
+\emph{Established before this paper:} Mehler's formula and OU spectral theory; cumulant attenuation $e^{-nt}$ under the forward process (Aarts et al.\ 2025); low-SNR expansions of mutual information and MMSE with fourth-order statistics at second order (Prelov--Verd\'u 2004; Guo--Shamai--Verd\'u 2005, 2011), valid for arbitrary input laws; the SNR$^k$ information law for directions first identifiable at moment order $k$ in latent-variable models (Katsevich--Bandeira 2023; Perry et al.\ 2019; Bandeira et al.\ 2023; Balanov et al.\ 2026); consistency and identifiability of MLE for general-state HMMs (Douc et al.\ 2011; Gassiat et al.\ 2020); EM via Fisher's identity (Capp\'e et al.\ 2005); Gaussian-dominance observations for learned scores (Wang--Vastola 2024; Li et al.\ 2024).
+
+\emph{Specialisations of known theory here:} eqs.~(4)--(5) as the diffusion-time form of the SNR$^k$ law; the LAN corollary.
+
+\emph{New in this paper:} (i) an exactly solvable, correlated, non-Gaussian diffusion laboratory with a validated instrument; (ii) Proposition~1 (closure = LMMSE of the twin) and its use as an apparatus check across fifteen regimes; (iii) the score-level statement of Theorem~3 with its constant $\tfrac16\Frob{\kappa_4}^2$, the general-order constant (Hermite norm), the exponential-moment hypothesis with the heavy-tailed regime beyond it, and the crossover as an exact scale for the Gaussian chain; (iv) exact verification of rates and constants with the true score; (v) transition learning by exact-inference EM through the channel, with the collapse level measured against the information curve, the moment competitor, and the oracle-free selection control; (vi) the controlled structured-vs-neural comparison at three declared interfaces with a matched interface that gives the larger factor; (vii) the fourth-order oracle correction as the moment-method reading of the closure gap; (viii) the closed-form misspecification bias and its order in $\varepsilon$. The contribution is the synthesis; no sentence should claim more.

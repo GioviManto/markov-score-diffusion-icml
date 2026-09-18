@@ -1,0 +1,21 @@
+%% ------------------------------------------------------------------------------------
+\section{Contradictions between the paper, the report, and the frozen outputs}
+\label{sec:contra}
+
+\begin{enumerate}
+\item \hi{``Information-matched'' (paper \S5, report \S5.2 and summary item 3).} Both documents call the fixed-corruption DSM arm ``the estimator's own interface''. The frozen file says it trains on $(a,x_t)$ pairs. The report even says ``implicit score matching on that bundle, which uses no clean target at all, lands at $0.165$'' in the same paragraph, i.e.\ it names the matched arm and then quotes the other one as the headline.
+\item \hi{``Attains the Cram\'er--Rao bound'' (paper \S4, report \S4 and summary item 2).} The report's ``never worse than $1.51$ for the fourth cumulant'' is true and the ``$1.02$ on average'' is arithmetic on the macro file; neither says that three of the five averaged ratios are below one, that the bound is for a different family, or that the estimator is bimodal from $t=0.7$.
+\item \hi{Belief mass outside the domain (paper App.~B, App.~E, Fig.~6; report \S8.2 and summary).} ``Essentially all'' versus one to two sites in $8192$. Same number, wrong reading.
+\item \hi{Student-$t_5$ departure (paper Fig.~2c caption and \S3; THEORY\_NOTES \S7).} ``Departs as the moment condition predicts'' versus E18: the constant is reached on a wide domain. The (801, 8) grid, validated at the frozen configuration for the twelve levels, was never validated for the closure panel's $t\le4$ on heavy tails.
+\item \hi{The under-resolved fits.} App.~C: ``a generator refuses to emit a table from \ldots cells whose narrowest fitted component is under two grid cells''. Table~1 prints two such cells with daggers and the text says ``1 of 320 fitted cells fail the two-grid-cell resolution gate and are reported, not dropped''. Policy in the code: flagged, not refused. The provenance sentence is the stale one.
+\item \hi{Seeds.} \S5: ``Sixteen paired seeds are the inferential unit''. E13 and E14 use eight. The regime paragraph says eight; the protocol paragraph does not qualify.
+\item \hi{Which window head.} Claim matrix E18 and E08's registry: ``against the screened window head''; E08's params: radius 2, width 64, 16k steps. E03's screened winner is radius 4, width 64, 32k steps.
+\item \hi{\S1 versus \S4.} \S1: ``the experiment confirms it'' ($e^{4t}$); \S4: ``the asymptotic window itself lies beyond the reach of $M=512$''. The latter is right.
+\item \hi{Contribution (iii) versus NEGATIVE\_RESULTS.} ``with the predicted $e^{4t}$ separation \ldots measured'' versus ``the predicted exponents are not confirmed by these runs''.
+\item \hi{Dangling reference.} \S5g cites \verb|\cref{thm:gap}|, which does not exist; the PDF prints ``??''.
+\item \hi{Abstract.} A \texttt{[PENDING]} note in a document labelled ``under review''.
+\item \hi{Report summary item 4 versus E03 length.} ``The radius-4 window head \ldots moving only $0.121\to0.118$'' beside a length table in which the same head moves $0.118\to0.082$ as the chain lengthens: the plateau is partly a boundary effect at $L=32$, which neither document says.
+\item \hi{Report \S8.1 versus paper \S5g.} The report says ``the mixture beats the Gaussian kernel in all fifteen cells \ldots the margin shrinking smoothly with $\rho$''; the paper says the same and adds ``its trend is not the exponent of \verb|\cref{thm:gap}|''---an honest caveat attached to a broken reference.
+\item \hi{Related work.} ``What is not in that literature \ldots is the score-level statement for a Markov (dependent) rather than i.i.d.\ latent structure'': the low-SNR expansions of Prelov--Verd\'u and Guo--Shamai--Verd\'u are for arbitrary input laws, dependent included; the dependence is not the novelty. The constant, the crossover, the exact verification and the learning consequence are (Section~8.3).
+\item \hi{Two E06 rows that agree with E06c and one stop reason that does not.} E06c's first four cells reproduce E06's fits exactly (same trajectories); the stop reason changes from ``censored'' to ``converged'' because the longer ladder lets the tolerance fire. Consistent, but the manuscript's ``censored'' counts will change when E06c lands and should be read as ``ladder exhausted'', not ``diverging''.
+\end{enumerate}

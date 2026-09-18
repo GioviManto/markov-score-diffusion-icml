@@ -30,13 +30,12 @@ estimator sees one frozen noised view per sequence and never a clean trajectory;
 reported fit selects its iteration count on a validation bundle disjoint from the test
 bundle.
 
-\paragraph{Shape is learned $e^{4t}$ more slowly than correlation.}
+\paragraph{The information curve predicts what is learned at each level.}
 \Cref{cor:samples} makes a prediction about learning that the exact score does not
-need: fitting from $\nseq$ sequences all observed at level $t$, the error of
-$\widehat\corr$ should grow like $e^{2t}$ and the error of the fitted innovation excess
-kurtosis $\widehat\kfour$ like $e^{4t}$ beyond $\tstar$. \Cref{fig:learning} measures both
-with $\nseq=512$ Laplace-chain sequences and $16$ replicates per level.
-\IfFileExists{sections/learning-numbers.tex}{\input{body/04a-learning-results}}{\needsdata{E06 queued: slopes of the two RMSEs against the level}}
+need: fitting from $\nseq$ sequences all observed at level $t$, the shape of the
+innovation law stops being identifiable at the level where its Cram\'er--Rao reference
+crosses the coordinate's range, while the correlation survives to the crossover.
+\IfFileExists{sections/learning-numbers.tex}{\input{body/04a-learning-results}}{\needsdata{E06 queued: the estimator against the information reference}}
 This is the mechanism behind the
 convergence asymmetry reported for this model---correlation settles in tens of EM
 updates, shape in hundreds---and behind the one-view protocol's arithmetic: of twelve
@@ -48,7 +47,10 @@ about shape.
   \IfFileExists{figures/fig_learning.pdf}{\includegraphics[width=\columnwidth]{fig_learning.pdf}}{\needsdata{fig\_learning.pdf (E06)}}
   \caption{\textbf{Learning through noise.} Recovery of the correlation coordinate and
   of the innovation shape from $\nseq=512$ sequences observed at a single level $t$,
-  sixteen replicates; the predicted growth $e^{2t}$ and $e^{4t}$ of the two errors beyond
-  $\tstar$ (dotted).}
+  sixteen replicates (points: individual fits; line: RMSE), against the Cram\'er--Rao
+  reference (dashed), the clean-data floor (dotted) and, for the shape, the coordinate's
+  range. The fits are unimodal and at the reference at the lowest levels, split into a
+  shrunk cluster and Gaussian-collapsed fits from $t=\learnLevelTzeropseven$, and collapse
+  where the reference crosses the range.}
   \label{fig:learning}
 \end{figure}

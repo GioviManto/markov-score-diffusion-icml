@@ -1,0 +1,90 @@
+%% ------------------------------------------------------------------------------------
+\section{Additional analyses performed}
+\label{sec:analyses}
+
+Everything in this section was run on the laptop during the audit (18--19 September). Each analysis is a registered experiment (E15--E21, \texttt{experiments/registry/}) whose script reproduces it under provenance; numbers are from those runs where complete and from the identical-seed scratch computation otherwise (marked $\dagger$).
+
+\subsection{The Student-$t$ envelope cell is a handful of exceedances (E11 re-read)}
+\label{sec:exceed}
+E11's chains were regenerated from their tags. Sites with $|a|>8$ among $8192$ per seed: $1, 1, 1, 2$ (seeds 0--3); the analytic expectation for the variance-normalised $t_5$ at $\rho=0$ is $8192\times P(|t_5|>8/\sqrt{0.6})=1.2$. Seed 2's exceedance is at $|a|=15.4$, beyond the $A=12$ reference; seed 3's at $10.0$. Every ``boundary belief mass $=1.00$'' in the frozen file is one of these sites; the drift is flat in $N_g$ because a pinned site is pinned on every grid; and the pooled relative drift at the lowest level ($0.046$ for seed 2) is one site's score error $\approx(\alpha/\Delta)(15.4-8)$ against the energy of $8192$ ordinary sites. At $\rho=0.5$ and $0.85$ no site exceeds $8$ in any seed, yet the ``boundary belief mass'' reaches $0.09$ and $0.17$: sites at $|a|\approx6$--$7$ whose posterior at the lowest level has a tail beyond $8$. Same mechanism, no pinning, drift $\le10^{-2}$.
+
+The correct diagnostic for polynomial tails is the expected exceedance count $ML\,P(|a|>A)$, Poisson-distributed, and the correct statement is that a finite domain cannot make it zero: $A=12$ gives $0.17$ per $8192$ sites, $A=16$ gives $0.04$. A second mechanism in the same table, mentioned nowhere: the uniform family's worst-level drift of $0.115$ at $\rho=0.5$ on $(401,10)$ is the trapezoidal rule on a discontinuous kernel ($O(h)$, not $O(h^2)$), largest at the coarsest spacing.
+
+\subsection{The closure gap on a wide domain (E18, part ``chain'')}
+\label{sec:e18}
+$\rho=0.85$, 256 chains $\times$ 2, levels $1$--$5$, three grids. Slopes are paired across grids (same chains) and across levels (common noise) and are precise; ratios to the constant from 512 chains are not (next subsection).
+
+\begin{center}\small
+\begin{tabular}{@{}llrrrrrr@{}}
+\toprule
+family & grid & slope $[3,3.5]$ & $[3.5,4]$ & $[4,4.5]$ & $[4.5,5]$ & ratio $t=4$ & ratio $t=5$ \\
+\midrule
+Student-$t_5$ & $(801,8)$ & $-4.97$ & $-4.21$ & $-4.04$ & $-4.01$ & 27 & 1440 \\
+ & $(1601,16)$ & $-7.69$ & $-7.20$ & $-5.73$ & $-4.48$ & 0.99 & 18 \\
+ & $(3201,32)$ & $-7.79$ & $-7.90$ & $-7.86$ & $-7.43$ & 0.74 & 1.06 \\
+Student-$t_7$ & $(801,8)$ & $-7.71$ & $-6.86$ & $-5.13$ & $-4.21$ & 1.94 & 54 \\
+ & $(3201,32)$ & $-7.90$ & $-7.96$ & $-7.98$ & $-7.99$ & 1.08 & 1.09 \\
+Student-$t_9$ & $(1601,16)$ & $-7.98$ & $-8.01$ & $-8.02$ & $-8.02$ & 1.04 & 1.02 \\
+Laplace & $(801,8)$ & $-7.95$ & $-8.00$ & $-8.02$ & $-8.02$ & 1.59 & 1.56 \\
+bimodal & $(3201,32)$ & $-7.87$ & $-7.95$ & $-7.98$ & $-7.99$ & 1.13 & 1.15 \\
+uniform & any & $-7.52$ & $-6.25$ & $-4.62$ & $-4.08$ & 3.8 & 148 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Three readings. (i) Every departure from $-8$ on the $(801,8)$ grid for the Student-$t$ families is removed by widening the domain: it was the truncated prior in the reference, not the moment condition. (ii) The uniform family's departure is identical on every grid: it is the double-precision floor of the BP posterior means (a squared gap of $\sim10^{-13}$ per chain), which every family reaches near $t\approx5$; the figure must shade it. (iii) On a domain wide enough for the sample, Student-$t_5$ follows $e^{-8t}$ through $t=5$. The expected tail term $\propto e^{-\nu t}$ of Proposition~\ref{prop:heavy} is carried by chains with $|a|\gtrsim1/\alpha^2$, whose probability at $t=5$ is $\sim10^{-16}$ per site: no sample sees them, and only an untruncated quadrature does (part ``scalar'', running). The paper's Student-$t$ sentence should say that the constant is reached and that the heavy-tailed correction is an expectation over events invisible in practice---which is the more interesting statement.
+
+\subsection{The closure constant, and how precisely it is verified (E18, part ``constant'')}
+\label{sec:const}
+The per-chain squared gap is a degree-six polynomial in nearly Gaussian variables and is heavy-tailed: over $8192$ chains its maximum is $\approx300$ times its median. A 512-chain mean therefore carries a relative standard error of $\approx15\%$: two 512-chain replicates of E01's Laplace closure at $t=3$ give ratios $0.83$ and $1.14$, two 256-chain replicates $1.77$ and $1.33$. E01's ``$0.99$ at $t=3$'' is the mean of four such replicates and its precision is $\approx\pm10\%$, not $1\%$. With $8192$ chains at $(1601,16)$: Laplace $0.92$ $[0.84,1.01]$ at $t=3$ and $0.99$ $[0.91,1.08]$ at $t=4$ (chain bootstrap); the other families are running. The paper should quote the constant with that interval. This does not touch the rates, which are paired and measured to $\pm0.05$.
+
+\subsection{The locality floor (E15)}
+\label{sec:e15}
+At $\rho=0.5$ (complete$^\dagger$): pooled floors $0.42, 0.068, 0.016, 0.0049, 0.0017, 0.0003$ for $r=0,1,2,3,4,6$ against the LMMSE floor $0.264$; the Gaussian twin's windowed LMMSE reaches the full LMMSE by $r=3$ ($0.2639$), so everything a window beyond $r=3$ buys is non-Gaussian information. At $\rho=0.85$ (running): at $t=0.15$ and $0.22$ the radius-4 floor is $0.018$ and $0.028$, rising with $t$. \textsc{[pending: pooled floors at $\rho=0.85$ and $0.95$; the verdict on the window head's $0.118$ (all-site) / $0.075$ (bulk).]}
+
+\subsection{The shape-information constant (E21, part ``constant'')}
+\label{sec:scalar-const}
+Scalar generalised Gaussian, untruncated quadrature: $I_t(\beta)e^{8t}/[\tfrac1{24}(\partial_\beta\kappa_4)^2]=1.0025, 1.0003, 1.0000$ at $t=1, 1.5, 2$ for $\beta=2$; $1.042, 1.006, 1.001$ for $\beta=3$; $0.960, 0.995, 0.999$ for $\beta=1.5$; the variance coordinate's $\tfrac12$ to five digits. The constant of eq.~(5) is correct. On the chain (E01) the outer-product estimate plateaus at $0.81$ ($\beta=2$) and $0.92$ ($\beta=3$) of the prediction from $t=3$ on, and diverges upward for $\beta\le1.5$ beyond $t\approx2.5$: the estimator's floor (a cancellation of $O(1)$ terms to $\alpha^4\approx10^{-5}$ against $10^{-5}$ grid accuracy) is reached before the asymptote for the kinked members and biases the smooth ones. The manuscript may say ``rate verified on the chain; constant verified in the scalar case and to $20\%$ on the chain''.
+
+\subsection{The fourth-order correction (E16)}
+\label{sec:e16}
+Laplace chain, fraction of the squared closure gap closed by $\Sg+\nabla\epsilon/(1+\epsilon)$: $-11$ at $t=0.05$ (the expansion diverges; $\epsilon$ reaches $43$), $-1.4$ at $0.15$, $+0.30$ at $0.22$, $0.83$ at $0.32$, $0.92$ at $0.47$, $0.96$ at $0.68$, $0.985$ at $0.98$, $0.996$ at $1.4$, $1.000$ from $2.1$. Bimodal and uniform: the same shape, converging from $t\approx0.15$. Student-$t_5$: $0.13$ at $0.68$, $0.59$ at $1.4$, $0.82$ at $2.1$, then $0.39, 0.08, 0.01$ at $3, 3.5, 4$---on the $(801,8)$ grid, where the reference is truncation-dominated at those levels (Section~\ref{sec:e18}); a rerun at the wide domain is a one-line change and must be made before the number is used. Pooled over the twelve levels the corrected score is \emph{worse} than the twin ($0.47$ vs $0.155$ on Laplace) because the lowest levels dominate the pooled energy and the expansion diverges there: the fourth-order oracle is a per-level statement about what the gap is made of, not a competitor on the schedule. That is the right way to present it.
+
+\subsection{Closed-form misspecification bias (E17)}
+\label{sec:e17}
+\begin{center}\small
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+mechanism & $\varepsilon$ & $\rho^\ast$ & EM $\hat\rho$ (2048) & $b(\varepsilon)$ & lag-1 plug-in & EM--BP 512 / 2048 & predicted 512 / 2048 \\
+\midrule
+AR(2) & 0.1 & 0.867 & 0.855 & 0.060 & 0.052 & 0.056 / 0.055 & 0.063 / 0.061 \\
+ & 0.4 & 0.916 & 0.888 & 0.248 & 0.216 & 0.214 / 0.214 & 0.248 / 0.248 \\
+site-varying & 0.05 & 0.848 & 0.836 & 0.088 & 0.088 & 0.094 / 0.094 & 0.090 / 0.088 \\
+ & 0.14 & 0.850 & 0.804 & 0.268 & 0.268 & 0.282 / 0.287 & 0.269 / 0.269 \\
+long-range & 0.1 & 0.792 & 0.746 & 0.139 & 0.111 & 0.120 / 0.120 & 0.140 / 0.139 \\
+ & 0.4 & 0.713 & 0.659 & 0.235 & 0.202 & 0.206 / 0.204 & 0.235 / 0.235 \\
+rank-one & 0.5 & 0.886 & 0.884 & 0.028 & 0.022 & 0.030 / 0.027 & 0.034 / 0.030 \\
+ & 1.0 & 0.937 & 0.932 & 0.065 & 0.048 & 0.055 / 0.052 & 0.068 / 0.066 \\
+\midrule
+\multicolumn{8}{@{}l}{small-$\varepsilon$ law: AR(2) $b\approx0.60\,\varepsilon$; site-varying $1.75\,\varepsilon$; long-range $1.07\,\varepsilon^{0.8\to1.0}$; rank-one $0.15\,\beta^{2.00}$}\\
+\bottomrule
+\end{tabular}
+\end{center}
+The KL projection under the one-view protocol reproduces EM--BP's $M=2048$ error within $0.003$ for site-varying $\rho$ and within $10$--$15\%$ for AR(2) and long-range, where the lag-one plug-in AR(1) (E08's \texttt{lmmse\_ar1} arm) is the closer match: the fitted $\hat\rho$ sits between the two projections because the $C=8$ kernel is not exactly Gaussian and the finite-sample fit under-shoots the KL optimum. Either way the asymptotic bias is a closed-form function of $\varepsilon$ and $L$; its order is $\varepsilon^1$ for the three mechanisms that perturb $O(L)$ directions of the covariance and $\varepsilon^2$ (in $\beta$) for the rank-one latent, which perturbs one. With $v=0.2$ from the well-specified cells, $\sqrt{b^2+v/M}$ predicts the two-size pattern of E08 at every strength.
+
+\subsection{Oracle-free checkpoint selection (E20)}
+Running (sixteen seeds at $M=32$, then four at $M=512$). \textsc{[pending.]} Expectation from the frozen validation curves: at $M=2048$ the oracle validation risk is monotone through the ladder ($0.0147\to0.0145$ over the last $400$ iterations), so any selection rule on that ladder gives the same test risk to $1\%$; the question is live only at $M\le128$.
+
+\subsection{Moment estimators (E19)}
+\label{sec:e19}
+Same chains and noise draws as E06, $M=512$, sixteen seeds. RMSE of $\hat\rho$: $0.031, 0.023, 0.030, 0.039, 0.049, 0.060, 0.16, 0.39$ at the eight levels against EM--BP's $0.005, 0.005, 0.006, 0.008, 0.011, 0.009, 0.03, 0.34$; RMSE of $\hat\kappa_4$: $1.42, 1.21, 1.82, 1.84, 3.78, 15, 12700, 1220$ against $0.28, 0.48, 0.33, 0.73, 1.55, 2.79, 2.92, 3.06$. Unbiased (bias $\le0.4$ up to $t=0.4$), never collapsing, $5$--$30\times$ the reference in dispersion at the informative levels, and with the asymptotic growth visible where the estimate is already useless: OLS log-slopes on $t\ge1$ of $1.83$ ($\hat\rho$, predicted $2$) and $3.73$ ($\hat\kappa_4$, predicted $4$). This is the high-noise competitor of the brief's Part~VII.6, and it answers cleanly: rate-correct, inefficient, and the inefficiency is the value of exact inference below the crossover (at high $t$ the MLE's score is itself the degree-4 Hermite statistic, so the two estimators become asymptotically equivalent---one sentence in the paper).
+
+\subsection{The information curve at $\rho=0.5$ (E21, part ``curve'')}
+\label{sec:e21}
+Table~\ref{tab:crb}. Local slopes of $\log(1/I^{\mathrm{eff}}_\beta)$: $5.5, 5.7, 6.1, 6.5, 6.8, 6.9, 6.6$ on $[0.4,1.2]$; of $\log(1/I^{\mathrm{eff}}_\rho)$: $3.8$--$3.9$ throughout. E12b's levels $[0.6,1.0]$ sit where the shape slope is $6$--$7$. The corollary's exponents are the $t\to\infty$ limits; the experiment measures the curve. Amendment recorded in \texttt{experiments/registry/E12b.json} before any cell of that job ran.
+
+\subsection{Interfaces and paired factors (E03 re-read)}
+Table~\ref{tab:matched}. The ISM window head is the matched arm at every size; its paired factor at $M=2048$ is $7.9$ $[6.6,9.3]$; the fixed-corruption DSM arm, which sees the clean chain, is at $7.3$ $[6.2,8.7]$. Ratio-of-means versions: $7.2$ and $6.7$. Both should be given, with the estimand named as in Appendix~C.
+
+\subsection{Compute accounting}
+\textsc{[pending: \texttt{f\_compute\_cost.py} on an idle machine.]} From the frozen \texttt{wall} columns: a 32k-step network fit takes $6$--$30$ minutes single-threaded ($1{,}900$ s for the ISM window head with the exact divergence at $M=32$); an EM--BP fit at $M=2048$ with the 1200-rung ladder takes of order an hour on one core; inference is $O(LN_g^2)$ per sequence per level ($\approx10^7$ flops) against a network forward pass of $10^5$--$10^6$ flops. The Pareto sentence: EM--BP buys a factor $8$ in error at equal data for a factor $\sim10$--$100$ in inference compute and one structural assumption whose price under violation is Section~\ref{sec:e17}.

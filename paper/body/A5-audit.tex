@@ -1,0 +1,100 @@
+\section{Reference computations behind the body}
+\label{app:audit}
+Six deterministic or cheap computations support statements in the body; each is a
+registered experiment (\textsc{e15}--\textsc{e21}) whose outputs are frozen like every
+other.
+
+\paragraph{The locality floor (\textsc{e15}).}
+For the Laplace chain at $\corr\in\{0.5,0.85,0.95\}$ and every level of the schedule, the
+best estimator of $a_i$ from the window $x_{i-r},\dots,x_{i+r}$ is its posterior mean
+given the window, computed exactly by sum-product on the sub-chain with the exact
+marginal law of the window's first site (propagated on the grid) as initial factor; its
+relative score error against the full-chain score is a floor for every radius-$r$
+denoiser. At $\corr=0.85$ the pooled floors are $\audLocFloorrzeroRhozeropeightfive$,
+$\audLocFloorrtwoRhozeropeightfive$, $\audLocFloorrfourRhozeropeightfive$,
+$\audLocFloorreightRhozeropeightfive$ and $\audLocFloorronesixRhozeropeightfive$ at
+$r=0,2,4,8,16$; the Gaussian twin's windowed LMMSE is
+$\audLocGaussrfourRhozeropeightfive$ at $r=4$ against its full value
+$\audLocLmmseRhozeropeightfive$, so the non-Gaussian part of the score is what a wider
+window carries. At $\corr=0.5$ the radius-$4$ floor is $\audLocFloorrfourRhozeropfive$.
+For the Gaussian chain the score's dependence on a site at distance $k$ decays as
+$r(\corr,t)^{k}$ with $r=(A-\sqrt{A^2-B^2})/B$, $A=\Dt(1+\corr^2)+e^{-2t}(1-\corr^2)$,
+$B=2\Dt\corr$, from $0$ at $t=0$ to $\corr$ as $t\to\infty$.
+
+\paragraph{The fourth-order correction (\textsc{e16}).}
+With $y=\Sig_t^{-1}\vx$, $K=e^{-4t}\kfour$ and $A_{ml}=\sum_{jk}K_{mjkl}(\Sig_t^{-1})_{jk}$,
+the first Edgeworth correction around the twin is
+$\epsilon(\vx)=\tfrac1{24}\bigl[K[y,y,y,y]-6\,y^{\!\top}Ay+3\langle A,\Sig_t^{-1}\rangle\bigr]$
+and the corrected score $\Sgauss+\nabla\epsilon/(1+\epsilon)$ with
+$\nabla\epsilon=\tfrac16\Sig_t^{-1}K[\cdot,y,y,y]-\tfrac12\Sig_t^{-1}Ay$. Fraction of the
+squared closure gap closed on the Laplace chain: $\audEdgeClosedLaplaceTzeroptwotwo$ at
+$t=\audEdgeLevelTzeroptwotwo$, $\audEdgeClosedLaplaceTzeropthreetwo$ at
+$t=\audEdgeLevelTzeropthreetwo$, $\audEdgeClosedLaplaceTzeropsixeight$ at
+$t=\audEdgeLevelTzeropsixeight$, $\audEdgeClosedLaplaceTzeropnineeight$ at
+$t=\audEdgeLevelTzeropnineeight$, $\audEdgeClosedLaplaceTtwopzeroseven$ at
+$t=\audEdgeLevelTtwopzeroseven$; the bimodal and uniform chains cross ninety per cent at
+$t=\audEdgeNinetyFromBimodal$ and $\audEdgeNinetyFromUniform$. Pooled over the
+schedule the corrected score is worse than the twin, because the lowest levels dominate
+the pooled energy and the expansion diverges there: the correction is a statement about
+what the gap is made of at each level, not a competitor on the schedule.
+
+\paragraph{Closed-form misspecification bias (\textsc{e17}).}
+For a Gaussian truth with covariance $\Sig(\varepsilon)$ the population limit of the
+Gaussian AR(1) fit under the one-view protocol is
+$\theta^\ast(\varepsilon)=\arg\min_{(\corr,\ivar)}\sum_t\mathrm{KL}(\normal{0}{\Sig_t(\varepsilon)}\,\|\,\normal{0}{\hat\Sig_t(\corr,\ivar)})$
+and its pooled relative score error is
+$b(\varepsilon)^2=\sum_t\operatorname{tr}[(\hat\Sig_t^{-1}-\Sig_t^{-1})\Sig_t(\hat\Sig_t^{-1}-\Sig_t^{-1})]/\sum_t\operatorname{tr}\Sig_t^{-1}$.
+Against the frozen EM--BP errors at $\nseq=2048$: AR(2) at the largest strength
+$\audBiasArtwoEzeropfour$ (KL projection), $\audBiasLagoneArtwoEzeropfour$ (lag-one
+plug-in) versus $\audBiasEmDArtwoEzeropfour$ measured; site-varying $\corr$ at its
+largest strength $\audBiasSitevarEzeroponefour$ versus $\audBiasEmDSitevarEzeroponefour$;
+long-range coupling $\audBiasLongrangeEzeropfour$, $\audBiasLagoneLongrangeEzeropfour$
+versus $\audBiasEmDLongrangeEzeropfour$; rank-one latent at $\beta=1$
+$\audBiasGlobalEone$ versus $\audBiasEmDGlobalEone$. The largest deviation of the
+lag-one projection from the measured error over all cells is
+$\audBiasMaxAbsDevLagoneD$. Small-$\varepsilon$ laws: $b\approx\audBiasCoefArtwo\,\varepsilon$
+(AR(2)), $\audBiasCoefSitevar\,\varepsilon$ (site-varying), $\audBiasCoefLongrange\,\varepsilon$
+(long-range, local exponent $\audBiasOrderLongrange$), $\audBiasCoefGlobal\,\beta^2$
+(rank-one).
+
+\paragraph{The closure constant and the heavy-tailed regime (\textsc{e18}).}
+The per-sequence squared gap is a degree-six polynomial in nearly Gaussian variables and
+heavy-tailed (maximum over $\audConstChains$ sequences
+$\audConstMaxOverMedianLaplaceTfour$ times the median), so a $512$-sequence mean carries a
+relative standard error of about $\audConstRelSeLaplaceTfour\%$ times four; the constant
+is therefore quoted from $\audConstChains$ sequences with a bootstrap interval:
+$\audConstRatioLaplaceTthree$ $[\audConstRatioLoLaplaceTthree,\audConstRatioHiLaplaceTthree]$ at
+$t=3$ and $\audConstRatioLaplaceTfour$ $[\audConstRatioLoLaplaceTfour,\audConstRatioHiLaplaceTfour]$
+at $t=4$ for Laplace. Across grids, with paired sequences, Student-$t_5$'s local slope
+on the half-unit interval from $t=4$ is $\audWideSlopeStudentfiveNeightzerooneTfour$ at $(801,8)$,
+$\audWideSlopeStudentfiveNonesixzerooneTfour$ at $(1601,16)$ and
+$\audWideSlopeStudentfiveNthreetwozerooneTfour$ at $(3201,32)$, against $-8$: the
+departure on the narrow domain is the truncated prior in the reference. Student-$t_7$ and
+$t_9$ behave the same way. The uniform family departs identically on every grid from
+$t\approx3.5$: that is the double-precision floor of the posterior means, reached by every
+family near $t=5$.
+
+\paragraph{Moment estimators (\textsc{e19}) and selection without the true score (\textsc{e20}).}
+On \textsc{e06}'s data the moment estimators' RMSEs are $\audMomRmseRhoTzeropzerofive$,
+$\audMomRmseRhoTzeropfour$, $\audMomRmseRhoTone$, $\audMomRmseRhoTtwo$ for $\corr$ and
+$\audMomRmseKurtTzeropzerofive$, $\audMomRmseKurtTzeropfour$, $\audMomRmseKurtTone$ for
+$\kfour$ at $t=0.05,\learnLevelTzeropfour,1,2$ (and $t=0.05,\learnLevelTzeropfour,1$), with biases within
+$\audMomBiasKurtTzeropfour$ at $t=\learnLevelTzeropfour$. Selecting EM--BP's checkpoint by held-out
+one-view log-evidence instead of by validation risk against the true kernel gives a test
+error of $\audSelEvidenceA$ against $\audSelOracleA$ at $\nseq=32$ ($\audSelSameA$ of
+$\audSelNA$ seeds select the same rung) and $\audSelEvidenceC$ against $\audSelOracleC$
+at $\nseq=512$.
+
+\paragraph{The information curve at $\corr=0.5$ and the scalar constants (\textsc{e21}).}
+At $\corr=0.5$ the local slope of $\log(1/I^{\mathrm{eff}})$ on the levels
+$[0.6,1.0]$ is $\audSlopeBetaWindowLo$--$\audSlopeBetaWindowHi$ for the shape coordinate
+and $\audSlopeRhoWindowLo$--$\audSlopeRhoWindowHi$ for the correlation, against the
+asymptotic $8$ and $4$: a sample-complexity experiment on those levels must be read
+against the curve, not the asymptote. The Cram\'er--Rao reference for the excess
+kurtosis at $t=1$ is $\audCrbKurtToneMtwozerofoureight$ at $\nseq=2048$ and
+$\audCrbKurtToneMeightoneninetwo$ at $\nseq=8192$. In the scalar generalised-Gaussian
+family an untruncated quadrature gives $I_t(\beta)e^{8t}$ over
+$\tfrac1{24}(\partial_\beta\kfour)^2$ equal to $\audScalarConstbetatwoTtwo$ ($\beta=2$),
+$\audScalarConstbetathreeTtwo$ ($\beta=3$) and $\audScalarConstbetaonepfiveTtwo$
+($\beta=1.5$) at $t=2$, and the variance coordinate's $I_t e^{4t}$ equal to
+$\audScalarConstgaussianvarianceTtwo$ times one half.

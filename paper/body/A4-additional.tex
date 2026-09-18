@@ -27,9 +27,9 @@ $\corr\in\{0,0.3,0.6,0.85,0.95\}$ for five families on the twelve-level schedule
 from the exact score with no estimation involved.
 The heavy-tailed member at $\corr=0$ is excluded from every statement below: the
 quadrature sweep of \cref{app:numerics} places it outside the validated envelope of the
-operating grid, with essentially all of its belief mass outside the domain, and a
-recomputation at a wider domain is pending. The ordering by $\kfour$ is read off the
-remaining cells.
+operating grid---one to two sites per bundle lie beyond the domain and are pinned to its
+boundary---and a recomputation at a wider domain is pending. The ordering by $\kfour$ is
+read off the remaining cells.
 \IfFileExists{sections/phase-numbers.tex}{\input{body/05f-phase}}{}
 
 \section{Capacity: the previous reading and the stopping-rule artefact}
@@ -50,12 +50,3 @@ checkpoints an order of magnitude past their optimum. ``The single Gaussian is a
 was ``the single Gaussian is the only arm that stopped in the right place''. The
 capacity experiment of \cref{sec:experiments} selects the checkpoint identically for every
 capacity on a per-seed validation bundle and reports the untouched confirmatory seeds.
-
-\section{Aggregation robustness of the archival comparison}
-\label{app:additional}
-The archival comparison against the unstructured network (sixteen seeds, eight sizes) is
-retained here under its five aggregations, because the ratio of two errors is not
-invariant to the order of averaging; the schedule-pooled paired per-seed ratio is the one
-the text quotes.
-\input{sections/tab-aggregation}
-\input{sections/tab-aggregation-structured}

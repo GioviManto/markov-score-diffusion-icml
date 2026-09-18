@@ -1,0 +1,53 @@
+%% ------------------------------------------------------------------------------------
+\section{Recommended ICML narrative}
+\label{sec:narrative}
+
+\subsection{What the paper is about}
+
+The four candidate stories of the brief (A: noise erases information order by order; B: exact structured inference measures it; C: structure converts surviving information into sample efficiency; D: the gain lasts while the structure is approximately right) are one story read at four distances, and the evidence now supports the hierarchy the brief suspected, with one change of emphasis. The load-bearing new fact is not the $7.9\times$; it is that every learning result in the paper is \emph{predicted} by the information curve: the collapse level of the shape estimate (E06 vs the CRB crossing), the misspecification break-even (E17 vs the network's error), the closure gap and what it is made of (E16), the plateau of a local architecture (E15, pending), and the sample-complexity slopes (E21 vs E12b). The paper should be organised so that a reader sees the information theory make a prediction and the exact laboratory test it, five times.
+
+\subsection{The arc}
+
+\begin{enumerate}
+\item \hi{Question} (\S1). What information about structured data survives diffusion noise, and what does knowing the structure buy? Answered in one sentence each for theory (order by order, at explicit rates and constants), inference (exact structured inference recovers what is left, and its error is at the information curve wherever the coordinate is identifiable), and its limit (a wrong structure is a bias no data removes, of an order in $\varepsilon$ we compute).
+\item \hi{Laboratory} (\S2). The chain, the channel, the tree, the exact score, the covariance twin, Proposition~1 with its two corollaries (every linear estimator is bounded by the floor; a Gaussian kernel fitted by likelihood lands on it). One figure: the factor graph.
+\item \hi{Theory} (\S3). Theorem~2 with the dictionary. Theorem~3 under Assumption~(E), with the general-order theorem and the LAN corollary; the crossover as an exact scale for the Gaussian chain. Verification: Figure~2 (three panels, wide-domain closure). The heavy-tailed regime in two sentences with Proposition~\ref{prop:heavy}. The fourth-order oracle (E16) in one sentence: ``adding the term back closes the gap''---the theorem's object is the gap's content.
+\item \hi{Learning through the channel} (\S4). EM around the exact recursion; Fisher's identity. Figure~3 redesigned: the estimator's dispersion and its collapse fraction against the information reference per level, with the moment estimator as the rate-correct, inefficient competitor. The claim: the estimator is at the reference while the coordinate is identifiable and collapses where the reference says it must; the exponents are the curve's, and the curve is exact.
+\item \hi{What explicit structure buys} (\S5). Capacity ($C=1$ on the floor everywhere, $C\ge2$ far below; the retired reading with its diagnosis in one paragraph); the family $V$; the three interfaces against six architectures with the matched (ISM) factor as the headline and the regime sweep E14 as its robustness; locality against the exact radius floor (whatever E15 says, it is a cleaner statement than a plateau); length; generation in three numbers.
+\item \hi{Where it stops} (\S5, last paragraph, or \S6). Misspecification with the closed-form bias drawn on the figure: the break-even is a predicted intersection; the order in $\varepsilon$ explains which mechanisms bite.
+\item \hi{Related work} (\S6), two thirds of a column, with the novelty stated as the synthesis of Section~\ref{sec:claims}.
+\item \hi{Limitations} (\S7): one dimension, linear autoregression, $O(LN_g^2)$ inference (with the Pareto sentence: data efficiency against compute and assumptions), fixed $L$ in the theory, eight seeds in the sweeps, and the heavy-tailed case outside Theorem~3.
+\end{enumerate}
+
+\subsection{Proposed section structure and page budget}
+
+\begin{tabular}{@{}lp{9.6cm}r@{}}
+\toprule
+section & content & pages \\
+\midrule
+1 Introduction & question; three answers; contributions (six items) & 0.9 \\
+2 Laboratory & model, channel, tree, exact score, twin, Prop.~1 + corollaries, Fig.~1 & 0.9 \\
+3 Theory & Thm~2 + dictionary; Thm~3 (E); Thm~\ref{thm:general}; Cor.~\ref{cor:lam}; crossover; heavy tails; verification Fig.~2; the fourth-order oracle & 2.0 \\
+4 Learning through the channel & EM, Fisher's identity; Fig.~3 (dispersion, collapse, reference, moments) & 1.0 \\
+5 What structure buys & capacity (Table~1, Fig.~4 family); interfaces (Table~2, matched headline); locality vs floor; length (Table~3); generation (3 numbers); misspecification (Fig.~5 with $b(\varepsilon)$) & 2.2 \\
+6 Related work & as \S8.3 of this report & 0.5 \\
+7 Limitations and conclusion & & 0.4 \\
+\bottomrule
+\end{tabular}
+
+\noindent Appendices: A proofs (with the corrected tail argument and the general-order proof); B numerics (envelope by exceedance count; the uniform kernel's $O(h)$ note; the double-precision floor of the means); C protocol (three interfaces named; selection rules named; seeds per experiment); D references and oracles; E the retired capacity reading; F E14 regime table when it lands; G the closed-form bias table; H the fourth-order oracle per level. Drop the archival aggregation appendices (D/G/H of the current draft), as the plan already says.
+
+\subsection{Figures and tables redesigned}
+
+Each visual must prove one claim, mark $\tstar$ and floors where they apply, and separate pre-asymptotic from asymptotic ranges.
+
+\begin{itemize}
+\item \hi{Fig.~1 (mechanism).} As now.
+\item \hi{Fig.~2 (order-by-order theory), three panels.} (a) Gaussian-chain information scaled by its asymptote, five $\rho$, $\tstar$ ticks---as now. (b) Efficient information about $\rho$ and $\beta$ with $e^{-4t}$, $e^{-8t}$ guides \emph{and} the predicted constants drawn as horizontal asymptotes on a scaled axis, so the reader sees the constant reached at $\beta=1.5$ and missed by $20\%$ at $\beta=2$ with the floor marked. (c) Closure gap divided by the predicted constant for Laplace, bimodal, uniform, Student-$t_{5,7,9}$ from E18 at $(3201,32)$, with the double-precision floor of the means as a shaded region above $t\approx4.5$; the $(801,8)$ Student-$t$ curve as a thin grey line labelled ``truncated domain''. Proves: rates and constants; the truncation artefact; the heavy-tail family reaching the constant.
+\item \hi{Fig.~3 (learning through noise), two panels.} (a) $\hat\rho$: dispersion (not RMSE) per level with the CRB reference and the moment estimator; (b) $\hat\kappa_4$: the fits themselves as points (so the bimodality is visible), the non-collapsed cluster's dispersion, the collapse fraction printed per level, the reference bound, the coordinate's range line, and the moment estimator. Proves: at the reference while identifiable; collapse where the reference crosses the range; rates in the competitor.
+\item \hi{Fig.~4 (capacity), one panel.} The family $V$ as now (it is the best figure), with the regime sweep as an inset table or a second small panel: paired gain vs $\rho$ at $L=64$.
+\item \hi{Fig.~5 (structure vs networks), two panels.} (a) Error vs $M$ for the six architectures at interface~A and EM--BP, with the LMMSE floor; (b) the matched interface: ISM window and transformer, the fixed-corruption arm dashed, EM--BP, at four sizes; the E14 regime table beside it when it lands. Proves: the factor at equal information, and that it is larger than at the standard interface.
+\item \hi{Fig.~6 (locality and misspecification), two panels.} (a) The exact radius-$r$ floor vs $r$ at $\rho=0.85$ (pooled and at two levels) with the window head, TCN (radius 15) and EM--BP as horizontal marks: locality is read against its floor. (b) Misspecification: the four mechanisms as now, with the closed-form bias $b(\varepsilon)$ and the finite-$M$ prediction drawn through the EM--BP points; the break-even as the intersection with the network's curve.
+\item \hi{Table~1 (capacity)} as now with the flag policy stated in the caption. \hi{Table~2 (interfaces)}: rows = arms, columns = $M$, grouped by interface A/B/C, EM--BP last, LMMSE floor first. \hi{Table~3 (length)} as now, adding the bulk-region column for the window head. \hi{Table~4 (generation)}: cut to $M=2048$ and three columns ($\Delta\ell$, $\hat\kappa_4$, $W_2$); the $M=128$ block to the appendix.
+\item \hi{Remove:} the phase-ladder figure from the body (appendix), the aggregation tables (drop), the archival comparison appendix (drop).
+\end{itemize}

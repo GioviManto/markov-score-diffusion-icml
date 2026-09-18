@@ -62,3 +62,36 @@ under a wider domain (E07b/E07c queued); the sample-complexity exponents (E12b q
     python tools/audit_claims.py
 
 A number that reaches a PDF sent to anyone has passed both.
+
+## 18–19 September 2026 — the full audit (reports/audit-2026-09-18.pdf)
+
+**Scope.** Both primary documents (the ICML manuscript and the 18 September meeting
+report) audited as a hostile ICML reviewer, a statistician and a numerical analyst; every
+theorem re-derived; every experiment re-read from its frozen CSV; seven new registered
+computations (E15–E21) run on the laptop to settle what the re-reading raised.
+
+**Findings in what was computed:** none. Every frozen number agrees with its
+recomputation. The closure-constant precision (N-18) is a precision statement, not a
+disagreement.
+
+**Findings in what was said** (all corrected in the manuscript on branch
+`claude/audit-2026-09-18`): Theorem 3's hypothesis versus its proof (exponential moment
+now assumed; the tail bound corrected; a general-order theorem and a local-asymptotic-
+minimax corollary added); the "information-matched 7.3×" label (N-15); the "attains the
+CRB" claim (N-14); the Student-t departure (N-16); the belief-mass sentence (N-17); the
+constant's precision (N-18, N-19); the E12b analysis plan (N-20); the "confirms e^{4t}"
+sentences in §1 and the contributions; the dangling `\cref{thm:gap}`; the provenance
+sentence on under-resolved fits (flagged, not refused); the E08 network named (radius 2);
+the seed count per experiment; the novelty paragraph.
+
+**New results now in the paper:** the closed-form misspecification bias and its order in ε
+(E17; reproduces the M = 2048 errors to ≤ 0.011 with the lag-one projection); the
+fourth-order Edgeworth correction as the content of the closure gap (E16); the moment
+estimators as the rate-correct, inefficient competitor (E19); the exact radius-r locality
+floor (E15); the wide-domain closure panel with the heavy-tailed regime (E18); the
+oracle-free selection control (E20); the information curve at ρ = 0.5 (E21).
+
+**Tools.** `tools/make_audit_numbers.py` emits every new number as a macro
+(`paper/sections/audit-numbers.tex`); `tools/make_baseline_numbers.py` now emits the ISM
+arm as the matched headline and the fixed-corruption arm separately, and the networks'
+at-cap rates.

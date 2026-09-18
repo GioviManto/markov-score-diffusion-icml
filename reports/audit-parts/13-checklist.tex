@@ -1,0 +1,30 @@
+%% ------------------------------------------------------------------------------------
+\section{Final submission checklist}
+\label{sec:checklist}
+
+\begin{enumerate}[label=$\square$, leftmargin=1.6em]
+\item Theorem~3 restated under Assumption~(E); Appendix~A.3 tail paragraph rewritten (exponential tail from the exponential moment; tower property for the conditional second moment); ``finite eighth moments'' removed from the statement.
+\item Theorem~\ref{thm:general} (general order) in the body with its constant; Remark~4 removed.
+\item Corollary~\ref{cor:lam} replaces Corollary~5; ``requires'' removed.
+\item The dictionary sentence (amplitude / information / samples) in \S3 and the abstract rewritten accordingly; \texttt{[PENDING]} removed.
+\item Proposition~1's two corollaries (linear estimators; Gaussian QMLE consistency) added in one sentence each.
+\item Fig.~2c redrawn from E18 at $(3201,32)$ with the floor shaded; caption: Student-$t_5$ reaches the constant; the heavy-tailed regime in one sentence with Proposition~\ref{prop:heavy}; the ``departs as the moment condition predicts'' sentence removed.
+\item ``Verifies the rates and the constants'' replaced by the sentence that names which constant is verified where (E21 scalar; chain to $10$--$20\%$).
+\item \S4: the efficiency paragraph replaced by the per-level statement (unimodal and at the reference for $t\le0.4$; collapse fraction $4/16$ at $0.7$, $15/16$ at $1.0$; reference crossing at $0.98$); Fig.~3 redrawn with dispersion, points, collapse fractions and the moment estimator (E19).
+\item \S1 and contributions: ``confirms'' / ``measured'' for the $e^{4t}$ separation removed; ``rates by computation, ordering by measurement'' in.
+\item \S5 matched interface: ISM arm as the headline ($7.9\times$ $[6.6,9.3]$), fixed-corruption arm as ``even with the clean target''; interfaces A/B/C named in the protocol; the $M=32$ ISM divergence noted; \texttt{make\_baseline\_numbers.py} changed to emit the ISM arm as the matched headline by definition.
+\item \S5 standard interface: at-cap rates of the networks stated; ``upper bound'' clause added.
+\item Locality paragraph rewritten against E15's floor (either sentence of Section~\ref{sec:claims}, item 13); bulk-region numbers cited; Fig.~6a added.
+\item E08 window head named (radius 2, width 64, 16k steps); the rank-one explanation replaced by the two reasons of Proposition~\ref{prop:bias}; Fig.~5 with $b(\varepsilon)$ and $\sqrt{b^2+v/M}$ drawn (E17).
+\item App.~B envelope paragraph: exceedance count and mechanism; ``essentially all'' removed; the uniform kernel's $O(h)$ note; E07 Student-$t$ row replaced when E07b/c land, with the exceedance count per cell.
+\item App.~C: flag policy for under-resolved fits stated correctly; seeds per experiment; selection rule per arm; E20 result cited.
+\item \verb|\cref{thm:gap}| fixed.
+\item Related work: novelty paragraph replaced by the synthesis statement; ``dependent rather than i.i.d.'' removed.
+\item Limitations: fixed $L$ in the theory; heavy tails; eight seeds; $O(LN_g^2)$ with the Pareto numbers.
+\item E14 folded in when it lands (Table or Fig.~5b); the framing sentence chosen after it, per the report's decision~7.
+\item E06c folded in: the ``leaves the bound'' clause resolved.
+\item E12b read against Table~\ref{tab:crb}; the amendment cited.
+\item New generators for E15--E21 numbers (\texttt{tools/make\_audit\_numbers.py}) so no typed decimal enters the body; \texttt{make check} green; \texttt{audit\_claims.py} extended to the new macros; outputs frozen with \texttt{tools/freeze.py}.
+\item CLAIM\_EVIDENCE\_MATRIX rows E11, E16 rewritten; NEGATIVE\_RESULTS entries for the efficiency claim, the matched-interface label, the Student-$t$ departure and the belief-mass sentence; SCIENCE\_AUDIT entry for this audit.
+\item Page budget $\le8$ body pages after the cuts; every figure rendered and looked at; no Overfull box from a table or figure.
+\end{enumerate}

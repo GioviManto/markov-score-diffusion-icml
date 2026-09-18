@@ -1,0 +1,55 @@
+%% ------------------------------------------------------------------------------------
+\section{New experiments, ranked}
+\label{sec:plan}
+
+Ranking is by scientific value per compute per referee risk removed. \hi{P0} = before submission; \hi{P1} = high value; \hi{P2} = optional. Costs are laptop core-hours (lc-h) or cluster node-days (nd). Seven of the items below are already registered and either done or running (E15--E21); the cluster queue holds E06c, E07b/c, E11b, E12b and E14.
+
+\subsection*{P0}
+
+\begin{enumerate}[label=\textbf{P0.\arabic*}]
+\item \hi{E14, matched comparison across $\rho\in\{0.5,0.85,0.95\}\times L\in\{32,128\}$ (queued, cluster, $\approx2$~nd).} Hypothesis: EM--BP beats the best re-screened network at every cell at interface~C. Design as registered; eight seeds; estimand the paired factor. Expected under the ``property of the method'' reading: every interval excludes one and the factor is largest at $\rho=0.5$ (most fourth-order structure in the marginal, shortest posterior range) and smallest at $0.95$; under the ``peculiarity of the corner'' reading a cell near one or below. Supports or kills the headline. One addition to make \emph{now}, before it runs, at no cost: record the ISM objective's held-out curve so that a diverged ISM fit ($M=32$-style) can be recognised and reported as such rather than as a network's error.
+\item \hi{E06c, extended ladder (running, cluster).} Resolves whether the $\hat\rho$ departure from the reference at $t=1.4$ and $2.0$ is budget. Expected: the fits at those levels converge inside the ladder to the same collapsed shape (first cells confirm); $\hat\rho$'s RMSE moves little; the sentence becomes ``at $t\ge1.4$ the correlation estimate leaves the reference with the ladder no longer binding''. Keep or kill: the ``leaves the bound'' clause.
+\item \hi{E12b with the amended analysis (queued, cluster).} Hypothesis now: $M^\ast(t)\propto1/I^{\mathrm{eff}}_t$ per coordinate, with local slopes $3.8$--$3.9$ ($\rho$) and $6.1$--$6.9$ (shape) on the swept levels (E21). Power: $1/I_\beta$ spans a factor $14$ over $[0.6,1.0]$, the $M$ ladder a factor $32$; with sixteen seeds and the exact enumerated bootstrap the separation of the two coordinates' slopes ($\approx2.7$ apart) is resolvable if $M^\ast$ is read at a threshold inside the identifiable window (CRB$(\kappa_4)<1$ needs $M\ge2048$ at $t=1.0$). The pre-registered thresholds should be checked against Table~\ref{tab:crb} before the data are read.
+\item \hi{E07b/E07c, the family ladder at $A=12$ and $16$ (queued).} Expected: Student-$t$ rows move by the exceedance mechanism; at $A=16$ the expected number of sites beyond the domain is $0.04$ per replicate. Replace the flagged row; state the exceedance count per cell in the appendix.
+\item \hi{E18 (done on the laptop, $\approx1$~lc-h).} Replaces Fig.~2c. Value: removes a false sentence and adds the heavy-tail proposition's evidence.
+\item \hi{E15 (running, $\approx1$~lc-h).} Decides the locality sentence. Value: a referee who knows that a radius-$r$ posterior mean is computable will ask for exactly this.
+\item \hi{E20 (running, $\approx3$~lc-h).} Oracle-free selection. Expected: identical numbers within seed noise at $M=32$ (validation risk and held-out evidence pick neighbouring rungs) and at $M=512$. Kills the ``model selection uses the truth'' objection.
+\end{enumerate}
+
+\subsection*{P1}
+
+\begin{enumerate}[label=\textbf{P1.\arabic*}]
+\item \hi{Closure panel at the wide domain for all families to $t=5$ (E18 chain part; done).} Also gives the double-precision floor of the BP means (reached near $t=5$ for every family), which should be drawn as a floor in the figure.
+\item \hi{E16 as a baseline row (done).} The fourth-order oracle score at each level: a ``moment-method'' estimator with oracle moments. Value: it explains \emph{what} the closure gap is made of at each level (fourth order above $t\approx0.3$, everything else below), and it is a natural bridge to the Balanov-type moment methods the related-work section invokes. Cost: none further. A version with \emph{estimated} $\kappa_4$ (from E19's moment estimator) would make it a real competitor: $\approx0.5$~lc-h; recommended.
+\item \hi{Misspecification with the closed-form bias in the figure (E17; done).} Draw $b(\varepsilon)$ and $\sqrt{b^2+v/M}$ on Fig.~5 beside the measured EM--BP error; the break-even becomes a predicted intersection. Cost: figure work only.
+\item \hi{Bulk-region companion for the locality story.} E03 already records bulk risks (window head $0.075$ at $M=2048$ on the bulk against $0.118$ all-site). Report both; the boundary fraction of the head's error is a fact worth one sentence.
+\item \hi{Compute accounting (P1, $\approx0.2$~lc-h).} Inference $O(LN_g^2)$ per sequence per level; EM cost per iteration; network training wall-clock from the frozen \texttt{wall} columns; a Pareto table (data efficiency $\times$ compute $\times$ assumptions). Script prepared (\texttt{scratchpad/f\_compute\_cost.py}); run on an idle machine so the timings are clean.
+\item \hi{Moment estimators in the learning figure (E19; done).} One extra pair of curves in Fig.~3: the unbiased, inefficient competitor that shows the $e^{2t}$, $e^{4t}$ growth without saturating (OLS slopes $1.83$ and $3.73$ on $t\ge1$) at $5$--$30\times$ the reference.
+\end{enumerate}
+
+\subsection*{P2}
+
+\begin{enumerate}[label=\textbf{P2.\arabic*}]
+\item \hi{A second innovation family for the matched comparison} (bimodal, where the fourth cumulant is negative): one $(\rho,L)$ cell, eight seeds, $\approx0.3$~nd. Tests whether the advantage is about heavy tails or about fourth-order structure of either sign.
+\item \hi{A tree instead of a chain.} Not recommended: Theorem~2 is model-free, Theorem~3 is about $P_0$, and exact inference on a tree adds nothing to the principle; it adds a second laboratory and a page.
+\item \hi{Lean: the projection operator of Proposition~1.} The report's decision~4. Not needed for the paper; the informal proof is complete.
+\end{enumerate}
+
+\begin{table}[h]\centering\small
+\caption{E21: Cram\'er--Rao reference for the excess kurtosis at $\rho=0.5$ (Laplace member, one view per sequence), $\mathrm{d}\kappa_4/\mathrm{d}\beta/\sqrt{MI^{\mathrm{eff}}_\beta}$; the coordinate's range is $3$ and a bound above $\approx1$ leaves no usable window. Local slopes of $\log(1/I^{\mathrm{eff}})$ between consecutive rows in the last two columns. Source: \texttt{outputs/E21/information.csv}.}
+\label{tab:crb}
+\begin{tabular}{@{}rrrrrrrr@{}}
+\toprule
+$t$ & $M=256$ & $512$ & $2048$ & $8192$ & $16384$ & slope ($\kappa_4$) & slope ($\rho$) \\
+\midrule
+0.6 & 1.24 & 0.88 & 0.44 & 0.22 & 0.16 & 6.1 & 3.8 \\
+0.7 & 1.68 & 1.19 & 0.59 & 0.30 & 0.21 & 6.5 & 3.8 \\
+0.8 & 2.32 & 1.64 & 0.82 & 0.41 & 0.29 & 6.8 & 3.8 \\
+0.9 & 3.26 & 2.31 & 1.15 & 0.58 & 0.41 & 6.9 & 3.8 \\
+1.0 & 4.59 & 3.25 & 1.62 & 0.81 & 0.57 & 6.6 & 3.9 \\
+1.2 & 8.90 & 6.29 & 3.15 & 1.57 & 1.11 & 5.5$^\ast$ & 3.9 \\
+1.4 & 15.5 & 11.0 & 5.48 & 2.74 & 1.94 & --- & 3.9 \\
+\bottomrule
+\end{tabular}\\[2pt]
+{\footnotesize $^\ast$ the outer-product estimate of $I_\beta$ reaches its quadrature floor beyond $t\approx1.2$ at $N_g=401$ for the kinked Laplace member; slopes there are not informative.}
+\end{table}

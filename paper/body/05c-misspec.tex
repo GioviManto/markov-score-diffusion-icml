@@ -2,33 +2,46 @@
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{fig_misspec.pdf}
-  \caption{\textbf{Where the structure stops helping.} Ratio of the window head's error
-  to EM--BP's against the misspecification strength, for four Gaussian departures from
-  the chain with exact reference scores (rank-one global latent, long-range precision
-  coupling, an AR(2) second coefficient at fixed lag-one correlation, site-dependent
-  $\corr$), at two sample sizes. Above the dotted line the misspecified chain estimator
-  still wins.}
+  \caption{\textbf{Where the structure stops helping.} Ratio of a radius-2 window
+  head's error to EM--BP's against the misspecification strength, for four Gaussian
+  departures from the chain with exact reference scores (rank-one global latent,
+  long-range precision coupling, an AR(2) second coefficient at fixed lag-one correlation,
+  site-dependent $\corr$), at two sample sizes. Above the dotted line the misspecified
+  chain estimator still wins.}
   \label{fig:misspec}
 \end{figure*}
 Every departure is Gaussian so that its score is exact, and every arm is scored against
-that score. The ordering degrades smoothly in each mechanism and the strength at which
-it breaks even is a property of the mechanism, not a single number. A rank-one global
-latent is absorbed by the chain's fitted $\corr$ and never reverses the ordering in the
-swept range: the ratio falls only from $\misRatioGlobalEzeropzeroD$ to
-$\misRatioGlobalEonepzeroD$ across the swept range, up to $\beta=\misEpsMaxGlobal$. An AR(2) second coefficient
-reverses it between $\misBreakLoArtwoD$ and $\misBreakHiArtwoD$ at both sizes, and a
-site-dependent $\corr$ between $\misBreakLoSitevarD$ and $\misBreakHiSitevarD$ at
-$\nseq=2048$. Long-range precision coupling does not reverse it anywhere we swept: the
-ratio decays to $\misRatioLongrangeEzeropfourD$ at $\gamma=\misEpsMaxLongrange$, a tie rather than a
-crossing. We report brackets and not fitted crossings, because with
-$\misSeeds$ seeds the paired log-ratio is resolved to a few thousandths and the
-crossing sits between grid points either way.
+that score; the network arm is a radius-2 window head under the recipe of
+\cref{app:protocol}. The ordering degrades smoothly in each mechanism and the strength
+at which it breaks even is a property of the mechanism, not a single number. A rank-one
+global latent never reverses the ordering in the swept range: the ratio falls only from
+$\misRatioGlobalEzeropzeroD$ to $\misRatioGlobalEonepzeroD$ across the swept range, up
+to $\beta=\misEpsMaxGlobal$. An AR(2) second coefficient reverses it between
+$\misBreakLoArtwoD$ and $\misBreakHiArtwoD$ at both sizes, and a site-dependent $\corr$
+between $\misBreakLoSitevarD$ and $\misBreakHiSitevarD$ at $\nseq=2048$. Long-range
+precision coupling does not reverse it anywhere we swept: the ratio decays to
+$\misRatioLongrangeEzeropfourD$ at $\gamma=\misEpsMaxLongrange$, a tie rather than a
+crossing. We report brackets and not fitted crossings, because with $\misSeeds$ seeds
+the paired log-ratio is resolved to a few thousandths and the crossing sits between grid
+points either way.
 
 The two sizes separate the statistical gain of the structure at small $\nseq$ from its
-asymptotic bias at large $\nseq$. At zero strength the EM--BP error falls from
-$\misArtwoEmbpEzeropzeroC$ to $\misArtwoEmbpEzeropzeroD$ between $\nseq=512$ and
-$2048$, which is estimation; at the largest AR(2) strength it moves from
-$\misArtwoEmbpEzeropfourC$ to $\misArtwoEmbpEzeropfourD$, which is not. Past the
-break-even the chain estimator has converged to a wrong law and more data no longer
-buys anything back --- exactly the behaviour \cref{sec:theory} attributes to a model
-whose bias, not whose variance, is binding.
+asymptotic bias at large $\nseq$, and the bias has a closed form. Since every truth is
+Gaussian and the fitted innovation is Gaussian to three decimals, the $\nseq\to\infty$
+limit of EM--BP is the Kullback--Leibler projection of the noised truth onto the
+Gaussian AR(1) family under the one-view protocol, and its relative score error
+$b(\varepsilon)$ is a trace formula (\cref{app:audit}). It reproduces the measured
+EM--BP error at $\nseq=2048$ to within $\audBiasMaxAbsDevLagoneD$ across every
+mechanism and strength, and $\sqrt{b(\varepsilon)^2+v/\nseq}$ with $v$ read from the
+well-specified cells predicts both sizes: at zero strength the EM--BP error falls from
+$\misArtwoEmbpEzeropzeroC$ to $\misArtwoEmbpEzeropzeroD$ between $\nseq=512$ and $2048$,
+which is estimation; at the largest AR(2) strength it moves from
+$\misArtwoEmbpEzeropfourC$ to $\misArtwoEmbpEzeropfourD$, which is bias. The order of the
+bias in the strength explains which mechanisms bite: $b\propto\varepsilon$ for the
+AR(2) coefficient, the site-dependent $\corr$ and the long-range coupling (local
+exponents $\audBiasOrderArtwo$, $\audBiasOrderSitevar$, $\audBiasOrderLongrange$), which
+perturb of order $\nsites$ directions of the covariance, and $b\propto\beta^2$ for the
+rank-one latent ($\audBiasOrderGlobal$), which is even in the latent and perturbs one
+direction of $\nsites$. Past the break-even the chain estimator has converged to a wrong
+law and more data no longer buys anything back---exactly the behaviour \cref{sec:theory}
+attributes to a model whose bias, not whose variance, is binding.

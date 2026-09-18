@@ -1,21 +1,27 @@
-%% DRAFT. Every number is a generated macro; the wording is rewritten once §5 is final.
 Diffusion models are trained to approximate the score of a noised data distribution,
 a target that is unknown for almost every distribution of interest. We study a family
 in which it is known exactly and non-trivial: a first-order Markov chain with
 continuous, non-Gaussian transitions under coordinatewise Ornstein--Uhlenbeck noise,
 where conditioning leaves the posterior factor graph a tree and one forward--backward
-sweep of functional message passing returns the exact score. This laboratory lets us
-separate what diffusion noise does to different orders of structure. We prove that the
-channel attenuates every Hermite mode of degree $m$ by $e^{-mt}$, so that the Fisher
-information one noised sequence carries about an order-$m$ feature decays as
-$e^{-2mt}$: correlation (degree two) survives as $e^{-4t}$, non-Gaussian shape (degree
-four) as $e^{-8t}$, and the gap between the true score and that of the covariance-matched
+sweep of functional message passing returns the exact score. The laboratory separates
+what diffusion noise does to different orders of structure. The channel attenuates the
+Hermite moment of degree $m$ by $e^{-mt}$ exactly, so that, for a law with an
+exponential moment, the Fisher information one noised sequence carries about a
+feature first visible at degree $m$ decays as $e^{-2mt}$ with an explicit constant:
+correlation (degree two) as $e^{-4t}$, non-Gaussian shape (degree four) as
+$e^{-8t}$; and the gap between the true score and that of the covariance-matched
 Gaussian---which we show is exactly what Gaussian message closure computes---is
 $\tfrac16\lVert\kappa_4\rVert_F^2e^{-8t}$, with the crossover set by the covariance
-spectrum. Tree-exact inference verifies the rates and the constants. We then learn the
-transition law from noised sequences alone, by expectation--maximisation around the
-same recursion with Fisher's identity supplying the exact gradient, and show that it
-recovers fourth-order structure from strictly less information than the denoisers it is
-compared against: one noised view per sequence, never a clean chain, against clean targets
-with a fresh corruption at every gradient step. \needsdata{final baseline, generation and
-misspecification numbers; the abstract is rewritten once \S5 is final}
+spectrum. Tree-exact inference verifies the rates and the constants, adding the
+fourth-order term back to the Gaussian score closes the gap wherever the expansion
+converges, and heavy-tailed innovations reach the same constant. We then learn the
+transition law from noised sequences alone by expectation--maximisation around the same
+recursion: the fitted shape sits at the information reference while the coordinate is
+identifiable and collapses to a Gaussian innovation where the reference says it must,
+and moment estimators show the predicted rates at a fraction of the efficiency.
+Against six sequence denoisers trained under one recipe the structured estimator is
+ahead at every sample size; at the estimator's own information interface---one noised
+view per sequence, no clean chain, no true score for model selection---the best network
+is a factor $\matchedRatioBestD$ behind. The advantage is earned by the non-Gaussian
+capacity of the innovation model, transfers to generation, extrapolates in length, and
+ends at a misspecification strength that a closed-form bias predicts.
