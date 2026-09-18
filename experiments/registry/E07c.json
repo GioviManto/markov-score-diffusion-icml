@@ -1,0 +1,11 @@
+{
+ "id": "E07c",
+ "script": "experiments/e07_phase_diagram.py",
+ "hypothesis": "H7b: the family/correlation ladder is converged in the quadrature at the grid it was computed on. Prediction: moving from (N_g, A) = (401, 8) to (801, 12) and (1601, 16) leaves every reported entry within its replicate spread, EXCEPT possibly the heavy-tailed low-correlation cells, where E11 measures a 5.4e-2 relative drift and a posterior mass in the outer 2 percent of the domain of 1.00.",
+ "design": "As E07b, at the second refinement (1601, 16.0). E07b and E07c are the two rungs of one refinement: E07b is the candidate replacement grid and E07c is the evidence that it has converged. They share hypothesis, analysis and motivation with E07b.",
+ "predeclared_analysis": "Cell-by-cell difference of rel_lmmse and rel_iso against the frozen E07, reported as an absolute and a relative movement, with the two refinements used to show convergence or its absence. If a cell moves by more than its replicate spread, the widest converged grid becomes the reported number and the E07 value is recorded as superseded with the reason.",
+ "motivation": "E11 (frozen 2026-09-18) validated the quadrature across families and correlations rather than at the frozen point alone, and found that at the operating grid the drift is NOT limited by the number of grid points but by the half-width: at A = 8 the drift is flat in N_g from 201 to 1601 (5.41e-2 to 5.43e-2), while widening to A = 12 at 801 points brings it to 3.0e-3. The offending cell is Student-t at rho = 0, which E07 reports.",
+ "status": "PRE-REGISTERED 2026-09-18; not yet run",
+ "registered": "2026-09-18",
+ "note": "Registered separately only because each run writes its own output directory; the pre-registration is E07b's and covers both rungs."
+}

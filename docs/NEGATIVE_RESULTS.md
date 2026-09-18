@@ -120,3 +120,69 @@ give the corollary its content wherever the coordinate remains identifiable, and
 identifiability is lost is itself measured (t = 0.98 at rho = 0.85). The paper states the rates as
 a property of the channel, verified directly, and does not claim a fitted confirmation of the
 exponents from estimator error.
+
+## From the 18 September harvest (E08, E11, E12, E13)
+
+**N-11. The tree-exact reference is not uniformly converged, and the binding parameter is the
+domain, not the number of grid points.** Every number in the project is measured against grid
+belief propagation at N_g = 401 points on [-8, 8]. E11 swept seven grids against a (3201, 12)
+reference across five innovation families, four correlations and twelve levels. Two findings, one
+reassuring and one not.
+
+Reassuring: at the frozen configuration the operating grid is excellent. Laplace at rho = 0.85 has
+a pooled drift of 9.2e-6, a worst-level drift of 3.7e-5 and 2.8e-4 of the belief mass in the outer
+2% of the domain. Nothing measured at the frozen point is in question.
+
+Not: the worst-case drift over the whole sweep is **flat in N_g at fixed half-width** -- 5.411e-2
+at (201, 8), 5.419e-2 at (401, 8), 5.424e-2 at (801, 8), 5.425e-2 at (1601, 8) -- and falls only
+when the domain widens: 2.6e-2 at (401, 10), 3.0e-3 at (801, 12). That is the signature of
+truncation, not of quadrature. Refining the grid at A = 8, which is what "refinement" has meant in
+this project and in the thesis before it, cannot fix it. The offending configuration is
+Student-t(5) at rho = 0: the posterior mass in the outer 2% of the domain is 1.00, i.e. the tails
+are entirely outside [-8, 8], and the drift is 5.4e-2.
+
+Consequence: **E07 reports that cell.** The family/correlation ladder covers Student-t at rho = 0,
+so a reported number sits outside the validated envelope. E07b/E07c re-run the ladder at (801, 12)
+and (1601, 16) to establish what it should be. Until they land, the Student-t rho = 0 entries of
+the phase ladder are flagged and are not cited.
+
+A second, milder observation from the same sweep: the column-mass defect of the discretised kernel
+grows with correlation (about 1e-16 at rho = 0 to about 0.1 at rho = 0.95, every family) because a
+narrow transition kernel is poorly resolved by a fixed grid, yet the drift at rho = 0.95 stays at
+1e-3 or below. The defect is close to uniform across the grid and BP renormalises it away. It is
+reported as a diagnostic, not as an error bar.
+
+**N-12. E12's sample-complexity reading is confounded by the EM iteration ladder at its highest
+level, and the confound, not the sample size, is what binds.** E12 was designed to escape E06's
+saturation problem by asking how much data buys back a fixed accuracy as the level rises, which
+does not saturate. At t = 0.6 and t = 0.8 it worked: the kurtosis RMSE falls cleanly with M
+(0.87 -> 0.14 and 1.79 -> 0.32 over M = 256 to 8192) and M* can be read off. At t = 1.0 it did not:
+the RMSE sits between 1.84 and 2.53 at every M and is **non-monotone in M**, and the fitted excess
+kurtosis scatters between 0 and 3.4 across seeds with no concentration. The diagnosis is in the
+run's own columns -- at t = 1.0 the EM is censored by the 1200-iteration cap in 40 of 40 cells, and
+the validation-selected checkpoint is the last rung in 100% of cells at M >= 4096. The optimiser is
+still travelling when it is cut off, so more data does not help: the experiment measured the
+budget, not the sample complexity.
+
+What the run does support, stated as such: the covariance coordinate's log-slope is 5.40
+[2.13, 7.57] over three levels, which excludes 8 and contains the predicted 4; and the shape
+coordinate never reaches the threshold at t = 1.0 even at M = 8192, which gives a one-sided bound
+of d log M*/dt > 5.54, excluding 4. The two together separate the coordinates from opposite sides.
+The point estimates where a crossing exists are 7.54 and 8.53 for the shape coordinate against a
+predicted 8, and 4.44 for the paired ratio against a predicted 4, but their seed-bootstrap
+intervals ([-2.88, 11.70], [-1.32, 11.93], [-9.54, 12.10]) exclude nothing and are **not** evidence
+for the exponents. E12b re-runs it with five levels, 16 seeds and an EM ladder extended to 8000.
+
+**N-13. The same censoring audit flags a reported claim in E06.** The fraction of cells whose
+validation-selected checkpoint is the last rung of the ladder is 0.12-0.38 at t <= 1.0 -- validation
+stops early of its own accord, so the cap is not binding, and the Cramer-Rao result over the
+informative levels stands -- but it is 0.88 at t = 1.4 and 0.75 at t = 2.0, with median selected
+checkpoint equal to the cap. Those are exactly the two levels at which the paper reports the
+estimator leaving the bound. The departure may be information or it may be budget; the run as it
+stands cannot tell. E06c re-runs the nine levels with the ladder extended to 8000. The sentence is
+flagged in the manuscript until it lands.
+
+The same audit clears two other experiments. In E02a the at_cap rate reaches 0.69 at M = 2048, but
+E02a_v1 -- the same design with the ladder cut from 1200 to 400 -- reproduces every overlapping cell
+to 0.001, so the estimates have plateaued well before the cap and the capacity conclusion does not
+depend on it. In E13 the rate is at most 0.25 and C = 1 never censors.

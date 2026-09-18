@@ -19,7 +19,7 @@ source hpc/.last_deploy.env
 CPUS=${MSD_HPC_CPUS:-32}; MEM=${MSD_HPC_MEM:-64G}; TIME=${MSD_HPC_TIME:-12:00:00}
 AFTER=""; WHAT=${1:-}; shift || true
 while [[ $# -gt 0 ]]; do case "$1" in --after) AFTER="$2"; shift 2;; *) echo "unknown arg $1" >&2; exit 2;; esac; done
-[[ -n "$WHAT" ]] || { echo "usage: $0 <e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
+[[ -n "$WHAT" ]] || { echo "usage: $0 <e06c|e07b|e07c|e11b|e12b|e14|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
 
 partition() {
   if [[ -n "${MSD_HPC_PARTITION:-}" ]]; then echo "$MSD_HPC_PARTITION"; return; fi
@@ -45,6 +45,13 @@ cmd_for() {
     e11)         echo "e11_grid_validation.py --output-dir {OUT}/E11";;
     e13)         echo "e13_regime_sweep.py --output-dir {OUT}/E13";;
     e12)         echo "e12_sample_complexity.py --output-dir {OUT}/E12";;
+    # --- budget and quadrature controls, and the regime robustness of the headline (18 Sep) ---
+    e06c)        echo "e06_learning_through_noise.py --set em_checkpoints=\"(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1600, 2200, 3000, 4000, 6000, 8000)\" --output-dir {OUT}/E06c";;
+    e07b)        echo "e07_phase_diagram.py --set grid_size=801 --set half_width=12.0 --output-dir {OUT}/E07b";;
+    e07c)        echo "e07_phase_diagram.py --set grid_size=1601 --set half_width=16.0 --output-dir {OUT}/E07c";;
+    e11b)        echo "e11_grid_validation.py --set lengths=\"(64, 128)\" --output-dir {OUT}/E11b";;
+    e12b)        echo "e12_sample_complexity.py --set levels=\"(0.6, 0.7, 0.8, 0.9, 1.0)\" --set seeds=\"(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)\" --set em_checkpoints=\"(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1600, 2200, 3000, 4000, 6000, 8000)\" --output-dir {OUT}/E12b";;
+    e14)         echo "e14_regime_baselines.py --output-dir {OUT}/E14";;
     e10)         echo "e10_capacity_evidence.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E10";;
     e04)         echo "e04_refinement.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E04";;
     e05)         echo "e05_generation.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --set net_dir=\"'{OUT}/E03/ckpts'\" --output-dir {OUT}/E05";;

@@ -1,0 +1,10 @@
+{
+ "id": "E11b",
+ "script": "experiments/e11_grid_validation.py",
+ "hypothesis": "H11b: the quadrature envelope measured at L = 32 also covers the longer chains the project uses. Prediction: at fixed (family, rho, grid) the drift at L = 64 and L = 128 is within a small multiple of the L = 32 value, since the messages are a product along the chain and the per-site error compounds at most linearly in L.",
+ "design": "E11 exactly, with lengths = (64, 128) instead of (32,).",
+ "predeclared_analysis": "Drift, boundary mass and column-mass defect per (family, rho, grid, L), and the ratio of the drift at L to the drift at L = 32 in the same cell, which is the quantity the prediction is about.",
+ "motivation": "E11 validated one chain length. E03's length study evaluates at L up to 256, E13 sweeps L to 64 and E14 will run at L = 128, all against tree-exact references computed on the same grid. The envelope has to cover them.",
+ "status": "PRE-REGISTERED 2026-09-18; not yet run",
+ "registered": "2026-09-18"
+}

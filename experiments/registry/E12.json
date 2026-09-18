@@ -8,7 +8,22 @@
  "seeds": {
   "confirmatory": "0-7"
  },
- "status": "REGISTERED 2026-09-17 before running",
+ "status": "FROZEN E12 2026-09-18T17:25:42Z; REGISTERED 2026-09-17 before running",
  "registered": "2026-09-17",
- "script_sha256": "d1d472d75257b7dce785f3f5de1908b88b4ef3fdb21ef8e9f5eb0e26bd4040cd"
+ "script_sha256": "d1d472d75257b7dce785f3f5de1908b88b4ef3fdb21ef8e9f5eb0e26bd4040cd",
+ "frozen_outputs": {
+  "outputs/E12/ladder.csv": "87c0030c1794ddbfaf568b8f850f1cf8397df3d6df361b3e60939bd9d989bd56",
+  "outputs/E12/params_ladder.json": "40fa02727aba0e3444049903b65c15c513d57a0fad8699aa84008261e3d142ea"
+ },
+ "frozen_at": {
+  "E12": "2026-09-18T17:25:42Z"
+ },
+ "frozen_commit": {
+  "E12": "3bb741e78c3464d17eedaf8b38360f2813d4028c"
+ },
+ "frozen_run_commits": {
+  "E12": [
+   "af64809"
+  ]
+ }
 }

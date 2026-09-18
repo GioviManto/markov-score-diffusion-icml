@@ -1,0 +1,10 @@
+{
+ "id": "E12b",
+ "script": "experiments/e12_sample_complexity.py",
+ "hypothesis": "H12 restated with the confound removed: M*(t) at fixed accuracy grows as e^{4t} for the covariance coordinate and e^{8t} for the shape coordinate, so their ratio grows as e^{4t}. Prediction: with five levels above the crossover, 16 seeds and an EM ladder long enough that the selected checkpoint is interior in the great majority of cells, the fitted log-slopes are 4 and 8 with intervals that separate them.",
+ "design": "E12 with levels (0.6, 0.7, 0.8, 0.9, 1.0) instead of (0.6, 0.8, 1.0), 16 seeds instead of 8, and em_checkpoints extended to 8000. rho = 0.5, M ladder 256-8192, C = 8, everything else at E12's settings.",
+ "predeclared_analysis": "As E12: M* by log-linear interpolation of the seed-pooled RMSE curve between the bracketing rungs, OLS log-slope across levels with a seed bootstrap, and the PAIRED ratio M*_shape/M*_cov whose slope is the corollary's own statement and in which the common noise cancels. The at_cap and censoring rates are reported per (level, M) as a condition of the reading; a level whose cells are predominantly at the cap is reported as a bound, not a point.",
+ "motivation": "E12 (frozen 2026-09-18) gave point estimates on the predictions -- 7.54 and 8.53 for the shape coordinate against 8, 5.40 [2.13, 7.57] for the covariance against 4, 4.44 for the ratio against 4 -- with bootstrap intervals too wide to exclude the alternatives, and, more seriously, a confound: at t = 1.0 every cell is censored by the 1200-iteration cap (stop_reason = censored in 40/40 cells, at_cap 1.00 at M >= 4096) and the fitted kurtosis scatters between 0 and 3.4 across seeds with no concentration. At that level the experiment measured the optimiser's budget, not the sample complexity. The binding constraint is the iteration ladder, not M.",
+ "status": "PRE-REGISTERED 2026-09-18; not yet run",
+ "registered": "2026-09-18"
+}

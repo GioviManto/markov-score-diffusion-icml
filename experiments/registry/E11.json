@@ -7,7 +7,22 @@
  "seeds": {
   "confirmatory": "0-3 (deterministic diagnostics; seeds are chain draws)"
  },
- "status": "REGISTERED 2026-09-17 before running",
+ "status": "FROZEN E11 2026-09-18T17:25:42Z; REGISTERED 2026-09-17 before running",
  "registered": "2026-09-17",
- "script_sha256": "119ab153c63781f906abc2f35d8680b68e46d83dd80bbaa3a2431a5932650aaa"
+ "script_sha256": "119ab153c63781f906abc2f35d8680b68e46d83dd80bbaa3a2431a5932650aaa",
+ "frozen_outputs": {
+  "outputs/E11/grid.csv": "d0b803a1cf962f60c2e66cb19d3639451f08b6d0112aa7894affc1107f96b5cb",
+  "outputs/E11/params_sweep.json": "919bd04883a81a2ccf104012f528453bbbf974d7cdab3441fd32a4f9f434c6f1"
+ },
+ "frozen_at": {
+  "E11": "2026-09-18T17:25:42Z"
+ },
+ "frozen_commit": {
+  "E11": "3bb741e78c3464d17eedaf8b38360f2813d4028c"
+ },
+ "frozen_run_commits": {
+  "E11": [
+   "af64809"
+  ]
+ }
 }

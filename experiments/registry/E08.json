@@ -30,18 +30,39 @@
   "2026-09-16 21:05: seeds raised from 8 to the protocol's 16, for consistency with every other confirmatory experiment. The 8-seed run of 16 Sep stays frozen until replaced."
  ],
  "frozen_outputs": {
-  "outputs/E08/misspecification.csv": "56f9a559baa308a7180fb4f8a75214bf3ab0d62c5c440aa5c5b2a0807963e95d",
-  "outputs/E08/params_sweep.json": "d3d09beb0718144e9aa6e5b77907358eeeb1158f985ccca23b2f213ddb595acb"
+  "outputs/E08/misspecification.csv": "fcdc1fa005a2c7e7cf77f4a434fce657e07df996f2b56ceeaa83013b26c287d3",
+  "outputs/E08/params_sweep.json": "fb197cc683bf15e11d44b4e824fbc2cc67f0078d1d38e706b55fcb5fffc91254"
  },
  "frozen_at": {
-  "E08": "2026-09-16T18:41:17Z"
+  "E08": "2026-09-18T17:25:42Z"
  },
  "frozen_commit": {
-  "E08": "0ddfa8bfe95122c6ad34aef0dfc93aea0aae2cd0"
+  "E08": "3bb741e78c3464d17eedaf8b38360f2813d4028c"
  },
  "frozen_run_commits": {
   "E08": [
-   "29a9ffe"
+   "9de9e24"
   ]
- }
+ },
+ "superseded_frozen_outputs": [
+  {
+   "reason": "Replaced by the 16-seed run under the amendment of 2026-09-16 21:05 (seeds 8 -> 16, for consistency with every other confirmatory experiment). The 8-seed artefact is not cited anywhere in the manuscript; its hashes are kept here so the replacement is on the record and the older run is identifiable if it is ever recovered.",
+   "superseded_at": "2026-09-18T07:40:00Z",
+   "frozen_outputs": {
+    "outputs/E08/misspecification.csv": "56f9a559baa308a7180fb4f8a75214bf3ab0d62c5c440aa5c5b2a0807963e95d",
+    "outputs/E08/params_sweep.json": "d3d09beb0718144e9aa6e5b77907358eeeb1158f985ccca23b2f213ddb595acb"
+   },
+   "frozen_at": {
+    "E08": "2026-09-16T18:41:17Z"
+   },
+   "frozen_commit": {
+    "E08": "0ddfa8bfe95122c6ad34aef0dfc93aea0aae2cd0"
+   },
+   "frozen_run_commits": {
+    "E08": [
+     "29a9ffe"
+    ]
+   }
+  }
+ ]
 }

@@ -11,8 +11,15 @@ bound itself. The shape bound grows as $e^{4t}$ and crosses the full range of th
 coordinate ($3$) at $t=\learnKurtBoundCross$; at $t=1$ the fitted excess kurtosis is
 $\learnRmseKurtTone$ from the truth, the fit having collapsed to a Gaussian innovation,
 while $\widehat\corr$ is still within $\learnRmseRhoTone$. Correlation is lost only past
-the crossover $\tstar=\learnTstar$: $\learnRmseRhoTonepfour$ at $t=1.4$ and
-$\learnRmseRhoTtwo$ at $t=2$, where the estimator also leaves the bound. Below the
+the crossover $\tstar=\learnTstar$: $\learnRmseRhoTonepfour$ at $t=\learnLevelTonepfour$ and
+$\learnRmseRhoTtwo$ at $t=2$, where the estimator also leaves the bound. That last
+departure we report as unresolved rather than as a finding: at $t\ge\learnAtCapHighFrom$
+the validation-selected checkpoint is the last rung of the \textsc{em} ladder in
+$\learnAtCapHighMin$ of cells or more, against at most $\learnAtCapLowMax$ at every
+informative level, so at those two levels the fit is limited by the iteration budget and
+the excess over the bound cannot be attributed to the channel. A control run with the
+ladder extended sixfold is registered (\textsc{e06c}); nothing else in this paragraph
+depends on it. Below the
 crossover both errors grow more slowly than the asymptotic rates, as
 \cref{sec:theory} predicts (fitted log-slopes $\learnPreSlopeRho$ and
 $\learnPreSlopeKurt$ on $[\learnPreLo,\learnPreHi]$ against $2$ and $4$); the asymptotic

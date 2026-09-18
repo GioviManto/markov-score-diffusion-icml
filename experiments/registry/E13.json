@@ -7,7 +7,22 @@
  "seeds": {
   "confirmatory": "0-7"
  },
- "status": "REGISTERED 2026-09-17 before running",
+ "status": "FROZEN E13 2026-09-18T17:25:42Z; REGISTERED 2026-09-17 before running",
  "registered": "2026-09-17",
- "script_sha256": "e82450fb4663d5f6e9f0aaed36fef7edfdb74f908b018aea241a3d4d39cb882b"
+ "script_sha256": "e82450fb4663d5f6e9f0aaed36fef7edfdb74f908b018aea241a3d4d39cb882b",
+ "frozen_outputs": {
+  "outputs/E13/regimes.csv": "fed7948f7d4b09e3b3efcc2ddcd1dc17af4b31fb961c0feac37dd6a98100718b",
+  "outputs/E13/params_sweep.json": "f67d0f380940f2c9a77751ce3a602eeaeca25471129b550504741c8a80d1cf15"
+ },
+ "frozen_at": {
+  "E13": "2026-09-18T17:25:42Z"
+ },
+ "frozen_commit": {
+  "E13": "3bb741e78c3464d17eedaf8b38360f2813d4028c"
+ },
+ "frozen_run_commits": {
+  "E13": [
+   "3bb741e"
+  ]
+ }
 }
