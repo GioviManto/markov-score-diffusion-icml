@@ -82,18 +82,32 @@ def part_chain(cfg, out):
     write_csv(out / "closure_wide.csv", rows)
 
 
-def _gap_scalar(logp0, ts, A, n, X, nx):
-    a = np.linspace(-A, A, n); da = a[1] - a[0]
-    p0 = np.exp(logp0(a)); p0 /= np.trapezoid(p0, a)
+def _scalar_grid(alpha, core=40.0, dcore=0.004, x_max=40.0, tail_factor=3.0):
+    """Two-segment a-grid: a fine core on [-core, core] and coarse tails out to tail_factor * x_max / alpha,
+    where the posterior for an x in the tail actually lives (a ~ x / alpha). A fixed domain truncates the
+    prior's tail at large t and pins the tail posterior means, which is exactly the artefact this
+    experiment exists to remove; the tail spacing 0.05 / alpha is a twentieth of the likelihood's width in a."""
+    A = max(core * 2, tail_factor * x_max / alpha)
+    a_core = np.arange(-core, core + dcore / 2, dcore)
+    dtail = 0.05 / alpha
+    a_right = np.arange(core + dtail, A + dtail / 2, dtail)
+    a = np.concatenate([-a_right[::-1], a_core, a_right])
+    w = np.gradient(a)  # trapezoid-like weights on the non-uniform grid
+    return a, w
+
+
+def _gap_scalar(logp0, ts, A_unused, n_unused, X, nx):
     x = np.linspace(-X, X, nx)
     out = []
     for t in ts:
         al, de = np.exp(-t), 1 - np.exp(-2 * t)
+        a, w = _scalar_grid(al, x_max=X)
+        p0 = np.exp(logp0(a)); p0 /= float(np.sum(p0 * w))
         Pt = np.empty(nx); Ea = np.empty(nx)
-        for s in range(0, nx, 400):
-            xx = x[s:s + 400, None]
-            wgt = np.exp(-0.5 * (xx - al * a[None, :]) ** 2 / de) / np.sqrt(2 * np.pi * de) * p0[None, :] * da
-            Pt[s:s + 400] = wgt.sum(1); Ea[s:s + 400] = (wgt * a[None, :]).sum(1) / np.maximum(wgt.sum(1), 1e-300)
+        for s in range(0, nx, 200):
+            xx = x[s:s + 200, None]
+            wgt = np.exp(-0.5 * (xx - al * a[None, :]) ** 2 / de) / np.sqrt(2 * np.pi * de) * p0[None, :] * w[None, :]
+            Pt[s:s + 200] = wgt.sum(1); Ea[s:s + 200] = (wgt * a[None, :]).sum(1) / np.maximum(wgt.sum(1), 1e-300)
         S = -(x - al * Ea) / de
         out.append(float(np.trapezoid((S + x) ** 2 * Pt, x)))
     return out
