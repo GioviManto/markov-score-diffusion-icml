@@ -81,9 +81,10 @@ $\audMomRmseKurtTzeropzerofive$, $\audMomRmseKurtTzeropfour$, $\audMomRmseKurtTo
 $\kfour$ at $t=0.05,\learnLevelTzeropfour,1,2$ (and $t=0.05,\learnLevelTzeropfour,1$), with biases within
 $\audMomBiasKurtTzeropfour$ at $t=\learnLevelTzeropfour$. Selecting EM--BP's checkpoint by held-out
 one-view log-evidence instead of by validation risk against the true kernel gives a test
-error of $\audSelEvidenceA$ against $\audSelOracleA$ at $\nseq=32$ ($\audSelSameA$ of
-$\audSelNA$ seeds select the same rung) and $\audSelEvidenceC$ against $\audSelOracleC$
-at $\nseq=512$.
+error of $\audSelEvidenceA$ against $\audSelOracleA$ at $\nseq=32$, the size at which
+selection matters most ($\audSelSameA$ of $\audSelNA$ seeds select the same rung; at
+$\nseq=2048$ the validation curve is monotone through the ladder, so every rule picks its
+top).
 
 \paragraph{The information curve at $\corr=0.5$ and the scalar constants (\textsc{e21}).}
 At $\corr=0.5$ the local slope of $\log(1/I^{\mathrm{eff}})$ on the levels

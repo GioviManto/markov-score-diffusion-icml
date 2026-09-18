@@ -167,10 +167,13 @@ technical.
   $\shapeSlopeBetathree$ ($\beta$, at $\beta=3$).
   (c)~The price of second-order closure: $\E\lVert\score-\Sgauss\rVert^2$ measured by
   tree-exact BP, divided by the predicted $\tfrac16\Frob{\kfour}^2e^{-8t}$, for four
-  innovation families on a domain wide enough for their samples (\cref{app:numerics});
-  the shaded band is the double-precision floor of the posterior means. Laplace, the
-  bimodal mixture and Student-$t_5$ reach the constant; the uniform family reaches the
-  floor first.}
+  innovation families on a domain wide enough for their samples (\cref{app:numerics}).
+  Thin curves: $512$ sequences, paired across levels; bold markers with bars: the
+  constant from $\audConstChains$ sequences with a bootstrap interval at $t=3$ and $4$;
+  grey dotted: the same Student-$t_5$ sequences on the operating $(801,8)$ domain, where
+  the truncated prior drives the reference. The shaded band is where the double-precision
+  floor of the posterior means enters; the uniform family, with the smallest constant,
+  reaches it first. Laplace, the bimodal mixture and Student-$t_5$ reach the constant.}
   \label{fig:theory}
 \end{figure*}
 

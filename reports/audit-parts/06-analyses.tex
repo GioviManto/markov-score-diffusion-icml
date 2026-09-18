@@ -101,7 +101,7 @@ rank-one & 0.5 & 0.886 & 0.884 & 0.028 & 0.022 & 0.030 / 0.027 & 0.034 / 0.030 \
 The KL projection under the one-view protocol reproduces EM--BP's $M=2048$ error within $0.003$ for site-varying $\rho$ and within $10$--$15\%$ for AR(2) and long-range, where the lag-one plug-in AR(1) (E08's \texttt{lmmse\_ar1} arm) is the closer match: the fitted $\hat\rho$ sits between the two projections because the $C=8$ kernel is not exactly Gaussian and the finite-sample fit under-shoots the KL optimum. Either way the asymptotic bias is a closed-form function of $\varepsilon$ and $L$; its order is $\varepsilon^1$ for the three mechanisms that perturb $O(L)$ directions of the covariance and $\varepsilon^2$ (in $\beta$) for the rank-one latent, which perturbs one. With $v=0.2$ from the well-specified cells, $\sqrt{b^2+v/M}$ predicts the two-size pattern of E08 at every strength.
 
 \subsection{Oracle-free checkpoint selection (E20)}
-Running (sixteen seeds at $M=32$, then four at $M=512$). \textsc{[pending.]} Expectation from the frozen validation curves: at $M=2048$ the oracle validation risk is monotone through the ladder ($0.0147\to0.0145$ over the last $400$ iterations), so any selection rule on that ladder gives the same test risk to $1\%$; the question is live only at $M\le128$.
+Running: eight seeds at $M=32$, the size at which the choice of rung matters most (at $M=2048$ the frozen validation curves are monotone through the ladder, $0.0147\to0.0145$ over the last $400$ iterations, so every rule picks the top). The first cell (seed 2): the oracle rule and the held-out-evidence rule select the same rung ($40$), test error $0.1206$ under both, against $0.158$ at the last rung. \textsc{[eight seeds pending; each cell costs an hour because the mixture M-step at $N_g=401$ is five seconds per iteration whatever $M$ is.]}
 
 \subsection{Moment estimators (E19)}
 \label{sec:e19}
@@ -115,4 +115,21 @@ Table~\ref{tab:crb}. Local slopes of $\log(1/I^{\mathrm{eff}}_\beta)$: $5.5, 5.7
 Table~\ref{tab:matched}. The ISM window head is the matched arm at every size; its paired factor at $M=2048$ is $7.9$ $[6.6,9.3]$; the fixed-corruption DSM arm, which sees the clean chain, is at $7.3$ $[6.2,8.7]$. Ratio-of-means versions: $7.2$ and $6.7$. Both should be given, with the estimand named as in Appendix~C.
 
 \subsection{Compute accounting}
-\textsc{[pending: \texttt{f\_compute\_cost.py} on an idle machine.]} From the frozen \texttt{wall} columns: a 32k-step network fit takes $6$--$30$ minutes single-threaded ($1{,}900$ s for the ISM window head with the exact divergence at $M=32$); an EM--BP fit at $M=2048$ with the 1200-rung ladder takes of order an hour on one core; inference is $O(LN_g^2)$ per sequence per level ($\approx10^7$ flops) against a network forward pass of $10^5$--$10^6$ flops. The Pareto sentence: EM--BP buys a factor $8$ in error at equal data for a factor $\sim10$--$100$ in inference compute and one structural assumption whose price under violation is Section~\ref{sec:e17}.
+Single-thread timings on the laptop (under load; relative values are what matter), $L=32$:
+
+\begin{center}\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+ & $N_g=201$ & $N_g=401$ & $N_g=801$ \\
+\midrule
+BP inference, one sequence, one level & 0.8 ms & 1.8 ms & 6.2 ms \\
+E-step, one sequence & 1.0 ms & 2.5 ms & 9.1 ms \\
+mixture M-step ($C=8$), per EM iteration & 1.5 s & 5.2 s & 22 s \\
+\midrule
+network forward pass, one sequence, one level & \multicolumn{3}{l}{window 0.11 ms; bi-GRU 0.20; U-Net 0.22; TCN 0.33; transformer 0.41} \\
+network training, 32k steps (frozen \texttt{wall}) & \multicolumn{3}{l}{window 113 s; transformer 481 s; bi-GRU 525 s; U-Net 630 s; TCN 641 s} \\
+ISM training, 32k steps & \multicolumn{3}{l}{transformer 1{,}700 s (Hutchinson); window 3{,}400 s (exact divergence)} \\
+\bottomrule
+\end{tabular}
+\end{center}
+So at the operating grid: inference over the twelve-level schedule costs EM--BP $\approx21$ ms per sequence against $1$--$5$ ms for a network (a factor $5$--$20$); an EM--BP fit at $M=2048$ with $\approx1000$ iterations costs $\approx(5+5)\,\mathrm{s}\times1000\approx3$ hours single-threaded against $2$--$11$ minutes for a network (a factor $\approx20$--$100$), with the mixture M-step, not the E-step, dominating below $M\approx2000$; memory is $O(N_g^2)$ per kernel and $O(ML N_g)$ per E-step chunk. The Pareto sentence for the paper: a factor $\approx8$ in error at equal data, bought with one structural assumption (priced by E17) and one to two orders of magnitude of compute. Scaling: linear in $L$ and $M$, quadratic in $N_g$, linear in $C$ for the M-step.

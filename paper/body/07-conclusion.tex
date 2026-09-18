@@ -8,10 +8,10 @@ results are for chains, at one innovation family in most experiments and with ei
 seeds in the regime sweeps. The estimator's advantage is the correctness of its
 factorisation: under a non-Markov truth it is misspecified in a way more data does not
 repair, and \cref{sec:experiments} computes where that begins. Inference costs
-$O(\nsites\ngrid^2)$ per sequence, far above a network forward pass, so the advantage is
-in data and understanding, not in wall-clock: a factor of eight in error at equal data is
-bought with a structural assumption and with inference compute that a network does not
-pay. The comparison with denoisers equalises the number of clean sequences under each
+$O(\nsites\ngrid^2)$ per sequence and level---of order ten times a network forward pass at
+$\ngrid=401$, with the mixture M-step of the same order per EM iteration---so the advantage
+is in data and understanding, not in wall-clock: a factor of eight in error at equal data
+is bought with a structural assumption and with compute a network does not pay. The comparison with denoisers equalises the number of clean sequences under each
 method's standard recipe and, separately, matches the information interface with no
 oracle on either side; it does not rank learning algorithms in general.
 

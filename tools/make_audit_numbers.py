@@ -103,7 +103,8 @@ def main() -> int:
                 M[f"audScalarSlope{_mac(fam.capitalize())}T{_mac(f'{a:g}')}"] = f"{s:.2f}"
             for _, r in g.iterrows():
                 if np.isfinite(r.ratio_to_prediction):
-                    M[f"audScalarRatio{_mac(fam.capitalize())}T{_mac(f'{r.t:g}')}"] = f"{r.ratio_to_prediction:.2f}"
+                    v = r.ratio_to_prediction
+                    M[f"audScalarRatio{_mac(fam.capitalize())}T{_mac(f'{r.t:g}')}"] = f"{v:.2f}" if v < 100 else f"{v:.0f}"
     # ---- E19 moment estimators
     p = ROOT / "outputs/E19/moments.csv"
     if p.exists():
