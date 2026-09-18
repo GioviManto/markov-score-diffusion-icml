@@ -1,0 +1,14 @@
+{
+ "id": "E16",
+ "script": "experiments/e16_edgeworth_oracle.py",
+ "hypothesis": "Adding the degree-4 Hermite term of Theorem 3 back to the covariance twin (first Edgeworth correction, oracle Sigma_0 and kappa_4) closes the closure gap wherever the expansion converges: the fraction closed -> 1 as t grows on every family with an exponential moment; it diverges below the crossover; on Student-t it cannot close the tail-dominated part.",
+ "design": "E01's closure protocol (512 chains, rng tag 'e01-closure', rep 0, grid (801, 8)) at the twelve levels plus 3.5 and 4.0 for laplace, bimodal, uniform, student(5): relative score error of S^G, S^G + grad eps (linear) and S^G + grad eps/(1+eps) (log) against tree-exact BP; fraction of the squared gap closed.",
+ "predeclared_analysis": "Per level and family: gap closed; the level above which the log form closes more than 90 %; pooled error over the twelve levels for the three estimators.",
+ "seeds": {
+  "confirmatory": "rep 0 of E01's closure stream"
+ },
+ "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "registered": "2026-09-18",
+ "script_sha256": "c9880c5f59bfffbf99a06ff51314373526020b6ec06de924c0fede213751d1fc",
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+}

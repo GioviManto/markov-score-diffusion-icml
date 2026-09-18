@@ -1,0 +1,276 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+
+\definecolor{rulegrey}{gray}{0.45}
+\titleformat{\section}{\large\bfseries}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.7em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection}{0.7em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+\setlist[itemize]{leftmargin=1.2em,itemsep=0.25em,topsep=0.3em}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=0.35em,topsep=0.4em}
+\newcommand{\hi}[1]{\textbf{#1}}
+\newcommand{\sev}[1]{\textsc{#1}}
+\newcommand{\Frob}[1]{\lVert #1 \rVert_{F}}
+\newcommand{\Hen}[1]{\mathrm{He}_{#1}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Sg}{S^{\mathrm{G}}}
+\newcommand{\tstar}{t_\ast}
+\newcommand{\lmax}{\lambda_{\max}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries What survives the audit}\\[0.45em]
+{\large A scientific audit of the ICML manuscript and of the 18 September report,\\ with the analyses it forced and the paper it recommends}\\[0.9em]
+{\small Internal research report \quad$\cdot$\quad 18--19 September 2026}\\[0.25em]
+{\footnotesize Every number that is new here comes from a script under \texttt{experiments/} or \texttt{outputs/E1x/} named in the text; every number that is old comes from a frozen run named in the text.}
+\end{center}
+
+\vspace{0.4em}
+\hrule height 0.8pt
+\vspace{1.2em}
+
+\noindent
+This report audits two documents as primary sources: the ICML manuscript \emph{What Survives Diffusion Noise?} (\texttt{paper/main.pdf}, 18 September) and the internal report \emph{The EM chapters, re-examined} (\texttt{reports/em-chapters-2026-09-18.pdf}). It does what the brief asked, in the order the brief asked: science first, prose last. Section~1 says what stands, what does not, and what changed; Section~2 lists the issues by severity; Sections~3--5 are the mathematical, experimental and consistency audits; Section~6 reports the analyses run for this audit (all on the laptop, all cheap, several decisive); Sections~7--13 are the forward plan---experiments, claims, narrative, structure, figures, the two referee reports, and the checklist.
+
+\medskip
+\noindent\hi{The one-paragraph version.} The theory is right and the constants are right, but Theorem~3 is stated under a moment condition its proof does not use: the proof needs an exponential moment, which every innovation family in the paper except Student-$t$ has, and Student-$t$ is precisely the family that departs. The heavy-tailed departure the manuscript attributes to the moment condition is, on the grid it was measured on, a truncation artefact; on a wider domain the Student-$t_5$ chain reproduces the $e^{-8t}$ constant to $0.99$ at $t=4$ and departs only afterwards. The ``all belief mass outside the domain'' diagnostic is one site of one chain in ten thousand, not a property of the configuration. The $7.3\times$ ``information-matched'' comparison gives the network the clean sequence as a regression target and is therefore not information-matched; the genuinely matched arm (implicit score matching, no clean target) gives $7.9\times$ $[6.6, 9.3]$, so the headline survives with a larger number and a different sentence. The ``estimator attains the Cram\'er--Rao bound at $1.02\times$'' claim does not survive: at the levels it averages over, the fitted shape is a mixture of a shrunken cluster below the bound and Gaussian-collapsed fits at the coordinate's range, and $1.02$ is the mean of ratios from $0.7$ to $1.5$. The capacity reversal, the family $V$, the regime sweep, generation and the misspecification brackets stand. Three new results were obtained for this audit and belong in the paper: a closed-form asymptotic bias for every misspecification mechanism that reproduces the $M=2048$ EM--BP error to three decimals and predicts the order in $\varepsilon$ at which each mechanism bites; an exact fourth-order (Edgeworth) correction to the covariance twin that closes $96\%$ of the closure gap at $t=0.68$ and $100\%$ by $t=2$ on every family with an exponential moment, and cannot close it on Student-$t$; and the exact information curve at $\rho=0.5$, which says the sample-complexity experiment E12b as pre-registered would have declared the corollary refuted by a slope of $6.5$ that is in fact its prediction on those levels (amended before any data, Section~7).
+
+\tableofcontents
+
+%% ------------------------------------------------------------------------------------
+\section{Executive scientific assessment}
+\label{sec:exec}
+
+\subsection{What is genuinely strong}
+
+\begin{enumerate}
+\item \hi{The laboratory.} A non-Gaussian, correlated law in $\R^{32}$ whose diffusion score is computable exactly, with a validated numerical instrument (at the frozen configuration the reference drifts $9\times10^{-6}$ under an eightfold refinement and a $1.5\times$ widening of the domain). Nothing comparable exists in the solvable-diffusion literature: the Gaussian, mixture and hierarchical-discrete models are either linear in the score or nonlinear only through a discrete latent.
+\item \hi{Theorem 2 and the algebraic skeleton of Theorem 3.} Hermite attenuation is exact and elementary; the four constants of Theorem 3 ($e^{-mt}$ per degree, $\kappa_4$ as the degree-4 difference, $\tfrac12$ in the covariance rate, $\tfrac16$ in the score gap) are machine-checked in Lean, and the fifth---$\tfrac1{24}$ in the shape rate---is verified in this audit by scalar quadrature to $0.25\%$ (Section~6.5). The closure-gap constant is reproduced on the chain to $1$--$6\%$ for Laplace and bimodal innovations and, on a wide enough domain, to $1\%$ for Student-$t_5$ at $t=4$.
+\item \hi{Proposition 1 as an apparatus check.} ``$C=1$ lands on the LMMSE floor'' is verified at fifteen $(\rho, L)$ cells to $0.01$ and across a one-parameter family at every member. It is the single most reassuring fact about the whole pipeline (grid, message passing, EM, scoring), and it is stated correctly.
+\item \hi{The capacity reversal and its diagnosis.} Retiring ``capacity does not help'' with the exact mechanism (a stopping rule that fired for one arm) and the two controls that isolate it (E02a\_v1 at a shorter ladder, E10 in the thesis's own estimand) is exemplary. It should be foregrounded, not hidden.
+\item \hi{The experimental discipline.} Frozen protocol, pre-registration, hashed bundles, paired seeds, a generator that refuses dirty runs, a manuscript check that refuses typed decimals, and an independent re-derivation of every headline number. This audit found no arithmetic error in any frozen number. Every problem found is in what a number was \emph{said} to mean.
+\item \hi{Misspecification as a measured boundary.} Four mechanisms, sixteen seeds, brackets rather than fitted crossings, and the separation of estimation from bias by two sample sizes. With the closed-form bias of Section~6.3 it becomes a small theory.
+\end{enumerate}
+
+\subsection{What is currently vulnerable}
+
+\begin{enumerate}
+\item \hi{Theorem 3's hypothesis.} Stated for finite eighth moments; proved (in Appendix A.3) with an analyticity of $\Lambda(s,b)$ at the origin and a tail bound $P_t(|\alpha x|>1)\le e^{-c/\alpha^2}$ that hold only under an exponential moment. A theoretical referee will find this in ten minutes. Section~3.3 gives the repair: state the theorem under $\E e^{\lambda|a|}<\infty$; keep finite moments for Theorem~2; add the heavy-tailed regime as a proposition with its own rate.
+\item \hi{``Information-matched''.} The arm behind $7.3\times$ trains by denoising score matching on $(a, x_t)$ pairs---the network sees the clean chain. Its sigma-algebra strictly contains EM--BP's. The genuinely matched arm (implicit score matching on $x_t$ alone) exists in the same frozen file, gives $7.9\times$ $[6.6, 9.3]$ paired over sixteen seeds, and is the number to report (Section~4.3).
+\item \hi{``Attains the Cram\'er--Rao bound''.} The $1.02\times$ average pools levels where the estimator is unimodal and near the bound ($t\le0.4$) with levels where it is a mixture of a shrunken cluster and collapsed fits ($t=0.7$: four of sixteen at excess kurtosis $\approx0$, the other twelve with dispersion $0.76$ against a bound of $1.79$). The bound is for the one-parameter shape family, the estimator is an eight-component mixture with early stopping selected on an oracle. None of this is efficiency in the statistical sense. Section~4.5 gives the defensible statement.
+\item \hi{Oracle model selection.} EM--BP, the standard-recipe networks and the fixed-corruption arm all select their checkpoint on a validation bundle scored against the \emph{true-kernel} score. Only the implicit-score-matching arm selects without an oracle. A control with held-out log-evidence selection is running (Section~6.7); at $M=2048$ the validation curve is monotone through the ladder, so the number will not move, but the sentence must say what the selection uses.
+\item \hi{The Student-$t$ envelope story.} ``Essentially all of its belief mass outside the domain'' is a maximum over $8192$ (chain, site) pairs at which exactly one site (seed 2: $|a|=15.4$; seeds 0, 1, 3: one site each beyond $8$) is pinned to the boundary. The instrument finding is real and better than stated---for polynomial tails the truncation error is a Poisson number of exceedances, and no finite domain removes it---but the sentence is wrong and the E07 ladder's Student-$t$ rows are wrong by a few sites, not by ``all''.
+\item \hi{Locality as a ceiling.} The claim rests on a plateau ($0.121\to0.118$) and an argument (``a radius-4 window cannot represent a message that has crossed the chain''). The exact best radius-$r$ estimator is computable (Section~6.4). The verdict depends on its value at $\rho=0.85$; at $\rho=0.5$ the radius-4 information floor is below $0.002$ at every level, two orders under the window head. If the $\rho=0.85$ floor is also far below $0.118$, the plateau is an architecture limit and the sentence must change.
+\item \hi{Overstatements of what E06 confirmed.} The introduction says the $e^{4t}$ separation ``is confirmed''; the contribution list says it is ``measured''; Section~4's heading asserts it. E06 saturates before the asymptotic window at $\rho=0.85$, E06b is inconclusive, E12 is confounded. What is established is the rates \emph{by computation}, the ordering \emph{by measurement}, and the collapse level. Say that.
+\item \hi{Stale and inconsistent text.} A \texttt{[PENDING]} note in the abstract, a dangling \verb|\cref{thm:gap}| (``??'' on page 7), a provenance paragraph saying under-resolved fits are refused while Table~1 prints them with daggers, sixteen seeds in Section~5 against eight in the regime sweep, and a related-work paragraph whose ``what is new'' list is longer than the evidence.
+\end{enumerate}
+
+\subsection{What changed because of this audit}
+
+\begin{itemize}
+\item Theorem~3 restated under an exponential-moment assumption with a corrected tail argument; a general-order theorem replaces Remark~4; the sample-complexity corollary becomes a local asymptotic minimax statement; a heavy-tailed proposition is added (Section~3).
+\item The headline matched-interface number becomes $7.9\times$ (implicit score matching), with the fixed-corruption arm demoted to ``even given the clean sequence''.
+\item The efficiency paragraph is rewritten around dispersion, bias and collapse fraction per level.
+\item The Student-$t$ cell is described by its exceedance count; the E07 rows are recomputed on a wide domain (E07b/E07c queued; the local check of Section~6.2 anticipates them).
+\item Figure~2c's Student-$t$ curve is replaced by the wide-domain computation (Section~6.2): the constant is reached, and the departure is later and has its own rate.
+\item Three new results enter the paper: the closed-form misspecification bias (Section~6.3), the fourth-order correction as a moment-method baseline (Section~6.6), and the moment estimators as the high-noise competitor (Section~6.8).
+\item E12b's analysis plan is amended before any of its cells has run: the target is the exact information curve, whose slope on the swept levels is $6$--$7$, not $8$ (Section~6.9).
+\end{itemize}
+
+%% ------------------------------------------------------------------------------------
+\section{Critical issues}
+\label{sec:issues}
+
+Severity: \sev{blocker} = a referee can reject on it; \sev{major} = must be fixed before submission; \sev{moderate} = must be fixed, low risk; \sev{minor} = editorial. ``Exp.'' says whether a new experiment is required.
+
+\begin{longtable}{@{}p{0.8cm}p{2.4cm}p{6.6cm}p{5.2cm}p{0.9cm}@{}}
+\toprule
+sev. & where & problem and reason & fix & exp. \\
+\midrule
+\endhead
+\sev{blocker} & Thm 3, App.\ A.3 & Hypothesis ``finite eighth moments''; proof uses $P_t(|\alpha x|>1)\le e^{-c/\alpha^2}$ (false under finite moments: by Markov the tail is $O(\alpha^{16})$, polynomial) and real-analyticity of $\Lambda(s,b)$ at $(0,0)$ (false when $\E e^{s\cdot a}=\infty$ for all $s\ne0$). The remainder bound $C\alpha^6(1+|x|)^6$ on $\{|\alpha x|\le1\}$ is asserted, not proved, and the tilted moments it needs grow like $e^{|x|^2/2\Delta}$ on that set. & Assume $\E e^{\lambda|a|}<\infty$ for some $\lambda>0$ (holds for Gaussian, Laplace, uniform, mixture, generalised Gaussian $\beta\ge1$). Then $\Lambda$ is analytic in $|s|<\lambda$, $b\ge0$, the bulk is $\{|s|\le\lambda/2\}$, and the tail bound is exponential. Student-$t$ is outside the theorem and gets Proposition~\ref{prop:heavy}. & no \\
+\sev{blocker} & \S5 ``matched information'', abstract, report \S5.2 & The $7.3\times$ arm is DSM on $(a,x_t)$: the network regresses on the clean chain. Not information-matched. & Headline: implicit score matching on $x_t$ only, $7.9\times$ $[6.6,9.3]$, 16/16 seeds; the fixed-corruption arm reported as ``even with the clean target, $7.3\times$''. Macro logic in \texttt{make\_baseline\_numbers.py} picks the best arm by risk; it must pick the ISM arm by definition. & no \\
+\sev{major} & \S4 efficiency & ``$1.02\times$ the bound'' averages ratios $0.7$--$1.5$ over post-hoc-selected levels; the fitted shape is bimodal from $t=0.7$ (4/16 collapsed) and collapsed at $t\ge1$ (15/16); the surviving cluster's dispersion is $0.42\times$ the bound; the bound is for a different family. & Report per level: collapse fraction, dispersion and bias of the non-collapsed cluster, the one-parameter bound as a reference. Claim: unimodal and within $20\%$ of the reference for $t\le0.4$; collapse begins at $t=0.7$ and is total by the level at which the bound crosses the range. & E06c (running) \\
+\sev{major} & \S5, ``locality is a ceiling'' & Explanation not tested against the exact radius-$r$ floor. & Compute the floor (Section~6.4); if far below the window head, rewrite as an architecture limit and report the floor as the reference. & no (done) \\
+\sev{major} & App.\ B, App.\ E, Fig.\ 6, report \S8.2 & ``essentially all of its belief mass outside the domain'' is a max over sites; the cell has one to two sites beyond $8$ in $8192$. The drift is those sites. & State the exceedance count and the mechanism; recompute the E07 row on a domain wide enough for the drawn sample (local check in Section~6.2; E07b/c queued). & queued \\
+\sev{major} & Fig.\ 2c, \S3 verification & Student-$t_5$ ``departs as the moment condition predicts'' at $t\approx3$: on the $A=8$ grid this is truncation of the prior's tail; on $A=16$ the constant is reached ($0.99$ at $t=4$) and the departure begins at $t\approx4.5$. & Replace the curve by the wide-domain run; state the departure as the heavy-tail regime (Prop.~\ref{prop:heavy}). & no (done) \\
+\sev{major} & \S1, contributions (iii), \S4 heading & ``the experiment confirms'' the $e^{4t}$ separation; it does not (saturation, E06b inconclusive, E12 confounded). & Rates by computation, ordering by measurement, collapse level measured; exponents from estimator error not claimed until E12b. & E12b (queued) \\
+\sev{major} & Cor.\ 5 & ``needs $M\propto e^{4t}$'' from a Fisher information alone. & State as a local asymptotic minimax lower bound (H\'ajek--Le Cam) attained by the MLE asymptotically; ``local'' precision; regime $M\to\infty$ at fixed $t$. & no \\
+\sev{major} & Remark 4 & General order is a remark without hypotheses or constant. & Theorem~\ref{thm:general} below: constant $\sum_{|\nu|=m}(\partial_\theta\E H_\nu)^2/\nu!$, proved by the same grading under the exponential moment. & no \\
+\sev{moderate} & All arms except ISM & Checkpoint selection on a true-score validation bundle. & Say so in the protocol; report the held-out-evidence control for EM--BP (Section~6.7). & running \\
+\sev{moderate} & \S5g & \verb|\cref{thm:gap}| unresolved (``??''). & Label. & no \\
+\sev{moderate} & App.\ C vs Table 1 & ``generator refuses to emit \ldots cells whose narrowest fitted component is under two grid cells'' vs daggers in Table~1 and ``1 of 320 \ldots reported, not dropped''. & Policy: reported with a flag; the generator refuses only dirty trees and incomplete designs. & no \\
+\sev{moderate} & \S3 eq.\ (5) verification & Constant of the shape rate is not reproduced on the chain ($0.81$ at $\beta=2$, $0.92$ at $\beta=3$ at the plateau); the text says ``verifies the rates and the constants''. & The scalar constant is verified to $0.25\%$ (Section~6.5); on the chain the outer-product estimator's floor limits the check to $10$--$20\%$; say which constants are verified where. & no \\
+\sev{moderate} & \S5 protocol vs \S5g & Sixteen seeds stated as the unit; the regime sweep has eight; E14 has eight. & State per experiment. & no \\
+\sev{moderate} & E08 text & ``the screened window head''; E08 trains a radius-2, width-64 head for 16k steps, not E03's screened radius-4 winner. & Name it. & no \\
+\sev{moderate} & E12 (frozen) & Confounded at $t=1$; kurtosis non-monotone in $M$; pre-registered E12b targets exponents that the information curve says are $6$--$7$ on those levels. & Amendment recorded before data (Section~7). & queued \\
+\sev{minor} & Abstract & \texttt{[PENDING]}; ``Correlation \ldots decays as $e^{-2t}$'' (amplitude) beside ``information decays as $e^{-4t}$'' without the dictionary. & Rewrite; add the amplitude/information/samples dictionary once. & no \\
+\sev{minor} & \S6 related work & ``what is not in that literature'' lists five items; two are specialisations. & Claim the synthesis precisely (Section~13 of the brief; here Section~8.3). & no \\
+\bottomrule
+\end{longtable}
+
+%% ------------------------------------------------------------------------------------
+\section{Mathematical audit}
+\label{sec:math}
+
+Conventions: $\alpha=e^{-t}$, $\Delta=1-\alpha^2$, $x=\alpha a+\sqrt\Delta z$, $\gamma$ the standard Gaussian on $\R^L$, $\Hen{n}$ probabilists' Hermite polynomials, $H_\nu(x)=\prod_i\Hen{\nu_i}(x_i)$, $\E_\gamma[H_\nu H_\mu]=\nu!\,\delta_{\nu\mu}$. Four objects that the manuscript sometimes conflates are kept apart throughout:
+\begin{description}[leftmargin=1.6em,itemsep=0.2em]
+\item[(L1)] exact functional sum-product on the chain posterior;
+\item[(L2)] Gaussian-projected functional sum-product (the closure of Proposition~1);
+\item[(L3)] the grid implementation of (L1) at $(N_g, A)$;
+\item[(L4)] the LMMSE estimator under the true covariance.
+\end{description}
+
+\subsection{Proposition 1: Gaussian closure equals the LMMSE of the covariance twin}
+
+\paragraph{Statement audited.} (L2) with $\rho\ne0$ returns $e^{-t}\Sigma_0\Sigma_t^{-1}x$ for every innovation law of mean $0$ and variance $q$.
+
+\paragraph{Forward induction.} Let the projected forward message at site $i-1$ be $N(m,v)$. Multiplying by the unary $\ell_{i-1}(a)\propto\exp[-(x_{i-1}-\alpha a)^2/2\Delta]$ gives a Gaussian with precision $1/v+\alpha^2/\Delta$ and mean $(m/v+\alpha x_{i-1}/\Delta)/(1/v+\alpha^2/\Delta)$, the same in both chains. The transition integral $\int\varphi(a-\rho a')g(a')\,da'$ is the density of $\rho a'+\varepsilon$ with $a'\sim g$, $\varepsilon\sim\varphi$ independent; its mean is $\rho m'$ and its variance $\rho^2v'+q$ for \emph{every} $\varphi$ with moments $(0,q)$. Projection returns $N(\rho m',\rho^2v'+q)$, which is the Gaussian chain's message. Correct.
+
+\paragraph{Backward induction.} The backward message as a function of $a$ is $h(\rho a)$ with $h(u)=\int\varphi(a''-u)g(a'')\,da''$, the density of $a''-\varepsilon$ evaluated at $u$; $h$ integrates to one in $u$, has mean $m'$ and variance $v'+q$. As a function of $a$ it is $h(\rho a)$: its mass is $1/|\rho|$, its normalised mean $m'/\rho$ and variance $(v'+q)/\rho^2$. This is where $\rho\ne0$ is used, and it is used correctly: at $\rho=0$ the backward message is constant and has no Gaussian projection, and the Gaussian chain's backward message is likewise flat. The terminal message $\overleftarrow m_L\equiv1$ is never projected (the induction starts from $\ell_L$); the manuscript says so.
+
+\paragraph{Normalisation constants.} Irrelevant to the posterior mean; the projection is applied to normalised shapes. Correct.
+
+\paragraph{Belief and the LMMSE identity.} Product of three Gaussians (forward, unary, backward) is the Gaussian chain's belief; its mean is the Gaussian chain's posterior mean, which equals $\mathrm{Cov}(a,x)\mathrm{Cov}(x)^{-1}x=\alpha\Sigma_0(\alpha^2\Sigma_0+\Delta I)^{-1}x$. Correct.
+
+\paragraph{Stationarity.} Not assumed. The initial law is $N(0,1)$ at site~1 and the induction carries site-dependent $(m,v)$; $\Sigma_0$ is the chain's covariance whatever the start. The text's ``$\mathrm{Cov}(a_i,a_j)=\rho^{|i-j|}$'' holds because $a_1$ has unit variance and $q=1-\rho^2$; nothing in the proposition needs it.
+
+\paragraph{Layers.} The proposition is a statement about (L2) and (L4). The manuscript then uses it in two further ways that need their own one-line justifications, both true and both currently implicit:
+\begin{itemize}
+\item \emph{``every Gaussian-innovation kernel is bounded by the LMMSE floor''} (App.~F): BP with any Gaussian kernel is a linear map of $x$ (the Gaussian chain's smoother with that kernel's covariance), and (L4) is the minimiser of the posterior-mean MSE over all linear maps; the score error is $(\alpha/\Delta)^2$ times the mean error. So the floor bounds every linear estimator. This is a different fact from the proposition and should be stated as a corollary.
+\item \emph{``$C=1$ lands on the floor''} (Table~1, E13): needs additionally that the Gaussian quasi-MLE of $(\rho,q)$ from noised data is consistent for the true $(\rho,q)$. It is: the Gaussian likelihood depends on the data only through the sample covariance, whose expectation $\alpha^2\Sigma_0+\Delta I$ identifies $(\rho,q)$. Say so in one sentence; it explains why the identity holds to $0.01$ at $M=512$ and is what makes E13's fifteen cells an apparatus check.
+\end{itemize}
+
+\paragraph{Verdict.} \sev{verified} as stated. Add the two one-line corollaries. The Lean coverage is honest about what it checks (the moment maps for a \emph{Gaussian} innovation, not the moments-only clause); the paper's sentence ``the projection step itself is not [machine-checked]'' is accurate.
+
+\subsection{Theorem 2: Hermite attenuation}
+
+$\E_{P_t}[H_\nu(x_t)]=e^{-|\nu|t}\E_{P_0}[H_\nu(a)]$ for $\E|a|^{|\nu|}<\infty$. The generating-function proof is standard and complete; coordinates of $z$ are independent given $a$, so the product form holds pointwise in $a$; Fubini needs $\E|H_\nu(a)|<\infty$, which finite $|\nu|$-th moments give. \sev{verified}. Two remarks the paper should absorb:
+\begin{itemize}
+\item The cumulant consequence $\kappa_m(x_t)=e^{-mt}\kappa_m(a)$, $m\ge3$, follows directly from $x_t=\alpha a+\text{Gaussian}$ and needs no Hermite polynomials; the Hermite statement is the natural one for \emph{moments}, which is what a Fisher information is built from.
+\item The \hi{dictionary} that the abstract currently blurs. For a feature whose lowest Hermite footprint has degree $m$: amplitude of the moment, $e^{-mt}$ (exact, all $t$, Theorem~2); Fisher information, $e^{-2mt}$ (asymptotic, Theorem~3/\ref{thm:general}); sample complexity for fixed local precision, $e^{2mt}$ (asymptotic in $M$, Corollary~\ref{cor:lam}). Correlation: $m=2$, so $e^{-2t}$, $e^{-4t}$, $e^{4t}$. Fourth cumulant: $m=4$, so $e^{-4t}$, $e^{-8t}$, $e^{8t}$. The squared score gap is the square of a degree-4 amplitude: $e^{-8t}$. The abstract writes ``correlation survives as $e^{-4t}$'' (information) two lines after ``attenuates every Hermite mode of degree $m$ by $e^{-mt}$'' (amplitude); one sentence stating the dictionary removes the ambiguity everywhere.
+\end{itemize}
+
+\subsection{Theorem 3: score gap and Fisher information}
+\label{sec:thm3}
+
+\paragraph{Exact identities.} $P_t(x)=\gamma_\Delta(x)\E_{P_0}\exp(s\cdot a-b|a|^2/2)$ with $s=\alpha x/\Delta$, $b=\alpha^2/\Delta$; $\E[a\mid x]=\nabla_s\Lambda$; $S=-x/\Delta+(\alpha/\Delta)\nabla_s\Lambda$. All correct and require only a density for $P_0$.
+
+\paragraph{The gap in the proof.} Two statements in Appendix A.3 are false under the stated hypothesis.
+\begin{enumerate}
+\item \emph{``$\Lambda$ is real-analytic in $(s,b)$ on $\R^L\times(0,\infty)$, and its Taylor coefficients at the origin are the joint cumulants''.} $\Lambda$ is analytic in $s$ for every fixed $b>0$ (the Gaussian damping makes the tilted measure integrable), but the expansion is taken at $b=0$, and $\Lambda(s,0)=\log\E e^{s\cdot a}$ is $+\infty$ for every $s\ne0$ when $P_0$ has only finitely many moments (Student-$t$; any regularly varying tail). The Taylor coefficients exist up to the order of the finite moments, the function is $C^k$ but not analytic, and a Lagrange remainder needs the derivatives at intermediate $(\theta s,\theta b)$, i.e.\ moments of the tilted measure $\propto P_0(a)\exp(-\theta\alpha^2|a-x/\alpha|^2/2\Delta)$, which on the bulk $\{|\alpha x|\le1\}$ are bounded only by $C_k e^{\theta|x|^2/2\Delta}$---not uniformly integrable against $P_t$ at the order claimed.
+\item \emph{``$P_t(|\alpha x|>1)\le\exp(-c/\alpha^2)$ since $x_t$ is a Gaussian convolution''.} The event $\{|\alpha x|>1\}$ contains $\{\alpha^2|a|>1/2\}$, whose probability is $\Theta(\alpha^{2\nu})$ for a tail index $\nu$ and $\le\E|a|^8(2\alpha^2)^8=O(\alpha^{16})$ under eighth moments---polynomial, not exponential. The conclusion survives (an $O(\alpha^{16})$ tail times a polynomial crude bound is $o(\alpha^8)$), but the sentence is wrong and a referee will not read past it.
+\end{enumerate}
+
+\paragraph{Is the theorem true under finite eighth moments?} Probably yes for the score gap, and the eighth moment is close to sharp, but the present proof does not show it and this audit could not close it cleanly. Heuristic for the scalar case with $P_0(a)\sim c|a|^{-\nu-1}$: on $\{|x|>K\}$ the true posterior mean is $\approx x/\alpha$ (the likelihood dominates a polynomial prior tail), so $S(x)\approx\partial\log P_0(x/\alpha)/\alpha\approx-(\nu+1)/x$ while $\Sg(x)\approx-x$, and the tail contributes $\int_{|x|>K}x^2P_t(x)\,dx\asymp\alpha^\nu K^{2-\nu}$ to the squared gap. This is $o(\alpha^8)$ iff $\nu>8$: finite eighth moments are exactly the borderline, and at $\nu\le8$ the tail term $e^{-\nu t}$ is leading. So Theorem~3's hypothesis is the right \emph{condition} for the conclusion but not a hypothesis under which the given \emph{proof} works.
+
+\paragraph{The repair.} State the theorem under
+\begin{assumption}[E]
+$\E_{P_0}e^{\lambda|a|}<\infty$ for some $\lambda>0$.
+\end{assumption}
+Then: (i) $\Lambda(s,b)$ is finite and real-analytic in $s$ on $|s|<\lambda$ jointly with $b\ge0$ (the integrand is dominated by $e^{\lambda|a|}$), so the Taylor expansion at $(0,0)$ with a Lagrange remainder is legitimate on $\{|s|\le\lambda/2\}$, i.e.\ on the bulk $\{|x|\le\lambda\Delta/2\alpha\}$, with all tilted moments bounded uniformly there; (ii) the tail $\{|x|>\lambda\Delta/2\alpha\}\subset\{\alpha|a|>c/\alpha\}\cup\{\sqrt\Delta|z|>c/\alpha\}$ has probability $\le e^{-\lambda c/\alpha^2}\E e^{\lambda|a|}+e^{-c^2/2\alpha^2}$, which \emph{is} $\exp(-c'/\alpha^2)$; (iii) on the tail $|S-\Sg|^2$ is bounded by $C(1+|x|^2+\E[|a|^2\mid x])/\Delta^2$ and $\E[\E[|a|^2\mid x]\mathbf 1_{\text{tail}}]=\E[|a|^2\mathbf 1_{\text{tail}}]$ by the tower property, so Cauchy--Schwarz with the exponential tail probability makes the tail contribution below every power of $\alpha$. The rest of Appendix A.3 (grading, Wick, the leading terms) is correct as written. Every family in the paper's laboratory except Student-$t$ satisfies (E); Student-$t$ is the family whose behaviour the theorem does not cover and Section~6.2 shows it does not follow the theorem beyond $t\approx4$. The sentence ``Student-$t_5$, whose sixth moment is infinite, departs as the moment condition predicts'' becomes ``Student-$t_5$ violates Assumption~(E); Proposition~\ref{prop:heavy} gives its rate''.
+
+\paragraph{Constants.} Tensor conventions: $\Frob{\kappa_4}^2=\sum_{ijkl}\kappa_4[ijkl]^2$ over ordered index tuples; the code (\texttt{theory.score\_gap\_constant}) sums the full $(L,L,L,L)$ tensor, and the chain measurement reproduces $\tfrac16\Frob{\kappa_4}^2$ to $1$--$6\%$, so the convention is consistent. Wick multiplicities: $\E_\gamma[(\tfrac16\sum_{jkl}T_{mjkl}{:}x_jx_kx_l{:})^2]=\tfrac{3!}{36}\sum_{jkl}T_{mjkl}^2$ for symmetric $T$, giving $\tfrac16\Frob{\kappa_4}^2$; for the information, $\E_\gamma[(\tfrac1{24}\sum T_{ijkl}{:}x_ix_jx_kx_l{:})^2]=\tfrac{4!}{24^2}\Frob{T}^2=\tfrac1{24}\Frob{T}^2$. Both checked by hand and, for the shape constant, by scalar quadrature to $0.25\%$ (Section~6.5). Hermite normalisation: probabilists', $\E_\gamma\Hen{n}^2=n!$; consistent throughout.
+
+\paragraph{Nuisance projection.} The efficient information of a degree-4 coordinate after eliminating degree-2 nuisances is $I_{44}-I_{42}I_{22}^{-1}I_{24}$ with $I_{42}=O(\alpha^8)$ (the $\alpha^6$ term vanishes by $\gamma$-orthogonality), $I_{22}=\Theta(\alpha^4)$, so the correction is $O(\alpha^{12})\ll\alpha^8$. Correct. But the manuscript should say \emph{which} nuisances: the argument covers nuisances of lower Hermite degree. A nuisance of the \emph{same} degree (another shape coordinate, as in the $C=8$ mixture) reduces the efficient information by an $O(1)$ factor, which is one reason the one-parameter bound of Section~4 is only a reference.
+
+\paragraph{Remainder and crossover.} $\epsilon_t=O(e^{-2t}\lmax)$ is proved only for the Gaussian chain (where $\Sigma_t^{-1}=I-\alpha^2(\Sigma_0-I)+\dots$ makes the correction explicit). For non-Gaussian $P_0$ the proof gives $\epsilon_t=O(e^{-2t})$ with a constant depending on $P_0$ through its moments and $L$; the identification of that constant with $\lmax$ is a heuristic. $\tstar=\tfrac12\log\lmax$ therefore has theorem-level meaning for the Gaussian chain and is the natural scale otherwise. There is a second, exact meaning worth stating: for the Gaussian chain $P_t/\gamma\in L^2(\gamma)$ iff $\lmax(\Sigma_t)<2$ iff $e^{2t}>\lmax(\Sigma_0)-1$, so $\tfrac12\log(\lmax-1)$ is exactly the time after which the Hermite expansion of $P_t/\gamma$ converges in $L^2(\gamma)$; for a Laplace $P_0$ it never does, which is why the proof must go through $\Lambda$.
+
+\paragraph{Uniformity.} The statement is for fixed $P_0$ (fixed $L$) as $t\to\infty$; nothing is claimed uniformly in $L$, and the constants grow with $L$ ($\Frob{\kappa_4}^2\propto L$). The manuscript says ``as $t\to\infty$''; it should add ``for fixed $L$''.
+
+\paragraph{Verdict.} \sev{supported but overstated}: true and verified under Assumption~(E); the stated hypothesis is not the one the proof uses; the tail sentence is false as written; the crossover is exact only for the Gaussian chain.
+
+\subsection{General order: from a remark to a theorem}
+
+\begin{theorem}[Order-by-order information]
+\label{thm:general}
+Let $P_0^\theta$ be a family satisfying Assumption~(E) uniformly near $\theta_0$, differentiable in $\theta$ in the sense that $\partial_\theta\E_{P_0^\theta}[H_\nu(a)]$ exists for every $\nu$. Let $m$ be the smallest degree with $\partial_\theta\E[H_\nu(a)]\ne0$ for some $|\nu|=m$. Then, for fixed $L$, as $t\to\infty$,
+\[
+  I_t(\theta)=e^{-2mt}\sum_{|\nu|=m}\frac{\bigl(\partial_\theta\E_{P_0}[H_\nu(a)]\bigr)^2}{\nu!}\,\bigl(1+O(e^{-2t})\bigr).
+\]
+\end{theorem}
+\noindent\emph{Proof sketch.} Under (E) write $P_t/\gamma_\Delta=e^{\Lambda(s,b)}$ and grade as in Appendix A.3. The two formal series in $\alpha$ for $\log(P_t/\gamma)$---the graded expansion of $\Lambda$ and $\log\bigl(1+\sum_{|\nu|\ge2}\alpha^{|\nu|}\E[H_\nu]H_\nu(x)/\nu!\bigr)$, the latter from Mehler's kernel---agree coefficient by coefficient, because both are polynomial identities in the moments of $P_0$ up to each order (they can be compared on any compactly supported $P_0$, where both converge, and a polynomial identity in finitely many moments that holds on that class holds identically). The grade-$m$ coefficient of $\partial_\theta\log(P_t/\gamma)$ is $\alpha^m\sum_{|\nu|=m}\partial_\theta\E[H_\nu]H_\nu(x)/\nu!$ plus $\partial_\theta$ of products of lower-grade terms, each of which contains a factor with vanishing $\theta$-derivative. Its $\gamma$-second moment is $\alpha^{2m}\sum_{|\nu|=m}(\partial_\theta\E H_\nu)^2/\nu!$ by orthogonality; replacing $\gamma$ by $P_t$ and adding the remainder costs $1+O(\alpha^2)$ exactly as in the $m=4$ case, with the tail handled by (E). $\square$
+
+\noindent\emph{Consistency.} $m=2$: $\sum_i(\partial\Sigma_{ii})^2/2+\sum_{i<j}(\partial\Sigma_{ij})^2=\tfrac12\Frob{\partial\Sigma_0}^2$, eq.~(4). $m=4$ with $\partial\Sigma_0=0$: the degree-4 Hermite moments differ from the twin's by $\kappa_4$ (Theorem~2's consequence), the multiset $\nu$ collects $4!/\nu!$ ordered tuples, so $\sum_\nu(\partial\kappa_4[\nu])^2/\nu!=\Frob{\partial\kappa_4}^2/24$, eq.~(5). The constant is the \emph{Hermite norm} of the derivative of the degree-$m$ moment tensor; for $m=6$ it is $\Frob{\partial\kappa_6+\text{(products)}}^2/6!$, where the products of lower cumulants do not vanish unless all lower-degree derivatives vanish---which is the hypothesis. Identifiable tangent directions are exactly those with some $m<\infty$; a direction with $\partial_\theta\E H_\nu=0$ for all $\nu$ is not identifiable at any noise level, which for a law determined by its moments (implied by (E)) means $\partial_\theta P_0=0$.
+
+\subsection{Sample complexity: what a Fisher information licenses}
+
+\begin{corollary}[Local asymptotic minimax, order by order]
+\label{cor:lam}
+Fix $t$ and let $I_t^{\mathrm{eff}}(\theta)$ be the efficient Fisher information of one sequence about a coordinate $\theta$ whose lowest footprint has degree $m$. For $M$ i.i.d.\ sequences observed at level $t$ and any estimator sequence $\hat\theta_M$,
+\[
+ \liminf_{M\to\infty}\ \sup_{|\theta'-\theta|\le c/\sqrt M}\ M\,\E_{\theta'}(\hat\theta_M-\theta')^2\ \ge\ \frac{1}{I_t^{\mathrm{eff}}(\theta)}
+ \;=\;\frac{e^{2mt}}{C_m(\theta)}\bigl(1+O(e^{-2t})\bigr),
+\]
+and the maximum-likelihood estimator attains the bound. In words: for fixed local precision the number of sequences \emph{necessary and sufficient} grows as $e^{2mt}$, with the constant of Theorem~\ref{thm:general}.
+\end{corollary}
+\noindent This is H\'ajek--Le Cam for a regular parametric model ($P_t^\theta$ is smooth in $\theta$ with finite, non-degenerate information at every $t>0$; differentiability in quadratic mean follows from the smoothness of $\Lambda$ in $\theta$ under (E)), and the MLE's efficiency is the standard consequence. What it does \emph{not} say, and the manuscript must not: (i) anything uniform in $t$ (the LAN regime needs $M\gg1/I_t$, i.e.\ $M\gg e^{2mt}$, so the two limits do not commute); (ii) anything about absolute precision for a bounded coordinate---once $1/\sqrt{MI_t}$ exceeds the coordinate's range the local statement is empty, which is exactly the collapse E06 observes at $t\approx1$; (iii) anything about EM at a finite iteration budget. The ratio statement ``$e^{4t}$ fewer effective samples for shape than for covariance'' is the ratio of two such bounds and inherits the same regime. ``Requires'' in Corollary~5 should read ``needs, in the local asymptotic minimax sense''.
+
+\subsection{Heavy tails: outside the theorem, with a rate of their own}
+
+\begin{proposition}[Heavy-tailed regime; supported numerically, proof sketched]
+\label{prop:heavy}
+Let $P_0$ be a chain whose innovation density is regularly varying with index $\nu>4$, $\varphi(\varepsilon)\sim c|\varepsilon|^{-\nu-1}$. Then $\E_{P_t}\|S-\Sg\|^2=\Theta(e^{-\min(\nu,8)t})$: the Hermite term $\tfrac16\Frob{\kappa_4}^2e^{-8t}$ leads while $\tfrac16\Frob{\kappa_4}^2e^{-8t}\gg c'Le^{-\nu t}$ and the tail term leads afterwards. For $\nu>8$ the theorem's conclusion holds; for $\nu\le8$ the moment condition of Theorem~3 is violated and the asymptotic rate is $e^{-\nu t}$.
+\end{proposition}
+\noindent\emph{Evidence.} Scalar quadrature on an untruncated domain (Section~6.2, running as this is written) and the chain at $(N_g,A)=(1601,16)$: for $\nu=5$ the ratio of the measured gap to $\tfrac16\Frob{\kappa_4}^2e^{-8t}$ is $0.57$, $0.99$, $18$ at $t=3,4,5$ and the local slope moves from $-7.7$ to $-4.5$ between $t=3.5$ and $t=5$. The crossover is late because $\Frob{\kappa_4}^2$ is large ($452$ per chain for $\nu=5$) and the tail constant is small. The $e^{-8t}$ constant is therefore \emph{reached} by Student-$t_5$, which the manuscript currently denies, and then abandoned, which it currently misattributes. The fourth-order Edgeworth correction of Section~6.6 closes the gap on every (E)-family and fails on Student-$t$ at exactly the levels where the tail term leads ($82\%$ closed at $t=2.1$, $8\%$ at $t=3.5$), a second, independent signature of the same mechanism.
+
+\subsection{Locality: the exact radius-$r$ floor and its Gaussian closed form}
+
+\begin{proposition}[Influence radius of the Gaussian score]
+\label{prop:radius}
+For the infinite Gaussian AR(1) chain, $(\Sigma_t^{-1})_{i,i+k}\propto r(\rho,t)^{|k|}$ for $|k|\ge2$, with
+\[
+ r(\rho,t)=\frac{A-\sqrt{A^2-B^2}}{B},\qquad A=\Delta(1+\rho^2)+\alpha^2(1-\rho^2),\quad B=2\Delta\rho .
+\]
+$r\to0$ as $t\to0$ (the score is local) and $r\to\rho$ as $t\to\infty$ (the score's off-diagonal part is $-\alpha^2(\Sigma_0-I)$, with the prior's correlation length). The best radius-$r$ linear estimator's excess error over the LMMSE is the energy of the coefficients beyond $r$, computable in closed form; the best radius-$r$ estimator of any kind is $\E[a_i\mid x_{i-r},\dots,x_{i+r}]$, computable exactly by sum-product on the sub-chain with the exact marginal of its first site as initial factor (Section~6.4).
+\end{proposition}
+\noindent\emph{Proof.} The symbol of $\Sigma_t$ is $g(\omega)=\alpha^2(1-\rho^2)/(1-2\rho\cos\omega+\rho^2)+\Delta$; $1/g=(1-2\rho\cos\omega+\rho^2)/(A-B\cos\omega)$, and the Fourier coefficients of $1/(A-B\cos\omega)$ are $r^{|k|}/\sqrt{A^2-B^2}$ with $r$ the root of $r+1/r=2A/B$ inside the unit disc; the numerator is a trigonometric polynomial of degree one and only modifies $|k|\le1$. $\square$
+
+\noindent This is the analytical form of ``the window head plateaus''---\emph{if} the plateau is where the floor is. Section~6.4 measures the floor; the verdict is in Section~4.
+
+\subsection{Length extrapolation}
+
+The EM--BP estimator is length-equivariant by construction: the fitted kernel is a function on $\R^2$, and the recursion at length $L'$ is the same recursion. Its relative error at length $L'$ is a functional of the kernel error alone; since the chain is stationary away from the first site and the posterior has finite correlation length (Proposition~\ref{prop:radius} for the Gaussian part), the per-site error converges as $L'\to\infty$, which is why $0.023$ is flat from $32$ to $256$. A convolutional or recurrent network is equivariant up to its receptive field or state; a transformer with a clipped relative-position bias ($\max\_dist=32$) is equivariant only up to that clip, and at $L'>64$ sees position pairs it never saw. This is a remark, not a theorem, and the manuscript treats it correctly as one.
+
+\subsection{Misspecification: a perturbation theory of where structure stops helping}
+
+Let the truth be Gaussian with covariance $\Sigma(\varepsilon)$, $\Sigma(0)=\Sigma_0$ an AR(1) covariance, and let the fitted family be Gaussian AR(1) (the $C=8$ mixture fits a Gaussian innovation to a Gaussian truth: E08's fitted excess kurtosis is $0.04$--$0.34$). The population EM limit under the one-view protocol is the KL projection
+\[
+ \theta^\ast(\varepsilon)=\arg\min_{(\rho,q)}\sum_{t\in\mathcal T}\mathrm{KL}\bigl(N(0,\Sigma_t(\varepsilon))\,\|\,N(0,\hat\Sigma_t(\rho,q))\bigr),
+\]
+and the asymptotic ($M\to\infty$) relative score error is
+\[
+ b(\varepsilon)^2=\frac{\sum_t\operatorname{tr}\bigl[(\hat\Sigma_t^{-1}-\Sigma_t^{-1})\Sigma_t(\hat\Sigma_t^{-1}-\Sigma_t^{-1})\bigr]}{\sum_t\operatorname{tr}\Sigma_t^{-1}}\Bigg|_{\theta^\ast(\varepsilon)} .
+\]
+\begin{proposition}[Order of the bias]
+\label{prop:bias}
+$b(\varepsilon)=\Theta(\varepsilon)$ whenever $\partial_\varepsilon\Sigma(0)$ is not in the tangent space of the AR(1) family, and $b(\varepsilon)=\Theta(\varepsilon^2)$ when the perturbation enters the law only through $\varepsilon^2$ (a perturbation odd in a latent variable). The finite-$M$ risk is $\sqrt{b(\varepsilon)^2+v/M}$ to leading order, with $v$ the well-specified variance constant.
+\end{proposition}
+\noindent Section~6.3 computes $b(\varepsilon)$ for the four E08 mechanisms with no Monte Carlo: it reproduces the $M=2048$ EM--BP error to $\pm0.003$ at every strength of every mechanism, gives $b\sim0.60\,\varepsilon$ (AR(2)), $1.75\,\varepsilon$ (site-varying $\rho$), $1.07\,\varepsilon^{0.8\to1}$ (long-range), and $0.15\,\beta^2$ (rank-one latent). The rank-one latent is the only even perturbation ($\Sigma=(\Sigma_y+\beta^2\mathbf 1\mathbf 1^\top)/(1+\beta^2)$), and it perturbs one eigendirection of $L=32$, so its effect on the score energy is $O(1/L)$ as well as $O(\beta^2)$: two reasons, both quantitative, why it is ``absorbed''. This replaces the manuscript's qualitative ``because it does not break the conditional independence'' (which is false: the latent does break Markovianity) with the right reason.
+
+%% ------------------------------------------------------------------------------------
+\end{document}

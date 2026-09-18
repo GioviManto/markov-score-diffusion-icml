@@ -1,0 +1,14 @@
+{
+ "id": "E20",
+ "script": "experiments/e20_evidence_selection.py",
+ "hypothesis": "EM-BP's reported errors do not depend on selecting the checkpoint with the true score: selection by held-out one-view log-evidence gives the same test risk within seed noise.",
+ "design": "E02a cells replicated exactly (bundle tags exp31-*, init tag exp31-em-init, protocol-2 ladder to 1200, C = 8) at M = 32 (16 seeds) and M = 512 (seeds 0-3); at every checkpoint the oracle validation risk, the held-out one-view log-evidence per edge (validation chains, tags 'e20-split'/'e20-noise') and the test risk; test risk under each rule and at the last rung.",
+ "predeclared_analysis": "Paired difference of the test risk between the two rules per size; the fraction of cells where the two rules pick the same rung.",
+ "seeds": {
+  "confirmatory": "0-15 at M = 32; 0-3 at M = 512"
+ },
+ "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "registered": "2026-09-18",
+ "script_sha256": "a29078ddeab5a21214ae84cc7f21564e5ae1005d612ac622cb1e151ecbf744c9",
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+}

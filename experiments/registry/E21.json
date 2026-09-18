@@ -1,0 +1,14 @@
+{
+ "id": "E21",
+ "script": "experiments/e21_information_curve.py",
+ "hypothesis": "At rho = 0.5 the local slope of log(1/I_eff) on E12b's levels is below the asymptotic 8 (shape) and 4 (correlation) because the expansion parameter e^{-2t} lambda_max is still of order one there; M*(t) should track 1/I_eff(t), not e^{8t}. Separately, the scalar constant (1/24)(d kappa4/d beta)^2 of eq. (5) is reproduced by untruncated quadrature.",
+ "design": "Part curve: Laplace member of the generalised-Gaussian chain at rho = 0.5, 512 chains x 4 reps (tag 'e12b-power'), grid (401, 8), levels 0.4-2.0; efficient information by Fisher-identity scores; CRB tables for M = 256-16384; local slopes. Part constant: scalar generalised Gaussian at beta = 1.5, 2, 3, I_t(beta) e^{8t} by Richardson central differences, and the Gaussian variance coordinate as control.",
+ "predeclared_analysis": "The slope table quoted in E12b's amendment; the identifiable window (CRB(kurt) < 1) per M; the constant ratio per beta and t.",
+ "seeds": {
+  "confirmatory": "reps 0-3 of the tag 'e12b-power'"
+ },
+ "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "registered": "2026-09-18",
+ "script_sha256": "3bb7826568184f6c88a27afe97fe927e6c38da6502fa1f01970fae05a9b141a1",
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+}

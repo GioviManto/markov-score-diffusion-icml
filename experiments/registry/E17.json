@@ -1,0 +1,14 @@
+{
+ "id": "E17",
+ "script": "experiments/e17_misspec_bias.py",
+ "hypothesis": "The M -> infinity error of EM-BP under each E08 misspecification is the closed-form score error of the KL projection of the noised Gaussian truth onto the Gaussian AR(1) family under the one-view protocol; it reproduces the frozen E08 EM-BP error at M = 2048 and grows as eps^1 for mechanisms whose first-order perturbation leaves the AR(1) tangent space (AR(2), site-varying rho, long-range coupling) and as eps^2 for the rank-one latent (even in the latent).",
+ "design": "Deterministic: for every (mechanism, strength) of E08 the KL projection (rho*, q*) by Nelder-Mead on the summed Gaussian KL over the twelve levels; the pooled relative score error of the projected AR(1) LMMSE against the truth's exact score; the same for the lag-one plug-in AR(1); the small-eps expansion at eps in (1e-3, 3e-3, 1e-2, 3e-2). Comparison columns read from the frozen outputs/E08/misspecification.csv.",
+ "predeclared_analysis": "Agreement with E08's em_bp at M = 2048 (expected within the seed s.e.); the leading power and coefficient per mechanism; the prediction sqrt(bias^2 + v/M) with v = 0.2 from the well-specified cells.",
+ "seeds": {
+  "confirmatory": "none (deterministic)"
+ },
+ "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "registered": "2026-09-18",
+ "script_sha256": "0edc371c8409582b952667709eb2d0ec33f2b725ce5597fdcc61e70aa05f56e3",
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+}

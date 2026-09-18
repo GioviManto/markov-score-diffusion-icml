@@ -1,0 +1,14 @@
+{
+ "id": "E15",
+ "script": "experiments/e15_locality_floor.py",
+ "hypothesis": "The window head's plateau (0.121 -> 0.118 from M = 512 to 2048) is an information ceiling of its radius: the best radius-4 estimator of any kind should sit near 0.118. Alternative: the exact radius-4 floor is far below, and the plateau is a property of the architecture and its training.",
+ "design": "Laplace chain, rho in (0.5, 0.85, 0.95), 512 chains (rng tag 'locality'), the twelve-level schedule, grid (401, 8). For every site i and radius r in (0,1,2,3,4,6,8,12,16,31): E[a_i | x_{i-r..i+r}] by sum-product on the sub-chain with the exact marginal of its first site as initial factor; the Gaussian twin's windowed LMMSE in closed form; the decay of |Sigma_t^{-1}|_{c,c+k}/|Sigma_t^{-1}|_{c,c}. Estimand: all-site schedule-pooled relative score error against full-chain BP, per level and pooled.",
+ "predeclared_analysis": "The pooled floor at r = 4 and rho = 0.85 against the window head's confirmatory error (E03, 0.118 at M = 2048); the radius at which the floor falls below EM-BP's 0.023; the Gaussian and non-Gaussian parts separated by comparing the windowed LMMSE with the windowed exact estimator.",
+ "seeds": {
+  "confirmatory": "deterministic given the rng tag; one draw of 512 chains per rho"
+ },
+ "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "registered": "2026-09-18",
+ "script_sha256": "d0e4de1b9be0ee38a164609318def19c9a53583608fb4216fdd67a105ab07d61",
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+}

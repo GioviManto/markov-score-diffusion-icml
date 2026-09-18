@@ -1,0 +1,14 @@
+{
+ "id": "E19",
+ "script": "experiments/e19_moment_estimators.py",
+ "hypothesis": "Method-of-moments estimators of rho and of the innovation excess kurtosis from the same one-level noised data as E06 are unbiased and show the e^{2t} and e^{4t} error growth without saturating, at a constant 5-30x the Cramer-Rao reference: the high-noise competitor is rate-correct and inefficient.",
+ "design": "E06's chains and noise draws exactly (rng tags 'e06-train', 'e06-noise'), M = 512, 16 seeds, the eight E06 levels; rho_hat from the lag-one product, kappa4(eps) from the per-site fourth cumulant with the chain's site-dependent factor, with the estimated and with the true rho.",
+ "predeclared_analysis": "RMSE, dispersion and bias per level, paired by seed with E06's EM-BP rows; OLS log-slope of the RMSE on t >= 1 against 2 and 4.",
+ "seeds": {
+  "confirmatory": "0-15 (E06's)"
+ },
+ "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "registered": "2026-09-18",
+ "script_sha256": "c485162226738ff114724b28bf79ed64b2d1c6c7cd9b33151c5986bf6598e57b",
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+}

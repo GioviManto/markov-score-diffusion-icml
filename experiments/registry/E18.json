@@ -1,0 +1,14 @@
+{
+ "id": "E18",
+ "script": "experiments/e18_closure_wide.py",
+ "hypothesis": "On a domain wide enough to hold the prior's tail every family, Student-t_5 included, reaches the constant (1/6)||kappa_4||^2 of Theorem 3; E01's Student-t departure near t = 3 on the (801, 8) grid is truncation of the prior in the reference. In expectation a regularly varying tail of index nu adds an e^{-nu t} term carried by events of probability ~ alpha^nu, visible in an untruncated scalar quadrature and invisible in any finite sample.",
+ "design": "Part chain: rho = 0.85, L = 32, 256 chains x 2 reps (rng tag 'e18-chain'), levels 1.0-5.0, grids (801,8), (1601,16), (3201,32), families laplace, bimodal, uniform, student(5), student(7), student(9); squared gap per chain, local slopes, ratio to the predicted constant. Part scalar: untruncated quadrature for unit-variance t_5, t_7, t_9, t_12 and Laplace on a in [-250,250] (125001 points), x in [-40,40].",
+ "predeclared_analysis": "Ratio to the constant at t = 3, 4, 5 per family and grid; the local slope; for the scalar computation the slope's limit against -min(nu, 8).",
+ "seeds": {
+  "confirmatory": "reps 0-1 of the tag 'e18-chain'"
+ },
+ "status": "REGISTERED 2026-09-18 (audit); laptop run",
+ "registered": "2026-09-18",
+ "script_sha256": "9f460874ae1661333aa251258ac0714100125368941f1dce936286404063c079",
+ "motivation": "Registered during the 18-19 September audit (reports/audit-2026-09-18.tex); the scratch computation that motivated it was run first on the laptop and is reproduced here under provenance."
+}
