@@ -5,7 +5,19 @@
  "design": "As E07b, at the second refinement (1601, 16.0). E07b and E07c are the two rungs of one refinement: E07b is the candidate replacement grid and E07c is the evidence that it has converged. They share hypothesis, analysis and motivation with E07b.",
  "predeclared_analysis": "Cell-by-cell difference of rel_lmmse and rel_iso against the frozen E07, reported as an absolute and a relative movement, with the two refinements used to show convergence or its absence. If a cell moves by more than its replicate spread, the widest converged grid becomes the reported number and the E07 value is recorded as superseded with the reason.",
  "motivation": "E11 (frozen 2026-09-18) validated the quadrature across families and correlations rather than at the frozen point alone, and found that at the operating grid the drift is NOT limited by the number of grid points but by the half-width: at A = 8 the drift is flat in N_g from 201 to 1601 (5.41e-2 to 5.43e-2), while widening to A = 12 at 801 points brings it to 3.0e-3. The offending cell is Student-t at rho = 0, which E07 reports.",
- "status": "PRE-REGISTERED 2026-09-18; not yet run",
+ "status": "PRE-REGISTERED 2026-09-18; SUBMITTED 2026-09-18 (job 662794)",
  "registered": "2026-09-18",
- "note": "Registered separately only because each run writes its own output directory; the pre-registration is E07b's and covers both rungs."
+ "note": "Registered separately only because each run writes its own output directory; the pre-registration is E07b's and covers both rungs.",
+ "hpc_runs": [
+  {
+   "protocol_version": "2",
+   "deployment": "92da540-20260918T180147Z",
+   "submitted": "2026-09-18T18:02 BST",
+   "slurm_jobs": {
+    "run": 662794
+   },
+   "resources": "defq/24cpu/23:00",
+   "note": "Submitted from the clean deployment 92da540 (hpc/.last_deploy.env); outputs land in ~/msd-icml/outputs/92da540-20260918T180147Z/E07c/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. Pre-registered before submission; nothing in this entry's hypothesis or analysis may change after the result is seen."
+  }
+ ]
 }

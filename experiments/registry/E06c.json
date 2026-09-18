@@ -5,6 +5,18 @@
  "design": "E06 exactly -- Laplace chain, rho = 0.85, M = 512, one level per run, C = 8, 16 seeds, nine levels -- with em_checkpoints extended to (..., 1200, 1600, 2200, 3000, 4000, 6000, 8000). Nothing else changes.",
  "predeclared_analysis": "The E06 analysis rerun on E06c: per-level RMSE of rho and of the excess kurtosis, the ratio to the Cramer-Rao bound from the frozen E01 efficient information, and the at_cap rate per level reported alongside. The comparison to E06 is per level and paired by seed.",
  "motivation": "Found on 2026-09-18 while auditing the harvested runs: in E06 the fraction of cells whose validation-selected checkpoint is the LAST rung of the ladder is 0.12-0.38 at t <= 1.0 but 0.88 at t = 1.4 and 0.75 at t = 2.0, with median selected checkpoint 1200 = the cap. At exactly the two levels where the paper reports the estimator leaving the bound, the estimator is budget-limited. That is an alternative explanation for a reported claim and has to be excluded before the claim stands.",
- "status": "PRE-REGISTERED 2026-09-18; not yet run",
- "registered": "2026-09-18"
+ "status": "PRE-REGISTERED 2026-09-18; SUBMITTED 2026-09-18 (job 662795)",
+ "registered": "2026-09-18",
+ "hpc_runs": [
+  {
+   "protocol_version": "2",
+   "deployment": "92da540-20260918T180147Z",
+   "submitted": "2026-09-18T18:02 BST",
+   "slurm_jobs": {
+    "run": 662795
+   },
+   "resources": "compute/40cpu/2-23:00",
+   "note": "Submitted from the clean deployment 92da540 (hpc/.last_deploy.env); outputs land in ~/msd-icml/outputs/92da540-20260918T180147Z/E06c/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. Pre-registered before submission; nothing in this entry's hypothesis or analysis may change after the result is seen."
+  }
+ ]
 }
