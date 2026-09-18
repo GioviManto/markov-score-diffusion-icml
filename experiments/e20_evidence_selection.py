@@ -62,9 +62,12 @@ def _cell(args):
         kb = saved[it]
         vr = e02._risk(e02._eval_kernel(kb, val, grid, w, "bulk"))
         ev = e_step_multi(grid, w, kb.log_transition_matrix(grid), held).log_evidence / (cfg["n_val"] * (N - 1))
-        tr = e02._risk(e02._eval_kernel(kb, test, grid, w, "all"))
-        curve[it] = (vr, ev, tr)
+        curve[it] = [vr, ev, np.nan]
     b_or = min(curve, key=lambda i: curve[i][0]); b_ev = max(curve, key=lambda i: curve[i][1]); last = max(curve)
+    # the test risk is needed only at the three checkpoints the rules pick (the full ladder's test
+    # curve costs four times the fit and adds nothing to the comparison)
+    for it in {b_or, b_ev, last}:
+        curve[it][2] = e02._risk(e02._eval_kernel(saved[it], test, grid, w, "all"))
     row = dict(n_chains=M, seed=seed, components=cfg["components"], ckpt_oracle=b_or, ckpt_evidence=b_ev, ckpt_last=last,
                test_oracle=curve[b_or][2], test_evidence=curve[b_ev][2], test_last=curve[last][2], stop_reason=trace.stop_reason,
                curve=";".join(f"{i}:{v[0]:.4f}/{v[1]:.5f}/{v[2]:.4f}" for i, v in sorted(curve.items())))
