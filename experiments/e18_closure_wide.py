@@ -38,7 +38,9 @@ SETTINGS = dict(rho=FROZEN.rho, levels=(1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 
                 grids=((801, 8.0), (1601, 16.0), (3201, 32.0)), n_chains=256, reps=2,
                 families=("laplace", "bimodal", "uniform", "student5", "student7", "student9"),
                 scalar_families=("t5", "t7", "t9", "t12", "laplace"), scalar_levels=(1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0),
-                scalar_A=250.0, scalar_n=125_001, scalar_X=40.0, scalar_nx=4_001)
+                scalar_A=250.0, scalar_n=125_001, scalar_X=40.0, scalar_nx=4_001,
+                const_families=("laplace", "bimodal", "uniform", "student5", "student7", "student9"), const_levels=(3.0, 4.0),
+                const_grid=(1601, 16.0), const_chains=8192, const_chunk=512)
 QUICK = dict(levels=(2.0, 3.0), grids=((201, 8.0), (401, 16.0)), n_chains=16, reps=1, families=("laplace", "student5"),
              scalar_families=("t5",), scalar_levels=(2.0, 3.0), scalar_n=20_001, scalar_nx=801)
 
@@ -115,7 +117,36 @@ def part_scalar(cfg, out):
     write_csv(out / "scalar_gap.csv", rows)
 
 
-PARTS = {"chain": part_chain, "scalar": part_scalar}
+def part_constant(cfg, out):
+    """The constant to a stated precision: the per-chain gap is a degree-six polynomial of Gaussians with a
+    heavy right tail (max/median ~ 100 over 256 chains), so a 512-chain mean carries a ~15 % standard error and
+    the E01 agreement to 1 % was partly luck. 8192 chains per family and level, with a chain bootstrap s.e."""
+    rho = cfg["rho"]; sig0 = theory.chain_covariance(rho, 1 - rho**2, L)
+    ng, A = cfg["const_grid"]; grid, w = make_grid(A, ng)
+    rows = []
+    for name in cfg["const_families"]:
+        prior = _prior(name, rho); logK = prior.log_transition_matrix(grid)
+        C4 = theory.score_gap_constant(theory.chain_kappa4(rho, theory.excess_kurtosis_to_kappa4(prior.innovation_excess_kurtosis, prior.q), L))
+        rng = rng_for("e18-constant", name)
+        per = {t: [] for t in cfg["const_levels"]}
+        for _ in range(cfg["const_chains"] // cfg["const_chunk"]):
+            Am = np.stack([prior.sample(rng, L) for _ in range(cfg["const_chunk"])]); Z = rng.standard_normal(Am.shape)
+            for t in cfg["const_levels"]:
+                al, de = alpha_delta(t); X = al * Am + np.sqrt(de) * Z
+                m_bp, _ = grid_bp_batch(grid, w, logK, X, al, de)
+                s_bp = theory.score_from_mean(X, m_bp, t); s_lm = theory.score_from_mean(X, theory.lmmse_posterior_mean(X, sig0, t), t)
+                per[t].append(((s_lm - s_bp) ** 2).sum(1))
+        for t in cfg["const_levels"]:
+            g = np.concatenate(per[t]); pred = C4 * np.exp(-8 * t)
+            brng = np.random.default_rng(0); bs = np.array([g[brng.integers(0, len(g), len(g))].mean() for _ in range(2000)])
+            rows.append(dict(family=name, t=t, n_chains=len(g), n_grid=ng, half_width=A, mean_gap=float(g.mean()), median_gap=float(np.median(g)),
+                             max_gap=float(g.max()), predicted=pred, ratio=float(g.mean() / pred), ratio_lo=float(np.percentile(bs, 2.5) / pred),
+                             ratio_hi=float(np.percentile(bs, 97.5) / pred), rel_se=float(bs.std() / g.mean())))
+            print(f"  [E18 constant] {name:9s} t={t:g} n={len(g)}: ratio {g.mean()/pred:.3f} [{np.percentile(bs,2.5)/pred:.3f}, {np.percentile(bs,97.5)/pred:.3f}]  max/median {g.max()/np.median(g):.0f}", flush=True)
+    write_csv(out / "constant.csv", rows)
+
+
+PARTS = {"chain": part_chain, "scalar": part_scalar, "constant": part_constant}
 
 
 def main():
