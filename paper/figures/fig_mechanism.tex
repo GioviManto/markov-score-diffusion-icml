@@ -1,36 +1,55 @@
-%% Figure 1: the mechanism. Clean chain -> coordinatewise OU noising -> posterior stays a
-%% chain (tree) -> two message sweeps -> Tweedie gives the exact score. TikZ, single column.
+%% Figure 1: the mechanism. Conditioning the chain on coordinatewise OU observations attaches
+%% one unary factor per site and adds no edge among the latent variables, so the posterior
+%% factor graph is the prior's chain and two message sweeps are exact. Single column.
+%%
+%% Two conventions. (i) The figure carries no prose: what it means belongs in the caption of
+%% \cref{fig:mechanism}; an explanation set inside the artwork cannot be typeset to the column
+%% and, in the previous version, ran off it. (ii) The chain is drawn with an elided interior
+%% and a symbolic last site \nsites, not as a concrete five, so the picture states the general
+%% case the text proves; the query site carries the generic index i, and it is there that the
+%% two sweeps meet. Colours are the house palette (tools/figstyle.py).
 \begin{tikzpicture}[
   x=1cm, y=1cm, font=\footnotesize,
-  lat/.style={circle, draw=black!70, fill=white, minimum size=4.2mm, inner sep=0pt},
-  obs/.style={circle, draw=black!70, fill=black!15, minimum size=4.2mm, inner sep=0pt},
-  fac/.style={rectangle, draw=black!70, fill=black!70, minimum size=1.8mm, inner sep=0pt},
-  ufac/.style={rectangle, draw=black!70, fill=white, minimum size=1.8mm, inner sep=0pt},
-  msg/.style={-{Latex[length=1.6mm]}, thick, draw=blue!70!black},
-  lab/.style={text=black!60, font=\footnotesize},
+  lat/.style={circle, draw=fgink, line width=0.45pt, fill=white, minimum size=5.4mm, inner sep=0pt},
+  obs/.style={circle, draw=fgink, line width=0.45pt, fill=fgfill, minimum size=5.4mm, inner sep=0pt},
+  fac/.style={rectangle, draw=fgink, line width=0.45pt, fill=fgink, minimum size=1.9mm, inner sep=0pt},
+  ufac/.style={rectangle, draw=fgink, line width=0.45pt, fill=white, minimum size=1.9mm, inner sep=0pt},
+  edge/.style={draw=fgink, line width=0.45pt},
+  gap/.style={inner sep=0pt, minimum size=5.4mm, text=fgink},
+  msg/.style={-{Latex[length=1.5mm, width=1.2mm]}, line width=0.7pt, draw=fgblue},
+  rowlab/.style={anchor=east, inner sep=0pt},
 ]
-  % latent chain
-  \foreach \i in {1,...,5} {
-    \node[lat] (a\i) at (1.05*\i-0.45, 1.2) {$a_{\i}$};
+  \def\dx{0.92}
+  \def\ya{1.12}\def\yl{0.56}\def\yx{0.0}
+
+  % --- drawn sites (slots 1, 2, 4, 6) and elided stretches (slots 3, 5)
+  \foreach \i/\al in {1/a_1, 2/a_2, 4/a_i, 6/a_\nsites} {
+    \node[lat] (a\i) at (\dx*\i, \ya) {$\al$};
   }
-  \foreach \i/\j in {1/2,2/3,3/4,4/5} {
+  \foreach \i in {3,5} { \node[gap] (a\i) at (\dx*\i, \ya) {$\cdots$}; }
+
+  % --- transition factors between every pair of consecutive sites, elisions included
+  \foreach \i/\j in {1/2,2/3,3/4,4/5,5/6} {
     \node[fac] (k\i) at ($(a\i)!0.5!(a\j)$) {};
-    \draw[black!70] (a\i) -- (k\i) -- (a\j);
+    \draw[edge] (a\i) -- (k\i) -- (a\j);
   }
-  \node[lab, anchor=east] at (0.2, 1.2) {$\kernel(a_{i}\!\mid\! a_{i-1})$};
-  % unary factors and observations
-  \foreach \i in {1,...,5} {
-    \node[ufac] (l\i) at (1.05*\i-0.45, 0.6) {};
-    \node[obs] (x\i) at (1.05*\i-0.45, 0.0) {$x_{\i}$};
-    \draw[black!70] (a\i) -- (l\i) -- (x\i);
+
+  % --- one unary factor per drawn site, and the coordinate it carries
+  \foreach \i/\xl in {1/x_1, 2/x_2, 4/x_i, 6/x_\nsites} {
+    \node[ufac] (l\i) at (\dx*\i, \yl) {};
+    \node[obs]  (x\i) at (\dx*\i, \yx) {$\xl$};
+    \draw[edge] (a\i) -- (l\i) -- (x\i);
   }
-  \node[lab, anchor=east] at (0.2, 0.6) {$\like(x_i\!\mid\! a_i)$};
-  \node[lab, anchor=east] at (0.2, 0.0) {$\vx_t=e^{-t}\va+\sqrt{\Dt}\,\vz$};
-  % messages
-  \draw[msg] ($(a1)+(0,0.42)$) -- node[above, lab, yshift=-1pt] {$\lmsg$} ($(a3)+(-0.25,0.42)$);
-  \draw[msg] ($(a5)+(0,0.42)$) -- node[above, lab, yshift=-1pt] {$\rmsg$} ($(a3)+(0.25,0.42)$);
-  % annotation: no edges added, exact score
-  \node[lab, anchor=north, text width=6.4cm, align=center] at (2.2, -0.45)
-    {unary factors add no edges among the $a_i$: the posterior is the prior's chain, a tree;
-     two sweeps give $\pmean{\va}$, and $\score(\vx,t)=-(\vx-e^{-t}\pmean{\va})/\Dt$ exactly};
+  \foreach \i in {3,5} { \node[gap] (x\i) at (\dx*\i, \yx) {$\cdots$}; }
+
+  % --- row labels name each row; the channel itself is \cref{eq:channel} and is not restated
+  \node[rowlab] at (\dx-0.44, \ya) {$\kernel(a_i\!\mid\! a_{i-1})$};
+  \node[rowlab] at (\dx-0.44, \yl) {$\like(x_i\!\mid\! a_i)$};
+  \node[rowlab] at (\dx-0.44, \yx) {$\vx_t$};
+
+  % --- the two sweeps, anchored to the latent row and meeting at the query site
+  \draw[msg] ($(a1)+(0.26,0.48)$) -- ($(a4)+(-0.32,0.48)$)
+    node[midway, above=0.3pt, text=fgblue, inner sep=1pt] {$\lmsg$};
+  \draw[msg] ($(a6)+(-0.26,0.48)$) -- ($(a4)+(0.32,0.48)$)
+    node[midway, above=0.3pt, text=fgblue, inner sep=1pt] {$\rmsg$};
 \end{tikzpicture}

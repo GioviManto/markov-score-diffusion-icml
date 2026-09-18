@@ -26,10 +26,14 @@ so $\Var(x_{t,i})=1$ at every $t$ and the noised law $\Pt$ tends to $\normal{0}{
 \begin{figure}[t]
   \centering
   \input{figures/fig_mechanism}
-  \caption{\textbf{Why the score is exact.} Coordinatewise noising attaches one unary
-  factor per site to the chain prior and adds no edge among the latent variables, so the
-  posterior factor graph is the prior's chain; two message sweeps return the posterior
-  mean, and Tweedie's identity turns it into the score.}
+  \caption{\textbf{Why the score is exact.} Latent sites (white) carry the chain prior
+  through its transition factors (filled squares). Coordinatewise noising attaches one
+  unary factor per site (open squares), joining $a_i$ to its own observation $x_i$
+  (shaded), and adds no edge among the latent variables. The posterior factor graph is
+  therefore the prior's chain, a tree, so the forward and backward sweeps
+  $\lmsg,\rmsg$ are exact; meeting at site $i$ they give $\pmeansite{i}$, and Tweedie's
+  identity returns $\score(\vx,t)=-(\vx-e^{-t}\pmean{\va})/\Dt$ exactly. The interior of
+  the chain is elided; $\nsites$ is its length.}
   \label{fig:mechanism}
 \end{figure}
 
