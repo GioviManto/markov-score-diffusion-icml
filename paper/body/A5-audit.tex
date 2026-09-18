@@ -60,9 +60,10 @@ $\audBiasMaxAbsDevLagoneD$. Small-$\varepsilon$ laws: $b\approx\audBiasCoefArtwo
 \paragraph{The closure constant and the heavy-tailed regime (\textsc{e18}).}
 The per-sequence squared gap is a degree-six polynomial in nearly Gaussian variables and
 heavy-tailed (maximum over $\audConstChains$ sequences
-$\audConstMaxOverMedianLaplaceTfour$ times the median), so a $512$-sequence mean carries a
-relative standard error of about $\audConstRelSeLaplaceTfour\%$ times four; the constant
-is therefore quoted from $\audConstChains$ sequences with a bootstrap interval:
+$\audConstMaxOverMedianLaplaceTfour$ times the median): the relative standard error of
+the mean is $\audConstRelSeLaplaceTfour\%$ from $\audConstChains$ sequences, hence about
+four times that from $512$. The constant is therefore quoted from $\audConstChains$
+sequences with a bootstrap interval:
 $\audConstRatioLaplaceTthree$ $[\audConstRatioLoLaplaceTthree,\audConstRatioHiLaplaceTthree]$ at
 $t=3$ and $\audConstRatioLaplaceTfour$ $[\audConstRatioLoLaplaceTfour,\audConstRatioHiLaplaceTfour]$
 at $t=4$ for Laplace. Across grids, with paired sequences, Student-$t_5$'s local slope
@@ -75,10 +76,11 @@ $t\approx3.5$: that is the double-precision floor of the posterior means, reache
 family near $t=5$.
 
 \paragraph{Moment estimators (\textsc{e19}) and selection without the true score (\textsc{e20}).}
-On \textsc{e06}'s data the moment estimators' RMSEs are $\audMomRmseRhoTzeropzerofive$,
-$\audMomRmseRhoTzeropfour$, $\audMomRmseRhoTone$, $\audMomRmseRhoTtwo$ for $\corr$ and
-$\audMomRmseKurtTzeropzerofive$, $\audMomRmseKurtTzeropfour$, $\audMomRmseKurtTone$ for
-$\kfour$ at $t=0.05,\learnLevelTzeropfour,1,2$ (and $t=0.05,\learnLevelTzeropfour,1$), with biases within
+On \textsc{e06}'s data the moment estimator of $\corr$ has RMSE
+$\audMomRmseRhoTzeropzerofive$, $\audMomRmseRhoTzeropfour$, $\audMomRmseRhoTone$ and
+$\audMomRmseRhoTtwo$ at $t=0.05$, $\learnLevelTzeropfour$, $1$ and $2$; that of $\kfour$ has
+RMSE $\audMomRmseKurtTzeropzerofive$, $\audMomRmseKurtTzeropfour$ and
+$\audMomRmseKurtTone$ at $t=0.05$, $\learnLevelTzeropfour$ and $1$, with a bias of
 $\audMomBiasKurtTzeropfour$ at $t=\learnLevelTzeropfour$. Selecting EM--BP's checkpoint by held-out
 one-view log-evidence instead of by validation risk against the true kernel gives a test
 error of $\audSelEvidenceA$ against $\audSelOracleA$ at $\nseq=32$, the size at which
