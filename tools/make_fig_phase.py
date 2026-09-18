@@ -23,6 +23,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import figstyle as fs  # noqa: E402
 
+# families whose zero-correlation cell E11 flags as unconverged on the operating grid
+EXCLUDED = ("student",)
+
 
 def _mac(s):
     return "".join({"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine"}.get(c, c) for c in s).replace(".", "p")
@@ -71,7 +74,22 @@ def main() -> int:
     d = pooled[pooled.family == "laplace"].sort_values("rho")
     ax.plot(d.rho, d.rel_iso, color=fs.MUTED, ls=":", lw=1.0, label="isotropic (any family)")
     ax.legend(loc="upper left", fontsize=6.5, frameon=False, handlelength=2.0, borderaxespad=0.2)
-    ax.set_xlabel("correlation  $\\rho$"); ax.set_ylabel("pooled LMMSE floor"); ax.set_xlim(-0.03, 1.0)
+    ax.set_xlabel("correlation  $\\rho$"); ax.set_ylabel("pooled LMMSE floor"); ax.set_xlim(-0.03, 1.12)
+    # E11 places the heavy-tailed family at zero correlation outside the validated quadrature
+    # envelope -- essentially all of its belief mass falls outside the grid domain -- so the
+    # point is drawn as excluded rather than silently plotted next to points that are not.
+    for key in EXCLUDED:
+        e = pooled[(pooled.family == key) & (pooled.rho.abs() < 1e-9)]
+        for _, r in e.iterrows():
+            ax.plot([r.rho], [r.rel_lmmse], marker="o", ms=8, mfc="none", mec=fs.INK2, mew=0.8, zorder=5)
+            # the empty band below every family's curve, not the gap between two of them
+            lo = float(pooled.rel_lmmse.min())
+            t = ax.annotate("outside the validated grid", xy=(r.rho + 0.015, r.rel_lmmse - 0.008),
+                            xytext=(0.06, lo * 0.55), textcoords="data",
+                            fontsize=6.2, color=fs.INK2, va="center", ha="left", linespacing=1.15,
+                            arrowprops=dict(arrowstyle="-", color=fs.INK2, lw=0.5, alpha=0.6,
+                                            shrinkA=1, shrinkB=5))
+            fs.halo(t, lw=1.8)
     fs.panel_label(ax, "(b)", x=-0.3)
     fig.savefig(figdir / "fig_phase.pdf"); fig.savefig(figdir / "fig_phase.png", dpi=220)
     print(pooled.to_string(index=False, float_format=lambda x: f"{x:.3f}")); print("wrote", figdir / "fig_phase.pdf")

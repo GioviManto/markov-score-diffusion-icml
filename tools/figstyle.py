@@ -48,3 +48,85 @@ def panel_label(ax, text, x=-0.18, y=1.02):
 def ygrid(ax):
     ax.grid(True, axis="y", color=GRID, linewidth=0.5, zorder=0)
     ax.set_axisbelow(True)
+
+
+def halo(*artists, lw=2.2, color="white"):
+    """Put a white outline behind text so it stays legible where it must sit near a curve.
+
+    A backstop, not a licence: the first fix for a label on a line is to move the label.
+    Use this for labels that are deliberately close to their own series (a curve's own
+    name, a reference line's caption), never to excuse a collision that could be avoided.
+    """
+    import matplotlib.patheffects as pe
+    fx = [pe.withStroke(linewidth=lw, foreground=color)]
+    for a in artists:
+        if a is not None:
+            a.set_path_effects(fx)
+    return artists[0] if len(artists) == 1 else artists
+
+
+def repel(values, min_gap, lo=None, hi=None, iters=80):
+    """Nudge label positions apart so consecutive ones differ by at least `min_gap`.
+
+    Works in whatever coordinates it is given (use log10 of the data for a log axis).
+    Returns positions in the input order; ties are resolved by moving both sides of a
+    clash outward, so a label never jumps past its neighbour.
+    """
+    import numpy as np
+    v = np.asarray(values, dtype=float).copy()
+    order = np.argsort(v)
+    for _ in range(iters):
+        moved = False
+        for a, b in zip(order[:-1], order[1:]):
+            d = v[b] - v[a]
+            if d < min_gap:
+                shift = (min_gap - d) / 2
+                v[a] -= shift; v[b] += shift; moved = True
+        if lo is not None:
+            v = np.maximum(v, lo)
+        if hi is not None:
+            v = np.minimum(v, hi)
+        if not moved:
+            break
+    return v
+
+
+def label_on_curve(ax, xs, ys, text, at_y=None, at_x=None, color=None, fontsize=7,
+                   offset=3.0, halo_lw=2.4, **kw):
+    """Write a label along a curve, rotated to its slope in DISPLAY space, with a halo.
+
+    For a fan of curves too tightly packed for horizontal labels (five series across a
+    two-inch panel), this is the placement that fits: each label rides its own curve at a
+    height where the others are elsewhere, so no two can collide. The rotation is computed
+    after the transform, so it is correct on log axes and survives a change of limits.
+
+    Give `at_y` (the label sits where the curve crosses that y) or `at_x`. `offset` is in
+    points, perpendicular to the curve, positive = above/left of it.
+    """
+    import numpy as np
+    from matplotlib.transforms import ScaledTranslation
+    xs = np.asarray(xs, dtype=float); ys = np.asarray(ys, dtype=float)
+    if at_y is not None:
+        k = int(np.argmin(np.abs(ys - at_y)))
+    elif at_x is not None:
+        k = int(np.argmin(np.abs(xs - at_x)))
+    else:
+        k = len(xs) // 2
+    i0, i1 = max(0, k - 1), min(len(xs) - 1, k + 1)
+    p0 = ax.transData.transform((xs[i0], ys[i0]))
+    p1 = ax.transData.transform((xs[i1], ys[i1]))
+    dx, dy = p1 - p0
+    ang = float(np.degrees(np.arctan2(dy, dx)))
+    if ang > 90:
+        ang -= 180
+    elif ang < -90:
+        ang += 180
+    n = np.hypot(dx, dy) or 1.0
+    px, py = -dy / n, dx / n                        # unit normal, in display space
+    dpi = ax.figure.dpi
+    tr = ax.transData + ScaledTranslation(px * offset / 72, py * offset / 72,
+                                          ax.figure.dpi_scale_trans)
+    t = ax.text(xs[k], ys[k], text, transform=tr, rotation=ang, rotation_mode="anchor",
+                ha="center", va="center", fontsize=fontsize, color=color, **kw)
+    halo(t, lw=halo_lw)
+    return t

@@ -75,16 +75,31 @@ def main() -> int:
 
     fs.apply()
     mechs = [m for m in ("global", "longrange", "ar2", "sitevar") if m in summ.mechanism.unique()]
-    fig, axes = plt.subplots(1, len(mechs), figsize=(fs.FULL_W, 1.9), gridspec_kw=dict(wspace=0.4), squeeze=False)
-    for ax, mech in zip(axes[0], mechs):
+    # One shared y-axis and one shared legend. Four copies of the same axis label and the
+    # same two-entry legend cost four panels' worth of space and, because every curve
+    # starts high on the left, put the legend on top of the data in each of them. Sharing
+    # the scale also makes the four mechanisms comparable, which is the point of the row.
+    fig, axes = plt.subplots(1, len(mechs), figsize=(fs.FULL_W, 2.05), sharey=True,
+                             gridspec_kw=dict(wspace=0.18), squeeze=False)
+    handles = None
+    for k, (ax, mech) in enumerate(zip(axes[0], mechs)):
         for j, n in enumerate(sorted(summ.n_chains.unique())):
             d = summ[(summ.mechanism == mech) & (summ.n_chains == n)].sort_values("eps")
             if "ratio" not in d:
                 continue
             ax.plot(d.eps, d.ratio, color=fs.CAT[j], marker=fs.MARKERS[j], ms=3, lw=1.3, ls=fs.LINESTYLES[j], label=f"$M={n}$")
         ax.axhline(1.0, color=fs.MUTED, lw=0.7, ls=":")
-        ax.set_yscale("log"); ax.set_xlabel(MECH_NAME.get(mech, mech)); ax.set_ylabel("window / EM–BP error")
-        ax.legend(loc="upper right", fontsize=7, frameon=False)
+        ax.set_yscale("log"); ax.set_xlabel(MECH_NAME.get(mech, mech))
+        ax.margins(x=0.08)
+        if k == 0:
+            ax.set_ylabel("window / EM–BP error")
+            handles = ax.get_legend_handles_labels()
+    # headroom above the highest point so the legend strip never reaches the curves
+    top = summ.ratio.max() if "ratio" in summ else 1.0
+    axes[0][0].set_ylim(top=top * 2.4)
+    if handles and handles[0]:
+        fig.legend(*handles, loc="upper center", bbox_to_anchor=(0.5, 1.06), ncol=2,
+                   fontsize=7, frameon=False, columnspacing=1.6, handletextpad=0.5)
     fig.savefig(figdir / "fig_misspec.pdf"); fig.savefig(figdir / "fig_misspec.png", dpi=220)
     print("wrote", figdir / "fig_misspec.pdf", f"({len(macros)} macros)")
     return 0

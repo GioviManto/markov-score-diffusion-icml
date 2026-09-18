@@ -72,42 +72,50 @@ def main() -> int:
     print(summ.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
 
     fs.apply()
-    fig, ax = plt.subplots(figsize=(fs.COL_W, 2.2))
+    fig, ax = plt.subplots(figsize=(fs.COL_W, 2.35))
     x = summ.excess_kurtosis
     labels = []
+    # The LMMSE floor is EXACTLY zero at the Gaussian member -- the covariance twin is the
+    # truth there -- so on a log axis it would plunge off the bottom and read as "very small"
+    # rather than "zero". Break the line at that point and mark it instead; the plunge also
+    # used to run straight through the annotation.
+    zero = summ.Lmmse < 1e-8
+    lm = summ.Lmmse.mask(zero)
     ax.plot(x, summ.Iso, color=fs.MUTED, ls=":", lw=1.0); labels.append((float(summ.Iso.iloc[-1]), "isotropic", fs.MUTED))
-    ax.plot(x, summ.Lmmse, color=fs.INK2, ls="--", lw=1.2, marker="s", ms=3, mfc="white"); labels.append((float(summ.Lmmse.iloc[-1]), "LMMSE floor", fs.INK2))
+    ax.plot(x, lm, color=fs.INK2, ls="--", lw=1.2, marker="s", ms=3, mfc="white"); labels.append((float(summ.Lmmse.iloc[-1]), "LMMSE floor", fs.INK2))
     if "C1" in summ:
         ax.errorbar(x, summ.C1, yerr=summ.C1_se, color=fs.CAT[3], ls="-.", marker="^", ms=3.5, lw=1.3, capsize=0); labels.append((float(summ.C1.iloc[-1]), "EM\u2013BP, $C=1$", fs.CAT[3]))
     if "C8" in summ:
         ax.errorbar(x, summ.C8, yerr=summ.C8_se, color=fs.CAT[0], ls="-", marker="o", ms=3.5, lw=1.4, capsize=0); labels.append((float(summ.C8.iloc[-1]), "EM\u2013BP, $C=8$", fs.CAT[0]))
     ax.set_yscale("log"); ax.set_xlabel("innovation excess kurtosis  $\\kappa_4/q^2$"); ax.set_ylabel("pooled relative score error")
-    # The floor is EXACTLY zero at the Gaussian member (the covariance twin is the truth there),
-    # which on a log axis is machine epsilon and would otherwise squash twelve decades into the
-    # panel. Clip to the range the arms occupy and mark that point instead.
-    floor_pos = summ.Lmmse[summ.Lmmse > 1e-8]
-    lo = min(float(floor_pos.min()), float(summ.C8.min())) / 3
+    floor_pos = summ.Lmmse[~zero]
+    lo = min(float(floor_pos.min()), float(summ.C8.min()), float(summ.C1.min())) / 6
     ax.set_ylim(lo, 1.5)
-    for i in summ.index[summ.Lmmse < 1e-8]:
+    xlo, xhi = float(x.min()) - 0.35, float(x.max()) + 2.35
+    ax.set_xlim(xlo, xhi)
+    # the zero point: a caret on the floor line at the axis bottom, and one note in the
+    # empty lower-right corner with a leader back to it -- never text laid over the curves
+    for i in summ.index[zero]:
         xg = float(x.loc[i])
-        ax.annotate("", xy=(xg, lo * 1.3), xytext=(xg, lo * 5), arrowprops=dict(arrowstyle="-|>", color=fs.INK2, lw=0.9, shrinkA=0, shrinkB=0))
-        ax.text(xg + 0.13, lo * 1.55, "floor $=0$ exactly:\nthe twin is the truth", color=fs.INK2, fontsize=6.5, va="center", ha="left", linespacing=1.15)
-    # right-margin labels repelled in log space: the floor and the $C=1$ curve coincide
+        ax.plot([xg], [lo * 1.45], marker="v", ms=4, color=fs.INK2, clip_on=False, zorder=5)
+        ax.annotate("LMMSE floor $=0$ exactly here:\nthe covariance twin is the truth",
+                    xy=(xg + 0.06, lo * 1.5), xycoords="data",
+                    xytext=(xhi - 0.15, lo * 1.9), textcoords="data",
+                    color=fs.INK2, fontsize=6.4, va="center", ha="right", linespacing=1.2,
+                    arrowprops=dict(arrowstyle="-", color=fs.INK2, lw=0.5, alpha=0.55,
+                                    shrinkA=2, shrinkB=1))
+    # right-margin labels, repelled in log space: the floor and the C=1 curve coincide
     # (Proposition 1 -- they are the same estimator), so both still need a readable label
     labels.sort()
-    ys = [np.log10(v) for v, _, _ in labels]
-    for _ in range(80):
-        moved = False
-        for i in range(1, len(ys)):
-            if ys[i] - ys[i - 1] < 0.12:
-                mid = 0.5 * (ys[i] + ys[i - 1]); ys[i - 1] = mid - 0.06; ys[i] = mid + 0.06; moved = True
-        if not moved:
-            break
+    ys = fs.repel([np.log10(v) for v, _, _ in labels], 0.155,
+                  lo=np.log10(lo) + 0.1, hi=np.log10(1.5) - 0.1)
     xr = float(x.iloc[-1])
     for (v, txt, col), yl in zip(labels, ys):
-        ax.annotate(txt, xy=(xr, v), xytext=(xr + 0.22, 10 ** yl), color=col, fontsize=7, va="center",
-                    arrowprops=dict(arrowstyle="-", color=col, lw=0.5, alpha=0.6, shrinkA=0, shrinkB=1) if abs(yl - np.log10(v)) > 0.03 else None)
-    ax.axvline(0, color=fs.GRID, lw=0.8); ax.set_xlim(x.min() - 0.3, x.max() + 1.9)
+        t = ax.annotate(txt, xy=(xr, v), xytext=(xr + 0.42, 10 ** yl), color=col, fontsize=7, va="center",
+                        arrowprops=dict(arrowstyle="-", color=col, lw=0.5, alpha=0.6, shrinkA=0, shrinkB=1)
+                        if abs(yl - np.log10(v)) > 0.03 else None)
+        fs.halo(t, lw=1.8)
+    ax.axvline(0, color=fs.GRID, lw=0.8, zorder=0)
     fig.savefig(figdir / "fig_family.pdf"); fig.savefig(figdir / "fig_family.png", dpi=220)
     print("wrote", figdir / "fig_family.pdf", f"({len(macros)} macros)")
     return 0

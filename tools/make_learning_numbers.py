@@ -132,7 +132,8 @@ def main() -> int:
     # against the information bound read from E01 (dashed), the clean-data floor (dotted) and, for the
     # shape coordinate, its full range (3): the estimator sits on the bound until the bound leaves the range
     fs.apply()
-    fig, axes = plt.subplots(1, 2, figsize=(fs.COL_W, 1.9), gridspec_kw=dict(wspace=0.5))
+    fig, axes = plt.subplots(1, 2, figsize=(fs.COL_W, 1.95), gridspec_kw=dict(wspace=0.5))
+    clean_labels = []
     for ax, col, lab, colr, bcol, tru in ((axes[0], "rmse_rho", r"RMSE of $\hat\rho$", fs.CAT[0], "crlb_rho", rho), (axes[1], "rmse_kurt", r"RMSE of $\hat\kappa_4$", fs.CAT[1], "crlb_kurt", 3.0)):
         for t, d in df[df.t_obs > 0].groupby("t_obs"):
             key = "fit_rho" if col == "rmse_rho" else "fit_kurt"
@@ -144,16 +145,24 @@ def main() -> int:
         clean = summ[summ.t_obs == 0]
         if len(clean):
             ax.axhline(float(clean[col].iloc[0]), color=fs.MUTED, lw=0.7, ls=":")
-            ax.text(noisy.t_obs.min(), float(clean[col].iloc[0]) * 1.15, "clean data", fontsize=7, color=fs.INK2)
+            # at the far right, just UNDER the floor: the left end of this line is buried in the
+            # replicate cloud, and the region below the clean-data floor is empty by construction
+            clean_labels.append((ax, float(clean[col].iloc[0])))
         ax.set_yscale("log")
         lo = float(df[df.t_obs > 0][("fit_rho" if col == "rmse_rho" else "fit_kurt")].sub(tru).abs().replace(0, np.nan).min()) * 0.5
         if col == "rmse_kurt":
             ax.axhline(3.0, color=fs.MUTED, lw=0.7, ls="-.")
-            ax.text(noisy.t_obs.max(), 3.0 * 1.25, "range of $\\kappa_4$", fontsize=7, color=fs.INK2, ha="right")
+            fs.halo(ax.text(noisy.t_obs.max(), 3.0 * 1.3, "range of $\\kappa_4$", fontsize=7,
+                            color=fs.INK2, ha="right", va="bottom", zorder=6))
             ax.set_ylim(max(lo, 1e-2), max(30.0, float(noisy[col].max()) * 3))
         else:
             ax.set_ylim(max(lo, 1e-4), max(1.0, float(noisy[col].max()) * 3))
         ax.set_xlabel("observation level  $t$"); ax.set_ylabel(lab)
+    # placed last, so the y-limits are final and the label can be tucked under its own line
+    for ax, yv in clean_labels:
+        x0, x1 = ax.get_xlim()
+        fs.halo(ax.text(x1 - 0.02 * (x1 - x0), yv * 0.82, "clean data", fontsize=7,
+                        color=fs.INK2, ha="right", va="top", zorder=6))
     axes[0].legend(loc="upper left", fontsize=6.5, frameon=False, handlelength=1.8, borderaxespad=0.2)
     fs.panel_label(axes[0], "(a)", x=-0.35); fs.panel_label(axes[1], "(b)", x=-0.35)
     fig.savefig(figdir / "fig_learning.pdf"); fig.savefig(figdir / "fig_learning.png", dpi=220)
