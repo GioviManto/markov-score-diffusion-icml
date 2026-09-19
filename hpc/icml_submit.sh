@@ -63,7 +63,11 @@ submit_one() {
   local name=$1 dep=${2:-}
   local cmd; cmd=$(cmd_for "$name"); cmd=${cmd//\{OUT\}/\$HOME/$MSD_OUT}
   local depflag=""; [[ -n "$dep" ]] && depflag="--dependency=afterok:$dep"     # dep may be "id1:id2"
-  local workers_flag='--workers $SLURM_CPUS_PER_TASK' cpus=$CPUS            # every driver takes --workers
+  # --workers only for drivers whose source declares it: the serial oracle ladders (e01, e07)
+  # do not, and passing it to them failed E07b at launch on 18 Sep (argparse: unrecognized
+  # arguments). Decided here, at submission, from the driver's own source.
+  local driver=${cmd%% *} workers_flag='' cpus=$CPUS
+  if grep -q -- '"--workers"' "experiments/$driver"; then workers_flag='--workers $SLURM_CPUS_PER_TASK'; else cpus=4; fi
   local jid
   jid=$(ssh -o BatchMode=yes "$MSD_HPC_HOST" "sbatch --parsable $depflag" <<SB
 #!/bin/bash
