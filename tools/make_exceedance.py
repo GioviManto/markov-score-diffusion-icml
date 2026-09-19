@@ -1,0 +1,107 @@
+#!/usr/bin/env python
+"""Expected number of (chain, site) pairs the grid domain truncates, per family, rho and half-width.
+
+Usage: make_exceedance.py [--dest paper/sections] [--draws 4000000]
+
+The reference grid carries messages on [-A, A]. A site whose latent value lies outside is
+pinned to the boundary, and E11 found the quadrature's worst-case error is set by exactly
+this, not by the number of grid points. The quantity that says how often it happens in a
+run is the expected exceedance count
+
+    N_exc(family, rho, A) = M * L * P(|a_i| > A),
+
+with a_i the stationary marginal of the chain, M chains and L sites as in E07 (512 x 32 per
+replicate). It depends on the prior and the domain only, never on the run, so it can be
+stated before E07b/E07c land and read beside them: a row whose count is O(1) is wrong by a
+few sites, a row whose count is O(100) is wrong throughout.
+
+P(|a_i| > A) is estimated by Monte Carlo on stationary chains drawn by the prior's own
+sampler (the same code path the experiments use), with the binomial standard error reported.
+For rho = 0 the marginal is the innovation and the Student-t tail is also given in closed
+form as a check on the sampler. A count whose Monte Carlo estimate is zero is reported as an
+upper bound from the draw size, not as zero.
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+import numpy as np
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src")); sys.path.insert(0, str(ROOT / "experiments"))
+from markov_score.priors import GaussianMixtureAR1, LaplaceAR1, StudentTAR1, UniformAR1  # noqa: E402
+
+M, L = 512, 32                                      # E07 bundle per replicate
+RHOS = (0.0, 0.3, 0.6, 0.85, 0.95)
+HALF_WIDTHS = (8.0, 12.0, 16.0)
+FAM_TAG = {"laplace": "Laplace", "student": "Student", "uniform": "Uniform", "bimodal": "Bimodal"}
+RHO_TAG = {0.0: "zero", 0.3: "zeropthree", 0.6: "zeropsix", 0.85: "zeropeightfive", 0.95: "zeropninefive"}
+A_TAG = {8.0: "Aeight", 12.0: "Atwelve", 16.0: "Asixteen"}
+
+
+def _families(rho):
+    return {"laplace": LaplaceAR1(rho), "student": StudentTAR1(rho, 5), "uniform": UniformAR1(rho),
+            "bimodal": GaussianMixtureAR1(rho, 0.6)}
+
+
+def _mac(k: str) -> str:
+    return k.replace(".", "p")
+
+
+def student_tail_rho0(A: float, nu: int = 5) -> float:
+    """P(|a| > A) for the unit-variance Student-t(nu) innovation: the rho = 0 marginal, exactly."""
+    from scipy.stats import t
+    scale = np.sqrt((nu - 2) / nu)                  # Var(t_nu) = nu/(nu-2); scaled to unit variance
+    return 2.0 * t.sf(A / scale, df=nu)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dest", type=Path, default=ROOT / "paper" / "sections")
+    ap.add_argument("--draws", type=int, default=4_000_000, help="(chain, site) pairs per (family, rho)")
+    a = ap.parse_args()
+    a.dest.mkdir(parents=True, exist_ok=True)
+    rng = np.random.default_rng(20260919)
+    macros, rows = {}, []
+    n_chains = max(1, a.draws // L)
+    print(f"{'family':8s} {'rho':>5s} " + " ".join(f"{'N_exc(A=' + str(int(A)) + ')':>16s}" for A in HALF_WIDTHS))
+    for rho in RHOS:
+        for fam, prior in _families(rho).items():
+            X = np.stack([prior.sample(rng, L) for _ in range(n_chains)])      # stationary chains
+            n = X.size
+            cells = []
+            for A in HALF_WIDTHS:
+                k = int((np.abs(X) > A).sum())
+                p = k / n
+                se = np.sqrt(max(p * (1 - p), 1.0 / n) / n)
+                cnt, cnt_se = M * L * p, M * L * se
+                tag = f"exc{FAM_TAG[fam]}Rho{RHO_TAG[rho]}{A_TAG[A]}"
+                if k == 0:                                                   # bound, never "zero"
+                    ub = M * L * 3.0 / n                                     # rule of three
+                    macros[tag] = f"<{ub:.2g}"; cells.append(f"<{ub:.2g}")
+                else:
+                    macros[tag] = f"{cnt:.3g}"; macros[tag + "se"] = f"{cnt_se:.2g}"
+                    cells.append(f"{cnt:8.3g} ± {cnt_se:<5.2g}")
+                rows.append(dict(family=fam, rho=rho, A=A, p_exceed=p, count=cnt, count_se=cnt_se, exceedances=k, pairs=n))
+            print(f"{fam:8s} {rho:5.2f} " + " ".join(f"{c:>16s}" for c in cells))
+    # closed-form check of the sampler at rho = 0 for the heavy-tailed family
+    for A in HALF_WIDTHS:
+        exact = M * L * student_tail_rho0(A)
+        macros[f"excStudentRhozero{A_TAG[A]}exact"] = f"{exact:.3g}"
+        mc = next(r for r in rows if r["family"] == "student" and r["rho"] == 0.0 and r["A"] == A)
+        print(f"check  student rho=0 A={A:g}: closed form {exact:.3g}  MC {mc['count']:.3g} ± {mc['count_se']:.2g}")
+    macros["excChains"] = str(M); macros["excSites"] = str(L); macros["excDraws"] = f"{n_chains * L:.1e}".replace("e+0", r"\times 10^{").replace("e+", r"\times 10^{") + "}"
+    (a.dest / "exceedance-numbers.tex").write_text(
+        "%% GENERATED by tools/make_exceedance.py -- do not hand-edit.\n"
+        + "\n".join(f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in macros.items()) + "\n")
+    import pandas as pd
+    pd.DataFrame(rows).to_csv(ROOT / "outputs" / "scratch" / "exceedance.csv", index=False) if (ROOT / "outputs" / "scratch").exists() else None
+    print(f"wrote {a.dest / 'exceedance-numbers.tex'} ({len(macros)} macros)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

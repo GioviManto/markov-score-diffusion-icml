@@ -175,15 +175,21 @@ def _train_ism(cfg, arch, hp, L, groups, val_groups, seed, steps):
                           hutchinson=True)
     t0 = time.time()
     saved = nt.train(model, None, tcfg, X_noisy_groups=groups)
-    best, best_v = None, np.inf
+    # The whole held-out ISM curve is recorded, not only its minimum: a fit that diverged
+    # (E03 saw ISM risks near 1.2 at M = 32) shows a curve that never turns over, and the
+    # reader of the CSV must be able to call that divergence rather than "the network's
+    # error". Same "step:value;..." encoding as E03's val_curve.
+    best, best_v, curve = None, np.inf, {}
     for step in sorted(saved):
         den = nt.Denoiser(nt.load_checkpoint(model, saved[step]), cfg["mode"])
         v = _ism_objective(den, val_groups)
+        curve[step] = v
         if v < best_v:
             best, best_v = step, v
     den = nt.Denoiser(nt.load_checkpoint(model, saved[best]), cfg["mode"])
     return den, dict(checkpoint=best, at_cap=best == max(saved), val_selected=best_v,
-                     wall=time.time() - t0, n_params=nt.n_params(model))
+                     wall=time.time() - t0, n_params=nt.n_params(model),
+                     val_curve=";".join(f"{k}:{v:.5f}" for k, v in sorted(curve.items())))
 
 
 def _em_arm(cfg, grid, w, groups, val, seed, rho, L):
@@ -237,7 +243,7 @@ def _screen_cell(args):
 # every row carries the same columns; an arm that has no fitted parameter leaves them blank rather
 # than shortening the record, so the CSV has one schema and a missing value means "not applicable".
 ROW_DEFAULTS = dict(arch="", hp="", checkpoint=-1, at_cap=False, val_selected=np.nan,
-                    wall=np.nan, n_params=0, fit_kurt=np.nan, fit_rho=np.nan)
+                    wall=np.nan, n_params=0, fit_kurt=np.nan, fit_rho=np.nan, val_curve="")
 
 
 def _confirm_cell(args):
