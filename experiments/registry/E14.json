@@ -6,18 +6,26 @@
  "predeclared_analysis": "Per (rho, L): mean pooled relative score error of each arm, and the paired ratio best-network / EM-BP over the confirmatory seeds with a percentile bootstrap. The trend in rho is reported against the marginal excess kurtosis 3(1-rho^2)/(1+rho^2), as a direction, not a fitted law -- the risk pools a schedule whose informative window moves with rho, so no exponent is claimed from it.",
  "motivation": "The headline comparison (claim E16: 0.023 against 0.155 at M = 2048, a paired factor 7.3) is stated at one point of the parameter space. E13 established that the capacity contrast survives a sweep of rho and L; the comparison against networks has not been tested that way, and it is the claim a reviewer will press on.",
  "limitations": "One innovation family (Laplace) and one sample size (M = 2048); two architecture families, the two that carried E03's matched comparison; eight seeds rather than the protocol's sixteen, for cost. The screen re-selects the architecture configuration per regime but not the learning rate or the parameterisation, which are held at E03's winners.",
- "status": "PRE-REGISTERED 2026-09-18; SUBMITTED 2026-09-18 (job 662797 (screen) -> 662798 (confirm))",
+ "status": "PRE-REGISTERED 2026-09-18; RESUBMITTED 2026-09-19 (jobs 663143 screen -> 663144 confirm; see amendments)",
  "registered": "2026-09-18",
  "hpc_runs": [
   {
    "protocol_version": "2",
-   "deployment": "92da540-20260918T180147Z",
-   "submitted": "2026-09-18T18:02 BST",
+   "deployment": "5144a45-20260919T001918Z",
+   "submitted": "2026-09-19T01:19 BST",
    "slurm_jobs": {
-    "run": "662797 (screen) -> 662798 (confirm)"
+    "screen": 663143,
+    "confirm": 663144
    },
-   "resources": "compute/40cpu/2-23:00 x2",
-   "note": "Submitted from the clean deployment 92da540 (hpc/.last_deploy.env); outputs land in ~/msd-icml/outputs/92da540-20260918T180147Z/E14/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. Pre-registered before submission; nothing in this entry's hypothesis or analysis may change after the result is seen."
+   "cancelled_before_start": {
+    "screen": 662797,
+    "confirm": 662798
+   },
+   "resources": "compute/40cpu/120G/2-23:00 x2, confirm afterok:screen",
+   "note": "Outputs land in ~/msd-icml/outputs/5144a45-20260919T001918Z/E14/; fetch with MSD_DEPLOY_ENV=hpc/.deploy_5144a45-20260919T001918Z.env hpc/icml_fetch.sh E14."
   }
+ ],
+ "amendments": [
+  "2026-09-19 01:20 BST, PRE-DATA (jobs 662797/662798 had been pending since 18 Sep 18:02 and no cell had run): each network row now records the whole held-out ISM objective curve (val_curve, E03's 'step:value;...' encoding), not only its minimum, so that a diverged fit -- E03 saw ISM risks near 1.2 at M = 32 -- can be reported as divergence rather than as the network's error. Nothing in the design, the arms, the seeds or the analysis changes. The pending jobs were cancelled and resubmitted from deployment 5144a45."
  ]
 }
