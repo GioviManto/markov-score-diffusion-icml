@@ -1,0 +1,404 @@
+\chapter{Markov chains and the AR(1) laboratory}
+\label{ch:markov-chains}
+
+The paper's data are sequences drawn from a first-order Markov chain with a linear
+autoregressive transition and a non-Gaussian innovation. The choice is not
+decorative: it is the one family in which the covariance is fixed by two numbers and
+every non-Gaussian feature lives in the cumulants of order four and higher, so that
+``second-order structure'' and ``higher-order structure'' are separated by
+construction and not by an approximation. This chapter defines Markov chains and
+transition kernels, distinguishes strict from second-order stationarity (the paper's
+chain has the second and, for non-Gaussian innovations, not the first), derives the
+covariance $\Cov(a_i,a_j)=\corr^{|i-j|}$ for every innovation law, studies the
+covariance matrix $\Sig_0$ and its spectrum, derives the chain's fourth-cumulant tensor,
+and fixes what the two sizes $\nsites$ and $\nseq$ mean.
+
+\section{The Markov property and transition kernels}
+
+\begin{definition}[Markov chain]
+A sequence of real random variables $a_1,a_2,\dots,a_{\nsites}$ is a \term{Markov
+chain} if, for every $i$, the conditional law of $a_i$ given $(a_1,\dots,a_{i-1})$
+depends only on $a_{i-1}$:
+\begin{equation}
+  \Prob(a_i\in B\mid a_1,\dots,a_{i-1})=\Prob(a_i\in B\mid a_{i-1})\qquad\text{for every Borel set }B.
+\end{equation}
+\end{definition}
+
+When the conditional laws have densities, the chain is described by an
+\term{initial density} $\mu$ and \term{transition kernels} $\kernel_i(a'\mid a)$, the
+density of $a_i$ at $a'$ given $a_{i-1}=a$. The kernel is a density in its first
+argument for every value of the second, $\int\kernel_i(a'\mid a)\dd a'=1$. Multiplying
+the conditional densities along the sequence gives the joint density
+\begin{equation}
+  p(a_1,\dots,a_{\nsites})=\mu(a_1)\prod_{i=2}^{\nsites}\kernel_i(a_i\mid a_{i-1}),
+  \label{eq:markov-joint}
+\end{equation}
+and conversely any density of this product form is Markov, because conditioning on
+$(a_1,\dots,a_{i-1})$ leaves a function of $a_i$ that depends on the past only through
+the factor $\kernel_i(a_i\mid a_{i-1})$. The chain is \term{time-homogeneous} if every
+$\kernel_i$ is the same kernel $\kernel$; the paper's chain is. The pair $(\mu,\kernel)$
+then determines the law of the whole sequence, which is why ``learning the
+dynamics'' in the paper means learning $\kernel$ (the initial law $\mu=\normal01$ is
+held fixed and known).
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[>=Latex,node distance=1.5cm]
+  \tikzset{site/.style={circle,draw,minimum size=0.8cm,inner sep=0pt}}
+  \node[site] (a1) {$a_1$};
+  \node[site,right=of a1] (a2) {$a_2$};
+  \node[site,right=of a2] (a3) {$a_3$};
+  \node[right=of a3] (dots) {$\cdots$};
+  \node[site,right=of dots] (aL) {$a_{\nsites}$};
+  \draw[->] (a1) -- node[above] {$\kernel$} (a2);
+  \draw[->] (a2) -- node[above] {$\kernel$} (a3);
+  \draw[->] (a3) -- node[above] {$\kernel$} (dots);
+  \draw[->] (dots) -- node[above] {$\kernel$} (aL);
+  \node[above=0.5cm of a1] {$\mu$};
+  \node[below=0.35cm of a2] {$\varepsilon_2$};
+  \node[below=0.35cm of a3] {$\varepsilon_3$};
+  \node[below=0.35cm of aL] {$\varepsilon_{\nsites}$};
+\end{tikzpicture}
+\caption{The chain: the initial law $\mu$ at site $1$, one transition kernel $\kernel$
+per edge, and one independent innovation $\varepsilon_i$ entering at each site $i\ge2$.
+The posterior factor graph of the paper's Figure 1 is this chain with one observation
+attached to each site.}
+\label{fig:chain}
+\end{figure}
+
+Two consequences of \cref{eq:markov-joint} are used constantly. The
+\term{Chapman--Kolmogorov equation} says that the two-step kernel is the composition
+$\kernel^{(2)}(a''\mid a)=\int\kernel(a''\mid a')\kernel(a'\mid a)\dd a'$, and more
+generally the $k$-step kernel is the $k$-fold composition. And conditioning on a site
+splits the chain: given $a_i$, the past $(a_1,\dots,a_{i-1})$ and the future
+$(a_{i+1},\dots,a_{\nsites})$ are independent, which is what makes the posterior factor
+graph of the paper a tree and the forward--backward recursion exact (chapter on
+factor graphs and belief propagation).
+
+\section{Stationarity: strict and second-order}
+
+\begin{definition}[Invariant law and stationarity]
+A density $\pi$ is \term{invariant} for $\kernel$ if $\int\kernel(a'\mid a)\pi(a)\dd a=\pi(a')$
+for every $a'$. A time-homogeneous chain started from an invariant law,
+$\mu=\pi$, is \term{strictly stationary}: the joint law of $(a_i,\dots,a_{i+k})$ does
+not depend on $i$. A sequence is \term{second-order stationary} if its means are
+constant and $\Cov(a_i,a_j)$ depends only on $|i-j|$.
+\end{definition}
+
+Strict stationarity implies second-order stationarity when second moments exist; the
+converse fails, and the paper's chain is the example. Its first site is $\normal01$,
+which is the invariant law of the transition only when the innovation is Gaussian;
+for every other family the chain is second-order stationary (next section) but not
+strictly stationary, and its fourth cumulant relaxes toward the invariant value along
+the chain, as the chapter on moments and cumulants computed. The paper's proof of
+Proposition 1 says explicitly that ``nothing assumes stationarity'', and its
+fourth-cumulant tensor (\cref{sec:kappa4-chain}) carries the site dependence exactly.
+The word ``stationary'' in this compendium always says which sense is meant.
+
+\section{The AR(1) chain}
+
+\begin{definition}[First-order autoregression]
+Let $\innov$ be a density on $\Reals$ with mean zero and variance $\ivar$, and let
+$|\corr|<1$. The \term{AR(1) chain} with innovation $\innov$ is
+\begin{equation}
+  a_1\sim\mu,\qquad a_i=\corr a_{i-1}+\varepsilon_i\quad(i\ge2),\qquad
+  \varepsilon_2,\varepsilon_3,\dots\ \text{i.i.d.\ with density }\innov,\ \text{independent of }a_1 .
+  \label{eq:ar1}
+\end{equation}
+Its transition kernel is $\kernel(a'\mid a)=\innov(a'-\corr a)$.
+\end{definition}
+
+The kernel is a function of the residual $a'-\corr a$ alone, which is what makes the
+grid representation of the chapter on grid quadrature a matrix of residuals; the
+helper \code{\_outer\_residual} in \code{src/markov\_score/priors.py} builds that
+matrix once for every family. Because
+$\varepsilon_i$ is independent of $(a_1,\dots,a_{i-1})$, the law of $a_i$ given the
+whole past depends only on $a_{i-1}$: the recursion is Markov.
+
+\paragraph{The invariant law.}
+Iterating \cref{eq:ar1}, $a_i=\corr^{i-1}a_1+\sum_{m=2}^i\corr^{i-m}\varepsilon_m$. As
+$i\to\infty$ the contribution of $a_1$ vanishes and the sum converges to the
+moving-average series $\sum_{k\ge0}\corr^k\varepsilon_{-k}$ of the chapter on moments
+and cumulants; its law is the invariant law of the kernel, whatever $\mu$ was. For
+Gaussian innovations it is $\normal{0}{\ivar/(1-\corr^2)}$, which at $\ivar=1-\corr^2$ is
+$\normal01$: the paper's Gaussian chain is strictly stationary. For a Laplace
+innovation the invariant law is the law of $\sum_k\corr^k\varepsilon_{-k}$, which has no
+closed form but has all the cumulants of the chapter on moments and cumulants; it is
+not the law of $a_1$.
+
+\section{Unit variance and geometric covariance for every innovation law}
+
+\begin{proposition}[Second-order structure of the chain]
+\label{prop:second-order}
+Let $\mu=\normal01$ and $\ivar=1-\corr^2$ in \cref{eq:ar1}. Then, for every innovation
+density of mean zero and variance $\ivar$,
+\begin{equation}
+  \E[a_i]=0,\qquad \Var(a_i)=1,\qquad \Cov(a_i,a_j)=\corr^{|i-j|}\quad\text{for all }i,j .
+  \label{eq:covariance}
+\end{equation}
+\end{proposition}
+\begin{proof}
+Means: $\E a_1=0$, and inductively $\E a_i=\corr\E a_{i-1}+\E\varepsilon_i=0$.
+Variances: $\Var(a_1)=1$, and inductively, since $\varepsilon_i$ is independent of
+$a_{i-1}$,
+\[
+  \Var(a_i)=\corr^2\Var(a_{i-1})+\Var(\varepsilon_i)=\corr^2+(1-\corr^2)=1 .
+\]
+Covariances: for $i>j$, write $a_i=\corr^{i-j}a_j+\sum_{m=j+1}^{i}\corr^{i-m}\varepsilon_m$,
+where the sum is independent of $a_j$ and has mean zero, so
+$\Cov(a_i,a_j)=\corr^{i-j}\Var(a_j)=\corr^{i-j}$. Only the mean and variance of $\innov$
+were used.
+\end{proof}
+
+\why{This is the sentence ``the variance choice makes $\Var(a_i)=1$ and
+$\Cov(a_i,a_j)=\corr^{|i-j|}$ exactly for every innovation law'' of the paper's Section
+2, and it is the whole reason the laboratory separates orders. Every innovation family
+of the paper is symmetric, so its odd cumulants vanish; \cref{prop:second-order} pins
+the cumulants of order two; therefore two chains with different innovation families
+share every cumulant tensor of order one, two and three, and differ only from order
+four on. A Gaussian-innovation kernel fitted by maximum likelihood can at best recover
+$(\corr,\ivar)$, hence $\Sig_0$; whatever it then leaves on the table is, by this
+proposition, fourth order or higher. That is what the paper's Proposition 1 turns
+into a computable floor.}
+
+The code parameterises every family by $\corr$ alone, computing $\ivar=1-\corr^2$ and
+the family's scale from it (\cref{tab:sampling}); the theory module
+\code{src/markov\_score/theory.py} (function \code{chain\_covariance}) keeps $\ivar$
+free, because the two-parameter family $(\corr,\ivar)$ is what the Fisher information
+of the chapter on Fisher information is computed on. For $\ivar\ne1-\corr^2$ the
+induction gives $\Var(a_i)=\corr^{2(i-1)}+\ivar(1-\corr^{2(i-1)})/(1-\corr^2)$, drifting from
+$1$ toward $\ivar/(1-\corr^2)$, and $\Cov(a_i,a_j)=\corr^{|i-j|}\Var(a_{\min(i,j)})$; this
+is what makes $\partial_\ivar\Sig_0\ne0$, so that $\ivar$ is a second-order coordinate
+in the paper's sense.
+
+\section{The covariance matrix and its spectrum}
+\label{sec:spectrum}
+
+At $\ivar=1-\corr^2$ the covariance matrix of the chain is the symmetric Toeplitz matrix
+\begin{equation}
+  \Sig_0=\bigl[\corr^{|i-j|}\bigr]_{i,j=1}^{\nsites}
+  =\begin{pmatrix}1&\corr&\corr^2&\cdots&\corr^{\nsites-1}\\ \corr&1&\corr&\cdots&\corr^{\nsites-2}\\
+  \vdots&&\ddots&&\vdots\\ \corr^{\nsites-1}&\corr^{\nsites-2}&\cdots&\corr&1\end{pmatrix},
+  \label{eq:kms}
+\end{equation}
+known as the \term{Kac--Murdock--Szeg\H{o} matrix}. Three of its properties matter.
+
+\paragraph{Determinant and inverse.}
+By the chain rule for densities, $\det\Sig_0=\Var(a_1)\prod_{i\ge2}\Var(a_i\mid a_{i-1})=1\cdot\ivar^{\nsites-1}=(1-\corr^2)^{\nsites-1}$.
+The inverse (the \term{precision matrix}) is tridiagonal,
+\begin{equation}
+  \Sig_0^{-1}=\frac1{\ivar}\begin{pmatrix}1&-\corr&&&\\ -\corr&1+\corr^2&-\corr&&\\ &\ddots&\ddots&\ddots&\\
+  &&-\corr&1+\corr^2&-\corr\\ &&&-\corr&1\end{pmatrix},
+  \label{eq:precision}
+\end{equation}
+which one verifies by multiplying \cref{eq:kms} by \cref{eq:precision} row by row
+(the interior row $i$ of the product has entries $\corr^{|i-j|}(-\corr\cdot\corr^{\mp1}+(1+\corr^2)-\corr\cdot\corr^{\pm1})/\ivar$
+for $j\ne i$, which vanish, and $(1-\corr^2)/\ivar=1$ on the diagonal). A banded
+precision matrix is the linear-algebraic face of the Markov property: for a Gaussian
+vector, $(\Sig^{-1})_{ij}=0$ means $a_i$ and $a_j$ are conditionally independent given
+the rest. This is the matrix \code{GaussianLongRange.precision} in
+\code{src/markov\_score/priors.py} builds before perturbing it.
+
+\paragraph{Eigenvalue bounds.}
+\begin{proposition}[Spectrum of the KMS matrix]
+\label{prop:kms-spectrum}
+Every eigenvalue $\lambda$ of $\Sig_0$ satisfies
+\begin{equation}
+  \frac{1-|\corr|}{1+|\corr|}\le\lambda\le\frac{1+|\corr|}{1-|\corr|},
+  \label{eq:kms-bounds}
+\end{equation}
+and $\lmax(\Sig_0)$ increases with $\nsites$ to the upper bound.
+\end{proposition}
+\begin{proof}
+Upper bound. For a symmetric matrix the largest eigenvalue is at most the largest
+absolute row sum (the operator norm is bounded by the $\infty$-norm), and every row sum
+of \cref{eq:kms} is at most $1+2\sum_{k\ge1}|\corr|^k=(1+|\corr|)/(1-|\corr|)$. Lower
+bound. $\Sig_0$ is the covariance of the vector $\va$, so for any unit vector $\vect v$,
+$\vect v^{\!\top}\Sig_0\vect v=\Var(\vect v^{\!\top}\va)$. Writing $\va$ in terms of the
+innovations, $\vect v^{\!\top}\va=\sum_mc_m\xi_m$ with $\xi_1=a_1$, $\xi_m=\varepsilon_m$
+independent, and one checks from the moving-average coefficients that this variance
+is the quadratic form of the Toeplitz matrix with symbol $g(\omega)=(1-\corr^2)/(1-2\corr\cos\omega+\corr^2)$;
+a symmetric Toeplitz form is bounded below by the minimum of its symbol, which is
+$(1-\corr^2)/(1+|\corr|)^2=(1-|\corr|)/(1+|\corr|)$. The monotonicity in $\nsites$ holds
+because the $\nsites\times\nsites$ matrix is a principal submatrix of the
+$(\nsites+1)\times(\nsites+1)$ one (Cauchy interlacing), and the limit is the maximum of
+the symbol, $g(0)=(1+\corr)/(1-\corr)$ for $\corr>0$, by the Szeg\H{o} theory of Toeplitz
+forms.
+\end{proof}
+
+\paragraph{The expansion parameter and the crossover.}
+The paper's asymptotic theorems expand in $e^{-2t}$, but for the Gaussian chain the
+natural parameter is $e^{-2t}\lmax(\Sig_0)$: the noised covariance
+$\Sig_t=e^{-2t}\Sig_0+\Dt\Id=\Id+e^{-2t}(\Sig_0-\Id)$ is a perturbation of the identity
+whose size in operator norm is $e^{-2t}(\lmax-1)$. The \term{crossover time}
+\begin{equation}
+  \tstar=\tfrac12\log\lmax(\Sig_0)\le\tfrac12\log\frac{1+\corr}{1-\corr}=\operatorname{artanh}\corr
+  \label{eq:tstar}
+\end{equation}
+is the time at which $e^{-2t}\lmax=1$; below it the longest-wavelength covariance mode
+is still of order one and the asymptotic rates are not yet visible, above it they
+are. The bound $\operatorname{artanh}\corr$ is exact as $\nsites\to\infty$; at $\nsites=32$
+the paper's value, a generated macro, is a little smaller. The paper uses
+$\tstar$ as an exact scale for the Gaussian chain (where the chapter on Fisher
+information shows how it enters the closed-form information) and as a heuristic for
+the non-Gaussian ones, and reads every ``shallower than predicted'' slope of the
+earlier literature as a measurement below $\tstar$. The neighbouring time
+$\tfrac12\log(\lmax-1)$, at which $\Pt/\gamma$ enters $L^2(\gamma)$ (chapter on
+Gaussian integrals and Hermite polynomials), is smaller by a little; the two coincide
+in spirit and the paper names only $\tstar$.
+
+\section{The fourth-cumulant tensor of the chain}
+\label{sec:kappa4-chain}
+
+\begin{proposition}[Fourth-cumulant tensor]
+\label{prop:kappa4-chain}
+For the chain \cref{eq:ar1} with $\mu=\normal01$ and an innovation with fourth cumulant
+$\kappa_4(\varepsilon)$, for sites $i,j,k,l\ge1$,
+\begin{equation}
+  \kappa_4[ijkl]=\kappa_4(\varepsilon)\sum_{m=2}^{\min(i,j,k,l)}\corr^{\,i+j+k+l-4m},
+  \label{eq:kappa4-chain}
+\end{equation}
+with the empty sum equal to zero (any index equal to $1$).
+\end{proposition}
+\begin{proof}
+Write each site as a linear combination of the independent variables
+$\xi_1=a_1,\ \xi_m=\varepsilon_m$ ($m\ge2$): $a_i=\sum_{m=1}^ic_{im}\xi_m$ with
+$c_{i1}=\corr^{i-1}$ and $c_{im}=\corr^{i-m}$ for $2\le m\le i$. By the transformation rule
+and additivity of cumulant tensors (chapter on moments and cumulants), and because the
+$\xi_m$ are independent so that only ``diagonal'' joint cumulants
+$\operatorname{cum}(\xi_m,\xi_m,\xi_m,\xi_m)=\kappa_4(\xi_m)$ survive,
+\[
+  \kappa_4[ijkl]=\sum_mc_{im}c_{jm}c_{km}c_{lm}\,\kappa_4(\xi_m).
+\]
+The Gaussian $\xi_1$ has $\kappa_4=0$; each innovation contributes
+$\kappa_4(\varepsilon)\corr^{(i-m)+(j-m)+(k-m)+(l-m)}$ for $m\le\min(i,j,k,l)$, which is
+\cref{eq:kappa4-chain}.
+\end{proof}
+
+On the diagonal, $\kappa_4[iiii]=\kappa_4(\varepsilon)(1-\corr^{4(i-1)})/(1-\corr^4)$, the
+site-dependent value already met, which tends to the stationary
+$\kappa_4(\varepsilon)/(1-\corr^4)$. The Frobenius norm $\Frob{\kfour}^2$ grows linearly
+in $\nsites$ (each site far from the start contributes the same amount), so the paper's
+score-gap constant $\tfrac16\Frob{\kfour}^2$ is proportional to the chain length and
+the paper's theorems are stated at fixed $\nsites$. The function \code{chain\_kappa4}
+of \code{src/markov\_score/theory.py} evaluates \cref{eq:kappa4-chain} as a geometric
+sum, and \code{tests/test\_theory\_hermite.py} checks six of its entries against
+brute-force fourth cumulants of sampled Laplace chains, including $\kappa_4[1111]=0$.
+
+\section{Sampling a chain}
+
+Sampling is the recursion itself: draw $a_1\sim\normal01$, then for $i=2,\dots,\nsites$
+draw $\varepsilon_i$ from the innovation law with variance $\ivar=1-\corr^2$ and set
+$a_i=\corr a_{i-1}+\varepsilon_i$. \Cref{tab:sampling} lists how each family's parameter
+is derived from $\ivar$. The samplers are the classes \code{GaussianAR1},
+\code{LaplaceAR1}, \code{StudentTAR1}, \code{UniformAR1} and \code{GaussianMixtureAR1}
+of \code{src/markov\_score/priors.py}, and the generalised Gaussian lives in
+\code{src/markov\_score/shape\_kernel.py}. Each class also exposes a method
+\code{log\_transition\_matrix} that evaluates the kernel on the residual matrix of a
+grid, indexed child first and parent second.
+
+\begin{table}[t]
+\centering
+\caption{Variance-$\ivar$ parameterisation of the innovation families, as sampled.}
+\label{tab:sampling}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+family & draw $\varepsilon$ as & parameter from $\ivar$ \\
+\midrule
+Gaussian & $\sqrt{\ivar}\,Z$ & --- \\
+Laplace & $\mathrm{Laplace}(0,b)$ & $b=\sqrt{\ivar/2}$ \\
+Student-$t_\nu$ & $s\,T_\nu$ & $s=\sqrt{\ivar(\nu-2)/\nu}$ \\
+uniform & $\mathrm{Uniform}(-h,h)$ & $h=\sqrt{3\ivar}$ \\
+mixture, separation $\kappa$ & $\pm m+sZ$, sign fair & $m=\sqrt{\kappa\ivar}$, $s=\sqrt{(1-\kappa)\ivar}$ \\
+generalised Gaussian, $\beta$ & density $\propto\exp(-|e/s_\beta|^\beta)$ & $s_\beta=\sqrt{\ivar\,\Gamma(1/\beta)/\Gamma(3/\beta)}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two details of the implementation are part of the experimental design. First, random
+streams are keyed by strings and integers through \code{rng\_for} in
+\code{src/markov\_score/utils.py}, so that the same clean chains and the same noise
+draws are used by every method compared at a setting; this is what makes the paper's
+comparisons paired (chapter on the statistics of the experiments). Second, the
+sampler draws the innovations and the recursion exactly, with no truncation; the
+grid on which inference runs truncates the domain to $[-\halfwidth,\halfwidth]$, and a
+sampled site beyond it is the mechanism the paper's Appendix B discusses for the
+heavy-tailed family.
+
+\section{The chain length $\nsites$ and the number of sequences $\nseq$}
+
+The \term{chain length} $\nsites$ is the number of sites of one sequence and, since a
+sequence is a point of $\Reals^{\nsites}$, the dimension of the space in which the
+diffusion runs. The frozen value is $\nsites=32$; the length study evaluates kernels
+fitted at $32$ on chains of length up to $256$, and the regime sweep uses $32$ and
+$128$. The \term{number of sequences} $\nseq$ is the number of independent draws of
+the chain in a data set; the sizes are $\nseq\in\{32,128,512,2048\}$ in the
+comparisons, and the theory's sample-size statements (Fisher information per
+sequence, the local asymptotic minimax bound) are in the limit $\nseq\to\infty$ at
+fixed $\nsites$.
+
+A data set therefore has $\nsites\nseq$ scalar observations, but they are not
+$\nsites\nseq$ independent numbers: within a sequence the sites are dependent, with
+the correlation length of $\corr^{|i-j|}$, and the independent unit is the sequence.
+This is why every information statement in the paper is ``per sequence'' and why the
+constant $\tfrac16\Frob{\kfour}^2$ carries a factor of order $\nsites$: a longer chain
+carries more information about its kernel, in proportion to its length, and the
+same estimator applies to any length because the kernel is a function on $\Reals^2$
+and inference at length $\nsites'$ is the same recursion. The chapter on conventions
+explains why these two numbers are not called $n$ and $d$.
+
+\section{Worked example: the frozen chain at $\corr=0.85$}
+
+Take $\corr=0.85$, so $\ivar=1-0.7225=0.2775$. The first four rows and columns of
+$\Sig_0$ are, from \cref{eq:kms},
+\[
+  \begin{pmatrix}1&0.85&0.7225&0.6141\\0.85&1&0.85&0.7225\\0.7225&0.85&1&0.85\\0.6141&0.7225&0.85&1\end{pmatrix},
+\]
+with determinant $\ivar^3=0.2775^3\approx0.02137$ for the $4\times4$ block. The precision
+entries are $1/\ivar\approx3.604$, $(1+\corr^2)/\ivar\approx6.207$ and $-\corr/\ivar\approx-3.063$;
+the interior diagonal $6.207$ is the conditional precision of a site given both
+neighbours, and $3.604$ that of an end site given its one neighbour.
+
+The row-sum bound of \cref{prop:kms-spectrum} for the infinite chain is
+$(1+\corr)/(1-\corr)=1.85/0.15\approx12.33$, and the lower bound is
+$0.15/1.85\approx0.081$; the $4\times4$ block's largest row sum is
+$1+0.85+0.7225+0.6141\approx3.19$, so at length $4$ the largest eigenvalue is at most
+$3.19$, and it grows toward $12.33$ with the length. The crossover bound is
+$\operatorname{artanh}(0.85)=\tfrac12\log12.33\approx1.256$; the paper's $\tstar$ at
+$\nsites=32$ lies below this and is reported in its Section 3. Already the $2\times2$
+block has eigenvalues $1\pm\corr$, i.e. $1.85$ and $0.15$, so $\lmax>2$ from length $3$
+on, and the Gaussian chain's $\Pz/\gamma$ is outside $L^2(\gamma)$ for every length the
+paper uses.
+
+For Laplace innovations, $\kappa_4(\varepsilon)=3\ivar^2\approx0.2310$, and
+\cref{eq:kappa4-chain} gives on the diagonal $\kappa_4[2222]\approx0.231$,
+$\kappa_4[3333]\approx0.231(1+0.522)\approx0.352$, $\kappa_4[4444]\approx0.231(1+0.522+0.2725)\approx0.415$,
+and off the diagonal, for instance, $\kappa_4[2233]=\kappa_4(\varepsilon)\corr^{2}\approx0.167$
+(only $m=2$ contributes, with exponent $2+2+3+3-8=2$).
+
+\where{{\sloppy The paper's Section 2 (the chain, variance matching, the covariance twin),
+Section 3 (the crossover $\tstar$, the bound $\lmax\le(1+\corr)/(1-\corr)$, the
+$L^2(\gamma)$ remark), Section 5 (the regime sweep in $\corr$ and $\nsites$, the length
+study), Appendix A (the proof of Proposition 1, ``nothing assumes stationarity'') and
+Appendix B (the kernel on the grid). Experiments E01, E07, E11, E13, E14, E15 and the
+length rows of E03. Code: \code{src/markov\_score/priors.py} (the chain classes and
+their samplers), \code{src/markov\_score/shape\_kernel.py} (the generalised-Gaussian
+kernel), \code{src/markov\_score/theory.py} (\code{chain\_covariance},
+\code{chain\_kappa4}, \code{crossover\_time}), \code{experiments/frozen\_config.py}
+(the frozen $\corr$, $\nsites$ and family), \code{tests/test\_theory\_hermite.py}.\par}}
+
+\paragraph{References.}
+S. P. Meyn and R. L. Tweedie (2009), \emph{Markov Chains and Stochastic Stability},
+2nd edition, Cambridge University Press (Chapters 3 and 10: kernels, invariant
+measures).
+P. J. Brockwell and R. A. Davis (1991), \emph{Time Series: Theory and Methods},
+2nd edition, Springer (Chapter 3: AR processes, stationarity and the moving-average
+representation).
+M. Kac, W. L. Murdock and G. Szeg\H{o} (1953), ``On the eigen-values of certain Hermitian
+forms'', Journal of Rational Mechanics and Analysis 2, 767--800.
+U. Grenander and G. Szeg\H{o} (1958), \emph{Toeplitz Forms and Their Applications},
+University of California Press (Chapter 5: the spectrum of Toeplitz forms and the
+symbol).
+W. F. Trench (1999), ``Asymptotic distribution of the spectra of a class of generalized
+Kac--Murdock--Szeg\H{o} matrices'', Linear Algebra and its Applications 294, 181--192.

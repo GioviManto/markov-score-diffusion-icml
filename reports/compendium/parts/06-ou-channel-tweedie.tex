@@ -1,0 +1,506 @@
+\chapter{The Ornstein--Uhlenbeck channel and Tweedie's identity}
+\label{ch:ou-channel-tweedie}
+
+This chapter builds the forward process of the paper from nothing. It writes down the
+stochastic differential equation that adds the noise, solves it, and derives the three
+facts on which every later chapter rests: the noised law is a Gaussian convolution of
+the clean law; its per-site variance is one at every noise level; and its score is a
+rescaled posterior mean (Tweedie's identity). It ends with the observation protocol of
+the paper, one noised view per sequence on a twelve-level schedule, written out level by
+level. Throughout, $\va\in\Reals^{\nsites}$ is a clean sequence with law $\Pz$,
+$\vx_t$ its noised version at level $t$ with law $\Pt$, and $\vz\sim\normal{0}{\Id}$ a
+standard Gaussian vector independent of $\va$. In derivations we abbreviate
+$\alpha=e^{-t}$, as the paper's appendix does; in displayed statements we keep
+$e^{-t}$, as the paper's body does.
+
+\section{Stochastic differential equations in one paragraph}
+\label{sec:ou:sde}
+
+A \term{Brownian motion} $(W_t)_{t\ge0}$ is a random continuous path with $W_0=0$ whose
+increments over disjoint intervals are independent and Gaussian,
+$W_t-W_s\sim\normal{0}{t-s}$ for $s<t$. Its formal time derivative
+$\eta(t)=\dd W_t/\dd t$ is \term{white noise}. It is \term{standardised} in the sense
+that $\E[\eta(t)\eta(t')]=\delta(t-t')$, which is the same as saying that
+$\int_s^t\eta(u)\dd u=W_t-W_s$ has variance $t-s$. A \term{stochastic differential
+equation}
+\begin{equation}
+  \dd x_t=f(x_t,t)\,\dd t+g(t)\,\dd W_t
+  \label{eq:ou:sde-generic}
+\end{equation}
+is shorthand for the recursion $x_{t+h}-x_t\approx f(x_t,t)\,h+g(t)\,(W_{t+h}-W_t)$
+taken to the limit $h\to0$; $f$ is the \term{drift} (the deterministic push) and $g$ the
+\term{diffusion coefficient} (the size of the random kick). The limit defines the It\^o
+integral, and only two of its properties are needed here. First, for a deterministic
+integrand $\phi$ the random variable $\int_0^t\phi(u)\dd W_u$ is Gaussian with mean zero
+and variance $\int_0^t\phi(u)^2\dd u$ (the \term{It\^o isometry}). Second, a linear
+equation can be solved with an integrating factor exactly as an ordinary differential
+equation can, because multiplying by a smooth deterministic function introduces no
+It\^o correction term. In $\nsites$ dimensions $W_t$ has $\nsites$ independent
+coordinates and \cref{eq:ou:sde-generic} is read coordinate by coordinate.
+
+\section{The variance-preserving Ornstein--Uhlenbeck process}
+\label{sec:ou:process}
+
+\begin{definition}[The channel]
+\label{def:ou:channel}
+The \term{Ornstein--Uhlenbeck channel} of the paper is the coordinatewise process
+\begin{equation}
+  \dd\vx_t=-\vx_t\,\dd t+\sqrt2\,\dd\vect{W}_t,\qquad \vx_0=\va\sim\Pz,
+  \label{eq:ou:sde}
+\end{equation}
+with $\vect{W}$ an $\nsites$-dimensional Brownian motion independent of $\va$. In white-noise
+form, $\dd\vx_t/\dd t=-\vx_t+\sqrt2\,\gwn(t)$ with $\gwn$ standardised.
+\end{definition}
+
+The drift $-\vx_t$ pulls every coordinate towards zero at unit rate; the kick
+$\sqrt2\,\dd\vect{W}_t$ is the same for every coordinate and independent across
+coordinates. Nothing couples the sites: the channel acts on each $a_i$ separately, and
+this is what keeps the posterior factor graph a tree in the paper's Section 2.
+
+\begin{proposition}[Solution of the channel]
+\label{prop:ou:solution}
+For every $t\ge0$,
+\begin{equation}
+  \vx_t=e^{-t}\va+\sqrt{\Dt}\,\vz,\qquad \Dt=1-e^{-2t},\qquad \vz\sim\normal{0}{\Id},
+  \label{eq:ou:solution}
+\end{equation}
+with $\vz$ independent of $\va$. Conditionally on $\va$, $\vx_t\sim\normal{e^{-t}\va}{\Dt\Id}$.
+\end{proposition}
+
+\begin{proof}
+Take one coordinate and drop the index. Put $y_t=e^{t}x_t$. The factor $e^{t}$ is
+deterministic and smooth, so the ordinary product rule applies:
+\[
+  \dd y_t=e^{t}x_t\,\dd t+e^{t}\,\dd x_t
+        =e^{t}x_t\,\dd t+e^{t}\bigl(-x_t\,\dd t+\sqrt2\,\dd W_t\bigr)
+        =\sqrt2\,e^{t}\,\dd W_t .
+\]
+Integrating from $0$ to $t$ gives $y_t=a+\sqrt2\int_0^t e^{u}\dd W_u$, hence
+\[
+  x_t=e^{-t}a+\sqrt2\int_0^t e^{-(t-u)}\dd W_u .
+\]
+The integrand $\sqrt2\,e^{-(t-u)}$ is deterministic, so by the It\^o isometry the
+integral is Gaussian with mean zero and variance
+\[
+  \int_0^t 2\,e^{-2(t-u)}\dd u=2\cdot\frac{1-e^{-2t}}{2}=1-e^{-2t}=\Dt .
+\]
+It is independent of $a$ because $W$ is. Writing the integral as $\sqrt{\Dt}\,z$ with
+$z\sim\normal01$ gives the scalar claim; the coordinates use independent Brownian
+motions, so the vector claim follows with $\vz\sim\normal{0}{\Id}$.
+\end{proof}
+
+\begin{remark}[Why $\sqrt2$]
+\label{rem:ou:sqrt2}
+The variance $v_t=\Var(x_t)$ of one coordinate obeys $\dd v_t/\dd t=-2v_t+2$, whose
+fixed point is $v=1$. With the kick $\dd W_t$ instead of $\sqrt2\,\dd W_t$ the fixed
+point would be $\tfrac12$ and one would have $\Dt=(1-e^{-2t})/2$. The paper's
+convention (\code{paper/notation.tex}, item 4) fixes the noise as standardised and
+carries the $\sqrt2$ explicitly so that $\Dt=1-e^{-2t}$ throughout, in the forward and
+in the reverse equation. The variance-preserving SDE of Song and co-authors,
+$\dd\vx=-\tfrac12\beta(t)\vx\,\dd t+\sqrt{\beta(t)}\,\dd\vect{W}$, is the same process
+when $\beta\equiv2$; for a general schedule $\beta$ the paper's $t$ is
+$\tfrac12\int_0^{t'}\beta(u)\dd u$, and nothing below changes.
+\end{remark}
+
+\begin{remark}[The semigroup property]
+\label{rem:ou:semigroup}
+Noising for time $t$ and then for time $s$ is noising for time $t+s$:
+if $\vx_t=e^{-t}\va+\sqrt{\Dt}\vz$ and $\vx_{t+s}=e^{-s}\vx_t+\sqrt{\Delta_s}\vz'$ with
+$\vz'$ fresh, then $\vx_{t+s}=e^{-(t+s)}\va+\bigl(e^{-s}\sqrt{\Dt}\vz+\sqrt{\Delta_s}\vz'\bigr)$,
+and the bracket is Gaussian with variance
+$e^{-2s}(1-e^{-2t})+1-e^{-2s}=1-e^{-2(t+s)}=\Delta_{t+s}$ per coordinate. This is the
+Markov property of the channel, used in \cref{ch:reverse-sde-generation}.
+\end{remark}
+
+\section{Variance preservation and the Gaussian limit}
+\label{sec:ou:variance}
+
+\begin{proposition}[Second moments of the noised law]
+\label{prop:ou:variance}
+Let $\Sig_0=\Cov(\va)$. Then $\E[\vx_t]=e^{-t}\E[\va]$ and
+\begin{equation}
+  \Cov(\vx_t)=e^{-2t}\Sig_0+\Dt\Id=:\Sig_t .
+  \label{eq:ou:sigmat}
+\end{equation}
+In particular, if $\Var(a_i)=1$ for every site, then $\Var(x_{t,i})=e^{-2t}+\Dt=1$ at
+every $t$: the channel \term{preserves the variance}.
+\end{proposition}
+
+\begin{proof}
+From \cref{eq:ou:solution}, $\va$ and $\vz$ are independent, so covariances add:
+$\Cov(\vx_t)=e^{-2t}\Cov(\va)+\Dt\Cov(\vz)$.
+\end{proof}
+
+The paper's chain (Section 2) has $a_1\sim\normal01$ and innovation variance
+$\ivar=1-\corr^2$, which gives $\Var(a_i)=1$ and $\Cov(a_i,a_j)=\corr^{|i-j|}$ for
+every innovation law; hence every family shares the same $\Sig_0$ and the same $\Sig_t$.
+
+\begin{proposition}[The Gaussian limit]
+\label{prop:ou:limit}
+As $t\to\infty$, $\Pt$ converges in distribution to $\gamma=\normal{0}{\Id}$, whatever
+$\Pz$ is, provided $\E|\va|^2<\infty$.
+\end{proposition}
+
+\begin{proof}
+For a bounded continuous $\phi$, $\E\phi(\vx_t)=\E\phi(e^{-t}\va+\sqrt{\Dt}\vz)$. The
+term $e^{-t}\va$ tends to zero in probability by Chebyshev's inequality,
+$\Prob(e^{-t}|\va|>\epsilon)\le e^{-2t}\E|\va|^2/\epsilon^2$, and $\sqrt{\Dt}\vz\to\vz$
+almost surely. Dominated convergence then gives $\E\phi(\vx_t)\to\E\phi(\vz)$.
+\end{proof}
+
+The limit is the stationary law of the process: if $\va\sim\gamma$ then
+$\vx_t\sim\normal{0}{e^{-2t}\Id+\Dt\Id}=\gamma$ for every $t$. The rate of convergence is
+the subject of \cref{ch:attenuation-theorems}: the Hermite moment of degree $m$ of
+$\Pt$ is exactly $e^{-mt}$ times that of $\Pz$, so the memory of $\Pz$ fades order by
+order rather than all at once.
+
+\section{The noised law as a Gaussian convolution}
+\label{sec:ou:convolution}
+
+Write $\gamma_{\Delta}$ for the density of $\normal{0}{\Delta\Id}$ on $\Reals^{\nsites}$,
+\begin{equation}
+  \gamma_{\Delta}(\vect{w})=(2\pi\Delta)^{-\nsites/2}\exp\Bigl(-\frac{|\vect{w}|^2}{2\Delta}\Bigr).
+  \label{eq:ou:gaussdensity}
+\end{equation}
+
+\begin{proposition}[Density of the noised law]
+\label{prop:ou:convolution}
+For every $t>0$ the law $\Pt$ has the density
+\begin{equation}
+  \Pt(\vx)=\int_{\Reals^{\nsites}}\Pz(\dd\va)\,\gamma_{\Dt}(\vx-e^{-t}\va)
+         =\E_{\Pz}\bigl[\gamma_{\Dt}(\vx-e^{-t}\va)\bigr],
+  \label{eq:ou:convolution}
+\end{equation}
+which is strictly positive and infinitely differentiable in $\vx$, whatever $\Pz$ is
+(it need not have a density). Every derivative may be taken under the integral sign.
+\end{proposition}
+
+\begin{proof}
+Conditionally on $\va$, $\vx_t$ has density $\gamma_{\Dt}(\vx-e^{-t}\va)$ by
+\cref{prop:ou:solution}; integrating over $\va$ gives \cref{eq:ou:convolution}.
+Positivity is clear. For differentiation under the integral, every $\vx$-derivative of
+$\gamma_{\Dt}(\vx-e^{-t}\va)$ is a polynomial in $(\vx-e^{-t}\va)/\Dt$ times the same
+Gaussian, and is therefore bounded uniformly in $\va$ on every bounded set of $\vx$ by a
+constant, which is integrable against the probability measure $\Pz$; dominated
+convergence applies.
+\end{proof}
+
+Two readings of \cref{eq:ou:convolution} are used. As an operator statement,
+$\Pt$ is the convolution of the dilated law (the law of $e^{-t}\va$) with the Gaussian
+$\gamma_{\Dt}$. As a factor-graph statement, the integrand factorises over sites,
+\begin{equation}
+  \gamma_{\Dt}(\vx-e^{-t}\va)=\prod_{i=1}^{\nsites}\like(x_i\mid a_i),\qquad
+  \like(x_i\mid a_i)\propto\exp\Bigl[-\frac{(x_i-e^{-t}a_i)^2}{2\Dt}\Bigr],
+  \label{eq:ou:unary}
+\end{equation}
+so conditioning on $\vx$ attaches one \term{unary likelihood factor} $\like$ to each
+site and adds no edge among the latent variables. The code builds exactly this table:
+\code{log\_likelihood\_matrix} in \code{src/markov\_score/noising.py} returns
+$\log\like(x_i\mid\gridpt{k})$ on the quadrature grid, shifted per row by a constant
+so that no row underflows; the shift cancels in every normalised message and changes
+nothing.
+
+\section{The signal-to-noise ratio}
+\label{sec:ou:snr}
+
+\begin{definition}[Signal-to-noise ratio]
+\label{def:ou:snr}
+The \term{signal-to-noise ratio} of the channel at level $t$ is the ratio of the
+signal variance to the noise variance in one coordinate of \cref{eq:ou:solution} for
+unit-variance data,
+\begin{equation}
+  \mathrm{SNR}_t=\frac{e^{-2t}}{\Dt}=\frac{e^{-2t}}{1-e^{-2t}}=\frac{1}{e^{2t}-1}.
+  \label{eq:ou:snr}
+\end{equation}
+\end{definition}
+
+For small $t$, $\Dt=2t+O(t^2)$ and $\mathrm{SNR}_t\approx1/(2t)$, which diverges: the
+observation is almost clean. For large $t$, $\mathrm{SNR}_t\approx e^{-2t}$: the signal
+is a small perturbation of pure noise, and $e^{-2t}$ is the natural small parameter of
+the expansion in \cref{ch:attenuation-theorems}. The same quantity appears there under
+the name $b=e^{-2t}/\Dt$, together with $s=e^{-t}\vx/\Dt$; the reader should keep in
+mind that $b$ is the SNR. Inverting \cref{eq:ou:snr}, $t=\tfrac12\log(1+1/\mathrm{SNR}_t)$,
+so the diffusion time is a logarithmic clock on the SNR.
+
+\begin{table}[t]
+\centering
+\caption{The twelve-level schedule of the paper (\code{experiments/frozen\_config.py},
+$t_k=0.05\cdot r^{k-1}$ with $r=60^{1/11}\approx1.4509$), with the analytic values of the
+decay factor, the noise variance and the signal-to-noise ratio at each level. All
+entries are computed from the definitions; none is measured.}
+\label{tab:ou:levels}
+\begin{tabular}{@{}rrrrr@{}}
+\toprule
+$k$ & $t_k$ & $e^{-t_k}$ & $\Delta_{t_k}$ & $\mathrm{SNR}_{t_k}$ \\
+\midrule
+1  & 0.0500 & 0.9512 & 0.0952 & 9.51 \\
+2  & 0.0725 & 0.9300 & 0.1350 & 6.40 \\
+3  & 0.1053 & 0.9001 & 0.1898 & 4.27 \\
+4  & 0.1527 & 0.8584 & 0.2632 & 2.80 \\
+5  & 0.2216 & 0.8012 & 0.3580 & 1.79 \\
+6  & 0.3215 & 0.7250 & 0.4743 & 1.11 \\
+7  & 0.4665 & 0.6272 & 0.6066 & 0.648 \\
+8  & 0.6769 & 0.5082 & 0.7417 & 0.348 \\
+9  & 0.9821 & 0.3745 & 0.8597 & 0.163 \\
+10 & 1.4250 & 0.2405 & 0.9422 & 0.061 \\
+11 & 2.0676 & 0.1265 & 0.9840 & 0.016 \\
+12 & 3.0000 & 0.0498 & 0.9975 & 0.0025 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Tweedie's identity}
+\label{sec:ou:tweedie}
+
+The \term{score} of the noised law is the gradient of its log-density,
+$\score(\vx,t)=\nabla_{\vx}\log\Pt(\vx)$. Tweedie's identity says that it is a
+rescaled residual of the posterior mean of the clean sequence. We write
+$\pmean{\va}=\E[\va\mid\vx_t=\vx]$ for that posterior mean, in the bracket notation of
+the paper.
+
+\begin{theorem}[Tweedie's identity]
+\label{thm:ou:tweedie}
+For every $t>0$ and every $\vx\in\Reals^{\nsites}$,
+\begin{equation}
+  \score(\vx,t)=\nabla_{\vx}\log\Pt(\vx)=-\frac{\vx-e^{-t}\pmean{\va}}{\Dt},
+  \qquad \pmean{\va}=\E[\va\mid\vx_t=\vx].
+  \label{eq:ou:tweedie}
+\end{equation}
+Equivalently, $\pmean{\va}=e^{t}\bigl(\vx+\Dt\,\score(\vx,t)\bigr)$. No assumption on
+$\Pz$ is needed beyond $\E|\va|<\infty$.
+\end{theorem}
+
+\begin{proof}
+Scalar case first. By \cref{prop:ou:convolution},
+$\Pt(x)=\int\Pz(\dd a)\,\gamma_{\Dt}(x-\alpha a)$ with $\alpha=e^{-t}$, and the
+derivative may be taken inside:
+\[
+  \frac{\dd}{\dd x}\gamma_{\Dt}(x-\alpha a)=-\frac{x-\alpha a}{\Dt}\,\gamma_{\Dt}(x-\alpha a).
+\]
+Hence
+\[
+  \Pt'(x)=-\frac1{\Dt}\int\Pz(\dd a)\,(x-\alpha a)\,\gamma_{\Dt}(x-\alpha a)
+         =-\frac1{\Dt}\Bigl[x\,\Pt(x)-\alpha\int\Pz(\dd a)\,a\,\gamma_{\Dt}(x-\alpha a)\Bigr].
+\]
+The posterior of $a$ given $x_t=x$ is, by Bayes' rule, the probability measure
+$\Pz(\dd a)\,\gamma_{\Dt}(x-\alpha a)/\Pt(x)$, so the last integral equals
+$\Pt(x)\,\E[a\mid x_t=x]$. Dividing by $\Pt(x)>0$,
+\[
+  \frac{\Pt'(x)}{\Pt(x)}=-\frac{x-\alpha\,\E[a\mid x_t=x]}{\Dt}.
+\]
+The integrability of $|a|$ under $\Pz$ is what makes the last integral finite. In
+$\nsites$ dimensions, $\nabla_{\vx}\gamma_{\Dt}(\vx-\alpha\va)=-\Dt^{-1}(\vx-\alpha\va)\gamma_{\Dt}(\vx-\alpha\va)$
+and the same three lines go through coordinate by coordinate.
+\end{proof}
+
+\begin{remark}[The classical forms]
+\label{rem:ou:robbins}
+Robbins (1956) wrote the identity for an empirical Bayes problem in which an observation
+$z\sim\normal{\mu}{\sigma^2}$ has an unknown prior on $\mu$: $\E[\mu\mid z]=z+\sigma^2\,(\log f)'(z)$
+with $f$ the marginal density of $z$. Efron (2011) named it Tweedie's formula. The
+channel is this setting with $\mu=e^{-t}\va$ and $\sigma^2=\Dt$:
+$\E[e^{-t}\va\mid\vx]=\vx+\Dt\score(\vx,t)$, which is the second form in
+\cref{thm:ou:tweedie}. The code uses it in both directions: \code{score\_from\_mean} in
+\code{src/markov\_score/theory.py} turns a posterior mean into a score, and
+\code{denoising\_readout} in \code{src/markov\_score/reverse.py} turns a score into a
+posterior mean.
+\end{remark}
+
+\begin{proposition}[Second-order Tweedie identity]
+\label{prop:ou:tweedie2}
+For $t>0$ the posterior covariance is also a function of the noised law:
+\begin{equation}
+  \Cov(\va\mid\vx_t=\vx)=\frac{\Dt}{e^{-2t}}\Bigl(\Id+\Dt\,\nabla^2_{\vx}\log\Pt(\vx)\Bigr),
+  \label{eq:ou:tweedie2}
+\end{equation}
+so that $\operatorname{div}\score(\vx,t)=\tr\nabla^2\log\Pt(\vx)=-\nsites/\Dt+(e^{-2t}/\Dt^2)\tr\Cov(\va\mid\vx_t=\vx)$.
+\end{proposition}
+
+\begin{proof}
+Differentiate \cref{eq:ou:tweedie} once more. With $m(\vx)=\pmean{\va}$,
+$\nabla^2\log\Pt=-\Id/\Dt+(\alpha/\Dt)\nabla_{\vx}m$. Writing
+$m_i(\vx)=\int a_i\,\Pz(\dd\va)\gamma_{\Dt}(\vx-\alpha\va)/\Pt(\vx)$ and differentiating
+the quotient with respect to $x_j$,
+\[
+  \partial_j m_i=-\frac1{\Dt}\Bigl(\E[a_i(x_j-\alpha a_j)\mid\vx]-m_i\,(x_j-\alpha m_j)\Bigr)
+               =\frac{\alpha}{\Dt}\bigl(\E[a_ia_j\mid\vx]-m_im_j\bigr)
+               =\frac{\alpha}{\Dt}\Cov(a_i,a_j\mid\vx),
+\]
+because the terms in $x_j$ cancel. Substituting gives
+$\nabla^2\log\Pt=-\Id/\Dt+(\alpha^2/\Dt^2)\Cov(\va\mid\vx)$, which is
+\cref{eq:ou:tweedie2} rearranged.
+\end{proof}
+
+\why{The divergence of the score is what implicit score matching
+(\cref{ch:score-matching}) has to compute, and \cref{eq:ou:tweedie2} says what it is:
+up to constants, the trace of the posterior covariance. It also shows that the score
+is a gradient field whose Jacobian is symmetric, a property a network's output need not
+have.}
+
+\begin{corollary}[The Gaussian case]
+\label{cor:ou:gaussian}
+If $\Pz=\normal{0}{\Sig_0}$ then $\Pt=\normal{0}{\Sig_t}$ with $\Sig_t$ as in
+\cref{eq:ou:sigmat}, the score is linear, $\score(\vx,t)=-\Sig_t^{-1}\vx$, and the
+posterior mean is $\pmean{\va}=e^{-t}\Sig_0\Sig_t^{-1}\vx$.
+\end{corollary}
+
+\begin{proof}
+A Gaussian pushed through \cref{eq:ou:solution} stays Gaussian, with the covariance of
+\cref{prop:ou:variance}. Then $\log\Pt(\vx)=-\tfrac12\vx^{\!\top}\Sig_t^{-1}\vx+\text{const}$
+and $\score=-\Sig_t^{-1}\vx$. Inverting \cref{eq:ou:tweedie},
+\[
+  \pmean{\va}=\frac{\vx+\Dt\score}{\alpha}
+             =\frac{(\Id-\Dt\Sig_t^{-1})\vx}{\alpha}
+             =\frac{(\Sig_t-\Dt\Id)\Sig_t^{-1}\vx}{\alpha}
+             =\frac{\alpha^2\Sig_0\Sig_t^{-1}\vx}{\alpha}
+             =\alpha\,\Sig_0\Sig_t^{-1}\vx .\qedhere
+\]
+\end{proof}
+
+This is the \term{linear minimum-mean-square estimator} (LMMSE) of $\va$ from $\vx$,
+and the paper's Proposition 1 (Section 2) shows that it is exactly what Gaussian
+message closure computes for \emph{any} innovation law with the same $\Sig_0$. The
+score $\Sgauss(\vx,t)=-\Sig_t^{-1}\vx$ of this \term{covariance twin} is the reference
+against which the paper measures the price of second-order closure
+(\cref{ch:attenuation-theorems}).
+
+\section{The posterior mean as a denoiser}
+\label{sec:ou:denoiser}
+
+\begin{proposition}[The posterior mean is the best denoiser]
+\label{prop:ou:mmse}
+For every measurable $f\colon\Reals^{\nsites}\to\Reals^{\nsites}$ with $\E|f(\vx_t)|^2<\infty$,
+\begin{equation}
+  \E\bigl|\va-f(\vx_t)\bigr|^2=\E\bigl|\va-\pmean{\va}\bigr|^2+\E\bigl|\pmean{\va}-f(\vx_t)\bigr|^2 .
+  \label{eq:ou:mmse}
+\end{equation}
+The first term on the right, written $\mathrm{MMSE}_t$, is the smallest mean squared
+error any denoiser can reach; it is reached only by $f=\pmean{\va}$.
+\end{proposition}
+
+\begin{proof}
+Expand $|\va-f|^2=|(\va-m)+(m-f)|^2$ with $m=\pmean{\va}$. The cross term is
+$2\,\E\bigl\langle\va-m,\,m-f\bigr\rangle=2\,\E\bigl\langle\E[\va-m\mid\vx_t],\,m-f\bigr\rangle=0$,
+because $m-f$ is a function of $\vx_t$ and $\E[\va-m\mid\vx_t]=0$.
+\end{proof}
+
+Two consequences organise the paper's measurements. First, any estimate
+$\widehat{m}$ of the posterior mean converts into an estimate of the score and the
+errors are proportional:
+\begin{equation}
+  \widehat{\score}=-\frac{\vx-e^{-t}\widehat{m}}{\Dt}
+  \quad\Longrightarrow\quad
+  \widehat{\score}-\score=\frac{e^{-t}}{\Dt}\bigl(\widehat{m}-\pmean{\va}\bigr),
+  \label{eq:ou:score-mean-identity}
+\end{equation}
+an exact identity that \code{score\_mean\_identity\_residual} in
+\code{src/markov\_score/metrics.py} checks to machine precision. Every estimator in the
+paper, the tree-exact recursion, the fitted kernel, the LMMSE twin and the networks,
+produces a posterior mean and is scored through \cref{eq:ou:score-mean-identity}.
+Second, the energy of the score is tied to the MMSE.
+
+\begin{proposition}[Score energy]
+\label{prop:ou:energy}
+$\E_{\Pt}|\score(\vx_t,t)|^2=\nsites/\Dt-(e^{-2t}/\Dt^2)\,\mathrm{MMSE}_t$.
+\end{proposition}
+
+\begin{proof}
+By \cref{eq:ou:solution}, $-(\vx_t-e^{-t}\va)/\Dt=-\vz/\sqrt{\Dt}$, and by
+\cref{thm:ou:tweedie} the score is its conditional expectation,
+$\score(\vx_t,t)=\E[-\vz/\sqrt{\Dt}\mid\vx_t]$. Apply \cref{eq:ou:mmse} to the random
+vector $-\vz/\sqrt{\Dt}$ in place of $\va$ and $f=\score$:
+$\E|\vz|^2/\Dt=\E|\score|^2+\E|{-\vz/\sqrt{\Dt}}-\score|^2$. The last term is
+$\E|\,e^{-t}(\va-\pmean{\va})/\Dt\,|^2=(e^{-2t}/\Dt^2)\mathrm{MMSE}_t$ by
+\cref{eq:ou:score-mean-identity} applied to $\widehat m=\va$; and $\E|\vz|^2=\nsites$.
+\end{proof}
+
+At low noise the energy is close to $\nsites/\Dt$ and large; at high noise it tends to
+$\nsites$, the energy of the score of $\gamma$. This is why the paper's pooled
+estimand (\cref{ch:score-matching}) is dominated by its lowest levels.
+
+\section{One noised view per sequence and the twelve-level schedule}
+\label{sec:ou:protocol}
+
+The paper observes $\nseq$ sequences $\va^{1},\dots,\va^{\nseq}$ and, in its own
+estimator's interface (interface C of Section 5), sees each of them exactly once, at one
+level $t_\mu$, as $\vx^{\mu}=e^{-t_\mu}\va^{\mu}+\sqrt{\Delta_{t_\mu}}\vz^{\mu}$; the clean
+sequence, a second noised view, and the noise draw itself are never seen. The
+sequences are split evenly across the twelve levels of \cref{tab:ou:levels}, so each
+level receives $\nseq/12$ views (\code{\_one\_view\_groups} in
+\code{experiments/e03\_baselines.py}; \code{one\_view=True} in
+\code{experiments/protocol.py}). The likelihood of one view is then
+$P_{t_\mu,\params}(\vx^{\mu})$, the density of \cref{eq:ou:convolution} under the
+parameterised kernel, and the marginal log-likelihood of the paper's Section 4 is the
+sum over views. The schedule is log-spaced so that the eleven ratios $t_{k+1}/t_k$ are
+equal; on the SNR clock of \cref{eq:ou:snr} the levels run from an almost clean
+observation (level 1) to almost pure noise (level 12), and the crossover scale
+$\tstar$ of \cref{ch:attenuation-theorems} at the frozen correlation lies between the
+ninth and the tenth level. The networks of the paper draw the level of each training
+example uniformly from the same twelve values (\code{t\_levels} in
+\code{src/markov\_score/nn\_torch.py}), so that their population objective is an
+average over the schedule (\cref{ch:score-matching}).
+
+\section{Worked example}
+\label{sec:ou:example}
+
+\begin{example}[A two-point prior at $t=\log2$]
+\label{ex:ou:twopoint}
+Let $\nsites=1$ and let $a=\pm1$ with probability $\tfrac12$ each, so that
+$\Var(a)=1$. At $t=\log2$ we have $e^{-t}=\tfrac12$, $\Dt=1-\tfrac14=\tfrac34$ and
+$\mathrm{SNR}=\tfrac13$. By \cref{eq:ou:convolution},
+\[
+  \Pt(x)=\tfrac12\gamma_{3/4}\bigl(x-\tfrac12\bigr)+\tfrac12\gamma_{3/4}\bigl(x+\tfrac12\bigr).
+\]
+The posterior of $a$ given $x$ puts mass proportional to $\exp[-(x\mp\tfrac12)^2/(2\cdot\tfrac34)]$
+on $\pm1$; the ratio of the two weights is $\exp(2\cdot\tfrac12x/\tfrac34)=\exp(4x/3)$, so
+\[
+  \pmean{a}=\tanh\bigl(\tfrac23x\bigr),\qquad
+  \score(x,t)=-\frac{x-\tfrac12\tanh(\tfrac23x)}{3/4}=-\tfrac43\Bigl(x-\tfrac12\tanh\tfrac{2x}{3}\Bigr).
+\]
+At $x=1$: $e^{4/3}=3.7937$, so $\tanh(2/3)=(3.7937-1)/(3.7937+1)=0.5828$,
+$\pmean{a}=0.5828$ and $\score(1,t)=-\tfrac43(1-0.2914)=-0.9448$. The covariance twin
+of this prior is $\normal01$, whose noised law is again $\normal01$; its score at $x=1$
+is $\Sgauss=-1$ and its posterior mean is $e^{-t}x=0.5$. The true denoiser pulls
+harder towards $+1$ than the linear one, by $0.083$, and the score gap
+$\score-\Sgauss=+0.0552$ is, by \cref{eq:ou:score-mean-identity}, exactly
+$(e^{-t}/\Dt)(0.5828-0.5)=\tfrac23\cdot0.0828$. As a check of \cref{cor:ou:gaussian}
+on the twin: $-(x-\tfrac12\cdot\tfrac12x)/\tfrac34=-x$, as it must be.
+\end{example}
+
+\begin{example}[Reading the schedule]
+\label{ex:ou:schedule}
+At level 8 of \cref{tab:ou:levels}, $t=0.6769$, a site with clean value $a_i=2$ is
+observed as $x_i=0.5082\cdot2+0.8612\,z_i=1.016+0.861\,z_i$: the signal has half its
+amplitude and the noise has standard deviation $\sqrt{0.7417}=0.861$. At level 12 the
+same site is observed as $0.0996+0.9988\,z_i$; its amplitude is one twentieth and the
+SNR is $1/400$. The information a single view carries about the site's fourth
+cumulant is, by the paper's Theorem 3, proportional to $e^{-8t}$, which between these
+two levels falls by the factor $e^{-8(3-0.6769)}=e^{-18.58}\approx8.5\times10^{-9}$.
+\end{example}
+
+\where{The channel is equation (2) of the paper (Section 2, ``Data and channel'') and
+Tweedie's identity is the first sentence of ``The score is a posterior mean''; the
+Gaussian corollary is the covariance twin of the same section and of Proposition 1.
+The twelve-level schedule is the frozen configuration of Appendix C, and the one-view
+interface is interface C of Section 5. Code: the channel and its likelihood table are
+\code{src/\allowbreak markov\_score/\allowbreak noising.py}; the LMMSE mean and score and the mean-to-score
+conversion are in \code{src/\allowbreak markov\_score/\allowbreak theory.py}; the score-to-mean readout is in
+\code{src/\allowbreak markov\_score/\allowbreak reverse.py}; the schedule is \code{t\_grid} in
+\code{experiments/\allowbreak frozen\_config.py} and the one-view flag is in
+\code{experiments/\allowbreak protocol.py}. Experiments: every registered experiment E01--E21
+noises its data through the two lines of \cref{eq:ou:solution}.}
+
+\paragraph{References.}
+G.~E.~Uhlenbeck and L.~S.~Ornstein, 1930, ``On the theory of the Brownian motion'',
+Physical Review 36, 823--841.
+B.~\O ksendal, 2003, \emph{Stochastic Differential Equations: An Introduction with
+Applications}, sixth edition, Springer.
+H.~Robbins, 1956, ``An empirical Bayes approach to statistics'', Proceedings of the
+Third Berkeley Symposium on Mathematical Statistics and Probability, vol.~1, 157--163.
+B.~Efron, 2011, ``Tweedie's formula and selection bias'', Journal of the American
+Statistical Association 106, 1602--1614.
+Y.~Song, J.~Sohl-Dickstein, D.~P.~Kingma, A.~Kumar, S.~Ermon and B.~Poole, 2021,
+``Score-based generative modeling through stochastic differential equations'',
+International Conference on Learning Representations.
+J.~Ho, A.~Jain and P.~Abbeel, 2020, ``Denoising diffusion probabilistic models'',
+Advances in Neural Information Processing Systems 33.

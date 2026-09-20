@@ -1,0 +1,516 @@
+\chapter{EM for the transition law from noised sequences}
+\label{ch:em-through-noise}
+
+This chapter assembles the paper's estimator from the pieces of the previous four. The
+data are $\nseq$ noised sequences, each observed once at its own noise level; the
+unknown is the transition kernel $\kernelth$ of the clean chain; the objective is the
+marginal likelihood; the algorithm is expectation--maximisation with the exact E-step
+of \cref{ch:factor-graphs-bp} on the grid of \cref{ch:grid-quadrature}. Everything the
+M-step needs is one $\ngrid\times\ngrid$ matrix, the expected transition statistic
+$\Xis$, and Fisher's identity turns the same matrix into the exact gradient of the
+marginal likelihood. The chapter derives Fisher's identity in full, defines $\Xis$ and
+its properties, derives the Gaussian M-step (the belief-weighted Yule--Walker
+equations), describes the mixture-innovation kernel and its conditional-maximisation
+sweeps, explains the checkpoint ladder, the validation selection and the
+\code{at\_cap} flag, the clean-data limit, and how E06, E06c and E02a use all of it. It
+ends with the information-theoretic reason for the convergence asymmetry the paper
+reports.
+
+\section{The marginal likelihood of noised sequences}
+
+The paper's Section 4 drops the assumption that $\kernel$ is known and keeps
+everything else: $a_1\sim\normal01$, $a_i=\corr a_{i-1}+\varepsilon_i$ with a
+parameterised transition kernel $\kernelth(a'\mid a)$, and the channel
+$\vx=e^{-t}\va+\sqrt{\Dt}\vz$. The observations are $\nseq$ sequences $\vx^\mu$, the
+$\mu$-th at level $t_\mu$. Under the \term{one-view protocol} each clean sequence is
+noised once, at one level, and never seen clean; in the headline experiments the
+sequences are split evenly across the twelve levels of the schedule, and in the
+learning experiment E06 all of them sit at one level. The \term{marginal
+log-likelihood} is
+\begin{equation}
+  \Lik(\params)=\sum_{\mu=1}^{\nseq}\log\Pt[t_\mu,\params](\vx^\mu),\qquad
+  \Pt[t,\params](\vx)=\int\mu(a_1)\prod_{i=2}^{\nsites}\kernelth(a_i\mid a_{i-1})
+  \prod_{i=1}^{\nsites}\like(x_i\mid a_i)\dd\va,
+  \label{eq:en-marginal}
+\end{equation}
+where the unary factors $\like$ depend on $t_\mu$ but not on $\params$, and only the
+transition factors carry $\params$. Each term of \cref{eq:en-marginal} is the evidence
+of \cref{ch:factor-graphs-bp}, returned by the forward sweep on the grid. Two structural
+facts drive everything below: the parameter enters only through the $\nsites-1$
+transition factors of each sequence, and the noise level enters only through the unary
+factors, so sequences at different levels contribute additively and identically to
+every statistic (\code{e\_step\_multi} in \code{src/markov\_score/em.py} simply adds
+them).
+
+\section{Fisher's identity}
+
+\subsection{Derivation}
+
+Let $p_\params(x,z)$ be a joint density of data and latent variables, with
+$p_\params(x)=\int p_\params(x,z)\dd z$, and assume differentiation under the integral
+sign is permitted (the integrand and its $\params$-derivative are dominated by an
+integrable function, which holds for the kernels used here on the truncated grid, where
+the integral is a finite sum). Then
+\begin{equation}
+\begin{aligned}
+  \nabla_\params\log p_\params(x)&=\frac{\nabla_\params p_\params(x)}{p_\params(x)}
+  =\frac{1}{p_\params(x)}\int\nabla_\params p_\params(x,z)\dd z\\
+  &=\int\frac{p_\params(x,z)}{p_\params(x)}\,\nabla_\params\log p_\params(x,z)\dd z
+  =\E_{p_\params(z\mid x)}\bigl[\nabla_\params\log p_\params(x,z)\bigr],
+\end{aligned}
+  \label{eq:en-fisher-general}
+\end{equation}
+using $\nabla p=p\nabla\log p$ in the third step and $p_\params(x,z)/p_\params(x)=p_\params(z\mid x)$
+in the last. This is \term{Fisher's identity}: the gradient of the marginal
+log-likelihood equals the posterior expectation of the gradient of the complete-data
+log-likelihood. It was met in \cref{ch:maximum-likelihood-em} as the statement that
+EM's fixed points are stationary points; here it is a computational device.
+
+Apply it to one sequence of \cref{eq:en-marginal}. The complete-data log-likelihood is
+$\log\mu(a_1)+\sum_{i\ge2}\log\kernelth(a_i\mid a_{i-1})+\sum_i\log\like(x_i\mid a_i)$, and
+only the middle sum depends on $\params$, so
+\begin{equation}
+\begin{aligned}
+  \nabla_\params\log\Pt[t,\params](\vx)
+  &=\sum_{i=2}^{\nsites}\E\bigl[\nabla_\params\log\kernelth(a_i\mid a_{i-1})\,\big|\,\vx\bigr]\\
+  &=\sum_{i=2}^{\nsites}\int p_t(a_{i-1},a_i\mid\vx)\,\nabla_\params\log\kernelth(a_i\mid a_{i-1})\dd a_{i-1}\dd a_i.
+\end{aligned}
+  \label{eq:en-fisher-chain}
+\end{equation}
+Each term needs only the \emph{pairwise} posterior marginal on one edge, which the
+two sweeps return exactly (equation \emph{pair} of \cref{ch:factor-graphs-bp}). No
+derivative of the recursion is taken: the sweeps supply an expectation, and the
+gradient is an integral against it. This is the sense of the paper's ``no
+differentiation through the recursion is needed''.
+
+\subsection{On the grid: the expected transition statistic}
+
+Replace the integrals by the discretised model of \cref{ch:grid-quadrature}. The
+pairwise posterior on edge $(i-1,i)$ of sequence $\mu$ becomes a matrix of
+probabilities $P(a_i=\gridpt{k},a_{i-1}=\gridpt{l}\mid\vx^\mu)$ over grid pairs, and
+$\nabla_\params\log\kernelth$ becomes the array $\nabla_\params\log\kernelth(\gridpt{k}\mid\gridpt{l})$.
+Summing over edges and sequences,
+\begin{equation}
+\begin{aligned}
+  \nabla_\params\Lik(\params)&=\sum_{k,l}\Xis_{kl}(\params)\,\nabla_\params\log\kernelth(\gridpt{k}\mid\gridpt{l})
+  =\bigl\langle\Xis(\params),\nabla_\params\log\kernelth\bigr\rangle,\\
+  \Xis_{kl}&=\sum_\mu\sum_{i\ge2}P(a_i=\gridpt{k},a_{i-1}=\gridpt{l}\mid\vx^\mu),
+\end{aligned}
+  \label{eq:en-fisher-grid}
+\end{equation}
+which is the paper's equation \emph{fisher}. The matrix $\Xis$ is the
+\term{expected transition statistic}: entry $(k,l)$ is the expected posterior mass on
+the transition $\gridpt{l}\to\gridpt{k}$ (column the parent, row the child, the same
+orientation as the transition matrix), summed over every edge of every sequence. It is
+the continuous-state analogue of the expected transition counts of Baum--Welch. Its
+computation from the sweeps is a rank-one accumulation: with
+$f_i=w\circ\lmsg_i\circ\ell_i$ and $g_i=w\circ\rmsg_i\circ\ell_i$ (messages with the local
+factor and the quadrature weight folded in), the unnormalised pairwise belief on edge
+$(i,i+1)$ is $f_i(l)\,\kernel[k,l]\,g_{i+1}(k)$ with normaliser $Z_i=g_{i+1}^{\!\top}\kernel f_i$, so
+\begin{equation}
+  \Xis=C\circ\kernel,\qquad C=\sum_{\mu}\sum_{i}\frac{g^\mu_{i+1}\,(f^\mu_i)^{\!\top}}{Z^\mu_i},
+  \label{eq:en-xi-accum}
+\end{equation}
+with $\circ$ the elementwise product. The code (\code{\_e\_step\_chunk} in
+\code{src/markov\_score/em.py}) forms $C$ as one matrix product of the stacked
+$g$ and $f$ vectors over all edges of a chunk, then multiplies by $\kernel$.
+
+Three properties of $\Xis$ are used constantly.
+\begin{enumerate}
+\item \emph{Mass.} $\sum_{kl}\Xis_{kl}=\nseq(\nsites-1)$, the number of transitions,
+because each pairwise posterior sums to one. This is checked exactly in
+\code{tests/test\_em\_bp.py} and is what lets the clean-data histogram of
+\cref{sec:en-clean} be a drop-in replacement.
+\item \emph{Additivity.} Sequences at different levels contribute additively; one
+$\Xis$ summarises a dataset spread over the whole schedule.
+\item \emph{What it is not.} $\Xis$ is a complete summary for the current M-step (the
+maximisation never revisits the data), but it is not a sufficient statistic of the
+observations: it is computed at the current $\params$ and depends on it, on the grid,
+on the fixed initial law and on the homogeneity of the transition. The code's
+docstring insists on this distinction, and so should the reader.
+\end{enumerate}
+
+\subsection{The same matrix is the whole E-step}
+
+With $\Xis$ in hand, the Q-function of \cref{ch:maximum-likelihood-em} for the
+discretised model is
+\begin{equation}
+  \Qfun(\params\mid\params')=\bigl\langle\Xis(\params'),\log\kernelth\bigr\rangle+\text{(site-1 term)}+\text{const},
+  \label{eq:en-Q}
+\end{equation}
+a finite bilinear form; the site-1 term involves the initial law, which the paper
+holds fixed at $\normal01$, and the constant collects the likelihood terms and the
+posterior entropy, none of which depend on $\params$. Its gradient at $\params=\params'$
+is \cref{eq:en-fisher-grid}: the Q-function's gradient and the marginal likelihood's
+gradient coincide where the E-step was taken, which is Fisher's identity once more.
+The E-step is therefore ``one forward--backward pass'' plus the accumulation
+\cref{eq:en-xi-accum}, at cost $O(\nseq\nsites\ngrid^2)$ independent of the number of
+parameters, and the M-step touches only $\Xis$, at cost $O(P\ngrid^2)$ for $P$
+parameters.
+
+\subsection{Verification}
+
+The paper states that the identity is verified against finite differences to
+$10^{-9}$. Three tests do the work, and it matters which checks what.
+\code{test\_fisher\_identity\_matches\_finite\_differences} in
+\code{tests/test\_em\_bp.py} compares $\langle\Xis,\nabla\log\kernelth\rangle$ with a
+central difference of the grid evidence for the Gaussian kernel: a real check, but not
+an independent one, since the evidence and $\Xis$ come from the same recursion and the
+same discretised kernel, so a shared error (a transposed index, a misplaced factor)
+could satisfy both sides. \code{tests/test\_fisher\_bruteforce.py} removes that
+coupling by enumerating every latent path of a five-state, four-site chain from the
+model definition, with no recursion, and checking the evidence, $\Xis$ \emph{including
+its orientation} (the matrix must match and must not match its transpose, on a grid
+asymmetric enough that the two differ), and the gradient against a finite difference of
+the \emph{enumerated} evidence. The Laplace kernel is included there deliberately: its
+$\corr$-derivative carries $\operatorname{sign}(a'-\corr a)$, a discontinuity along the
+diagonal, and trapezoidal quadrature of a discontinuous integrand is first order
+(\cref{ch:grid-quadrature}); the test in \code{tests/test\_em\_bp.py} named for the
+Laplace scale gradient pins the fact that the smooth $b$-derivative matches a finite
+difference to high accuracy while the $\corr$-derivative is off by a grid-dependent
+percentage. That is a discretisation artefact of differentiating a non-smooth density
+on a mesh, not a failure of the identity; the Laplace M-step avoids it by never using
+the gradient (it is a weighted median). Finally,
+\code{tests/test\_gradient\_trace\_alignment.py} guards a different invariant of the
+gradient-ascent route: the returned parameter is the one at which the last recorded
+likelihood was evaluated, and the monotonicity record covers the final update.
+
+\section{The M-step for the Gaussian kernel}
+
+Take $\kernelth(a'\mid a)=\normal{\corr a}{\ivar}$, $\params=(\corr,\ivar)$. The edge part
+of \cref{eq:en-Q} is
+\begin{equation}
+  \Qfun(\corr,\ivar)=\sum_{k,l}\Xis_{kl}\Bigl[-\frac{(\gridpt{k}-\corr\gridpt{l})^2}{2\ivar}-\frac12\log(2\pi\ivar)\Bigr]
+  =-\frac{S_{11}-2\corr S_{01}+\corr^2S_{00}}{2\ivar}-\frac{W}{2}\log(2\pi\ivar),
+  \label{eq:en-Qgauss}
+\end{equation}
+where $W=\sum_{kl}\Xis_{kl}$ and the three belief-weighted moments are
+\[
+  S_{00}=\sum_{kl}\Xis_{kl}\,\gridpt{l}^2,\qquad
+  S_{01}=\sum_{kl}\Xis_{kl}\,\gridpt{k}\gridpt{l},\qquad
+  S_{11}=\sum_{kl}\Xis_{kl}\,\gridpt{k}^2,
+\]
+the second moment of the parent, the cross moment, and the second moment of the child.
+The subscripts index the two variables of a transition ($0$ for the parent
+$\gridpt{l}$, $1$ for the child $\gridpt{k}$) and say which pair is multiplied; they are
+not powers. The paper's Section 4 writes the same three quantities as
+$S_{ab}=\sum_{kl}\Xis_{kl}\gridpt{k}^a\gridpt{l}^b$, which read literally as powers would
+make $S_{00}=W$ and $S_{01}=\sum\Xis_{kl}\gridpt{l}$ and would not give the formulas that
+follow; the index reading above is the one the formulas and the code use.
+Setting the derivatives to zero,
+\begin{equation}
+\begin{aligned}
+  \frac{\partial\Qfun}{\partial\corr}&=\frac{S_{01}-\corr S_{00}}{\ivar}=0
+  &&\Rightarrow\quad \corr=\frac{S_{01}}{S_{00}},\\
+  \frac{\partial\Qfun}{\partial\ivar}&=\frac{S_{11}-2\corr S_{01}+\corr^2S_{00}}{2\ivar^2}-\frac{W}{2\ivar}=0
+  &&\Rightarrow\quad \ivar=\frac{S_{11}-2\corr S_{01}+\corr^2S_{00}}{W}=\frac{S_{11}-\corr S_{01}}{W},
+\end{aligned}
+  \label{eq:en-yw}
+\end{equation}
+the last equality because $\corr^2S_{00}=\corr S_{01}$ at the optimum. These are the
+\term{belief-weighted Yule--Walker equations}: the least-squares regression of the
+child on the parent through the origin, with the pairwise posterior mass as weights,
+and the residual variance as the innovation variance. The Hessian of
+\cref{eq:en-Qgauss} is negative definite at this point (it is a weighted least-squares
+problem in $\corr$ and a concave profile in $\ivar$), so this is the maximiser and the
+M-step is exact. In the clean-data limit, where $\Xis$ is a histogram of observed
+transitions, \cref{eq:en-yw} reduces to the ordinary AR(1) least-squares estimator,
+which the clean-statistics test of \code{tests/test\_em\_bp.py} confirms. The Gaussian
+kernel's \code{m\_step} in \code{src/markov\_score/kernels.py} does not clamp
+$|\corr|<1$: the update is the exact maximiser, a finite chain with $|\corr|\ge1$ is a
+valid joint law, and what fails there is only the stationary interpretation
+$\ivar=1-\corr^2$, which the code flags with a warning rather than silently biasing the
+step.
+
+\section{The mixture-innovation kernel}
+
+\subsection{Definition and moments}
+
+The paper's headline estimator keeps the linear autoregression and frees the
+innovation law:
+\begin{equation}
+  \kernelth(a'\mid a)=\sum_{c=1}^{\ncomp}\pi_c\,\normal{a'-\corr a-\nu_c}{s_c^2},\qquad
+  \params=(\corr,\pi_1,\dots,\pi_\ncomp,\nu_1,\dots,\nu_\ncomp,s_1^2,\dots,s_\ncomp^2),
+  \label{eq:en-mixture}
+\end{equation}
+a $\ncomp$-component Gaussian mixture as the density of the innovation
+$\varepsilon=a'-\corr a$. Heavy tails (Laplace, Student-$t$), bimodality and skew are all
+approximable; the estimator never sees a Laplace density and must reproduce one from
+noised data. The component means are unconstrained: recentering them after each
+update to enforce $\sum_c\pi_c\nu_c=0$ is not a maximiser of $\Qfun$ and was found to
+break monotone ascent, so the fitted innovation mean is reported as a diagnostic
+instead (on zero-mean data it lands near zero by itself). The fitted innovation's
+moments are read from the components in closed form,
+\begin{equation}
+\begin{aligned}
+  m_1&=\sum_c\pi_c\nu_c,\qquad
+  \ivar_{\mathrm{fit}}=\sum_c\pi_c\bigl(s_c^2+(\nu_c-m_1)^2\bigr),\\
+  m_4&=\sum_c\pi_c\bigl(3s_c^4+6s_c^2(\nu_c-m_1)^2+(\nu_c-m_1)^4\bigr),\qquad
+  \hat\kappa_4^{\mathrm{ex}}=\frac{m_4}{\ivar_{\mathrm{fit}}^2}-3,
+\end{aligned}
+  \label{eq:en-moments}
+\end{equation}
+using the Gaussian moments $\E(\nu+sZ-m_1)^4$ expanded in powers of $sZ$ (the odd
+terms vanish). The last quantity is the fitted excess kurtosis, the scalar
+``non-Gaussianity knob'' the paper compares with the truth ($+3$ for Laplace); the
+formula is \code{innovation\_moments} in \code{src/markov\_score/kernels.py} and is
+tested against draws from the same mixture.
+
+\subsection{The complete-data problem has a second latent variable}
+
+For the Gaussian kernel the M-step was a closed-form maximisation because
+$\log\kernelth$ was a quadratic in $\params$. For \cref{eq:en-mixture} it is the
+logarithm of a sum, and the maximiser of $\langle\Xis,\log\kernelth\rangle$ has no
+closed form. The remedy is the classical one: the mixture has its own latent variable,
+the component label, and given $\Xis$ the M-step is itself an EM problem over that
+label. Define the \term{responsibilities} on the grid,
+\begin{equation}
+  r_c(k,l)=\frac{\pi_c\,\normal{\gridpt{k}-\corr\gridpt{l}-\nu_c}{s_c^2}}
+  {\sum_{c'}\pi_{c'}\,\normal{\gridpt{k}-\corr\gridpt{l}-\nu_{c'}}{s_{c'}^2}},
+  \label{eq:en-resp}
+\end{equation}
+the posterior probability of component $c$ given the transition $\gridpt{l}\to\gridpt{k}$.
+A sweep of \term{conditional maximisations} (\cref{ch:maximum-likelihood-em}) then
+alternates two blocks, each a closed-form maximiser of the inner Q-function with the
+other block fixed, with $e_{kl}=\gridpt{k}-\corr\gridpt{l}$ the residual:
+\begin{align}
+  \text{mixture block:}\qquad
+  \pi_c&=\frac{\langle\Xis,r_c\rangle}{W},\quad
+  \nu_c=\frac{\langle\Xis,r_c\circ e\rangle}{\langle\Xis,r_c\rangle},\quad
+  s_c^2=\frac{\langle\Xis,r_c\circ(e-\nu_c)^2\rangle}{\langle\Xis,r_c\rangle};
+  \label{eq:en-mixblock}\\
+  \text{autoregression block:}\qquad
+  \corr&=\frac{\sum_{c,k,l}\Xis_{kl}\,r_c(k,l)\,\gridpt{l}\,(\gridpt{k}-\nu_c)/s_c^2}
+              {\sum_{c,k,l}\Xis_{kl}\,r_c(k,l)\,\gridpt{l}^2/s_c^2},
+  \label{eq:en-rhoblock}
+\end{align}
+the first being the usual Gaussian-mixture M-step with the weights $\Xis_{kl}r_c(k,l)$
+and the second a weighted least-squares fit of the child on the parent with
+component-specific offsets $\nu_c$ and precisions $1/s_c^2$ (differentiate
+$\sum\Xis\,r_c[-(\gridpt{k}-\corr\gridpt{l}-\nu_c)^2/2s_c^2]$ in $\corr$). The
+responsibilities are recomputed between the blocks. Each block increases the inner
+Q-function, which by Jensen's inequality (the standard mixture-EM argument applied
+with $\Xis$ as the ``data weights'') increases $\langle\Xis,\log\kernelth\rangle$; so the
+sweep ascends $\Qfun$, and by the monotonicity theorem of
+\cref{ch:maximum-likelihood-em} the outer EM's marginal likelihood cannot decrease.
+This is the sense of the paper's ``a generalised EM whose ascent is monotone'' and of
+its citation of Meng and Rubin.
+
+The implementation, the mixture kernel's \code{m\_step} in
+\code{src/markov\_score/kernels.py}, sweeps until the per-transition gain in
+$\langle\Xis,\log\kernelth\rangle/W$ falls below $10^{-8}$ or sixteen sweeps are spent,
+and records which happened on the returned kernel; a negative gain beyond round-off
+raises an error, since a conditional maximiser cannot decrease its objective. The
+docstring records why sixteen: with four sweeps the innovation \emph{shape} was
+materially under-converged on short outer runs while $\corr$ barely moved, the same
+asymmetry as the outer loop's (\cref{sec:en-asymmetry}), and sixteen removes the
+interaction at a quarter of the cost of sixty-four. Because $\Xis$ is fixed during the
+sweeps, each costs $O(\ncomp\ngrid^2)$ on a matrix that never grows with the dataset,
+which is why the M-step's cost per iteration is independent of $\nseq$ and why, at the
+operating grid, it is the M-step rather than the E-step that dominates a fit below a
+few thousand sequences.
+
+\subsection{Resolution}
+
+A mixture component can be narrower than a grid cell: the variance floor in the code
+is $10^{-6}$, a standard deviation of $10^{-3}$, against a spacing of $0.04$. A spike
+narrower than the mesh can raise the quadrature likelihood without describing any
+feature of the innovation law. The diagnostic \code{scale\_diagnostics} reports the
+narrowest fitted standard deviation in units of $\gridh$ and a flag
+\code{resolved} equal to $s_{\min}\ge2\gridh$; every reported cell carries it, the paper's
+Appendix C says such cells are flagged rather than dropped, and its capacity table
+marks them.
+
+\section{The checkpoint ladder and validation selection}
+
+\subsection{The ladder}
+
+The protocol (\code{experiments/protocol.py}) fixes an iteration ladder
+\[
+  \{10,\,20,\,40,\,60,\,80,\,120,\,160,\,220,\,300,\,400,\,600,\,800,\,1200\}.
+\]
+\code{fit\_em} runs EM to the top rung and snapshots the kernel at each rung. The snapshot semantics are precise: at
+iteration $k$ the kernel about to be scored is saved \emph{before} its E-step, so the
+saved kernel at rung $k$ is the one whose likelihood is the $k$-th trace entry; the
+final iterate is always available under its own index, so a caller asking for a rung
+past an early convergence break still receives the best kernel rather than an error.
+The likelihood tolerance ($10^{-9}$ nats per transition, signed) can end a run before
+the top; at the paper's sizes it rarely does, and the run's \code{stop\_reason} records
+which happened.
+
+\subsection{Selection and the \code{at\_cap} flag}
+
+Which rung is reported is chosen on a \term{validation bundle}: sequences drawn from a
+random stream disjoint from the training stream, noised, and scored by the relative
+score error on the bulk sites (the four sites at each end trimmed) against the
+reference posterior means computed with the \emph{true} kernel. The rung with the
+smallest validation error is selected and then scored, once, on a separate test
+bundle. The selected rung is compared with the top of the ladder, and the boolean
+\code{at\_cap} records whether they coincide (\code{best == max(saved)} in
+\code{experiments/e02\_capacity.py} and \code{experiments/e06\_learning\_through\_noise.py}).
+A cell with \code{at\_cap} true is one whose validation curve was still falling at the
+last rung, so its error is an upper bound on what a longer ladder would give; the
+paper reports the fraction of such cells (as the macro that its Section 4 calls the
+at-cap rate) and refuses to read a difference between two arms as final when either
+is at cap. E20 shows that the oracle in this rule is dispensable: selecting the rung
+by the held-out one-view log-evidence per transition, which needs neither the clean
+chain nor the true kernel, picks the same rung in most seeds and the same test error
+within noise.
+
+\section{The clean-data limit}
+\label{sec:en-clean}
+
+As $t\to0$ the unary factors sharpen to delta functions at the observations, the
+posterior collapses onto the clean chain, the pairwise beliefs become products of
+deltas, and $\Xis$ degenerates to a histogram of the observed transitions. The code
+makes this limit an explicit input: \code{clean\_statistics} in
+\code{src/markov\_score/em.py} places each observed pair $(a_{i-1},a_i)$ on the grid by
+bilinear interpolation (a value $a$ between $\gridpt{k}$ and $\gridpt{k+1}$ is split into
+weights $1-\theta$ and $\theta$ with $\theta=(a-\gridpt{k})/\gridh$, which preserves the
+first moment exactly), and accumulates unit mass per transition. No quadrature weights
+enter: the clean $\Xis$ is a counting measure, whereas the BP $\Xis$ is belief mass that
+has already absorbed the weights; both sum to the number of transitions, which is the
+only property the M-steps rely on. \code{fit\_clean} then applies the same M-step
+code, so the clean-data maximum-likelihood fit and the noisy-data EM differ only in
+how $\Xis$ is built. The test \code{test\_small\_noise\_em\_approaches\_clean\_mle} pins
+the continuity between the two. E06 includes a clean arm as the ``optimiser's own
+floor''; for one code path it is implemented as the channel at a tiny level, which
+the paper's Figure 3 shows as the dotted reference.
+
+\section{How the experiments use this}
+
+\paragraph{E02a (capacity).} Laplace chain at the frozen configuration; for each seed
+and size $\nseq$ the same hashed bundles; mixture kernels with
+$\ncomp\in\{1,2,4,8,16\}$ from the same initialisation stream ($\corr$ initialised at
+$0.3$, components spread over the innovation range), one view per sequence split over
+the twelve levels, the ladder above, the rung selected on validation identically for
+every capacity, then the test error in every region, the fitted $\corr$, innovation
+variance and excess kurtosis, the resolution flag and \code{at\_cap}. The $\ncomp=1$ arm
+must land on the LMMSE floor by the corollaries of \cref{ch:gaussian-closure-lmmse};
+the paper's capacity table (Section 5) reports that it does, and that the mixture goes
+far below it. The
+earlier reading that ``capacity does not help'' came from a sweep in which only the
+single-Gaussian arm stopped at its optimum (the tolerance fired for it) while the richer
+arms ran to a fixed cap past theirs: the stopping rule, not the model, produced the
+verdict (the paper's Appendix F).
+
+\paragraph{E06 (learning through noise).} The same estimator with $\ncomp=8$ and
+$\nseq=512$, but with every training sequence noised at \emph{one} level $t$, over a
+ladder of levels and sixteen replicates, the validation bundle at the same level, the
+test bundle on the twelve-level schedule. Recorded per cell: the selected rung,
+\code{at\_cap}, the stop reason, $\hat\corr$, the fitted innovation variance and excess
+kurtosis, the Hellinger distance of the fitted kernel to the truth, the resolution
+flag and the schedule-pooled test error. The paper's Figure 3 and Section 4 read these
+against the Cram\'er--Rao reference $1/\sqrt{\nseq I_t}$ level by level: unimodal and at
+the reference at low levels; a split into a shrunk cluster and Gaussian-collapsed fits
+at an intermediate level; collapse where the reference crosses the coordinate's range;
+$\hat\corr$ recovered until past the crossover. At the two highest levels the selected
+rung is the top of the ladder in most cells, which is the budget question.
+
+\paragraph{E06c.} The control that answers it: the same cells with the ladder
+extended sixfold. Its result is what decides whether the excess of $\hat\corr$'s error
+over the reference at those levels is information or optimisation; the paper leaves
+the question open pending it, and \cref{sec:en-asymmetry} says why the budget binds
+exactly there.
+
+\section{The convergence asymmetry}
+\label{sec:en-asymmetry}
+
+The paper reports, as a fact about this model, that the correlation coordinate
+settles in tens of EM updates and the innovation shape in hundreds. Two mechanisms
+produce it, and both can be read off the information at each Hermite degree.
+
+\emph{The outer loop.} By the rate formula of \cref{ch:maximum-likelihood-em}, EM
+contracts the error along a coordinate by the factor
+$1-I_{\mathrm{obs}}/I_{\mathrm{com}}$ per iteration, where $I_{\mathrm{obs}}$ is the
+information the noised data carry about the coordinate and $I_{\mathrm{com}}$ the
+information the clean chains would carry. The complete information is of the same
+order for both coordinates: clean transitions determine $\corr$ and the innovation
+shape at the same rate in $\nseq$. The observed information differs by the Hermite
+degree at which each coordinate first appears: by the paper's decay theorem, per sequence
+it is $\tfrac12\Frob{\partial_\corr\Sig_0}^2e^{-4t}$ for the correlation (degree two) and
+$\tfrac1{24}\Frob{\partial_\theta\kfour}^2e^{-8t}$ for a shape coordinate (degree four), up
+to corrections. So the missing fraction is closer to one for the shape at every level,
+by roughly a factor $e^{-4t}$ in the retained fraction ($0.37$ at $t=0.25$, $0.14$ at
+$t=0.5$, $0.018$ at $t=1$), and the number of iterations the shape needs grows
+correspondingly. In the clean limit both informations are complete and the asymmetry
+disappears, which the clean arm of E06 shows.
+
+\emph{The inner loop.} For the mixture kernel there is a second latent variable, the
+component label, and the shape parameters are learned through it: the M-step's inner
+sweeps are themselves an EM whose rate is governed by how well the responsibilities
+\cref{eq:en-resp} separate the components. A nearly Gaussian innovation gives nearly
+equal responsibilities, a missing fraction near one, and slow inner convergence,
+which the code's sixteen-sweep budget was introduced to absorb; $\corr$ is not learned
+through the label at all (its block is a single least-squares solve) and does not
+suffer this. The two mechanisms compound, and both act on the same coordinate.
+
+The consequence for the one-view protocol is the paper's arithmetic: of the twelve
+levels, spread over $[0.05,3]$, only the lowest few carry appreciable information about
+the shape, since $e^{-8t}$ has fallen by a factor of several hundred by $t=0.7$, so
+for the shape the twelve-level schedule is effectively a four-level one, and the
+estimator's shape is learned from a quarter of the data at a rate set by the smallest
+of its information ratios. That is why the ladder is long, why the shape is what the
+inner budget affects, and why the validation-selected rung sits at the cap precisely
+at the levels where the information is smallest.
+
+\section{A worked example: the Gaussian M-step from a small $\Xis$}
+
+Return to the three-site, three-state chain of \cref{ch:factor-graphs-bp}, grid
+$\{-1,0,1\}$. Its two pairwise posteriors summed over the two edges give, for that one
+sequence,
+\[
+  \Xis=\begin{pmatrix}0.0802&0.1585&0.0665\\0.0661&0.7356&0.2385\\0.0251&0.2638&0.3656\end{pmatrix},
+  \qquad W=\sum_{kl}\Xis_{kl}=2,
+\]
+rows indexed by the child $\gridpt{k}$, columns by the parent $\gridpt{l}$ (the first edge
+matrix was written out in that chapter; the second is obtained the same way). The
+belief-weighted moments are
+\begin{align*}
+  S_{00}&=\sum_{kl}\Xis_{kl}\gridpt{l}^2=(0.0802+0.0661+0.0251)+(0.0665+0.2385+0.3656)=0.8421,\\
+  S_{11}&=\sum_{kl}\Xis_{kl}\gridpt{k}^2=(0.0802+0.1585+0.0665)+(0.0251+0.2638+0.3656)=0.9598,\\
+  S_{01}&=\sum_{kl}\Xis_{kl}\gridpt{k}\gridpt{l}=0.0802-0.0665-0.0251+0.3656=0.3542,
+\end{align*}
+where $S_{01}$ collects the four corner entries with the sign of $\gridpt{k}\gridpt{l}$. Then
+\cref{eq:en-yw} gives $\corr=0.3542/0.8421=0.4206$ and
+$\ivar=(0.9598-0.4206\cdot0.3542)/2=0.4054$. Evaluating $\Qfun(\corr,\ivar)$ of
+\cref{eq:en-Qgauss} at this point gives $-1.9350$, and at the perturbed points
+$(0.4706,\,0.4054)$, $(0.4206,\,0.4459)$ and $(0.3706,\,0.3649)$ it gives $-1.9376$,
+$-1.9394$ and $-1.9436$: the closed form is the maximiser, as the test of the Gaussian
+M-step in \code{tests/test\_em\_bp.py} checks by random perturbation. A two-component
+mixture started at $\pi=(\tfrac12,\tfrac12)$, $\nu=(-0.3,0.3)$, $s^2=(0.5,0.5)$,
+$\corr=0.2$ has $\langle\Xis,\log\kernelth\rangle/W=-1.0155$; one mixture block
+\cref{eq:en-mixblock} moves it to $-0.9700$ and the following autoregression block
+\cref{eq:en-rhoblock} to $-0.9592$, with $\corr=0.328$ after one sweep: each block
+increases the objective, as the conditional-maximisation argument requires. (The
+example has a single sequence and a three-point grid, so the numbers illustrate the
+algebra, not the statistics.)
+
+\where{The paper, Section 4 (the marginal likelihood, Fisher's identity and equation
+\emph{fisher}, the Yule--Walker M-step, the mixture kernel and its
+conditional-maximisation sweeps, the one-view protocol and validation selection, the
+convergence asymmetry and the twelve-level arithmetic), Appendix C (the ladder and its
+selection rule, the resolution flag), Appendix E (E19's moment estimators as the
+competitor, E20's oracle-free selection), Appendix F (the stopping-rule artefact of the
+earlier capacity reading). Code: the E-step, its multi-level sum, the clean-data
+statistics, the two fitting loops and the Q-function helpers are all in
+\code{src/\allowbreak markov\_score/\allowbreak em.py}; the three kernels, with the mixture's
+\code{innovation\_moments} and \code{scale\_diagnostics}, are in
+\code{src/\allowbreak markov\_score/\allowbreak kernels.py}; the ladder \code{em\_checkpoints} is in
+\code{experiments/\allowbreak protocol.py}; the drivers are \code{experiments/\allowbreak e02\_capacity.py},
+\code{experiments/\allowbreak e06\_learning\_through\_noise.py} and
+\code{experiments/\allowbreak e20\_evidence\_selection.py}. Tests: \code{tests/\allowbreak test\_em\_bp.py},
+\code{tests/\allowbreak test\_fisher\_bruteforce.py} and
+\code{tests/\allowbreak test\_gradient\_trace\_alignment.py}.}
+
+\paragraph{References.}
+A.~P.~Dempster, N.~M.~Laird and D.~B.~Rubin (1977), ``Maximum likelihood from incomplete
+data via the EM algorithm'', \emph{Journal of the Royal Statistical Society B} 39(1).
+X.-L.~Meng and D.~B.~Rubin (1993), ``Maximum likelihood estimation via the ECM algorithm:
+a general framework'', \emph{Biometrika} 80(2).
+O.~Capp\'e, E.~Moulines and T.~Ryd\'en (2005), \emph{Inference in Hidden Markov Models},
+Springer, Chapters 10 and 11 (Fisher's identity, EM for HMMs).
+R.~H.~Shumway and D.~S.~Stoffer (1982), ``An approach to time series smoothing and
+forecasting using the EM algorithm'', \emph{Journal of Time Series Analysis} 3(4).
+R.~Douc, E.~Moulines, J.~Olsson and R.~van Handel (2011), ``Consistency of the maximum
+likelihood estimator for general hidden Markov models'', \emph{Annals of Statistics} 39(1).

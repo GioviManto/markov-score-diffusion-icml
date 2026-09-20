@@ -1,0 +1,570 @@
+\chapter{Glossary}
+\label{ch:glossary}
+
+Every technical term used in the paper and in this compendium, in alphabetical order,
+with one to three sentences and the chapter in which it is defined. Symbols follow the
+paper's notation (\Cref{ch:conventions}).
+
+\begingroup\sloppy
+\begin{description}[leftmargin=1.6em,itemsep=0.25em,font=\normalfont\bfseries]
+
+\item[Adam] A first-order stochastic optimiser that scales each parameter's update by
+running estimates of the gradient's mean and magnitude; the optimiser of every network
+arm. \Cref{ch:neural-baselines}.
+
+\item[Affine layer] A map $\vect{h}\mapsto\mat{W}\vect{h}+\vect{b}$; the basic block of every
+network, with $mn+m$ parameters for an $m\times n$ weight. \Cref{ch:neural-baselines}.
+
+\item[Amendment, pre-data] A dated entry in a registry file recording a change to a
+registered design or analysis made before any confirmatory cell has produced a number;
+the instrument by which a registration is corrected without losing its guarantee.
+\Cref{ch:protocol}.
+
+\item[Amplitude (of a feature)] The size of a Hermite moment of degree $m$, attenuated by
+the channel as $e^{-mt}$; the first of the three clocks. \Cref{ch:attenuation-theorems}.
+
+\item[AR(1) chain] A first-order autoregression $a_i=\corr a_{i-1}+\varepsilon_i$ with
+i.i.d.\ innovations; the paper's data model, with $a_1\sim\normal01$ and
+$\ivar=1-\corr^2$. \Cref{ch:markov-chains}.
+
+\item[AR(2)] A second-order autoregression $a_i=\corr_1a_{i-1}+\corr_2a_{i-2}+\varepsilon_i$;
+one of the four misspecification mechanisms, parameterised by $\corr_2$ at fixed lag-one
+correlation. \Cref{ch:misspecification-edgeworth}.
+
+\item[Assumption (exponential moment)] $\E e^{\lambda|\va|}<\infty$ for some $\lambda>0$,
+the hypothesis of the paper's Theorem~3; every family used except Student-$t$ satisfies
+it. \Cref{ch:attenuation-theorems}.
+
+\item[Asymptotic relative efficiency] The limiting ratio of the Cram\'er--Rao variance to
+an estimator's variance; one for an efficient estimator, below one otherwise.
+\Cref{ch:quasi-likelihood-moments}.
+
+\item[At cap] A cell whose validation-selected checkpoint is the last rung of its ladder,
+so the reported error is an upper bound on what a longer ladder would give.
+\Cref{ch:model-selection}.
+
+\item[Attention (self-attention)] The transformer's operation in which every site forms a
+softmax-weighted average of every other site's representation with weights it computes
+from the data. \Cref{ch:neural-baselines}.
+
+\item[Attenuation, Hermite] The exact identity $\E_{\Pt}[H_\nu(\vx_t)]=e^{-|\nu|t}\E_{\Pz}[H_\nu(\va)]$,
+the paper's Theorem~2. \Cref{ch:attenuation-theorems}.
+
+\item[Audit script] \code{tools/audit\_claims.py}, an independent recomputation of every
+headline number from the frozen CSVs with plain code, compared with the macros.
+\Cref{ch:protocol}.
+
+\item[Backward message] $\rmsg_i$, the function of $a_i$ carrying the evidence from sites
+$i+1,\dots,\nsites$; the right-to-left sweep of sum-product. \Cref{ch:factor-graphs-bp}.
+
+\item[Belief (site marginal)] The posterior density of one site,
+$\propto\lmsg_i\like\rmsg_i$; its mean is $\pmeansite{i}$. \Cref{ch:factor-graphs-bp}.
+
+\item[Belief propagation] Sum-product message passing on a factor graph; exact on a tree,
+hence exact for the paper's posterior. \Cref{ch:factor-graphs-bp}.
+
+\item[Bias (of an estimator)] $\E\hat\theta-\theta$; in misspecification, the error that
+remains as $\nseq\to\infty$. \Cref{ch:fisher-cramer-rao,ch:misspecification-edgeworth}.
+
+\item[Bi-GRU] A bidirectional gated recurrent network; one of the six baselines.
+\Cref{ch:neural-baselines}.
+
+\item[Bimodal innovation] The symmetric two-component Gaussian mixture innovation (separation
+parameter $0.6$), excess kurtosis $-0.72$. \Cref{ch:markov-chains}.
+
+\item[Bootstrap, percentile] Resampling seeds with replacement and reporting the $2.5$th
+and $97.5$th percentiles of the resampled statistic; the paper's interval for paired
+ratios. \Cref{ch:experimental-statistics}.
+
+\item[Break-even] The misspecification strength at which the paired log-ratio of the
+network's error to EM--BP's changes sign; reported as the bracketing grid points.
+\Cref{ch:misspecification-edgeworth}.
+
+\item[Bulk region] Sites $5$ to $\nsites-4$; the region used for checkpoint selection.
+\Cref{ch:model-selection}.
+
+\item[Bundle] A fixed set of chains with their noised views at every level and the
+reference posterior means under the true kernel; training, validation and test bundles
+are drawn from disjoint keyed streams. \Cref{ch:model-selection}.
+
+\item[Capacity (mixture)] The number of components $\ncomp$ of the mixture-innovation
+kernel. \Cref{ch:em-through-noise}.
+
+\item[Cell] One unit of work of a driver (one seed at one size, say), written to its own
+file so that a run is resumable. \Cref{ch:protocol}.
+
+\item[Checkpoint ladder] The fixed list of budgets (EM iterations or gradient steps) at
+which a fit is saved; the selected checkpoint is chosen afterwards among its rungs.
+\Cref{ch:model-selection}.
+
+\item[Clean chain] The unnoised sequence $\va\sim\Pz$. \Cref{ch:conventions}.
+
+\item[Closure gap] $\E_{\Pt}\lVert\score-\Sgauss\rVert^2$, the squared distance between
+the true score and the covariance twin's; $\tfrac16\Frob{\kfour}^2e^{-8t}$ to leading order.
+\Cref{ch:attenuation-theorems}.
+
+\item[Coloured probes] The $2r+1$ deterministic probe vectors that give the exact trace of
+a Jacobian of bandwidth $r$; the divergence estimator of the window head.
+\Cref{ch:neural-baselines}.
+
+\item[Common random numbers] Keying every random stream by a tag so that compared arms see
+the same draws and their difference is not Monte Carlo noise. \Cref{ch:protocol}.
+
+\item[Conditional expectation] $\E[Y\mid X]$, the best mean-square predictor of $Y$ from
+$X$; the posterior mean is the case $Y=\va$, $X=\vx_t$. \Cref{ch:conventions}.
+
+\item[Confirmatory seeds] Seeds $0$--$15$ (eight in the sweeps), used only for reported
+numbers, never for selection. \Cref{ch:model-selection}.
+
+\item[Consistency] Convergence of an estimator to the true (or pseudo-true) parameter as
+$\nseq\to\infty$. \Cref{ch:fisher-cramer-rao,ch:quasi-likelihood-moments}.
+
+\item[Convolution, one-dimensional] A weight-shared linear map of a signal whose output
+at $i$ depends on inputs within a fixed radius; zero-padded at the ends.
+\Cref{ch:neural-baselines}.
+
+\item[Correlation coordinate] A parameter that moves the covariance $\Sig_0$, such as
+$\corr$; a degree-two coordinate. \Cref{ch:attenuation-theorems}.
+
+\item[Covariance twin] The Gaussian chain with the same $\corr$ and $\ivar$; its score is
+$\Sgauss=-\Sig_t^{-1}\vx$. \Cref{ch:gaussian-closure-lmmse}.
+
+\item[Cram\'er--Rao bound] $\Var\hat\theta\ge1/(\nseq I(\theta))$ for an unbiased estimator;
+the reference curve of the learning figure. \Cref{ch:fisher-cramer-rao}.
+
+\item[Crossover time] $\tstar=\tfrac12\log\lmax(\Sig_0)$, where $e^{2t}$ passes the
+largest eigenvalue of the clean covariance; the scale beyond which the asymptotic rates
+apply. \Cref{ch:attenuation-theorems}.
+
+\item[Cumulant] The coefficients of the log of the moment generating function; additive
+over independent summands and homogeneous of degree $n$. \Cref{ch:moments-cumulants}.
+
+\item[Cumulant generating function] $\log\E e^{s\cdot\va}$, whose Taylor coefficients are
+the joint cumulants. \Cref{ch:moments-cumulants}.
+
+\item[Damped cumulant generating function] $\Lambda(s,b)=\log\E_{\Pz}\exp(s\cdot\va-b|\va|^2/2)$,
+the function whose grading gives the paper's Theorem~3. \Cref{ch:attenuation-theorems}.
+
+\item[Delta method] The first-order propagation of an estimator's variance through a
+smooth function. \Cref{ch:experimental-statistics}.
+
+\item[Denoiser] A map from a noised sequence and a level to an estimate of the posterior
+mean; every network arm is one. \Cref{ch:neural-baselines}.
+
+\item[Denoising score matching] Regressing the network on the clean chain (or the noise)
+with fresh corruptions; its minimiser is the posterior mean, hence the score.
+\Cref{ch:score-matching,ch:neural-baselines}.
+
+\item[Development seeds] Seeds $10000$--$10003$, used only for architecture and
+hyperparameter choices. \Cref{ch:model-selection}.
+
+\item[Dilation] The spacing $d$ between the taps of a convolution; a dilated stack widens
+its receptive radius by $d$ per layer. \Cref{ch:neural-baselines}.
+
+\item[Divergence] $\nabla\cdot s=\sum_i\partial s_i/\partial x_i$, the trace of the score
+map's Jacobian; the term implicit score matching must estimate. \Cref{ch:neural-baselines}.
+
+\item[Drift (grid)] The relative change of the posterior-mean field between two grids on
+the same chains; the quadrature convergence diagnostic. \Cref{ch:grid-quadrature}.
+
+\item[Edgeworth correction] The expansion of a law around its covariance-matched Gaussian,
+whose first term is $\tfrac1{24}\kfour$ contracted with the multivariate Hermite
+polynomials. \Cref{ch:misspecification-edgeworth}.
+
+\item[Efficient information] The Fisher information of a coordinate after the nuisance
+coordinates are projected out. \Cref{ch:fisher-cramer-rao}.
+
+\item[EM (expectation--maximisation)] Alternating an E-step (posterior expectations under
+the current parameters) and an M-step (maximisation of the expected complete-data
+log-likelihood). \Cref{ch:maximum-likelihood-em}.
+
+\item[EM--BP] The paper's structured estimator: EM whose E-step is the tree-exact
+recursion on the grid and whose kernel is the mixture-innovation AR(1) kernel.
+\Cref{ch:em-through-noise}.
+
+\item[Eps parameterisation] The network predicts the standardised noise $\vz$; the mean
+is $(\vx-\sqrt{\Dt}\hat\varepsilon)/e^{-t}$. \Cref{ch:neural-baselines}.
+
+\item[Estimand] The quantity a number estimates; the paper's is the schedule-pooled
+relative score error. \Cref{ch:experimental-statistics}.
+
+\item[Evidence (marginal likelihood)] $\Pt(\vx)$, the probability of the noised view under
+the model, returned by the forward sweep with its constants accumulated.
+\Cref{ch:grid-quadrature}.
+
+\item[Evidence rule] Selecting EM's rung by the held-out one-view log-evidence per edge;
+the oracle-free rule of E20 and E14. \Cref{ch:model-selection}.
+
+\item[Exceedance count] The expected number of sites of a bundle beyond the grid domain,
+$\nseq\nsites P(|a|>\halfwidth)$; the right diagnostic for polynomial tails.
+\Cref{ch:grid-quadrature}.
+
+\item[Excess kurtosis] $\kfour/\ivar^2$, the fourth cumulant divided by the squared variance;
+$+3$ for Laplace, $0$ for Gaussian. \Cref{ch:moments-cumulants}.
+
+\item[Factor graph] A bipartite graph of variables and factors representing a product
+density; the posterior's is the prior's chain. \Cref{ch:factor-graphs-bp}.
+
+\item[Fair screen] A screen in which every candidate is trained under the same recipe,
+budget, bundles, ladder and selection rule on development seeds disjoint from the
+confirmatory ones. \Cref{ch:model-selection}.
+
+\item[Fisher divergence] $\tfrac12\E_p\lVert s_\theta-s_p\rVert^2$, what score matching
+minimises. \Cref{ch:score-matching,ch:model-selection}.
+
+\item[Fisher information] $I(\theta)=\E[(\partial_\theta\log P)^2]$; per noised sequence,
+$I_t(\theta)$. \Cref{ch:fisher-cramer-rao}.
+
+\item[Fisher's identity] The gradient of the marginal log-likelihood equals the posterior
+expectation of the complete-data score; on the grid it is read off the pairwise
+marginals. \Cref{ch:maximum-likelihood-em}.
+
+\item[Forward message] $\lmsg_i$, the function of $a_i$ carrying the evidence from sites
+$1,\dots,i-1$. \Cref{ch:factor-graphs-bp}.
+
+\item[Forward process] The Ornstein--Uhlenbeck noising $\vx_t=e^{-t}\va+\sqrt{\Dt}\vz$.
+\Cref{ch:ou-channel-tweedie}.
+
+\item[Fourier features] The vector $(\log t,\sin2^k\log t,\cos2^k\log t)_{k\le3}$ by which the
+level enters every network. \Cref{ch:neural-baselines}.
+
+\item[Frobenius norm] $\Frob{\mat{A}}^2=\sum A_{ij}^2$, extended to tensors over ordered
+index tuples. \Cref{ch:conventions}.
+
+\item[Frozen configuration] \code{FROZEN}, the world every experiment runs in: chain,
+channel, grid, schedule, seeds. \Cref{ch:protocol}.
+
+\item[Frozen output] An output directory whose files are hashed into its registry entry;
+immutable thereafter. \Cref{ch:protocol}.
+
+\item[Gaussian closure] Moment-projected sum-product, which replaces every message by the
+Gaussian with its mean and variance; equals the LMMSE of the covariance twin.
+\Cref{ch:gaussian-closure-lmmse}.
+
+\item[Gaussian quasi-likelihood] The Gaussian log-likelihood written for data that are
+not Gaussian; depends on the data only through the sample covariance.
+\Cref{ch:quasi-likelihood-moments}.
+
+\item[GELU] The activation $x\Phi(x)$, a smooth rectifier. \Cref{ch:neural-baselines}.
+
+\item[Generalised EM] An EM whose M-step only increases the expected complete-data
+log-likelihood (conditional maximisation); its ascent is monotone.
+\Cref{ch:maximum-likelihood-em}.
+
+\item[Generalised Gaussian family] Innovations $\propto\exp(-|\varepsilon/s_\beta|^\beta)$
+at fixed variance, from Laplace ($\beta=1$) through Gaussian ($\beta=2$) to platykurtic
+members. \Cref{ch:markov-chains}.
+
+\item[Generator] A script under \code{tools/} that reads frozen outputs and writes the
+macros, tables and figures of the paper. \Cref{ch:protocol}.
+
+\item[Gradient clipping] Rescaling the gradient to a maximum norm before an optimiser
+step; at $1$ in the recipe. \Cref{ch:neural-baselines}.
+
+\item[Grid (quadrature)] The $\ngrid$ uniform points on $[-\halfwidth,\halfwidth]$ on which
+messages are carried with trapezoidal weights. \Cref{ch:grid-quadrature}.
+
+\item[GRU] Gated recurrent unit; a recurrence with reset and update gates.
+\Cref{ch:neural-baselines}.
+
+\item[H\'ajek--Le Cam] The local asymptotic minimax theorem: no estimator beats
+$1/I^{\mathrm{eff}}$ locally, and maximum likelihood attains it.
+\Cref{ch:fisher-cramer-rao}.
+
+\item[Heavy tails] Innovation laws with polynomial tails (Student-$t$), outside the
+exponential-moment assumption, with an $e^{-\nu t}$ term in the expected gap.
+\Cref{ch:attenuation-theorems}.
+
+\item[Held-out] Data not used to fit; the validation bundle for selection, the test
+bundle for scoring. \Cref{ch:model-selection}.
+
+\item[Hermite moment] $\E[H_\nu(\vx)]$ with $H_\nu$ a product of Hermite polynomials over
+sites; the quantity the channel attenuates diagonally. \Cref{ch:gaussian-hermite}.
+
+\item[Hermite polynomial] The probabilists' $\Hen{n}$, orthogonal under the standard
+Gaussian with $\E\Hen{n}^2=n!$. \Cref{ch:gaussian-hermite}.
+
+\item[Hutchinson's estimator] $\vect{v}^\top\mat{J}\vect{v}$ with a standard normal probe,
+an unbiased but noisy estimate of $\tr\mat{J}$. \Cref{ch:neural-baselines}.
+
+\item[Hyv\"arinen identity] $\E_p[\tfrac12\lVert s\rVert^2+\nabla\cdot s]=\tfrac12\E_p\lVert s-s_p\rVert^2+\text{const}$,
+by integration by parts. \Cref{ch:score-matching,ch:model-selection}.
+
+\item[Identifiability] Distinct parameters give distinct laws; $(\corr,\ivar)$ is
+identifiable from $\Sig_0$, hence from the noised covariance.
+\Cref{ch:quasi-likelihood-moments}.
+
+\item[Implicit score matching] Minimising Hyv\"arinen's objective on noisy samples only;
+the loss of interface~C. \Cref{ch:score-matching,ch:neural-baselines}.
+
+\item[Information interface] What a learner may see: A (clean chains, fresh corruptions),
+B (clean chains, one fixed corruption), C (one noised view per sequence and nothing
+else). \Cref{ch:model-selection}.
+
+\item[Innovation] The i.i.d.\ increment $\varepsilon_i$ of the chain, with density $\innov$
+of mean zero and variance $\ivar$. \Cref{ch:markov-chains}.
+
+\item[Isotropic score] $-\vx$, the score of $\normal0{\Id}$; the reference of a model that
+learned nothing beyond the unit variance. \Cref{ch:gaussian-closure-lmmse}.
+
+\item[Isserlis' theorem] Gaussian moments are sums over pairings of covariances (also
+Wick's theorem). \Cref{ch:gaussian-hermite}.
+
+\item[k-statistic] Fisher's exactly unbiased sample cumulant. \Cref{ch:quasi-likelihood-moments}.
+
+\item[Kalman smoother] The linear-Gaussian smoother; the Gaussian part of the paper's
+score. \Cref{ch:gaussian-closure-lmmse}.
+
+\item[Kernel (transition)] $\kernel(a'\mid a)=\innov(a'-\corr a)$; $\kernelth$ when
+parameterised. \Cref{ch:markov-chains}.
+
+\item[Kullback--Leibler divergence] $\KL(p\|q)=\E_p\log(p/q)\ge0$, zero only at $p=q$.
+\Cref{ch:conventions}.
+
+\item[Kullback--Leibler projection] The member of a family closest to a law in
+$\KL(\text{law}\|\cdot)$; the limit of a misspecified maximum-likelihood estimator.
+\Cref{ch:misspecification-edgeworth}.
+
+\item[Lag-one moment estimator] $\hat\corr=e^{2t}\,\overline{x_ix_{i+1}}$, unbiased for
+$\corr$ by Hermite attenuation. \Cref{ch:quasi-likelihood-moments}.
+
+\item[Laplace innovation] The double-exponential density, excess kurtosis $3$; the
+frozen family. \Cref{ch:markov-chains}.
+
+\item[Layer normalisation] Rescaling a representation to zero mean and unit variance
+across channels with a learned gain and shift. \Cref{ch:neural-baselines}.
+
+\item[Length-agnostic] An architecture that refers to no fixed $\nsites$ and can be
+applied at any length. \Cref{ch:neural-baselines}.
+
+\item[LMMSE] The linear minimum-mean-square estimator $e^{-t}\Sig_0\Sig_t^{-1}\vx$ of
+$\va$ from $\vx_t$; the best linear map. \Cref{ch:gaussian-closure-lmmse}.
+
+\item[LMMSE floor] The relative score error of the LMMSE with the true covariance; the
+bound of every second-order estimator. \Cref{ch:gaussian-closure-lmmse}.
+
+\item[Locality floor] The error of the best estimator that sees only a window of radius
+$r$, the exact posterior mean given the window. \Cref{ch:attenuation-theorems}.
+
+\item[Log-evidence per edge] The held-out marginal log-likelihood divided by the number
+of transitions; the evidence rule's statistic. \Cref{ch:model-selection}.
+
+\item[Log-spaced schedule] The twelve levels $0.05\cdot60^{(k-1)/11}$. \Cref{ch:protocol}.
+
+\item[M-estimator] The solution of an estimating equation $\sum_\mu\psi(\vx^\mu;\theta)=0$;
+its variance is the sandwich. \Cref{ch:quasi-likelihood-moments}.
+
+\item[M-step] The maximisation step of EM; for a Gaussian kernel the belief-weighted
+Yule--Walker pair. \Cref{ch:maximum-likelihood-em}.
+
+\item[Marginal likelihood] See evidence. \Cref{ch:maximum-likelihood-em}.
+
+\item[Markov chain] A sequence in which each site depends on the past only through its
+predecessor. \Cref{ch:markov-chains}.
+
+\item[Matched interface] Interface~C, EM--BP's own; the comparison at matched information.
+\Cref{ch:model-selection}.
+
+\item[Mehler's identity] $\E_z\Hen{n}(\alpha a+\sqrt{1-\alpha^2}z)=\alpha^n\Hen{n}(a)$; the
+proof of Hermite attenuation. \Cref{ch:gaussian-hermite}.
+
+\item[Method of moments] Solving sample moments equal to model moments for the parameter.
+\Cref{ch:quasi-likelihood-moments}.
+
+\item[Misspecification] Fitting a family that does not contain the truth.
+\Cref{ch:misspecification-edgeworth}.
+
+\item[Mixture-innovation kernel] $\kernelth(a'\mid a)=\sum_c\pi_c\normal{a'-\corr a-\nu_c}{s_c^2}$,
+the paper's parametric kernel. \Cref{ch:em-through-noise}.
+
+\item[MLP] The fully connected network; the baseline with no weight sharing.
+\Cref{ch:neural-baselines}.
+
+\item[Moment] $\E[X^n]$ or its multivariate version. \Cref{ch:moments-cumulants}.
+
+\item[Multi-index] $\nu\in\mathbb N^{\nsites}$ with $|\nu|=\sum\nu_i$, labelling a product
+of Hermite polynomials. \Cref{ch:gaussian-hermite}.
+
+\item[Multivariate Hermite polynomial] $H^\Sig_{ijkl}=\partial_i\partial_j\partial_k\partial_l\phi_\Sig/\phi_\Sig$,
+the tensor version of $\Hen{4}$ for a Gaussian with covariance $\Sig$.
+\Cref{ch:misspecification-edgeworth}.
+
+\item[Noised view] One draw $\vx=e^{-t}\va+\sqrt{\Dt}\vz$ at one level.
+\Cref{ch:ou-channel-tweedie}.
+
+\item[One-view protocol] Each training sequence contributes one noised view at one level,
+the sequences split evenly across the twelve levels. \Cref{ch:em-through-noise}.
+
+\item[Oracle] A quantity that uses the truth (the true kernel's posterior means, the true
+score); an oracle rule is a selection rule that uses one. \Cref{ch:model-selection}.
+
+\item[Oracle selection rule] Choosing the rung by the validation risk against the true
+kernel's posterior means on the bulk. \Cref{ch:model-selection}.
+
+\item[Ornstein--Uhlenbeck channel] The coordinatewise noising process with decay $e^{-t}$
+and variance $\Dt=1-e^{-2t}$, which keeps the unit variance. \Cref{ch:ou-channel-tweedie}.
+
+\item[Outer-product information estimate] Estimating Fisher information by the sample
+covariance of per-sequence scores. \Cref{ch:fisher-cramer-rao}.
+
+\item[Overfull box] A line LaTeX could not fit in its width; a gate of the manuscript
+check for tables and figures. \Cref{ch:protocol}.
+
+\item[Paired comparison] A difference or ratio formed within seed on identical bundles
+before averaging over seeds. \Cref{ch:experimental-statistics}.
+
+\item[Parameter count] The number of trainable numbers of a network, fixed by its
+architecture. \Cref{ch:neural-baselines}.
+
+\item[Pointwise MLP] Affine maps and activations applied at each site separately
+(width-one convolutions). \Cref{ch:neural-baselines}.
+
+\item[Pooled relative score error] $\bigl(\sum_t\sum_{j,i}(\hat s-s)^2/\sum_t\sum_{j,i}s^2\bigr)^{1/2}$,
+the paper's estimand. \Cref{ch:experimental-statistics}.
+
+\item[Posterior mean] $\pmean{\va}=\E[\va\mid\vx_t=\vx]$; the score is
+$-(\vx-e^{-t}\pmean{\va})/\Dt$. \Cref{ch:ou-channel-tweedie}.
+
+\item[Pre-registration] Writing hypothesis, design, seeds and analysis before the data
+exist. \Cref{ch:protocol}.
+
+\item[Provenance record] \code{params\_<part>.json}: commit, dirty list, archive digest,
+host, resolved settings. \Cref{ch:protocol}.
+
+\item[Pseudo-true parameter] The minimiser of $\KL(P^\star\|Q_\theta)$; where a
+misspecified estimator converges. \Cref{ch:misspecification-edgeworth}.
+
+\item[Quadrature, trapezoidal] Approximating an integral by a weighted sum on a uniform
+grid; second order in the spacing for smooth integrands. \Cref{ch:grid-quadrature}.
+
+\item[Quasi-MLE] The maximiser of a quasi-likelihood; consistent for $(\corr,\ivar)$ here.
+\Cref{ch:quasi-likelihood-moments}.
+
+\item[Quasi-score] The derivative of the quasi-likelihood; a moment equation in the
+sample covariance. \Cref{ch:quasi-likelihood-moments}.
+
+\item[Receptive radius] The $r$ such that a network's output at site $i$ depends on inputs
+within $|j-i|\le r$ only. \Cref{ch:neural-baselines}.
+
+\item[Registry] \code{experiments/registry/<id>.json}: hypothesis, design, analysis, seeds,
+status, amendments, frozen digests. \Cref{ch:protocol}.
+
+\item[Relative-position bias] A learned attention bias depending on the clipped offset
+$i-j$; what makes the transformer length-agnostic. \Cref{ch:neural-baselines}.
+
+\item[Residual connection] $\vect{h}\mapsto\vect{h}+g(\vect{h})$. \Cref{ch:neural-baselines}.
+
+\item[Reverse SDE] The time-reversed diffusion driven by the score, used to generate
+samples. \Cref{ch:reverse-sde-generation}.
+
+\item[RMSE] Root mean squared error over seeds of a fitted coordinate.
+\Cref{ch:experimental-statistics}.
+
+\item[Rung] One entry of a checkpoint ladder. \Cref{ch:model-selection}.
+
+\item[Sample covariance] $\mat{S}=\nseq^{-1}\sum_\mu\vx^\mu\vx^{\mu\top}$.
+\Cref{ch:quasi-likelihood-moments}.
+
+\item[Sandwich covariance] $\mat{J}^{-1}\mat{V}\mat{J}^{-1}$, the asymptotic variance of an
+M-estimator under a possibly wrong model. \Cref{ch:quasi-likelihood-moments}.
+
+\item[Schedule] The twelve levels over which errors are pooled. \Cref{ch:protocol}.
+
+\item[Score] $\score(\vx,t)=\nabla_{\vx}\log\Pt(\vx)$. \Cref{ch:ou-channel-tweedie}.
+
+\item[Score matching] Fitting a score by minimising the Fisher divergence, implicitly or
+by denoising. \Cref{ch:score-matching}.
+
+\item[Screen] The selection of a configuration per architecture family on development
+seeds. \Cref{ch:model-selection}.
+
+\item[Seed] The integer that determines a random stream; the inferential unit of the
+paper's comparisons. \Cref{ch:experimental-statistics}.
+
+\item[SHA-256] A cryptographic hash producing a $256$-bit digest; a changed byte changes
+the digest. \Cref{ch:protocol}.
+
+\item[Shape coordinate] A parameter that leaves $\Sig_0$ fixed and moves $\kfour$; a
+degree-four coordinate, such as the generalised-Gaussian exponent at fixed variance.
+\Cref{ch:attenuation-theorems}.
+
+\item[Site] One coordinate $i$ of the chain. \Cref{ch:conventions}.
+
+\item[Sliced Wasserstein distance] A distance between samples averaged over random
+one-dimensional projections; a column of the generation table.
+\Cref{ch:reverse-sde-generation}.
+
+\item[SLURM] The cluster scheduler that runs the registered experiments. \Cref{ch:protocol}.
+
+\item[Sub-chain] A window of consecutive sites treated as a chain with the exact marginal
+of its first site as initial factor; the locality floor's computation.
+\Cref{ch:attenuation-theorems}.
+
+\item[Sum-product] The message-passing algorithm computing marginals on a factor graph.
+\Cref{ch:factor-graphs-bp}.
+
+\item[TCN] The dilated temporal convolutional network, receptive radius $15$.
+\Cref{ch:neural-baselines}.
+
+\item[Test bundle] The $2048$ held-out chains on which a selected fit is scored.
+\Cref{ch:model-selection}.
+
+\item[Three clocks] Amplitude $e^{-mt}$, information $e^{-2mt}$, samples $e^{2mt}$ for a
+feature first visible at Hermite degree $m$. \Cref{ch:attenuation-theorems}.
+
+\item[Time features] See Fourier features. \Cref{ch:neural-baselines}.
+
+\item[Transformer] The attention-based encoder with relative-position bias.
+\Cref{ch:neural-baselines}.
+
+\item[Truncation (domain)] The error from carrying messages on a finite domain; bounded
+by the exceedance count, not by the grid spacing. \Cref{ch:grid-quadrature}.
+
+\item[Tweedie's identity] $\score(\vx,t)=-(\vx-e^{-t}\pmean{\va})/\Dt$.
+\Cref{ch:ou-channel-tweedie}.
+
+\item[Typed literal] A decimal typed into the manuscript rather than emitted by a
+generator; forbidden unless listed with a justification. \Cref{ch:protocol}.
+
+\item[U-Net] The two-resolution convolutional network with a skip connection.
+\Cref{ch:neural-baselines}.
+
+\item[Unary factor] $\like(x_i\mid a_i)\propto\exp[-(x_i-e^{-t}a_i)^2/2\Dt]$, the
+likelihood factor attached to each site. \Cref{ch:factor-graphs-bp}.
+
+\item[Uniform innovation] The uniform density at unit variance, excess kurtosis $-1.2$.
+\Cref{ch:markov-chains}.
+
+\item[Validation bundle] The $1024$ held-out chains on which the checkpoint is chosen.
+\Cref{ch:model-selection}.
+
+\item[Validation risk] The pooled relative score error on the validation bundle's bulk
+against the true kernel's posterior means. \Cref{ch:model-selection}.
+
+\item[Variance-matched family] Innovation laws with the same mean and variance, hence the
+same $\Sig_0$, differing only beyond second order. \Cref{ch:markov-chains}.
+
+\item[Weight sharing] Using the same parameters at every site, as a convolution or a
+recurrence does. \Cref{ch:neural-baselines}.
+
+\item[Wick product] ${:}x_ix_jx_k{:}$, the Hermite (orthogonalised) monomial; Wick's
+theorem gives its Gaussian second moments by pairings. \Cref{ch:gaussian-hermite}.
+
+\item[Window head] One convolution of width $2r+1$ followed by a pointwise MLP; the
+smallest local baseline. \Cref{ch:neural-baselines}.
+
+\item[Winner's curse] The downward bias of the minimum of several noisy measured risks;
+the reason selection and reporting use disjoint seeds. \Cref{ch:model-selection}.
+
+\item[x0 parameterisation] The network predicts the posterior mean directly.
+\Cref{ch:neural-baselines}.
+
+\item[Yule--Walker equations] The linear relations between an autoregression's
+coefficients and its autocovariances; the Gaussian M-step and the AR(2) covariance.
+\Cref{ch:markov-chains,ch:maximum-likelihood-em}.
+
+\item[Zero padding] Treating inputs outside $\{1,\dots,\nsites\}$ as zero in a convolution;
+the source of the window head's boundary error. \Cref{ch:neural-baselines}.
+
+\end{description}
+\endgroup

@@ -1,0 +1,635 @@
+\chapter{Quasi-likelihood and moment estimators}
+\label{ch:quasi-likelihood-moments}
+
+The paper's headline estimator maximises the exact marginal likelihood of the noised
+data by expectation--maximisation around the tree-exact recursion
+(\Cref{ch:maximum-likelihood-em,ch:em-through-noise}). Two simpler estimators appear
+beside it. The first is the \emph{Gaussian quasi-likelihood}: the Gaussian
+log-likelihood written down for data that are not Gaussian. The paper needs it in one
+sentence of Section~2 (a Gaussian-innovation kernel fitted by maximum likelihood is
+consistent for $(\corr,\ivar)$ and lands on the LMMSE floor) and uses that sentence as
+an apparatus check in every capacity table and in the fifteen cells of the regime
+sweep. The second is the \emph{method of moments}: two closed-form statistics, one for
+the correlation and one for the fourth cumulant, which the paper places against EM as
+the rate-correct, inefficient competitor at high noise (Section~4 of the paper,
+experiment E19). This chapter builds both from scratch, derives the two properties the
+paper asserts (consistency of the quasi-MLE; unbiasedness of the moment estimators),
+computes their variances and their efficiency relative to maximum likelihood, and
+records how E19 measured them.
+
+\section{The Gaussian quasi-likelihood of noised data}
+\label{sec:ql-def}
+
+\subsection{Likelihood of the wrong model}
+
+Fix one noise level $t$ and write $\alpha=e^{-t}$, $\Dt=1-\alpha^2$. A noised sequence
+is $\vx=\alpha\va+\sqrt{\Dt}\,\vz$ with $\va\sim\Pz$ and $\vz\sim\normal{0}{\Id}$.
+Whatever the innovation law, the chain of the paper has
+$\E\va=0$ and $\Cov(\va)=\Sig_0$ with $(\Sig_0)_{ij}=\corr^{|i-j|}$, so
+\begin{equation}
+  \E\vx=0,\qquad \Cov(\vx)=\alpha^2\Sig_0+\Dt\Id=:\Sig_t .
+  \label{eq:ql-cov}
+\end{equation}
+Only the first two moments of $\Pz$ enter \cref{eq:ql-cov}; this is the whole reason the
+Gaussian quasi-likelihood works.
+
+\begin{definition}[Gaussian quasi-likelihood]
+\label{def:ql}
+Let $\Sig_t(\params)=e^{-2t}\Sig_0(\params)+\Dt\Id$ be the covariance that the Gaussian
+chain with parameters $\params=(\corr,\ivar)$ would give to a noised sequence at level $t$.
+The \term{Gaussian quasi-likelihood} of $\nseq$ noised sequences $\vx^1,\dots,\vx^{\nseq}$
+observed at level $t$ is the Gaussian log-likelihood
+\begin{equation}
+  \ell_{\mathrm G}(\params)
+  = -\frac{1}{2}\sum_{\mu=1}^{\nseq}\Bigl[\log\det\Sig_t(\params)
+    + \vx^{\mu\top}\Sig_t(\params)^{-1}\vx^{\mu}\Bigr] - \frac{\nseq\nsites}{2}\log 2\pi ,
+  \label{eq:ql}
+\end{equation}
+evaluated on data whose true law is not Gaussian. Its maximiser is the
+\term{quasi-maximum-likelihood estimator} (quasi-MLE) $\hat\params_{\mathrm G}$.
+\end{definition}
+
+The word \emph{quasi} records that \cref{eq:ql} is not the log-density of the data. The
+true log-density of $\vx$ is $\log\Pt(\vx)$, a non-Gaussian function whose evaluation
+needs the forward--backward sweep of \Cref{ch:factor-graphs-bp}. The Gaussian
+quasi-likelihood is what one obtains by pretending that the innovation law is Gaussian,
+and \cref{eq:ql} is then exactly the marginal likelihood of the Gaussian chain, since the
+Gaussian chain noised by a Gaussian channel is Gaussian with covariance $\Sig_t(\params)$.
+
+\subsection{It depends on the data only through the sample covariance}
+
+Let $\mat{S}=\nseq^{-1}\sum_\mu\vx^\mu\vx^{\mu\top}$ be the \term{sample covariance} (about
+zero, because the mean is known to be zero). Using
+$\vx^\top\mat{A}\vx=\tr(\mat{A}\vx\vx^\top)$ and the linearity of the trace,
+\begin{equation}
+  \sum_{\mu}\vx^{\mu\top}\Sig_t^{-1}\vx^\mu
+  =\tr\Bigl(\Sig_t^{-1}\sum_\mu\vx^\mu\vx^{\mu\top}\Bigr)=\nseq\,\tr\bigl(\Sig_t^{-1}\mat{S}\bigr),
+\end{equation}
+so
+\begin{equation}
+  \ell_{\mathrm G}(\params)=-\frac{\nseq}{2}\Bigl[\log\det\Sig_t(\params)+\tr\bigl(\Sig_t(\params)^{-1}\mat{S}\bigr)\Bigr]+\text{const}.
+  \label{eq:ql-S}
+\end{equation}
+This is the statement in the paper's Section~2: \emph{the Gaussian quasi-likelihood of
+noised data depends on the data only through their covariance}. Two remarks make it
+precise. First, the dependence is through the \emph{sample} covariance $\mat{S}$, a
+random matrix; the population statement is about its expectation
+$\E\mat{S}=\Sig_t=e^{-2t}\Sig_0+\Dt\Id$, which is \cref{eq:ql-cov}. Second, nothing about
+the shape of $\Pz$ beyond its covariance can influence $\hat\params_{\mathrm G}$: two
+data sets with the same $\mat{S}$ give the same quasi-MLE, whether their innovations were
+Laplace, uniform or Gaussian.
+
+\subsection{The one-view protocol: a sum over levels}
+
+Under the paper's one-view protocol each sequence is observed at one level $t_\mu$ and the
+$\nseq$ sequences are split evenly across the twelve levels of the schedule. The
+quasi-likelihood is then a sum of twelve terms of the form \cref{eq:ql-S}, one per level,
+each with its own sample covariance $\mat{S}_t$ over the $\nseq/12$ sequences at that
+level:
+\begin{equation}
+  \ell_{\mathrm G}(\params)=-\frac{1}{2}\sum_{t}\nseq_t\Bigl[\log\det\Sig_t(\params)+\tr\bigl(\Sig_t(\params)^{-1}\mat{S}_t\bigr)\Bigr]+\text{const},
+  \qquad \nseq_t=\nseq/12 .
+  \label{eq:ql-levels}
+\end{equation}
+Every level identifies the same $\params$, so the sum only adds information; the
+argument below is given for one level and applies term by term.
+
+\section{Consistency of the quasi-MLE for \texorpdfstring{$(\corr,\ivar)$}{(rho, q)}}
+\label{sec:ql-consistency}
+
+\subsection{The population objective is a Kullback--Leibler divergence}
+
+Divide \cref{eq:ql-S} by $\nseq$ and let $\nseq\to\infty$. By the law of large numbers
+$\mat{S}\to\Sig_t^{\star}:=e^{-2t}\Sig_0+\Dt\Id$, the true covariance of the noised data,
+so the normalised quasi-likelihood converges, uniformly on compact parameter sets, to the
+\term{population quasi-likelihood}
+\begin{equation}
+  \bar\ell(\params)=-\frac12\Bigl[\log\det\Sig_t(\params)+\tr\bigl(\Sig_t(\params)^{-1}\Sig_t^\star\bigr)\Bigr].
+  \label{eq:ql-pop}
+\end{equation}
+Compare this with the Kullback--Leibler divergence between two centred Gaussians
+(\Cref{ch:conventions} for the definition of $\KL$):
+\begin{equation}
+  \KL\bigl(\normal{0}{\Sig^\star}\,\big\|\,\normal{0}{\Sig}\bigr)
+  =\frac12\Bigl[\tr(\Sig^{-1}\Sig^\star)-\nsites+\log\det\Sig-\log\det\Sig^\star\Bigr].
+  \label{eq:kl-gauss}
+\end{equation}
+The derivation of \cref{eq:kl-gauss} is short. With $p=\normal{0}{\Sig^\star}$ and
+$q=\normal{0}{\Sig}$, $\log(p/q)=\tfrac12[\log\det\Sig-\log\det\Sig^\star]-\tfrac12\vx^\top(\Sig^{\star-1}-\Sig^{-1})\vx$, and
+$\E_p[\vx^\top\mat{A}\vx]=\tr(\mat{A}\Sig^\star)$ gives
+$\E_p[\vx^\top\Sig^{\star-1}\vx]=\nsites$ and $\E_p[\vx^\top\Sig^{-1}\vx]=\tr(\Sig^{-1}\Sig^\star)$.
+Hence
+\begin{equation}
+  \bar\ell(\params)=-\KL\bigl(\normal{0}{\Sig_t^\star}\,\big\|\,\normal{0}{\Sig_t(\params)}\bigr)+\text{const},
+\end{equation}
+where the constant does not depend on $\params$. Maximising the population
+quasi-likelihood is minimising a Kullback--Leibler divergence between Gaussians, and that
+divergence is zero if and only if $\Sig_t(\params)=\Sig_t^\star$, because
+$\KL(p\,\|\,q)\ge0$ with equality only at $p=q$ (\Cref{ch:conventions}).
+
+\subsection{Identifiability of \texorpdfstring{$(\corr,\ivar)$}{(rho, q)} from the noised covariance}
+
+It remains to show that $\Sig_t(\params)=\Sig_t^\star$ forces $\params=\params^\star$. Since
+$\Sig_t(\params)-\Dt\Id=e^{-2t}\Sig_0(\params)$ and $e^{-2t}>0$, equality of the two noised
+covariances is equality of the two clean covariances, $\Sig_0(\params)=\Sig_0(\params^\star)$.
+For the chain with $a_1\sim\normal01$ and general $(\corr,\ivar)$ (the two-parameter
+family the EM fits), the code's \code{theory.chain\_covariance} gives
+\begin{equation}
+  (\Sig_0)_{ij}=\corr^{|i-j|}\,v_{\min(i,j)},\qquad
+  v_i=\corr^{2(i-1)}+\ivar\,\frac{1-\corr^{2(i-1)}}{1-\corr^2},
+  \label{eq:sig0-general}
+\end{equation}
+so $(\Sig_0)_{11}=1$, $(\Sig_0)_{12}=\corr$ and $(\Sig_0)_{22}=\corr^2+\ivar$: the
+$(1,2)$ entry reads off $\corr$ and the $(2,2)$ entry then reads off $\ivar$. Two
+different parameter pairs give two different covariances, so $\params$ is identifiable
+from $\Sig_0$, hence from $\Sig_t^\star$.
+
+\begin{proposition}[Consistency of the Gaussian quasi-MLE]
+\label{prop:qmle}
+Let the noised data at level $t$ have a law with mean zero and covariance
+$\Sig_t^\star=e^{-2t}\Sig_0(\params^\star)+\Dt\Id$, and let $\hat\params_{\mathrm G}$
+maximise \cref{eq:ql} over a compact set containing $\params^\star$ in its interior. Then
+$\hat\params_{\mathrm G}\to\params^\star$ in probability as $\nseq\to\infty$, whatever the
+innovation law.
+\end{proposition}
+\begin{proof}
+The normalised objective converges uniformly to \cref{eq:ql-pop}, which is continuous
+and has the unique maximiser $\params^\star$ by the two facts above; a standard
+argument (the argmax of a uniformly convergent sequence of continuous functions converges
+to the unique argmax of the limit) finishes the proof.
+\end{proof}
+
+This is the special case of White's theory of misspecified maximum likelihood
+(\Cref{ch:misspecification-edgeworth}) in which the pseudo-true parameter coincides with
+the true one: the model is wrong about the shape of the law but right about its first two
+moments, and the Gaussian likelihood only ever asks about those.
+
+\subsection{The quasi-score equations are moment equations}
+
+Differentiate \cref{eq:ql-S} with respect to a parameter $\theta$ using
+$\partial\log\det\Sig=\tr(\Sig^{-1}\partial\Sig)$ and
+$\partial\Sig^{-1}=-\Sig^{-1}(\partial\Sig)\Sig^{-1}$:
+\begin{equation}
+  \frac{\partial\ell_{\mathrm G}}{\partial\theta}
+  =\frac{\nseq}{2}\,\tr\Bigl(\Sig_t^{-1}\,\partial_\theta\Sig_t\,\Sig_t^{-1}\,(\mat{S}-\Sig_t)\Bigr).
+  \label{eq:quasi-score}
+\end{equation}
+The \term{quasi-score} vanishes when a weighted trace of $\mat{S}-\Sig_t(\params)$
+vanishes: the quasi-MLE solves \emph{moment equations}, one per parameter, that ask the
+sample covariance to agree with the model covariance in the directions
+$\mat{A}_\theta=\Sig_t^{-1}\partial_\theta\Sig_t\Sig_t^{-1}$. That is the sense in which
+the quasi-MLE belongs in this chapter beside the method of moments: it is a moment
+estimator with a particular, likelihood-derived choice of weights.
+
+\subsection{Variance of the quasi-MLE: the sandwich}
+\label{sec:ql-sandwich}
+
+The quasi-MLE is consistent for every innovation law, but its \emph{variance} is not the
+Gaussian one when the data are not Gaussian. The standard result for an estimator that
+solves $\sum_\mu\psi(\vx^\mu;\params)=0$ (an \term{M-estimator}) is
+\begin{equation}
+  \sqrt{\nseq}\,(\hat\params-\params^\star)\ \to\ \normal{0}{\mat{J}^{-1}\mat{V}\mat{J}^{-1}},
+  \qquad \mat{J}=-\E\,\partial_\params\psi,\quad \mat{V}=\Var\,\psi ,
+  \label{eq:sandwich}
+\end{equation}
+the \term{sandwich covariance}. For the quasi-score $\psi_\theta=\tfrac12\tr(\mat{A}_\theta(\vx\vx^\top-\Sig_t))$
+the outer matrices $\mat{J}$ are the Gaussian Fisher information
+$\tfrac12\tr(\Sig_t^{-1}\partial_i\Sig_t\Sig_t^{-1}\partial_j\Sig_t)$ of the paper's
+Theorem~3, and $\mat{V}$ needs the variance of a quadratic form under the true law.
+
+\begin{lemma}[Variance of a quadratic form]
+\label{lem:quadform}
+Let $\vx$ have mean zero, covariance $\Sig$ and fourth-cumulant tensor $\kfour[\vx]$
+(\Cref{ch:moments-cumulants}), and let $\mat{A}$ be symmetric. Then
+\begin{equation}
+  \Var\bigl(\vx^\top\mat{A}\vx\bigr)=2\tr(\mat{A}\Sig\mat{A}\Sig)+\sum_{ijkl}A_{ij}A_{kl}\,(\kfour[\vx])_{ijkl}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+$\Var(\vx^\top\mat{A}\vx)=\sum_{ijkl}A_{ij}A_{kl}\bigl(\E[x_ix_jx_kx_l]-\Sig_{ij}\Sig_{kl}\bigr)$.
+The fourth moment of a zero-mean law is its fourth cumulant plus the three pairings of
+second moments (\Cref{ch:moments-cumulants}):
+$\E[x_ix_jx_kx_l]=\kfour[ijkl]+\Sig_{ij}\Sig_{kl}+\Sig_{ik}\Sig_{jl}+\Sig_{il}\Sig_{jk}$.
+The first pairing cancels against $\Sig_{ij}\Sig_{kl}$; the other two each contract to
+$\tr(\mat{A}\Sig\mat{A}\Sig)$ by symmetry of $\mat{A}$.
+\end{proof}
+
+For the noised chain, $\kfour[\vx]=e^{-4t}\kfour[\va]$ exactly (the cumulant consequence
+of the paper's Theorem~2, \Cref{ch:attenuation-theorems}), so the non-Gaussian part of
+$\mat{V}$ is $e^{-4t}$ times a fixed contraction of $\kfour[\va]$, while the Gaussian part
+$2\tr(\mat{A}\Sig_t\mat{A}\Sig_t)$ is of order $e^{-4t}$ as well through
+$\mat{A}_\theta\propto\partial_\theta\Sig_t=e^{-2t}\partial_\theta\Sig_0$. The ratio of
+the two is therefore of order one at every level, not decaying: the quasi-MLE of a
+Laplace chain is consistent but has a different (typically larger) variance than the
+same estimator on a Gaussian chain, by an amount proportional to the excess kurtosis.
+This matters only for error bars; the paper never quotes a variance of the
+$\ncomp=1$ arm, so the consistency statement is the one it uses.
+
+\subsection{Why this is an apparatus check}
+
+Put together with Proposition~1 of the paper (\Cref{ch:gaussian-closure-lmmse}), the
+chain of implications is:
+\begin{enumerate}
+\item the $\ncomp=1$ arm of EM--BP fits a Gaussian-innovation kernel by maximum
+  likelihood of the noised data; with a Gaussian kernel the exact marginal likelihood that
+  EM maximises \emph{is} the Gaussian quasi-likelihood \cref{eq:ql-levels} (up to the grid
+  discretisation), so EM's fixed point is the quasi-MLE;
+\item by \Cref{prop:qmle} the quasi-MLE converges to the true $(\corr,\ivar)$;
+\item by Proposition~1, sum-product with any Gaussian-innovation kernel returns the LMMSE
+  estimator of that kernel's covariance; at the true $(\corr,\ivar)$ this is the LMMSE of
+  the true covariance, the second-order floor.
+\end{enumerate}
+So the $\ncomp=1$ row of every capacity table must sit on the LMMSE floor, up to the
+$O(\nseq^{-1/2})$ sampling error of step~2 and the checkpoint selection. The paper
+reports that it does, at every sample size, at every member of the generalised-Gaussian
+family and in all fifteen $(\corr,\nsites)$ cells of the regime sweep (see the paper,
+Section~5 and Table~1, and the regime paragraph; E02a, E02b, E13). A failure of that
+identity anywhere would indict the grid, the message passing, the M-step or the scoring,
+which is why the audit calls it the most reassuring fact about the pipeline.
+
+\section{The method of moments in general}
+\label{sec:mom-general}
+
+\begin{definition}[Method of moments]
+\label{def:mom}
+Let $\vx^1,\dots,\vx^{\nseq}$ be i.i.d.\ with law $P_{\params}$, and let
+$g(\vx)\in\Reals^d$ be a vector of statistics whose expectation
+$m(\params)=\E_{\params}\,g(\vx)$ is known in closed form and injective in $\params$. The
+\term{method-of-moments estimator} is the solution of
+\begin{equation}
+  \frac{1}{\nseq}\sum_{\mu=1}^{\nseq}g(\vx^\mu)=m(\hat\params),
+  \qquad\text{i.e.}\qquad \hat\params=m^{-1}(\bar g).
+  \label{eq:mom}
+\end{equation}
+\end{definition}
+
+Three facts follow from the definition. First, $\bar g$ is an unbiased estimator of
+$m(\params)$ for every $\nseq$, so when $m$ is linear the estimator $\hat\params$ is
+exactly unbiased; when $m$ is nonlinear the plug-in $m^{-1}(\bar g)$ is unbiased only to
+order $\nseq^{-1}$ (the delta method, \Cref{ch:experimental-statistics}). Second, by
+the central limit theorem and the delta method,
+\begin{equation}
+  \Var(\hat\params)\approx\frac{1}{\nseq}\,(\partial m)^{-1}\,\Var(g)\,(\partial m)^{-\top},
+  \label{eq:mom-var}
+\end{equation}
+which is \cref{eq:sandwich} with $\psi=g-m(\params)$ and $\mat{J}=\partial m$. Third,
+the estimator is asymptotically efficient, that is, attains the Cram\'er--Rao bound
+(\Cref{ch:fisher-cramer-rao}), exactly when the statistic $g$ is an affine function of
+the score $\partial_\params\log P_\params$: otherwise the ratio of the Cram\'er--Rao
+variance to \cref{eq:mom-var}, the \term{asymptotic relative efficiency}, is strictly
+below one.
+
+\paragraph{Moment estimators through the channel.}
+The paper's Theorem~2 (Hermite attenuation, \Cref{ch:attenuation-theorems}) is what
+makes the method of moments available for noised data without any inference: it says
+that for every multi-index $\nu$,
+\begin{equation}
+  \E_{\Pt}[H_\nu(\vx)]=e^{-|\nu|t}\,\E_{\Pz}[H_\nu(\va)],
+\end{equation}
+so any Hermite moment of the clean law has a known image under the channel, and the
+sample Hermite moment of the noised data, divided by $e^{-|\nu|t}$, is an unbiased
+estimator of the clean one. The two estimators below are the simplest instances, at
+degree two and at degree four.
+
+\section{The paper's two moment estimators}
+\label{sec:two-estimators}
+
+Throughout this section the data are $\nseq$ sequences observed at one common level
+$t$, as in E06 and E19 (not the twelve-level split), and $\alpha=e^{-t}$.
+
+\subsection{The lag-one product for the correlation}
+
+\begin{definition}[Lag-one moment estimator]
+\label{def:rho-mom}
+\begin{equation}
+  \hat\corr_{\mathrm{mom}}=\frac{1}{\alpha^2}\cdot\frac{1}{\nseq(\nsites-1)}\sum_{\mu=1}^{\nseq}\sum_{i=1}^{\nsites-1}x^\mu_i\,x^\mu_{i+1}.
+  \label{eq:rho-mom}
+\end{equation}
+\end{definition}
+
+\begin{proposition}[Unbiasedness]
+\label{prop:rho-unbiased}
+For the chain of the paper, $\E\,\hat\corr_{\mathrm{mom}}=\corr$ exactly, at every $t$,
+every $\nseq$ and every innovation law of mean zero and variance $\ivar=1-\corr^2$.
+\end{proposition}
+\begin{proof}
+$x_ix_{i+1}=(\alpha a_i+\sqrt{\Dt}z_i)(\alpha a_{i+1}+\sqrt{\Dt}z_{i+1})$. Expanding, the
+cross terms have a factor $\E z_i=0$ or $\E z_{i+1}=0$, and $\E[z_iz_{i+1}]=0$ because the
+channel noise is independent across sites; so $\E[x_ix_{i+1}]=\alpha^2\E[a_ia_{i+1}]$.
+For the chain, $a_{i+1}=\corr a_i+\varepsilon_{i+1}$ with $\varepsilon_{i+1}$ independent
+of $a_i$ and of mean zero, so $\E[a_ia_{i+1}]=\corr\E[a_i^2]=\corr\Var(a_i)$. The
+variance choice $\ivar=1-\corr^2$ with $a_1\sim\normal01$ gives $\Var(a_i)=1$ at every
+site (induction: $\Var(a_{i+1})=\corr^2\Var(a_i)+\ivar=\corr^2+1-\corr^2=1$). Hence
+$\E[x_ix_{i+1}]=\alpha^2\corr$ for every $i$, and dividing by $\alpha^2$ and averaging
+gives $\corr$.
+\end{proof}
+
+The statistic $x_ix_{i+1}$ is, up to the constant $\alpha^2$, the degree-two Hermite
+moment with multi-index $\nu=e_i+e_{i+1}$, that is, the expectation of
+$\Hen{1}(x_i)\,\Hen{1}(x_{i+1})$; \Cref{prop:rho-unbiased} is Theorem~2 at that
+multi-index. The estimator is a linear function of the data products, so it is
+unbiased exactly, not only asymptotically.
+
+\paragraph{Variance and the $e^{2t}$ growth.}
+Write $T=\frac{1}{\nseq(\nsites-1)}\sum_{\mu,i}x^\mu_ix^\mu_{i+1}$, so
+$\hat\corr_{\mathrm{mom}}=\alpha^{-2}T$ and $\Var(\hat\corr_{\mathrm{mom}})=e^{4t}\Var(T)$.
+Sequences are independent, so $\Var(T)=\nseq^{-1}\Var(\bar p)$ with
+$\bar p=(\nsites-1)^{-1}\sum_ix_ix_{i+1}$ the within-sequence average of the products.
+For a Gaussian chain Isserlis' theorem (\Cref{ch:gaussian-hermite}) gives, with
+$c_k=\Cov(x_i,x_{i+k})=\alpha^2\corr^{k}$ for $k\ge1$ and $c_0=1$,
+\begin{equation}
+  \Var(x_ix_{i+1})=\E[x_i^2x_{i+1}^2]-c_1^2=(1+2c_1^2)-c_1^2=1+c_1^2,
+  \qquad
+  \Cov(x_ix_{i+1},x_{i+k}x_{i+k+1})=c_k^2+c_{k-1}c_{k+1},
+\end{equation}
+and for a non-Gaussian chain each of these acquires a fourth-cumulant term of order
+$e^{-4t}\kfour$ (\Cref{lem:quadform}). All the covariance terms are $O(\alpha^4)$ or
+$O(\alpha^2)$ while the leading $1$ is not, so as $t$ grows
+\begin{equation}
+  \Var(\hat\corr_{\mathrm{mom}})=\frac{e^{4t}}{\nseq(\nsites-1)}\bigl(1+O(e^{-2t})\bigr),
+  \qquad
+  \mathrm{RMSE}(\hat\corr_{\mathrm{mom}})=\frac{e^{2t}}{\sqrt{\nseq(\nsites-1)}}\bigl(1+O(e^{-2t})\bigr).
+  \label{eq:rho-mom-var}
+\end{equation}
+The error of the degree-two moment estimator grows as $e^{2t}$: the amplitude of the
+degree-two signal shrinks as $e^{-2t}$ while the noise in the product stays of order one.
+This is the first of the two slopes E19 fits (see the paper, Section~4 and Appendix A5).
+
+\subsection{The per-site fourth cumulant for the shape}
+
+The shape coordinate the paper tracks is the excess kurtosis of the innovation,
+$\kfour(\varepsilon)/\ivar^2$, which is $+3$ for the Laplace law. To estimate it from
+noised data one needs the fourth cumulant of a site of the chain and its image under the
+channel.
+
+\begin{lemma}[Fourth cumulant of a chain site]
+\label{lem:kappa4-site}
+For the chain $a_1\sim\normal01$, $a_i=\corr a_{i-1}+\varepsilon_i$ ($i\ge2$) with
+i.i.d.\ innovations of fourth cumulant $\kfour(\varepsilon)$,
+\begin{equation}
+  \kfour(a_i)=\kfour(\varepsilon)\sum_{m=2}^{i}\corr^{4(i-m)}
+  =\kfour(\varepsilon)\,\frac{1-\corr^{4(i-1)}}{1-\corr^4}=:\kfour(\varepsilon)\,c_i(\corr).
+  \label{eq:kappa4-site}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Unrolling the recursion, $a_i=\corr^{i-1}a_1+\sum_{m=2}^{i}\corr^{i-m}\varepsilon_m$, a
+sum of independent terms. Cumulants are additive over independent summands and
+homogeneous of degree four under scaling (\Cref{ch:moments-cumulants}):
+$\kfour(\lambda Y)=\lambda^4\kfour(Y)$. The Gaussian $a_1$ has $\kfour(a_1)=0$, so
+$\kfour(a_i)=\sum_{m=2}^{i}\corr^{4(i-m)}\kfour(\varepsilon)$, a geometric sum with ratio
+$\corr^4$ and $i-1$ terms.
+\end{proof}
+
+Under the channel, $x_i=\alpha a_i+\sqrt{\Dt}z_i$ with $z_i$ Gaussian and independent of
+$a_i$, so by the same two properties $\kfour(x_i)=\alpha^4\kfour(a_i)$: this is the
+cumulant form of Theorem~2 at degree four. Since $x_i$ has mean zero and variance one at
+every $t$, $\kfour(x_i)=\E x_i^4-3(\E x_i^2)^2=\E x_i^4-3$.
+
+\begin{definition}[Per-site fourth-cumulant estimator]
+\label{def:k4-mom}
+With $\hat m_{2,i}=\nseq^{-1}\sum_\mu(x^\mu_i)^2$ and $\hat m_{4,i}=\nseq^{-1}\sum_\mu(x^\mu_i)^4$,
+let $\hat k_{4,i}=\hat m_{4,i}-3\hat m_{2,i}^2$ be the sample fourth cumulant at site
+$i$. The estimator of the innovation's fourth cumulant, and of its excess kurtosis, is
+\begin{equation}
+  \hat\kfour(\varepsilon)=\frac{\sum_{i=1}^{\nsites}\hat k_{4,i}}{\alpha^4\sum_{i=1}^{\nsites}c_i(\hat\corr)},
+  \qquad
+  \widehat{\text{exc.\ kurt.}}=\frac{\hat\kfour(\varepsilon)}{\hat\ivar^{\,2}},\quad
+  \hat\ivar=1-\hat\corr^2 ,
+  \label{eq:k4-mom}
+\end{equation}
+with $\hat\corr=\hat\corr_{\mathrm{mom}}$ from \cref{eq:rho-mom} (E19 also records the
+version with the true $\corr$ substituted, to separate the two sources of error).
+\end{definition}
+
+\begin{proposition}[Unbiasedness at the population level]
+\label{prop:k4-unbiased}
+Replace the sample cumulants in \cref{eq:k4-mom} by their population values and
+$\hat\corr$ by $\corr$. Then the right-hand side equals $\kfour(\varepsilon)$ exactly, at
+every $t$.
+\end{proposition}
+\begin{proof}
+$\sum_i\kfour(x_i)=\alpha^4\sum_i\kfour(a_i)=\alpha^4\kfour(\varepsilon)\sum_ic_i(\corr)$
+by \Cref{lem:kappa4-site} and the cumulant scaling; divide.
+\end{proof}
+
+This is the sense in which the paper's Section~4 says both estimators are ``unbiased by
+Theorem~2''. It is a statement about the population identity, and it is exact. The
+finite-sample estimator, however, is a nonlinear function of sample moments, and its
+bias deserves its own paragraph, because the channel amplifies it.
+
+\paragraph{Finite-sample bias of the plug-in cumulant.}
+The sample fourth cumulant $\hat k_4=\hat m_4-3\hat m_2^2$ is not unbiased: $\hat m_4$
+is unbiased for $m_4$, but $\E[\hat m_2^2]=(\E\hat m_2)^2+\Var(\hat m_2)=m_2^2+(m_4-m_2^2)/\nseq$,
+so
+\begin{equation}
+  \E\hat k_4=m_4-3m_2^2-\frac{3(m_4-m_2^2)}{\nseq}
+  =\kfour\Bigl(1-\frac3\nseq\Bigr)-\frac{6m_2^2}{\nseq}.
+  \label{eq:k4-bias}
+\end{equation}
+At unit variance the bias is $-(3\kfour(x_i)+6)/\nseq$, of which the $-6/\nseq$ term does
+not decay with $t$. Summed over $\nsites$ sites and divided by $\alpha^4\sum_ic_i$ and
+$\ivar^2$, the bias in excess-kurtosis units is about
+\begin{equation}
+  -\frac{6\nsites}{\nseq\,\ivar^2\,e^{-4t}\sum_ic_i(\corr)}
+  \approx-\frac{6\,(1-\corr^4)}{\nseq\,\ivar^2}\,e^{4t}
+  \qquad(\text{large }\nsites),
+  \label{eq:k4-bias-amplified}
+\end{equation}
+which grows as $e^{4t}$: the $O(1/\nseq)$ bias of a moment estimator is multiplied by
+the same $e^{4t}$ that multiplies its standard deviation. At $\nseq=512$, $\corr=0.85$
+and $\ivar=1-\corr^2=0.2775$ this is about $-0.4$ at $t=0.4$ and about $-4$ at $t=1$,
+that is, of the same order as the coordinate's whole range ($3$) at the level where the
+paper's own reference bound crosses that range. The remedy is classical: Fisher's
+\term{k-statistic} $k_4=\nseq^2[(\nseq+1)\hat m_4-3(\nseq-1)\hat m_2^2]/[(\nseq-1)(\nseq-2)(\nseq-3)]$
+is exactly unbiased for $\kfour$ at every $\nseq$. E19 uses the plug-in form, so its
+$\hat\kfour$ is unbiased only up to $O(e^{4t}/\nseq)$; the script's docstring says
+``unbiased up to $O(1/M)$'', and the paper's Appendix A5 reports the measured bias at
+$t=0.4$ (see the paper's macro for that level). A second, smaller $O(1/\nseq)$ bias
+comes from dividing by $c_i(\hat\corr)$ and $\hat\ivar^2$, nonlinear functions of the
+estimated $\hat\corr$.
+
+\paragraph{Variance and the $e^{4t}$ growth.}
+Each $\hat k_{4,i}$ has variance of order $\nseq^{-1}\Var(x_i^4)=O(\nseq^{-1})$ with a
+leading constant that does not decay in $t$ (for a standard Gaussian $\Var(x^4)=96$),
+while the signal $\kfour(x_i)=\alpha^4\kfour(a_i)$ decays as $e^{-4t}$. Dividing by
+$\alpha^4$ therefore multiplies the standard deviation by $e^{4t}$:
+\begin{equation}
+  \mathrm{RMSE}\bigl(\hat\kfour(\varepsilon)\bigr)\propto\frac{e^{4t}}{\sqrt{\nseq}}
+  \qquad(t\to\infty).
+\end{equation}
+The two slopes, $2$ for the degree-two coordinate and $4$ for the degree-four one, are
+the ``three clocks'' of the paper's Section~3 read in the sample-size clock, and they
+are what the paper's Appendix A5 reports E19 measuring on $t\ge1$ (the log-slopes are
+quoted there as macros).
+
+\paragraph{No collapse.}
+EM at high noise collapses the shape estimate to a Gaussian innovation (fitted excess
+kurtosis near zero), because the likelihood surface is flat in the shape direction and
+the validation-selected early stopping shrinks toward the initialisation
+(\Cref{ch:em-through-noise}; the paper's Section~4). The moment estimator cannot do
+this: it is a polynomial in the data with no boundary, so its error grows without
+saturating and its sign is unconstrained. The paper uses this contrast in one sentence
+(``never collapse''), and it is the reason the asymptotic slopes are visible in E19 where
+they are not in E06.
+
+\section{Relative efficiency against maximum likelihood}
+\label{sec:mom-efficiency}
+
+\subsection{The reference}
+
+\Cref{ch:fisher-cramer-rao} defines the Fisher information and the Cram\'er--Rao bound;
+\Cref{ch:attenuation-theorems} gives the paper's Theorem~3, which for one noised
+sequence at level $t$ reads
+\begin{equation}
+  I_t(\corr)=\tfrac12\Frob{\partial_\corr\Sig_0}^2e^{-4t}\bigl(1+O(e^{-2t})\bigr),
+  \qquad
+  I_t(\beta)=\tfrac1{24}\Frob{\partial_\beta\kfour}^2e^{-8t}\bigl(1+O(e^{-2t})\bigr),
+\end{equation}
+for a covariance coordinate and a shape coordinate respectively. The reference RMSE for
+an unbiased estimator from $\nseq$ sequences is $1/\sqrt{\nseq I_t}$, which grows as
+$e^{2t}$ and $e^{4t}$: the moment estimators have the right \emph{rates} by
+construction. What separates them from maximum likelihood is the \emph{constant}.
+
+\subsection{The lag-one estimator against the covariance information}
+
+For the Gaussian chain the information about $\corr$ is exact at every $t$
+(the paper's Theorem~3, last sentence), and its $t\to\infty$ form is
+$e^{-4t}\cdot\tfrac12\Frob{\partial_\corr\Sig_0}^2$. With
+$(\Sig_0)_{ij}=\corr^{|i-j|}$, the derivative has entries
+$|i-j|\corr^{|i-j|-1}$ off the diagonal and zero on it, so
+\begin{equation}
+  \tfrac12\Frob{\partial_\corr\Sig_0}^2=\tfrac12\sum_{i\ne j}(|i-j|)^2\corr^{2(|i-j|-1)}
+  =\sum_{k=1}^{\nsites-1}(\nsites-k)\,k^2\corr^{2(k-1)}.
+  \label{eq:info-rho-constant}
+\end{equation}
+Comparing with \cref{eq:rho-mom-var}, the asymptotic relative efficiency of the lag-one
+estimator is
+\begin{equation}
+  \mathrm{ARE}(\hat\corr_{\mathrm{mom}})=\lim_{t\to\infty}\frac{1/(\nseq I_t(\corr))}{\Var(\hat\corr_{\mathrm{mom}})}
+  =\frac{\nsites-1}{\sum_{k=1}^{\nsites-1}(\nsites-k)k^2\corr^{2(k-1)}}\ \le\ 1,
+  \label{eq:are-rho}
+\end{equation}
+with equality if and only if $\corr=0$. For a long chain the per-site sum converges,
+$\sum_{k\ge1}k^2r^{k-1}=(1+r)/(1-r)^3$ with $r=\corr^2$, so
+\begin{equation}
+  \mathrm{ARE}(\hat\corr_{\mathrm{mom}})\ \xrightarrow[\nsites\to\infty]{}\ \frac{(1-\corr^2)^3}{1+\corr^2}.
+  \label{eq:are-rho-long}
+\end{equation}
+
+The reason is visible in the score. At high noise the likelihood score of $\corr$ is, to
+leading order, the degree-two Hermite statistic
+$\tfrac12\alpha^2\langle\partial_\corr\Sig_0,{:}\vx\vx^\top{:}\rangle=\tfrac12\alpha^2\sum_{i\ne j}|i-j|\corr^{|i-j|-1}x_ix_j$
+(the paper's Appendix A1, ``information and the general order''): it uses \emph{every}
+lag $k$, weighted by $k\corr^{k-1}$, because a change of $\corr$ moves the whole
+covariance. The lag-one product uses lag one only. When $\corr=0$ the weights vanish for
+$k\ge2$ and the two statistics coincide; when $\corr$ is large the longer lags carry most
+of the information and the lag-one estimator discards it.
+
+\begin{example}[Efficiency of the lag-one estimator, by hand]
+\label{ex:are}
+\emph{Independent sites.} At $\corr=0$ the chain is i.i.d.\ $\normal01$, so
+$\Sig_0=\Id$, $\Sig_t=\Id$ at every $t$, and the noised sites $x_i$ are i.i.d.\
+$\normal01$. The exact Gaussian information is
+$I_t(\corr)=\tfrac12\tr(\Sig_t^{-1}\partial\Sig_t\Sig_t^{-1}\partial\Sig_t)=\tfrac12e^{-4t}\Frob{\partial_\corr\Sig_0}^2=e^{-4t}(\nsites-1)$,
+since $\partial_\corr\Sig_0$ at $\corr=0$ has ones on the two first off-diagonals and
+$2(\nsites-1)$ nonzero entries. On the estimator side, the products $x_ix_{i+1}$ and
+$x_{i+1}x_{i+2}$ are uncorrelated ($\E[x_ix_{i+1}^2x_{i+2}]=\E x_i\cdot\E x_{i+1}^2\cdot\E x_{i+2}=0$)
+and each has variance $\E x_i^2\,\E x_{i+1}^2=1$, so
+$\Var(\hat\corr_{\mathrm{mom}})=e^{4t}/(\nseq(\nsites-1))=1/(\nseq I_t)$ exactly, at every
+$t$: the lag-one estimator is efficient. \emph{The frozen correlation.} At $\corr=0.85$,
+$\corr^2=0.7225$, $1-\corr^2=0.2775$, $(1-\corr^2)^3=0.02137$ and
+$1+\corr^2=1.7225$, so by \cref{eq:are-rho-long} the long-chain efficiency is
+$0.02137/1.7225\approx0.0124$: the lag-one product uses about one eightieth of the
+covariance information, and its RMSE at high noise is about $\sqrt{80.6}\approx9$ times
+the Cram\'er--Rao reference. (At $\nsites=32$ the finite sum in \cref{eq:are-rho} is a
+little smaller than the infinite one, so the factor is a little below nine.) The exact
+Gaussian information includes the effect of the nuisance $\ivar$ only through the
+efficient information, which changes the constant by an $O(1)$ factor
+(\Cref{ch:attenuation-theorems}); the order of magnitude is the point.
+\end{example}
+
+\subsection{The per-site cumulant against the shape information}
+
+The same argument applies at degree four. The efficient shape score at high noise is
+\begin{equation}
+  \frac{\alpha^4}{24}\sum_{ijkl}\partial_\beta\kfour[ijkl]\;{:}x_ix_jx_kx_l{:}\,,
+\end{equation}
+a contraction of the \emph{whole} fourth-cumulant tensor with the degree-four Hermite polynomials,
+including every off-diagonal entry $\kfour[ijkl]$ with $i,j,k,l$ not all equal. The
+per-site estimator uses only the diagonal entries $\kfour[iiii]$. For the chain the
+off-diagonal entries are
+\begin{equation}
+  \kfour[ijkl]=\kfour(\varepsilon)\sum_{m=2}^{\min(i,j,k,l)}\corr^{\,i+j+k+l-4m}
+\end{equation}
+(\Cref{ch:moments-cumulants}; \code{theory.chain\_kappa4}), which are comparable to the
+diagonal ones when $\corr$ is close to one, so again the moment estimator discards most
+of the information at the frozen correlation. Its constant is therefore far from the
+Cram\'er--Rao one, as the paper's Section~4 reports (the ratios are quoted there as
+macros); its rate is right.
+
+\begin{remark}[On ``the two estimators coincide at high noise'']
+\label{rem:coincide}
+The paper's Section~4 says that at high noise the moment and likelihood estimators
+coincide, ``since the likelihood score of a degree-$m$ coordinate is itself the
+degree-$m$ Hermite statistic''. The second clause is the general-order theorem of
+\Cref{ch:attenuation-theorems} and is correct. The first clause is correct for the
+moment estimator built from that \emph{full} degree-$m$ statistic (all lags at degree
+two; the full tensor at degree four). The paper's two estimators use the lag-one
+product and the per-site cumulant, which are proper sub-statistics of it; their
+efficiency relative to maximum likelihood tends to the constant \cref{eq:are-rho},
+not to one, unless $\corr=0$. What does coincide at high noise is the \emph{rate}, and
+in a sample of fixed size both estimators are useless there anyway, which is the
+practical content of the sentence.
+\end{remark}
+
+\section{How E19 measured them}
+\label{sec:e19}
+
+E19 (\code{experiments/e19\_moment\_estimators.py}) is a deterministic re-analysis of
+E06's data. It regenerates E06's chains and noise draws from their random-stream tags
+(\code{e06-train}, \code{e06-noise}; \Cref{ch:protocol} explains the tag mechanism), so
+every row is paired by seed and level with the EM--BP row of
+\code{outputs/E06/levels.csv}. The design is: the Laplace chain at the frozen
+$\corr=0.85$ and $\nsites=32$; $\nseq=512$ sequences per cell, all noised at one level
+$t\in\{0.05,0.1,0.2,0.4,0.7,1.0,1.4,2.0\}$; sixteen seeds. Per cell the script computes
+$\hat\corr_{\mathrm{mom}}$ of \cref{eq:rho-mom}, the per-site sample cumulants, and
+$\hat\kfour(\varepsilon)/\hat\ivar^2$ of \cref{eq:k4-mom} with $\hat\corr$ and,
+separately, with the true $\corr$ (column \code{fit\_kurt\_oracle\_rho}). The
+predeclared analysis (registry \code{experiments/registry/E19.json}) is the RMSE,
+dispersion and bias over the sixteen seeds per level, paired with E06's EM--BP fits, and
+the ordinary-least-squares log-slope of the RMSE against $t$ on the levels $t\ge1$,
+compared with the predicted $2$ and $4$. The numbers reach the manuscript through
+\code{tools/make\_audit\_numbers.py} as the macros \code{audMom\ldots} (RMSE per level,
+bias at each level, the two slopes, and the ratio of the moment RMSE to the EM--BP RMSE
+over the informative levels $t\le0.7$); the paper quotes them in Section~4 (the learning
+paragraph) and in Appendix A5 (the E19 paragraph). Nothing about the moment estimators
+is selected: there is no ladder, no validation bundle and no checkpoint, which is what
+makes them the natural control for the selection-dependent EM fits.
+
+Two readings the paper draws from E19, in the order it draws them: below the crossover
+the moment estimators are several times worse than EM--BP for the correlation and for
+the shape, which is the value of exact inference (\Cref{ex:are} gives the analytic
+reason for the correlation); above it, where the EM shape estimate has collapsed, the
+moment estimators keep growing at the asymptotic rates, which is the corollary's
+prediction made visible on an estimator that cannot saturate.
+
+\where{\begingroup\sloppy The paper, Section~2 (the quasi-likelihood consequence of Proposition~1),
+Section~4 (the moment estimators against EM--BP) and Appendix A5 (E19); the
+$\ncomp=1$ rows of Table~1, of the family figure and of the regime sweep as the
+apparatus check (E02a, E02b, E13). Code:
+\code{experiments/e19\_moment\_estimators.py},
+\code{experiments/e06\_learning\_through\_noise.py},
+\code{tools/make\_audit\_numbers.py},
+\code{src/markov\_score/theory.py} (\code{chain\_covariance}, \code{chain\_kappa4},
+\code{correlation\_information\_constant}),
+\code{src/markov\_score/kernels.py} (the Gaussian and mixture M-steps),
+\code{experiments/e13\_regime\_sweep.py}.\par\endgroup}
+
+\paragraph{References.}
+H.~White, 1982, Maximum likelihood estimation of misspecified models, \emph{Econometrica} 50, 1--25.
+P.~J.~Huber, 1967, The behavior of maximum likelihood estimates under nonstandard conditions, \emph{Proceedings of the Fifth Berkeley Symposium}, 221--233.
+A.~W.~van der Vaart, 1998, \emph{Asymptotic Statistics}, Cambridge University Press (chapters 4 and 5: method of moments and M-estimators).
+R.~A.~Fisher, 1930, Moments and product moments of sampling distributions, \emph{Proceedings of the London Mathematical Society} 30, 199--238 (the k-statistics).
+A.~Balanov, T.~Bendory and D.~Edidin, 2026, The generalized method of moments is (almost) statistically efficient in low-SNR Gaussian latent-variable models, arXiv:2605.30095.
+D.~Hsu, S.~M.~Kakade and T.~Zhang, 2012, A spectral algorithm for learning hidden Markov models, \emph{Journal of Computer and System Sciences} 78, 1460--1480.

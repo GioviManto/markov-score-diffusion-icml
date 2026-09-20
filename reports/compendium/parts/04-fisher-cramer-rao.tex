@@ -1,0 +1,563 @@
+\chapter{Fisher information and the Cram\'er--Rao bound}
+\label{ch:fisher-cramer-rao}
+
+The paper's information theorems are statements about Fisher information: how much
+one noised sequence tells an estimator about a coordinate of the clean law, and how
+that amount decays with the noise level. Its learning section then compares an
+estimator's dispersion with the Cram\'er--Rao reference built from that information,
+and its corollary on sample complexity invokes the local asymptotic minimax theorem
+of H\'ajek and Le Cam. This chapter defines the statistical score and keeps it apart
+from the diffusion score, derives Fisher information and its properties, proves the
+Cram\'er--Rao bound, works out the efficient information under nuisance parameters and
+why a nuisance at another Hermite degree costs nothing to leading order, derives the
+Gaussian information formula the paper uses in closed form, states local asymptotic
+normality and the H\'ajek--Le Cam theorem in plain words and in the form the paper's
+corollary uses, explains what ``maximum likelihood attains it'' does and does not say,
+and derives Fisher's identity for latent-variable models, which is how the paper
+computes the gradient of its marginal likelihood from one forward--backward pass.
+
+\section{Two scores}
+\label{sec:two-scores}
+
+The word \term{score} has two meanings in this project, and confusing them makes the
+paper unreadable.
+
+\begin{definition}[Statistical score]
+For a parametric family of densities $p_\theta(\vx)$ with $\theta\in\Theta\subset\Reals^d$,
+the \term{statistical score} at $\vx$ is the gradient of the log-likelihood with
+respect to the \emph{parameter},
+\begin{equation}
+  \vect s_\theta(\vx)=\nabla_\theta\log p_\theta(\vx)\in\Reals^d .
+\end{equation}
+\end{definition}
+
+\begin{definition}[Diffusion score]
+For a density $\Pt$ on $\Reals^{\nsites}$, the \term{diffusion score} (also Stein score)
+at $\vx$ is the gradient of the log-density with respect to the \emph{data},
+\begin{equation}
+  \score(\vx,t)=\nabla_{\vx}\log\Pt(\vx)\in\Reals^{\nsites}.
+\end{equation}
+\end{definition}
+
+Both are gradients of a log-density; they differ in the variable of
+differentiation, in their dimension ($d$ against $\nsites$), and in their use. The
+statistical score is a random vector whose covariance is the Fisher information and
+whose sum over a sample is set to zero by maximum likelihood. The diffusion score is
+a vector field that drives the reverse process and that a network is trained to
+approximate. The paper writes ``the score'' for the diffusion score throughout, and
+``the likelihood score'', ``per-sequence scores obtained by Fisher's identity'' or
+``$\partial_\theta\log\Pt$'' for the statistical one. The two meet in one place: the
+paper's Theorem 2 computes the Fisher information of a parameter of $\Pz$ from the
+noised law $\Pt$, so the \emph{statistical} score $\partial_\theta\log\Pt(\vx)$ is
+a function on the same space as the \emph{diffusion} score $\nabla_{\vx}\log\Pt(\vx)$.
+A third, harmless usage, ``an arm is scored on the test bundle'', means evaluated,
+and is avoided here.
+
+\section{The score function and Fisher information}
+
+Fix a family $p_\theta$, $\theta\in\Theta$ open in $\Reals^d$, and write
+$\E_\theta$ for the expectation under $p_\theta$.
+
+\begin{assumption}[Regularity]
+\label{ass:regular}
+(R1) The support $\{\vx:p_\theta(\vx)>0\}$ does not depend on $\theta$. (R2) $\theta\mapsto p_\theta(\vx)$
+is continuously differentiable for every $\vx$. (R3) Differentiation with respect to
+$\theta$ may be taken under the integral sign in $\int p_\theta\dd\vx$ and in
+$\int T(\vx)p_\theta(\vx)\dd\vx$ for the statistics $T$ considered (a dominating
+integrable bound on $\|\nabla_\theta p_\theta\|$ locally in $\theta$ suffices).
+\end{assumption}
+
+\begin{proposition}[The score has mean zero]
+\label{prop:score-mean-zero}
+Under \cref{ass:regular}, $\E_\theta[\vect s_\theta(\vx)]=\vect 0$.
+\end{proposition}
+\begin{proof}
+$\E_\theta[\vect s_\theta]=\int\frac{\nabla_\theta p_\theta}{p_\theta}p_\theta\dd\vx=\int\nabla_\theta p_\theta\dd\vx=\nabla_\theta\int p_\theta\dd\vx=\nabla_\theta1=\vect0$,
+using (R1) so that the integrand is defined on the support and (R3) to exchange
+$\nabla_\theta$ and $\int$.
+\end{proof}
+
+\begin{definition}[Fisher information]
+The \term{Fisher information matrix} of the family at $\theta$ is the covariance of
+the score,
+\begin{equation}
+  \mat I(\theta)=\E_\theta\bigl[\vect s_\theta(\vx)\vect s_\theta(\vx)^{\!\top}\bigr],
+  \qquad I_{jk}(\theta)=\E_\theta\bigl[\partial_j\log p_\theta\,\partial_k\log p_\theta\bigr].
+  \label{eq:fisher}
+\end{equation}
+For a scalar parameter it is the number $I(\theta)=\E_\theta[(\partial_\theta\log p_\theta)^2]$.
+\end{definition}
+
+The paper's $I_t(\theta)=\E_{\Pt}[(\partial_\theta\log\Pt)^2]$ is this definition for
+the family $\{\Pt^\theta\}$ of noised laws at fixed $t$, one sequence being one
+observation.
+
+\begin{proposition}[Four properties]
+\label{prop:fisher-props}
+Under \cref{ass:regular}, with second derivatives where stated:
+\begin{enumerate}[label=(\roman*)]
+\item (second-derivative form) if $\theta\mapsto p_\theta$ is twice differentiable and
+  (R3) holds for the second derivatives, $I_{jk}(\theta)=-\E_\theta[\partial_j\partial_k\log p_\theta]$;
+\item (additivity) for $\nseq$ independent observations with a common $\theta$ the
+  information is $\nseq\,\mat I(\theta)$; for independent observations from different
+  families it is the sum of their informations;
+\item (reparametrisation) if $\theta=g(\psi)$ with $g$ differentiable and Jacobian
+  $\mat J=\partial\theta/\partial\psi$, then $\mat I_\psi(\psi)=\mat J^{\!\top}\mat I_\theta(g(\psi))\mat J$;
+  for scalars, $I_\psi=(g'(\psi))^2I_\theta$;
+\item (data processing) if $\vect y=T(\vx)$ is a statistic, the information carried by
+  $\vect y$ about $\theta$ is at most that carried by $\vx$, in the Loewner order.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(i) Differentiate $\partial_j\log p=\partial_jp/p$ once more:
+$\partial_j\partial_k\log p=\partial_j\partial_kp/p-(\partial_jp)(\partial_kp)/p^2$, and
+$\E_\theta[\partial_j\partial_kp/p]=\int\partial_j\partial_kp\dd\vx=\partial_j\partial_k1=0$ by (R3);
+the second term's expectation is $-I_{jk}$. (ii) The log-likelihood of independent
+observations is a sum, so the score is a sum of independent mean-zero vectors and
+its covariance is the sum of their covariances. (iii) By the chain rule
+$\nabla_\psi\log p=\mat J^{\!\top}\nabla_\theta\log p$, and covariances transform as
+$\mat J^{\!\top}\Cov\mat J$. (iv) Write $p_\theta(\vx)=p_\theta(\vect y)\,p_\theta(\vx\mid\vect y)$;
+the score of $\vx$ is the score of $\vect y$ plus the score of the conditional law,
+and the two are uncorrelated because the conditional score has conditional mean zero
+given $\vect y$ (\cref{prop:score-mean-zero} applied to the conditional family); so
+$\mat I_{\vx}=\mat I_{\vect y}+\E[\mat I_{\vx\mid\vect y}]\succeq\mat I_{\vect y}$.
+\end{proof}
+
+\why{Three of these are used by the paper without comment. Additivity is why the
+bound for $\nseq$ sequences is $1/(\nseq I_t)$. Reparametrisation is how the paper's
+Cram\'er--Rao reference for the excess kurtosis is obtained ``through the chain rule
+at the Laplace member of the one-parameter shape family'': the information about
+$\beta$ is computed, and the information about $\gamma_2=\kappa_4/\ivar^2$ as a function
+of $\beta$ is $I_\beta/(\dd\gamma_2/\dd\beta)^2$, so the reference standard deviation of
+an unbiased estimator of $\gamma_2$ is $|\dd\gamma_2/\dd\beta|/\sqrt{\nseq I_\beta}$.
+Data processing is why the information of the noised sequence is at most that of the
+clean one, and why the ``clean-data floor'' of the paper's Figure 3 is a floor.}
+
+\section{The Cram\'er--Rao bound}
+
+\begin{theorem}[Cram\'er--Rao, scalar]
+\label{thm:cr-scalar}
+Let $\theta$ be scalar, let \cref{ass:regular} hold, let $0<I(\theta)<\infty$, and let
+$T(\vx)$ be an estimator with $\E_\theta[T^2]<\infty$ and bias $b(\theta)=\E_\theta[T]-\theta$
+differentiable with (R3). Then
+\begin{equation}
+  \Var_\theta(T)\ \ge\ \frac{\bigl(1+b'(\theta)\bigr)^2}{I(\theta)},
+  \qquad\text{and in particular}\qquad \Var_\theta(T)\ge\frac1{I(\theta)}\ \text{if $T$ is unbiased.}
+  \label{eq:cr-scalar}
+\end{equation}
+\end{theorem}
+\begin{proof}
+Compute the covariance of $T$ with the score. Since the score has mean zero,
+\[
+  \Cov_\theta(T,s_\theta)=\E_\theta[T\,s_\theta]=\int T(\vx)\,\frac{\partial_\theta p_\theta(\vx)}{p_\theta(\vx)}\,p_\theta(\vx)\dd\vx
+  =\partial_\theta\int T(\vx)p_\theta(\vx)\dd\vx=\partial_\theta\E_\theta[T]=1+b'(\theta),
+\]
+using (R3) for the exchange. The Cauchy--Schwarz inequality for covariances,
+$\Cov(T,s)^2\le\Var(T)\Var(s)$, with $\Var_\theta(s_\theta)=I(\theta)$, gives
+$(1+b'(\theta))^2\le\Var_\theta(T)\,I(\theta)$, which is \cref{eq:cr-scalar}.
+\end{proof}
+
+Equality in Cauchy--Schwarz holds if and only if $T-\E T$ is a multiple of the score,
+$T(\vx)-\theta=c(\theta)\,s_\theta(\vx)$; an estimator that achieves the bound at every
+$\theta$ is called \term{efficient}, and exists only for exponential families in
+their mean parameterisation. The bound is a property of the family, not of any
+estimator; that is why the paper calls it a \emph{reference} and not a target.
+
+\begin{theorem}[Cram\'er--Rao, vector]
+\label{thm:cr-vector}
+Let $\theta\in\Reals^d$, let \cref{ass:regular} hold with $\mat I(\theta)$ finite and
+non-singular, and let $\vect T(\vx)\in\Reals^d$ be unbiased for $\theta$ with finite
+second moments. Then $\Cov_\theta(\vect T)\succeq\mat I(\theta)^{-1}$ in the Loewner order,
+i.e. $\vect v^{\!\top}\Cov_\theta(\vect T)\vect v\ge\vect v^{\!\top}\mat I(\theta)^{-1}\vect v$
+for every $\vect v$.
+\end{theorem}
+\begin{proof}
+As in the scalar case, $\Cov_\theta(\vect T,\vect s_\theta)=\E_\theta[\vect T\vect s_\theta^{\!\top}]=\nabla_\theta\E_\theta[\vect T]^{\!\top}=\Id$.
+The joint covariance of the stacked vector $(\vect T,\vect s_\theta)$ is
+$\begin{psmallmatrix}\Cov(\vect T)&\Id\\ \Id&\mat I\end{psmallmatrix}\succeq0$, and a
+block matrix $\begin{psmallmatrix}\mat A&\mat B\\ \mat B^{\!\top}&\mat C\end{psmallmatrix}$
+with $\mat C\succ0$ is positive semidefinite if and only if its Schur complement
+$\mat A-\mat B\mat C^{-1}\mat B^{\!\top}\succeq0$; here that is $\Cov(\vect T)-\mat I^{-1}\succeq0$.
+\end{proof}
+
+\section{Nuisance parameters and the efficient information}
+\label{sec:efficient}
+
+Partition $\theta=(\psi,\eta)$ into a coordinate of interest $\psi$ (scalar, say) and
+nuisance parameters $\eta$, and partition the information accordingly,
+$\mat I=\begin{psmallmatrix}I_{\psi\psi}&\mat I_{\psi\eta}\\ \mat I_{\eta\psi}&\mat I_{\eta\eta}\end{psmallmatrix}$.
+By \cref{thm:cr-vector} the variance of an unbiased estimator of $\psi$ that must
+also estimate $\eta$ is bounded below by $(\mat I^{-1})_{\psi\psi}$, and by the block
+inverse formula
+\begin{equation}
+  (\mat I^{-1})_{\psi\psi}=\frac1{I^{\mathrm{eff}}_{\psi}},\qquad
+  I^{\mathrm{eff}}_{\psi}=I_{\psi\psi}-\mat I_{\psi\eta}\mat I_{\eta\eta}^{-1}\mat I_{\eta\psi},
+  \label{eq:efficient}
+\end{equation}
+the Schur complement. $I^{\mathrm{eff}}_\psi$ is the \term{efficient information}
+about $\psi$: the information that survives after the nuisance has been estimated. It
+is at most $I_{\psi\psi}$, with equality if and only if the scores of $\psi$ and of $\eta$
+are uncorrelated. The ratio $I_{\psi\psi}/I^{\mathrm{eff}}_\psi\ge1$ is the
+\term{nuisance cost}, the quantity \code{summarise} in
+\code{src/markov\_score/information.py} reports. Equivalently, $I^{\mathrm{eff}}_\psi$
+is the variance of the \term{efficient score}, the residual of the $\psi$-score after
+its linear regression on the $\eta$-score.
+
+\begin{proposition}[Nuisance at another Hermite degree]
+\label{prop:nuisance-degree}
+Suppose that, as $t\to\infty$ and with $\alpha=e^{-t}$, the scores of two coordinates
+of the noised family have expansions
+$s_\psi=\alpha^mA(\vx)+\alpha^{m+2}A_2(\vx)+\dots$ and $s_\eta=\alpha^{m'}B(\vx)+\alpha^{m'+2}B_2(\vx)+\dots$
+with $A$, $B$ polynomials that are $\gamma$-orthogonal, $\E_\gamma[AB]=0$, and with
+$I_{\psi\psi}=\alpha^{2m}\E_\gamma[A^2](1+O(\alpha^2))$, $I_{\eta\eta}=\alpha^{2m'}\E_\gamma[B^2](1+O(\alpha^2))$,
+$\E_\gamma[B^2]>0$, and $\Pt=\gamma(1+O(\alpha^2))$ on the relevant moments. Then
+$I_{\psi\eta}=O(\alpha^{m+m'+2})$ and
+\begin{equation}
+  I^{\mathrm{eff}}_\psi=I_{\psi\psi}\bigl(1+O(\alpha^4)\bigr)=\alpha^{2m}\E_\gamma[A^2]\bigl(1+O(\alpha^2)\bigr):
+\end{equation}
+the efficient information has the same rate and the same leading constant as the raw
+information. If instead $m=m'$ and $\E_\gamma[AB]\ne0$, the correction is of the same
+order as $I_{\psi\psi}$ and the efficient information is smaller by an $O(1)$ factor.
+\end{proposition}
+\begin{proof}
+$I_{\psi\eta}=\E_{\Pt}[s_\psi s_\eta]=\alpha^{m+m'}\E_{\Pt}[AB]+O(\alpha^{m+m'+2})$, and
+$\E_{\Pt}[AB]=\E_\gamma[AB]+O(\alpha^2)=O(\alpha^2)$. Hence
+$I_{\psi\eta}^2/I_{\eta\eta}=O(\alpha^{2m+2m'+4})/\Theta(\alpha^{2m'})=O(\alpha^{2m+4})$, which is
+$O(\alpha^4)$ relative to $I_{\psi\psi}=\Theta(\alpha^{2m})$. In the same-degree case the
+cross term is $\alpha^{2m}\E_\gamma[AB]\ne0$ at leading order and the Schur complement
+subtracts a fixed fraction.
+\end{proof}
+
+\why{This is the paper's sentence ``the leading orders of a degree-2 and a degree-4
+coordinate do not couple, because $\Hen{2}$ and $\Hen{4}$ are $\gamma$-orthogonal, so the
+efficient information of a shape coordinate after lower-degree nuisance coordinates
+are estimated has the same rate and constant as its raw information; a nuisance of
+the same degree costs an $O(1)$ factor''. For the generalised-Gaussian chain, $\psi=\beta$
+has $m=4$ with $A$ a degree-four Hermite polynomial, and $\eta=(\corr,\ivar)$ have
+$m'=2$ with $B$ a degree-two one. The proposition says the $e^{-8t}$ law and the constant
+$\tfrac1{24}\Frob{\partial_\beta\kfour}^2$ of the paper's Theorem 2 hold for the efficient
+information that the paper's Figure 2b actually plots, not only for the diagonal entry.
+It also says why the eight-component mixture's shape coordinates, which are all of
+degree four, cost each other an $O(1)$ factor, one reason the paper calls its
+one-parameter reference a yardstick.}
+
+The paper measures the information matrix of $(\corr,\ivar,\beta)$ by the
+\term{outer-product estimator}: with per-sequence scores $\vect g_\mu=\nabla_\theta\log\Pt(\vx^\mu)$
+at the true $\theta$, $\widehat{\mat I}=\tfrac1{\nseq}\sum_\mu\vect g_\mu\vect g_\mu^{\!\top}$,
+which is unbiased for $\mat I$ by \cref{eq:fisher} (it is not the observed
+information $-\nabla^2\log p$, which would need second derivatives). The function
+\code{outer\_product\_information} of \code{src/markov\_score/information.py} forms it,
+and \code{efficient\_information} inverts it coordinate by coordinate as in
+\cref{eq:efficient}. Its own sampling error is what limits the paper's chain
+verification of the shape constant; the scalar constant is verified by quadrature
+instead (E21).
+
+\section{The Gaussian family in closed form}
+\label{sec:gaussian-fisher}
+
+\begin{proposition}[Fisher information of a zero-mean Gaussian family]
+\label{prop:gaussian-fisher}
+Let $\vx\sim\normal{\vect0}{\Sig(\theta)}$ on $\Reals^{\nsites}$ with $\Sig(\theta)$
+positive definite and differentiable in $\theta\in\Reals^d$. Then
+\begin{equation}
+  I_{jk}(\theta)=\tfrac12\tr\bigl(\Sig^{-1}\partial_j\Sig\,\Sig^{-1}\partial_k\Sig\bigr).
+  \label{eq:gaussian-fisher}
+\end{equation}
+\end{proposition}
+\begin{proof}
+The log-density is $\log p_\theta(\vx)=-\tfrac{\nsites}2\log2\pi-\tfrac12\log\det\Sig-\tfrac12\vx^{\!\top}\Sig^{-1}\vx$.
+Using $\partial_j\log\det\Sig=\tr(\Sig^{-1}\partial_j\Sig)$ and $\partial_j\Sig^{-1}=-\Sig^{-1}(\partial_j\Sig)\Sig^{-1}$,
+\[
+  \partial_j\log p_\theta(\vx)=-\tfrac12\tr(\Sig^{-1}\partial_j\Sig)+\tfrac12\vx^{\!\top}\Sig^{-1}(\partial_j\Sig)\Sig^{-1}\vx
+  =\tfrac12\bigl(\vx^{\!\top}\mat B_j\vx-\E[\vx^{\!\top}\mat B_j\vx]\bigr),
+\]
+with $\mat B_j=\Sig^{-1}(\partial_j\Sig)\Sig^{-1}$ symmetric, since $\E[\vx^{\!\top}\mat B\vx]=\tr(\mat B\Sig)=\tr(\Sig^{-1}\partial_j\Sig)$.
+The information is the covariance of these centred quadratic forms. For
+$\vx\sim\normal{\vect0}{\Sig}$ and symmetric $\mat B$, $\mat C$, Isserlis' theorem
+(chapter on Gaussian integrals and Hermite polynomials) gives
+$\E[\vx^{\!\top}\mat B\vx\,\vx^{\!\top}\mat C\vx]=\tr(\mat B\Sig)\tr(\mat C\Sig)+2\tr(\mat B\Sig\mat C\Sig)$,
+so $\Cov(\vx^{\!\top}\mat B\vx,\vx^{\!\top}\mat C\vx)=2\tr(\mat B\Sig\mat C\Sig)$. With the factors
+$\tfrac12\cdot\tfrac12$, $I_{jk}=\tfrac14\cdot2\tr(\mat B_j\Sig\mat B_k\Sig)=\tfrac12\tr(\Sig^{-1}\partial_j\Sig\Sig^{-1}\partial_k\Sig)$.
+\end{proof}
+
+\paragraph{The noised Gaussian chain.}
+For the Gaussian chain of the chapter on Markov chains, $\vx_t\sim\normal{\vect0}{\Sig_t(\theta)}$
+exactly, with $\Sig_t=e^{-2t}\Sig_0(\theta)+\Dt\Id$ and $\theta=(\corr,\ivar)$, so
+$\partial_\theta\Sig_t=e^{-2t}\partial_\theta\Sig_0$ and \cref{eq:gaussian-fisher} gives the
+paper's closed form
+\begin{equation}
+  I_t(\theta)=\tfrac12\tr\bigl(\Sig_t^{-1}\partial_\theta\Sig_t\,\Sig_t^{-1}\partial_\theta\Sig_t\bigr)
+  =\tfrac12e^{-4t}\tr\bigl(\Sig_t^{-1}\partial_\theta\Sig_0\,\Sig_t^{-1}\partial_\theta\Sig_0\bigr),
+  \label{eq:gaussian-chain-fisher}
+\end{equation}
+exact at every $t$ and every $\corr$; this is the curve of the paper's Figure 2a and
+the function \code{gaussian\_chain\_fisher} of \code{src/markov\_score/theory.py},
+which evaluates $\partial_\theta\Sig_0$ by central differences. Its large-$t$ limit is
+immediate: $\Sig_t\to\Id$, so
+\begin{equation}
+  e^{4t}I_t(\theta)\ \longrightarrow\ \tfrac12\tr\bigl(\partial_\theta\Sig_0\,\partial_\theta\Sig_0\bigr)=\tfrac12\Frob{\partial_\theta\Sig_0}^2,
+\end{equation}
+the constant of the paper's equation for a covariance coordinate, checked in Lean as
+target 3 (\code{lean/README.md}). The approach to the limit is governed by the
+spectrum of $\Sig_0$: writing $\Sig_t=\Id+e^{-2t}(\Sig_0-\Id)$, the Neumann series
+$\Sig_t^{-1}=\Id-e^{-2t}(\Sig_0-\Id)+e^{-4t}(\Sig_0-\Id)^2-\dots$ converges in operator norm
+exactly when $e^{-2t}\lmax(\Sig_0-\Id)<1$, i.e. $e^{2t}>\lmax(\Sig_0)-1$, and its first
+correction is of relative size $e^{-2t}\lmax(\Sig_0)$: this is the origin of the paper's
+$\epsilon_t=O(e^{-2t}\lmax(\Sig_0))$ and of the crossover $\tstar=\tfrac12\log\lmax(\Sig_0)$
+below which the measured slope is shallower than $-4$. The same formula gives the
+off-diagonal entry $I_{\corr\ivar}$, hence the correlation between the two scores and
+the efficient information of each, which the paper's Figure 2a uses; the efficient
+slope is already close to $-4$ below $\tstar$ where the raw diagonal is not, because
+the nuisance coupling of $\corr$ with $\ivar$ is strong there.
+
+\section{Local asymptotic normality and the H\'ajek--Le Cam theorem}
+\label{sec:lan}
+
+Fisher information bounds the variance of \emph{unbiased} estimators. Nothing in the
+Cram\'er--Rao bound stops a biased estimator from having a smaller mean squared error
+at some $\theta$ (the constant estimator has zero variance). The statement that
+$1/I$ is nevertheless the right yardstick for \emph{every} estimator is asymptotic and
+local, and it is the theorem the paper's corollary on sample complexity invokes.
+
+\paragraph{In plain words.}
+Take $\nseq$ independent sequences from $p_\theta$ and look at parameter values within
+a $1/\sqrt{\nseq}$ neighbourhood of $\theta$, the scale on which the data can
+distinguish them. As $\nseq\to\infty$ the whole experiment, restricted to that
+neighbourhood, looks like observing one Gaussian vector with mean $\vect h$ (the
+rescaled parameter offset) and covariance $\mat I(\theta)^{-1}$. In that Gaussian
+experiment no estimator of $\vect h$ has worst-case risk below that of the observation
+itself, whose covariance is $\mat I^{-1}$. So no estimator sequence can beat
+$\mat I(\theta)^{-1}/\nseq$ uniformly over a shrinking neighbourhood, however biased,
+and the maximum-likelihood estimator, which becomes that Gaussian observation,
+attains it.
+
+\begin{definition}[Local asymptotic normality]
+The family is \term{locally asymptotically normal} (LAN) at $\theta$ with information
+$\mat I(\theta)$ if, for every $\vect h\in\Reals^d$, the log-likelihood ratio of $\nseq$
+independent observations satisfies
+\begin{equation}
+  \log\prod_{\mu=1}^{\nseq}\frac{p_{\theta+\vect h/\sqrt{\nseq}}(\vx^\mu)}{p_\theta(\vx^\mu)}
+  =\vect h^{\!\top}\vect\Delta_{\nseq}-\tfrac12\vect h^{\!\top}\mat I(\theta)\vect h+o_{p}(1),
+  \qquad \vect\Delta_{\nseq}=\frac1{\sqrt{\nseq}}\sum_\mu\vect s_\theta(\vx^\mu)\Rightarrow\normal{\vect0}{\mat I(\theta)},
+\end{equation}
+under $p_\theta$. A sufficient condition is that the family be
+\term{differentiable in quadratic mean} at $\theta$: $\sqrt{p_{\theta+\vect h}}=\sqrt{p_\theta}+\tfrac12\vect h^{\!\top}\vect s_\theta\sqrt{p_\theta}+r_{\vect h}$
+with $\int r_{\vect h}^2=o(|\vect h|^2)$; a continuously differentiable log-density with
+continuous finite information suffices for that.
+\end{definition}
+
+\begin{theorem}[H\'ajek--Le Cam local asymptotic minimax]
+\label{thm:lam}
+Let the family be LAN at $\theta$ with non-singular $\mat I(\theta)$, let
+$\ell:\Reals^d\to[0,\infty)$ be bowl-shaped (its sublevel sets convex and symmetric),
+and let $\vect T_{\nseq}$ be any sequence of estimators. Then
+\begin{equation}
+  \lim_{c\to\infty}\ \liminf_{\nseq\to\infty}\ \sup_{|\vect h|\le c}\
+  \E_{\theta+\vect h/\sqrt{\nseq}}\,\ell\bigl(\sqrt{\nseq}(\vect T_{\nseq}-\theta-\vect h/\sqrt{\nseq})\bigr)
+  \ \ge\ \E\,\ell(\vect Z),\qquad \vect Z\sim\normal{\vect0}{\mat I(\theta)^{-1}} .
+  \label{eq:lam}
+\end{equation}
+\end{theorem}
+
+With the quadratic loss $\ell(\vect u)=(v^{\!\top}\vect u)^2$ for a coordinate direction,
+$\E\ell(\vect Z)=(\mat I^{-1})_{\psi\psi}=1/I^{\mathrm{eff}}_\psi$, and \cref{eq:lam} reads:
+for any estimator sequence $\hat\psi_{\nseq}$,
+\begin{equation}
+  \lim_{c\to\infty}\liminf_{\nseq\to\infty}\sup_{|\theta'-\theta|\le c/\sqrt{\nseq}}\nseq\,\E_{\theta'}(\hat\psi_{\nseq}-\psi')^2\ \ge\ \frac1{I^{\mathrm{eff}}_\psi(\theta)} .
+  \label{eq:lam-quadratic}
+\end{equation}
+This is the statement the paper's corollary uses, with $I^{\mathrm{eff}}$ the efficient
+information of the paper's general-order theorem at fixed $t$, so that the right-hand
+side is $\Theta(e^{2mt})$ for a coordinate of lowest Hermite degree $m$. Two
+features of the exact statement deserve attention. The supremum over a shrinking
+neighbourhood is essential: without it a superefficient estimator can beat $1/I$ at
+isolated points. And the outer limit $c\to\infty$ is part of the theorem; for a fixed
+$c$ the local minimax risk of the limiting Gaussian experiment over $|\vect h|\le c$ is
+strictly below $\E\ell(\vect Z)$ (a bounded normal-mean problem has a shrinkage
+estimator with smaller worst-case risk), and the bound is approached as $c$ grows. The
+paper's corollary writes the bound with a fixed $c$ and without the outer limit; read
+literally that is slightly stronger than \cref{eq:lam-quadratic}, and the intended
+statement is \cref{eq:lam-quadratic}.
+
+\paragraph{What ``maximum likelihood attains it'' means.}
+Under the regularity that gives LAN plus conditions for consistency, the
+maximum-likelihood estimator satisfies $\sqrt{\nseq}(\hat\theta_{\nseq}-\theta)\Rightarrow\normal{\vect0}{\mat I(\theta)^{-1}}$
+under $p_\theta$, locally uniformly, and is \term{regular} in the sense of the
+convolution theorem; so its rescaled risk converges to $\E\ell(\vect Z)$ and equality
+holds in \cref{eq:lam}. Three things this does \emph{not} say, all named by the paper.
+(i) It is a statement at fixed $t$ as $\nseq\to\infty$; the LAN approximation needs
+$\nseq\gg1/I_t$, i.e. $\nseq\gg e^{2mt}$, so the limits $\nseq\to\infty$ and $t\to\infty$
+do not commute and nothing is claimed uniformly in $t$. (ii) It is a statement about
+\emph{local} precision, on the scale $1/\sqrt{\nseq I_t}$; once that scale exceeds the
+range of a bounded coordinate (the excess kurtosis of the mixture family is bounded
+below by $-2$ and the paper's shape coordinate has range $3$), the neighbourhood
+$|\theta'-\theta|\le c/\sqrt{\nseq}$ is no longer inside the parameter space and the
+statement is empty; the paper reads its estimator's collapse at that level as the
+information running out, not as a failure of the estimator. (iii) It says nothing
+about an optimiser stopped at a finite budget, nor about an estimator whose iteration
+count is selected on validation.
+
+\section{Why ``at the bound'' is a yardstick and not an efficiency theorem}
+\label{sec:yardstick}
+
+The paper compares, level by level, the dispersion across sixteen replicates of its
+fitted correlation and fitted excess kurtosis with the Cram\'er--Rao reference
+$1/\sqrt{\nseq I^{\mathrm{eff}}_t}$. Four facts make that comparison a yardstick.
+
+\begin{enumerate}
+\item The reference is computed in a \emph{one-parameter} shape family (the
+  generalised Gaussian at its Laplace member, with $(\corr,\ivar)$ as lower-degree
+  nuisances that cost nothing to leading order, \cref{prop:nuisance-degree}). The
+  estimator fits an \emph{eight-component mixture}, whose shape coordinates are all of
+  degree four and cost each other $O(1)$ factors. The two families share the Laplace
+  law as a point but not their tangent spaces, so the reference is not the bound for
+  the estimator's own family.
+\item The Cram\'er--Rao bound is for \emph{unbiased} estimators, and \cref{thm:cr-scalar}
+  shows that a bias with $b'(\theta)<0$ lowers the bound by $(1+b')^2$. Early stopping
+  selected on validation is a shrinkage device: it pulls the fitted shape toward the
+  Gaussian innovation as the information falls. A dispersion \emph{below} the
+  unbiased reference, which the paper reports at some levels, is therefore not a
+  contradiction; it is the signature of shrinkage, and the paper reports bias and
+  dispersion separately for that reason.
+\item $\nseq=512$ is fixed and moderate, whereas the theorem is asymptotic. At the
+  levels where $1/\sqrt{\nseq I_t}$ is a sizeable fraction of the coordinate's range,
+  the local statement is empty (\cref{sec:lan}, point (ii)).
+\item The reported dispersion is a sixteen-replicate standard deviation, whose own
+  relative sampling error is about $1/\sqrt{2\cdot15}\approx18\%$ under normality
+  (chapter on the statistics of the experiments); ``within the sampling error of a
+  sixteen-replicate standard deviation'' is the most that can be claimed.
+\end{enumerate}
+The defensible statement, and the one the paper makes, is that at the low levels the
+fits are unimodal and their dispersion is consistent with the one-parameter reference,
+that collapse to a Gaussian innovation begins at a stated level, and that it is total
+at the level where the reference crosses the coordinate's range.
+
+\section{Fisher's identity for latent-variable models}
+\label{sec:fisher-identity}
+
+The paper's estimator maximises the marginal likelihood of the noised sequences,
+$\Lik(\params)=\sum_\mu\log\Pt[t_\mu,\params](\vx^\mu)$, where each term is an integral
+over the unobserved clean chain. Its gradient is obtained without differentiating
+through the integral, by an identity due to Fisher.
+
+\begin{proposition}[Fisher's identity]
+\label{prop:fisher-identity}
+Let $p_\theta(\va,\vx)$ be a joint density of a latent $\va$ and an observation $\vx$,
+with marginal $p_\theta(\vx)=\int p_\theta(\va,\vx)\dd\va$, differentiable in $\theta$ with
+(R3). Then
+\begin{equation}
+  \nabla_\theta\log p_\theta(\vx)=\E_\theta\bigl[\nabla_\theta\log p_\theta(\va,\vx)\,\big|\,\vx\bigr],
+  \label{eq:fisher-identity}
+\end{equation}
+the posterior expectation of the complete-data score.
+\end{proposition}
+\begin{proof}
+\[
+  \nabla_\theta\log p_\theta(\vx)=\frac{\nabla_\theta\int p_\theta(\va,\vx)\dd\va}{p_\theta(\vx)}
+  =\int\frac{\nabla_\theta p_\theta(\va,\vx)}{p_\theta(\va,\vx)}\cdot\frac{p_\theta(\va,\vx)}{p_\theta(\vx)}\dd\va
+  =\int\nabla_\theta\log p_\theta(\va,\vx)\,p_\theta(\va\mid\vx)\dd\va ,
+\]
+using (R3) to move the gradient inside the integral and $p_\theta(\va\mid\vx)=p_\theta(\va,\vx)/p_\theta(\vx)$.
+\end{proof}
+
+Equivalently, with the EM auxiliary function $\Qfun(\theta\mid\theta')=\E_{\theta'}[\log p_\theta(\va,\vx)\mid\vx]$,
+\cref{eq:fisher-identity} says $\nabla_\theta\Qfun(\theta\mid\theta')|_{\theta=\theta'}=\nabla_\theta\log p_{\theta'}(\vx)$:
+the gradient of the EM surrogate at the current point is the gradient of the marginal
+log-likelihood, which is why EM's ascent directions are likelihood ascent directions
+(chapter on maximum likelihood and EM).
+
+\paragraph{For the chain.}
+The complete-data density is \cref{eq:markov-joint} of the chapter on Markov chains
+times the channel, $p_\theta(\va,\vx)=\mu(a_1)\prod_{i\ge2}\kernelth(a_i\mid a_{i-1})\prod_i\like(x_i\mid a_i)$,
+and only the transition factors depend on $\theta$. So
+\begin{equation}
+\begin{aligned}
+  \nabla_\theta\log p_\theta(\vx)&=\sum_{i\ge2}\E_\theta\bigl[\nabla_\theta\log\kernelth(a_i\mid a_{i-1})\,\big|\,\vx\bigr]\\
+  &=\sum_{i\ge2}\iint\nabla_\theta\log\kernelth(a'\mid a)\,p_\theta(a_i=a',a_{i-1}=a\mid\vx)\dd a\dd a' ,
+\end{aligned}
+\end{equation}
+a sum of integrals against the \term{pairwise posterior marginals} of consecutive
+sites, which the forward--backward recursion returns in the same pass that computes
+the site marginals. On the grid, with $\Xis_{kl}=\sum_\mu\sum_{i\ge2}p(a_i=\gridpt{k},a_{i-1}=\gridpt{l}\mid\vx^\mu)$
+the expected transition mass (child first, parent second), the gradient of the whole
+marginal log-likelihood is the inner product $\langle\Xis,\nabla_\theta\log\kernelth\rangle$
+of the paper's equation (4). The same $\Xis$ is all the M-step of EM needs. The
+identity is verified in the paper against finite differences of the grid evidence to
+$10^{-9}$, and, independently of the recursion, \code{tests/test\_fisher\_bruteforce.py}
+enumerates every latent path on a five-point grid and checks the evidence, the
+orientation of $\Xis$ (a transposed $\Xis$ paired with a transposed kernel would pass a
+finite-difference check), and the gradient against a finite difference of the
+enumerated evidence. The per-sequence scores $\vect g_\mu$ that feed the outer-product
+information estimator of \cref{sec:efficient} are computed by the batched version of
+the same identity in \code{src/markov\_score/information.py}
+(\code{per\_chain\_scores}), one term per edge, without materialising a per-sequence
+$\ngrid\times\ngrid$ matrix.
+
+\section{Worked example: the variance of one noised Gaussian coordinate}
+
+Let $x\sim\normal{0}{\theta}$, one scalar observation, $\theta>0$. The log-density is
+$-\tfrac12\log(2\pi\theta)-x^2/(2\theta)$, the score is $-1/(2\theta)+x^2/(2\theta^2)$, and
+since $\E x^2=\theta$ and $\Var(x^2)=2\theta^2$,
+\[
+  I(\theta)=\Var\Bigl(\frac{x^2}{2\theta^2}\Bigr)=\frac{2\theta^2}{4\theta^4}=\frac1{2\theta^2},
+\]
+which agrees with \cref{eq:gaussian-fisher}: $\tfrac12\tr(\theta^{-1}\cdot1\cdot\theta^{-1}\cdot1)=1/(2\theta^2)$.
+The Cram\'er--Rao bound for $\nseq$ unbiased observations is $2\theta^2/\nseq$, attained
+by the sample second moment $\tfrac1{\nseq}\sum x_\mu^2$, whose variance is exactly
+$2\theta^2/\nseq$: an efficient estimator, as the exponential-family remark after
+\cref{thm:cr-scalar} predicts.
+
+Now noise the coordinate: $x_t=e^{-t}a+\sqrt{\Dt}z$ with $a\sim\normal0\theta$, so
+$x_t\sim\normal{0}{v_t}$ with $v_t=e^{-2t}\theta+1-e^{-2t}$ and $\partial_\theta v_t=e^{-2t}$.
+By \cref{eq:gaussian-fisher},
+\[
+  I_t(\theta)=\frac{(\partial_\theta v_t)^2}{2v_t^2}=\frac{e^{-4t}}{2\bigl(1+e^{-2t}(\theta-1)\bigr)^2}.
+\]
+At $\theta=1$ the denominator is exactly $1$ at every $t$, so $I_t(1)=\tfrac12e^{-4t}$
+\emph{exactly}: the constant $\tfrac12\Frob{\partial_\theta\Sig_0}^2=\tfrac12$ of the
+paper's covariance-coordinate law, with no correction, because a unit-variance
+coordinate keeps unit variance under the channel. This is the ``$I_te^{4t}$ equal to
+one half'' that the paper's Appendix E checks for the variance coordinate of the scalar
+law, and that \code{tests/test\_theory\_hermite.py} checks by quadrature for the
+Laplace law as well (the paper's Theorem 2 says the constant is the same for every
+law with an exponential moment). At $\theta\ne1$ the factor $(1+e^{-2t}(\theta-1))^{-2}$ is
+the scalar version of the crossover: for $\theta=5$ the local log-slope of $I_t$ is
+$-4+4\cdot4e^{-2t}/(1+4e^{-2t})$, about $-1.6$ at $t=0.5$, $-3.3$ at $t=1.5$ and $-4.0$ at
+$t=3$, with the crossover $\tfrac12\log(\theta-1)=\tfrac12\log4\approx0.69$ at which the
+correction term equals one. With $\nseq=512$ sequences at $t=1$ and $\theta=1$, the
+reference standard deviation is $\sqrt{2e^{4}/512}\approx0.46$, more than the range of
+a coordinate confined to an interval of length one: at that level the local theory
+has nothing to say about such a coordinate, which is the content of point (ii) in
+\cref{sec:lan}.
+
+\where{{\sloppy The paper's Section 3 (the definition of $I_t(\theta)$, the closed-form Gaussian
+information, the efficient-information sentence, Theorem 3 on the general order,
+Corollary 4 and the three caveats after it), Section 4 (the Cram\'er--Rao reference,
+``a yardstick, not an efficiency theorem'', Fisher's identity and equation (4)),
+Appendix A (the proof of the corollary and the nuisance-projection argument),
+Appendix C (the finite-difference verification) and Appendix E (E21, the scalar
+constants). Experiments E01, E06, E12b, E19, E21. Code:
+\code{src/markov\_score/theory.py} (\code{gaussian\_chain\_fisher},
+\code{correlation\_information\_constant}, \code{shape\_information\_constant}),
+\code{src/markov\_score/information.py} (\code{per\_chain\_scores},
+\code{outer\_product\_information}, \code{efficient\_information}, \code{summarise}),
+\code{src/markov\_score/shape\_kernel.py} (the shape coordinate and its gradient),
+\code{tests/test\_fisher\_bruteforce.py}, \code{tests/test\_theory\_hermite.py},
+\code{tests/test\_shape\_kernel.py}.\par}}
+
+\paragraph{References.}
+H. Cram\'er (1946), \emph{Mathematical Methods of Statistics}, Princeton University
+Press (Chapter 32: the information inequality).
+C. R. Rao (1945), ``Information and the accuracy attainable in the estimation of
+statistical parameters'', Bulletin of the Calcutta Mathematical Society 37, 81--91.
+E. L. Lehmann and G. Casella (1998), \emph{Theory of Point Estimation}, 2nd edition,
+Springer (Chapter 2: Fisher information, nuisance parameters, efficiency).
+A. W. van der Vaart (1998), \emph{Asymptotic Statistics}, Cambridge University Press
+(Chapters 7 and 8: differentiability in quadratic mean, local asymptotic normality, the
+convolution and local asymptotic minimax theorems).
+J. H\'ajek (1972), ``Local asymptotic minimax and admissibility in estimation'',
+Proceedings of the Sixth Berkeley Symposium on Mathematical Statistics and
+Probability 1, 175--194.
+O. Capp\'e, E. Moulines and T. Ryd\'en (2005), \emph{Inference in Hidden Markov Models},
+Springer (Chapter 10: Fisher's identity, Louis' identity and the EM algorithm for
+state-space models).

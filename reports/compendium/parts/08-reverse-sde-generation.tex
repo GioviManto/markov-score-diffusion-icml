@@ -1,0 +1,424 @@
+\chapter{Reverse-time diffusion and generation}
+\label{ch:reverse-sde-generation}
+
+A diffusion model generates by running the channel of \cref{ch:ou-channel-tweedie}
+backwards in time, and the only ingredient the backward equation needs that the
+forward one does not is the score. This chapter derives the reverse-time equation
+(Anderson's theorem) from the Fokker--Planck equation, explains why an error in the
+score is exactly what an error in the generated law is made of, writes down the
+Euler--Maruyama scheme the code uses, and then describes the paper's generation
+experiment E05: its same-Brownian-path design, its arms, and every metric by which the
+samples are judged, including the transition-law metric (Hellinger distance) used in
+the learning section.
+
+\section{Anderson's reverse-time equation}
+\label{sec:rev:anderson}
+
+Consider a forward diffusion on $[0,T]$,
+\begin{equation}
+  \dd\vx_t=f(\vx_t,t)\,\dd t+g(t)\,\dd\vect{W}_t,\qquad \vx_0\sim\Pz,
+  \label{eq:rev:forward}
+\end{equation}
+with smooth positive marginal densities $p_t$. The evolution of $p_t$ is the
+\term{Fokker--Planck equation}
+\begin{equation}
+  \partial_tp_t=-\nabla\cdot\bigl(f\,p_t\bigr)+\tfrac12g^2\,\Delta p_t ,
+  \label{eq:rev:fp}
+\end{equation}
+where $\nabla\cdot$ is the divergence and $\Delta=\nabla\cdot\nabla$ the Laplacian
+(not to be confused with $\Dt$). The reader who has not met \cref{eq:rev:fp} may read
+it as a conservation law: the drift transports probability with velocity $f$, and the
+noise spreads it by diffusion with coefficient $\tfrac12g^2$.
+
+\begin{theorem}[Time reversal]
+\label{thm:rev:anderson}
+Let $\tau=T-t$ and let $\bar{\vx}_\tau$ solve
+\begin{equation}
+  \dd\bar{\vx}_\tau=\bigl[-f(\bar{\vx}_\tau,T-\tau)+g(T-\tau)^2\,\nabla\log p_{T-\tau}(\bar{\vx}_\tau)\bigr]\dd\tau
+   +g(T-\tau)\,\dd\bar{\vect{W}}_\tau,\qquad \bar{\vx}_0\sim p_T,
+  \label{eq:rev:reverse}
+\end{equation}
+with $\bar{\vect{W}}$ a Brownian motion. Then $\bar{\vx}_\tau$ has the law $p_{T-\tau}$
+for every $\tau\in[0,T]$; in particular $\bar{\vx}_T\sim\Pz$. Anderson (1982) proved
+more: the process $t\mapsto\vx_{T-t}$ itself is a solution of \cref{eq:rev:reverse}.
+\end{theorem}
+
+\begin{proof}[Proof of the marginal statement]
+Scalar case, and write $p=p_t(x)$. Since $\tfrac12g^2\partial_x^2p=\partial_x\bigl(g^2\partial_xp\bigr)-\tfrac12g^2\partial_x^2p$
+and $\partial_xp=p\,\partial_x\log p$, the Fokker--Planck equation can be rewritten as
+\[
+  \partial_tp=-\partial_x\Bigl[\bigl(f-g^2\partial_x\log p\bigr)p\Bigr]-\tfrac12g^2\,\partial_x^2p .
+\]
+Now set $q(x,\tau)=p_{T-\tau}(x)$, so that $\partial_\tau q=-\partial_tp$:
+\[
+  \partial_\tau q=-\partial_x\Bigl[\bigl(-f+g^2\partial_x\log q\bigr)q\Bigr]+\tfrac12g^2\,\partial_x^2q .
+\]
+This is the Fokker--Planck equation of the diffusion with drift $-f+g^2\partial_x\log q$
+and diffusion coefficient $g$, run in the time $\tau$, and $q(\cdot,0)=p_T$. The
+solution of \cref{eq:rev:reverse} has marginals obeying the same equation with the
+same initial condition, hence the same marginals, by uniqueness for this parabolic
+equation. In $\nsites$ dimensions replace $\partial_x$ by $\nabla\cdot$ and
+$\partial_x^2$ by $\Delta$ line by line.
+\end{proof}
+
+A useful by-product of the same rewriting is the \term{probability-flow ODE}:
+$\tfrac12g^2\Delta p=\nabla\cdot(\tfrac12g^2p\nabla\log p)$ turns \cref{eq:rev:fp} into
+$\partial_tp=-\nabla\cdot[(f-\tfrac12g^2\nabla\log p)p]$, the transport equation of the
+deterministic flow $\dot{\vx}=f-\tfrac12g^2\nabla\log p_t$, which has the same
+marginals as the SDE and is implemented in \code{probability\_flow\_ode} of
+\code{src/markov\_score/reverse.py}.
+
+\begin{corollary}[The channel reversed]
+\label{cor:rev:ou}
+For the channel $f(\vx,t)=-\vx$, $g=\sqrt2$, the reverse equation in the original time
+$t$ running from $T$ down to $0$ is
+\begin{equation}
+  \dd\vx=\bigl[-\vx-2\,\score(\vx,t)\bigr]\dd t+\sqrt2\,\dd\bar{\vect{W}}_t\qquad(\dd t<0),
+  \label{eq:rev:ou}
+\end{equation}
+that is, in the forward-running time $\tau$, $\dd\bar{\vx}=[\bar{\vx}+2\score(\bar{\vx},T-\tau)]\dd\tau+\sqrt2\,\dd\bar{\vect{W}}_\tau$.
+\end{corollary}
+
+The drift has two parts. The term $\bar{\vx}$ undoes the contraction of the forward
+drift; the term $2\score$ pushes towards regions where $\Pt$ is large. At high noise,
+where $\score\approx-\vx$, the two nearly cancel and the reverse process is again an
+Ornstein--Uhlenbeck process (\cref{ex:rev:gaussian}); at low noise the score carries
+all the structure of $\Pz$.
+
+\section{Why the score is exactly what drives generation}
+\label{sec:rev:why}
+
+Everything in \cref{eq:rev:ou} is known except $\score$: the drift $-\vx$ and the
+coefficient $\sqrt2$ are the channel's. A generator that replaces $\score$ by an
+estimate $\widehat s$ runs a different diffusion and produces a different law, and the
+discrepancy is controlled by the score error alone.
+
+\begin{proposition}[Score error controls the generated law]
+\label{prop:rev:girsanov}
+Let $\Prob$ be the law of the paths of \cref{eq:rev:ou} on $[\tmin,T]$ started at
+$\vx_T\sim P_T$, and $\mathbb{Q}$ the law of the paths of the same equation with
+$\widehat s$ in place of $\score$ and started at $\gamma=\normal{0}{\Id}$. Then
+\begin{equation}
+  \KL\bigl(P_{\tmin}\,\big\|\,\mathbb{Q}_{\tmin}\bigr)
+  \le\KL\bigl(P_T\,\big\|\,\gamma\bigr)+\int_{\tmin}^{T}\E_{\Pt}\bigl|\widehat s(\vx_t,t)-\score(\vx_t,t)\bigr|^2\dd t ,
+  \label{eq:rev:kl}
+\end{equation}
+where $\mathbb{Q}_{\tmin}$ is the law of the generated sample at time $\tmin$.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+Two diffusions with the same diffusion coefficient $g$ and drifts $\mu_1,\mu_2$ have
+path laws whose Kullback--Leibler divergence is, by Girsanov's theorem,
+$\tfrac12\int\E|\mu_1-\mu_2|^2/g^2\,\dd t$ plus the divergence of the initial laws.
+Here $\mu_1-\mu_2=2(\score-\widehat s)$ and $g^2=2$, so the integrand is
+$\tfrac12\cdot4|\score-\widehat s|^2/2=|\score-\widehat s|^2$, with the expectation
+under the true path law, whose marginal at time $t$ is $\Pt$. The divergence of the
+marginals at $\tmin$ is at most that of the path laws (data processing).
+\end{proof}
+
+This is Theorem 1 of Song, Durkan, Murray and Ermon (2021). It says that the
+time-integrated mean squared score error under the true noised laws is the quantity a
+generator pays for, in nats. The paper's estimand (\cref{def:sm:estimand}) is the
+square root of that integrand summed over the twelve levels and divided by the
+reference energy; the generation experiment E05 measures whether the ordering of
+estimators by score error is the ordering by sample quality, which
+\cref{eq:rev:kl} predicts but does not guarantee, because it is an upper bound.
+
+\section{The Euler--Maruyama scheme and its grid}
+\label{sec:rev:euler}
+
+\begin{definition}[Euler--Maruyama for the reverse channel]
+\label{def:rev:em}
+Given a decreasing sequence of times $T=t_0>t_1>\dots>t_n=\tmin$ with steps
+$h_k=t_k-t_{k+1}>0$, the scheme is
+\begin{equation}
+  \vx_{k+1}=\vx_k+h_k\bigl[\vx_k+2\,\widehat s(\vx_k,t_k)\bigr]+\sqrt{2h_k}\,\vect{\xi}_k,
+  \qquad\vect{\xi}_k\sim\normal{0}{\Id}\ \text{i.i.d.},\qquad \vx_0\sim\normal{0}{\Id}.
+  \label{eq:rev:euler}
+\end{equation}
+\end{definition}
+
+This is \code{reverse\_sde} and \code{reverse\_sde\_with\_increments} in
+\code{src/markov\_score/reverse.py}: the drift is evaluated at the left endpoint, and
+the Brownian increment over the step is $\sqrt{h_k}\,\vect{\xi}_k$, scaled by the
+$\sqrt2$ of the channel. Three choices need explaining.
+
+\paragraph{The grid is geometric.} The code uses $t_k=\tmax\,r^{k}$ with
+$r=(\tmin/\tmax)^{1/n}$ (\code{time\_grid}), so that $h_k=(1-r)\,t_k$: the step is a
+fixed fraction of the current time. The reason is that the reverse drift can be stiff
+at small $t$: by \cref{eq:ou:tweedie2}, $\nabla\score=-\Id/\Dt+(e^{-2t}/\Dt^2)\Cov(\va\mid\vx)$,
+whose entries can be of size $1/\Dt\approx1/(2t)$ when the posterior is narrower than
+the likelihood (a kinked or discrete prior), and an explicit scheme is only stable for
+steps below the reciprocal of the stiffness. A step proportional to $t$ keeps
+$h_k/\Delta_{t_k}\approx(1-r)/2$ fixed. With the paper's $\tmax=3$, $\tmin=0.02$ and
+$n=400$ steps (\code{experiments/e05\_generation.py}), $\ln(\tmin/\tmax)=-5.0106$,
+$r=e^{-0.012527}=0.98755$, the first step is $h_0=3\times0.01245=0.0374$ and the last
+is $h_{399}=0.0203\times0.01245=0.00025$; the ratio $h_k/\Delta_{t_k}$ is about $0.006$
+throughout.
+
+\paragraph{The start is $\normal{0}{\Id}$, not $P_T$.} The true law at $T=3$ is
+not available to sample from, and $\gamma$ is its limit (\cref{prop:ou:limit}). The
+cost is the first term of \cref{eq:rev:kl}. For the covariance twin it is computable:
+$\Sig_T=\Id+e^{-2T}(\Sig_0-\Id)$ and, to second order in $e^{-2T}$,
+$\KL(\normal{0}{\Sig_T}\|\gamma)=\tfrac12[\tr\Sig_T-\nsites-\log\det\Sig_T]\approx\tfrac14e^{-4T}\Frob{\Sig_0-\Id}^2$.
+For the frozen chain, $\Frob{\Sig_0-\Id}^2=2\sum_{k=1}^{31}(32-k)\corr^{2k}\approx148$
+at $\corr=0.85$ (a geometric sum), so the start costs about $\tfrac14e^{-12}\cdot148\approx2\times10^{-4}$
+nats: negligible next to the discretisation, and the reason $\tmax=3$ suffices.
+
+\paragraph{The stop is $\tmin=0.02$, not $0$.} At $t=0$ the score of a law with a
+density that is not smooth (the Laplace chain has a kink) is singular, and for a law
+without a density it does not exist. The generated sample is therefore a sample at
+$\tmin$ and is compared with a reference sample of the true law at $\tmin$, obtained
+by drawing clean sequences and noising them once (\code{rng\_ref} in
+\code{\_gen\_cell}); comparing with clean sequences would be a category error. The
+alternative readout $\pmean{\va}=e^{t}(\vx+\Dt\score)$ of \cref{thm:ou:tweedie}
+(\code{denoising\_readout}) returns a posterior mean, which is not a sample.
+
+\paragraph{Order of accuracy.} For an additive noise, as here, Euler--Maruyama has
+strong order one (the pathwise error is $O(h)$) and weak order one (errors of
+expectations are $O(h)$); the discretisation bias is measured, not assumed, by the
+step study below.
+
+\section{The same-Brownian-path design of E05}
+\label{sec:rev:design}
+
+The experiment (\code{experiments/e05\_generation.py}) is organised in cells
+$(\text{seed},\nseq)$. In each cell one initial sample $\vx_0$ of $2000$ sequences and
+one array of Brownian increments for all $400$ steps are drawn once, and every arm is
+integrated by \code{reverse\_sde\_with\_increments} on exactly those increments. The
+arms differ only in the score function $\widehat s$:
+\begin{itemize}
+\item \emph{exact}: the tree-exact score under the true kernel (grid message passing;
+  its distance to the true law is the sampler's own discretisation floor);
+\item \emph{em--bp}: the mixture kernel fitted in E02a for the same seed and $\nseq$,
+  at its validation-selected checkpoint, driven through the same message passing;
+\item \emph{lmmse}: the covariance twin, $\widehat s=-\Sig_t^{-1}\vx$
+  (\cref{cor:ou:gaussian});
+\item \emph{isotropic}: $\widehat s=-\vx$, the score of $\gamma$;
+\item \emph{net}: network checkpoints from E03's confirmatory part for the same cell,
+  converted from posterior means by \cref{eq:ou:score-mean-identity}.
+\end{itemize}
+Because the noise is shared, the difference between two arms' samples is due to their
+scores and not to Monte Carlo scatter, and the metrics can be compared within cell and
+then paired across seeds, as everywhere else in the paper. The reference sample $R$ of
+$4000$ sequences at $\tmin$ is drawn from its own stream. The \emph{step} part of the
+experiment integrates the exact arm at $100$, $200$, $400$ and $800$ steps on
+\term{nested Brownian paths}: the increments of the finest grid are drawn once and the
+coarse grid's increment over an interval is the sum of the fine increments inside it
+(\code{nested\_brownian\_path}, \code{coarsen\_increments}). Two resolutions are then
+driven by the same Brownian path and the root mean square of their difference is a
+\term{strong error}, a pure measure of discretisation. With independent noise at each
+resolution the difference would be dominated by sampling scatter and the study would
+show only robustness, which is the mistake the code's docstring records.
+
+\section{The sample-quality metrics}
+\label{sec:rev:metrics}
+
+Let $G\in\Reals^{n_g\times\nsites}$ be the generated sample and $R\in\Reals^{n_r\times\nsites}$
+the reference sample, both at $\tmin$. All definitions are those of
+\code{src/markov\_score/gen\_metrics.py} (\code{compare}); the paper's generation
+table prints the first, the second, the fourth and the sliced Wasserstein distance.
+
+\paragraph{Residuals.} For a sample $Y$ the \term{autoregressive residuals} are
+$r_{j,i}=y_{j,i+1}-\corr\,y_{j,i}$ with the true $\corr$, $i=1,\dots,\nsites-1$. At
+$\tmin=0$ they would be the innovations $\varepsilon_{i+1}$; at $\tmin>0$ they are
+$e^{-\tmin}\varepsilon_{i+1}+\sqrt{\Delta_{\tmin}}(z_{i+1}-\corr z_i)$.
+
+\paragraph{Excess kurtosis.} For a pooled sample $\{u\}$ with central moments $m_2,m_4$,
+$\widehat\kappa=m_4/m_2^2-3$. Applied to the residuals it measures the non-Gaussian
+shape of the innovation that the sampler reproduces; a Gaussian-innovation sampler
+(the twin) gives zero up to sampling error. Its standard error is a bootstrap over
+sequences ($200$ resamples).
+
+\begin{proposition}[Residual kurtosis at $\tmin$]
+\label{prop:rev:kurt}
+If the innovation has variance $\ivar$ and excess kurtosis $\kappa$, then the residual
+of the true law at level $t$ has
+\[
+  \Var(r)=e^{-2t}\ivar+\Dt(1+\corr^2),\qquad
+  \operatorname{cum}_4(r)=e^{-4t}\kappa\,\ivar^2,\qquad
+  \text{excess kurtosis}=\frac{\kappa\,e^{-4t}\ivar^2}{\bigl(e^{-2t}\ivar+\Dt(1+\corr^2)\bigr)^2}.
+\]
+\end{proposition}
+
+\begin{proof}
+$r=e^{-t}\varepsilon+\sqrt{\Dt}(z'-\corr z)$ is a sum of independent terms; variances
+add, and fourth cumulants add with the Gaussian terms contributing nothing.
+\end{proof}
+
+So the reference row of the paper's table does not show the innovation's excess
+kurtosis $3$ but its attenuated and diluted value at $\tmin$; the worked example
+computes it. The same holds for every arm, which is why the table is read as a
+comparison with the reference row and not with $3$.
+
+\paragraph{Lag fourth cumulant.} $\operatorname{cum}(r_i,r_i,r_{i+1},r_{i+1})=\E[r_i^2r_{i+1}^2]-\E[r_i^2]\E[r_{i+1}^2]-2\E[r_ir_{i+1}]^2$
+for centred residuals, pooled over sites. For the true law it is exactly zero at every
+$t$: $r_i$ and $r_{i+1}$ share only the Gaussian $z_{i+1}$, joint cumulants are additive
+over independent components, and a Gaussian has no fourth cumulant. It is therefore a
+check for spurious dependence between neighbouring residuals, which a sampler with a
+wrong score can create; it is not a signature of the innovation's shape.
+
+\paragraph{Marginal Wasserstein-1.} Pooling all entries of $G$ and of $R$ into two
+one-dimensional samples with quantile functions $F_G^{-1}$, $F_R^{-1}$,
+$W_1=\int_0^1|F_G^{-1}(u)-F_R^{-1}(u)|\dd u$, approximated by the mean over $1999$
+equally spaced $u$. It compares the site marginals only.
+
+\paragraph{Sliced Wasserstein-2.} For $256$ random unit vectors $\vect{\theta}_k$
+(common seed), project both samples, $G\vect{\theta}_k$ and $R\vect{\theta}_k$, compute
+the one-dimensional $W_2^2$ of the projections by quantile matching,
+$W_2^2(\mu,\nu)=\int_0^1(F_\mu^{-1}-F_\nu^{-1})^2\dd u$, and report
+$\bigl(\tfrac1{256}\sum_kW_2^2\bigr)^{1/2}$. It sees the joint law through its
+one-dimensional projections, and is dominated by second-order structure: two laws with
+the same covariance and different fourth cumulants project to nearly the same
+one-dimensional laws, which is why the twin and the exact arm are close in this
+column.
+
+\paragraph{Energy distance.} $2\E|G-R|-\E|G-G'|-\E|R-R'|$ with independent copies,
+estimated on subsamples of $1000$ (Sz\'ekely and Rizzo); it is zero if and only if the
+laws coincide, and is again dominated by low-order structure in practice.
+
+\paragraph{Covariance errors.} The sample covariance $\widehat{\Sig}$ of $G$ against a
+target $\Sig$: the relative Frobenius error $\Frob{\widehat{\Sig}-\Sig}/\Frob{\Sig}$
+and the worst absolute error of the mean diagonal at lags $0$ to $5$. The code passes
+$\Sig_0$ as the target although the sample lives at $\tmin$, where the covariance is
+$\Sig_{\tmin}=e^{-2\tmin}\Sig_0+\Delta_{\tmin}\Id$; the difference is
+$\Delta_{\tmin}(\Sig_0-\Id)$, whose relative Frobenius size at $\tmin=0.02$ is about
+$0.039\times\Frob{\Sig_0-\Id}/\Frob{\Sig_0}\approx0.035$ for the frozen chain, a floor
+the exact arm cannot go below. The paper's table does not print this column.
+
+\paragraph{Residual autocorrelation.} $\rho_k=\E[r_ir_{i+k}]/\E[r_i^2]$ for
+$k=1,\dots,5$ on the pooled centred residuals; the reported number is the largest
+absolute difference between the generated and the reference values. For the true law
+at $\tmin$ the residuals are not white ($\rho_1=-\corr\Delta_{\tmin}/\Var(r)$, from the
+shared $z_{i+1}$), which is why the reference values are subtracted rather than zero.
+
+\paragraph{Histogram divergence of the residuals.} With $60$ bins between the $0.001$
+and $0.999$ quantiles of the reference residuals, $p$ the reference histogram and $q$
+the generated one with add-one smoothing, $\sum_{p_b>0}p_b\log(p_b/q_b)$: a
+Kullback--Leibler divergence of the innovation shape, true against generated.
+
+\paragraph{Log-likelihood under the true law.} For every sequence of $G$ and of $R$
+the evidence $\log P_{\tmin}(\vx)$ under the true kernel is computed exactly for the
+discretised model by the same message passing that gives the score (the accumulated
+normalisation constants of the recursion; the function \code{log\_\allowbreak likelihood\_\allowbreak true}), and the
+reported gap is
+\begin{equation}
+  \Delta\ell=\frac1{n_r}\sum_{R}\log P_{\tmin}(\vx)-\frac1{n_g}\sum_{G}\log P_{\tmin}(\vx).
+  \label{eq:rev:llgap}
+\end{equation}
+Writing $P$ for the true law and $Q$ for the generated one, in expectation
+$\Delta\ell=\E_P\log P-\E_Q\log P=\KL(Q\|P)+H(Q)-H(P)$ with $H$ the differential
+entropy: a difference of cross-entropies, not a divergence. It is zero when $Q=P$,
+positive when $Q$ is misplaced or too spread, and can be negative when $Q$ is more
+concentrated than $P$ on the high-density region. The exact arm's value is the
+discretisation floor of the sampler, since its only error is the scheme's; the
+superseded four-seed run recorded a negative value for that arm, which is consistent
+with the definition and is the reason the sign is worth stating.
+
+\section{A transition-law metric: the Hellinger distance}
+\label{sec:rev:hellinger}
+
+The learning section of the paper reports that the transition law is recovered ``to
+Hellinger distance'' a stated value at the lowest level. The metric is the
+function \code{transition\_\allowbreak hellinger} of
+\code{src/\allowbreak markov\_score/\allowbreak metrics.py}.
+
+\begin{definition}[Hellinger distance]
+\label{def:rev:hellinger}
+For two densities $p,q$ on $\Reals$,
+\[
+  H^2(p,q)=\tfrac12\int\bigl(\sqrt{p}-\sqrt{q}\bigr)^2\dd u=1-\int\sqrt{pq}\,\dd u\in[0,1],
+\]
+the second form because $\int p=\int q=1$. On the quadrature grid with weights $w_k$
+the integral is $\tfrac12\sum_kw_k(\sqrt{p_k}-\sqrt{q_k})^2$ after each column has been
+normalised under the same weights.
+\end{definition}
+
+For a transition kernel every parent state $\gridpt{j}$ gives one density
+$\kernel(\cdot\mid\gridpt{j})$, hence one distance $H_j$ between the fitted and the
+true kernel. The code reports the median, mean, $90$th percentile and maximum over
+parents, the same over the interior parents $|\gridpt{j}|\le\halfwidth/2$ (near the
+edge of the domain the true column has mass outside the grid and the distance picks
+up truncation), and versions weighted by the parent law, which defaults to the
+standard normal because $\Var(a_i)=1$: the weighted mean $\sum_j\pi_jH_j$, the
+weighted median, and $\sum_j\pi_jH_j^2$. The second form of the definition is the
+one the code evaluates, because $1-\int\sqrt{pq}$ subtracts two numbers near one and
+loses everything below $10^{-15}$ to cancellation; the first form returns exactly zero
+for identical columns. Which of these summaries the paper's sentence quotes is not
+said in the paper; the reader should take the weighted mean as the intended one and
+check the generator.
+
+\section{Worked examples}
+\label{sec:rev:examples}
+
+\begin{example}[The reverse of a Gaussian, and the bias of a step]
+\label{ex:rev:gaussian}
+Let $\Pz=\normal01$ in one dimension, so that $\score(x,t)=-x$ at every $t$. The reverse
+equation \cref{eq:rev:ou} in the time $\tau$ is
+$\dd\bar x=[\bar x-2\bar x]\dd\tau+\sqrt2\,\dd\bar W=-\bar x\,\dd\tau+\sqrt2\,\dd\bar W$:
+the forward channel again, for which $\normal01$ is stationary, as it must be. The
+Euler step \cref{eq:rev:euler} with constant $h$ is $x\leftarrow(1-h)x+\sqrt{2h}\,\xi$,
+and the variance $v$ of the iterate obeys $v\leftarrow(1-h)^2v+2h$, whose fixed point is
+\[
+  v^\ast=\frac{2h}{1-(1-h)^2}=\frac{2h}{2h-h^2}=\frac{2}{2-h}=1+\tfrac h2+O(h^2).
+\]
+The scheme's stationary variance is biased by $h/2$: with the first geometric step
+$h_0=0.0374$ the bias would be $1.9\%$, with the last, $0.01\%$. This is the weak error
+of order one, and it is what the exact arm's log-likelihood gap measures on the chain.
+\end{example}
+
+\begin{example}[The residual kurtosis of the frozen chain at $\tmin$]
+\label{ex:rev:kurt}
+Take $\corr=0.85$, $\ivar=1-\corr^2=0.2775$, a Laplace innovation ($\kappa=3$) and
+$\tmin=0.02$, so $e^{-2\tmin}=0.96079$, $e^{-4\tmin}=0.92312$, $\Delta_{\tmin}=0.03921$.
+By \cref{prop:rev:kurt},
+\[
+  \Var(r)=0.96079\times0.2775+0.03921\times1.7225=0.26662+0.06754=0.33416,
+\]
+\[
+  \operatorname{cum}_4(r)=3\times0.92312\times0.2775^2=3\times0.92312\times0.07701=0.21327,
+\]
+and the excess kurtosis is $0.21327/0.33416^2=0.21327/0.11166=1.91$. A perfect
+sampler at $\tmin=0.02$ should therefore show a residual excess kurtosis near $1.9$,
+not $3$; the paper's reference row is to be read against this value (see the paper,
+Section 5, the generation table). The Gaussian twin shows $0$; a sampler that
+reproduces only part of the fourth cumulant lands in between.
+\end{example}
+
+\begin{example}[Hellinger distances one can compute by hand]
+\label{ex:rev:hellinger}
+For $p=\normal01$ and $q=\normal0{\sigma^2}$, $\int\sqrt{pq}=\sqrt{2\sigma/(1+\sigma^2)}$,
+so at $\sigma=1.1$: $2.2/2.21=0.99548$, square root $0.99774$, $H^2=0.00226$,
+$H=0.048$. For $p=\normal01$ and $q=\normal{\mu}1$, $\int\sqrt{pq}=e^{-\mu^2/8}$, so at
+$\mu=0.5$: $H^2=1-e^{-0.03125}=0.0308$, $H=0.175$. A ten per cent error in the width
+of an innovation costs less than a half-unit shift of its centre; a column-wise
+Hellinger summary is sensitive to both.
+\end{example}
+
+\begingroup\setlength{\emergencystretch}{2em}
+\where{Generation is Section 5 of the paper (``Generation'') with its table, and the
+reverse SDE is named there with its step count, grid and shared Brownian path; the
+Hellinger sentence is in Section 4. Experiment E05 (parts \code{generate} and
+\code{steps}); the arms come from E02a (fitted kernels) and E03 (network checkpoints).
+Code: \code{src/\allowbreak markov\_\allowbreak score/\allowbreak reverse.py} (\code{time\_\allowbreak grid}, \code{reverse\_\allowbreak sde},
+\code{reverse\_\allowbreak sde\_\allowbreak with\_\allowbreak increments}, \code{nested\_\allowbreak brownian\_\allowbreak path},
+\code{coarsen\_\allowbreak increments}, \code{probability\_\allowbreak flow\_\allowbreak ode}, \code{denoising\_\allowbreak readout}),
+\code{src/\allowbreak markov\_\allowbreak score/\allowbreak gen\_\allowbreak metrics.py} (\code{compare} and the functions it calls),
+\code{src/\allowbreak markov\_\allowbreak score/\allowbreak metrics.py} (\code{transition\_\allowbreak hellinger}),
+\code{experiments/\allowbreak e05\_\allowbreak generation.py}.}
+\endgroup
+
+\paragraph{References.}
+B.~D.~O.~Anderson, 1982, ``Reverse-time diffusion equation models'', Stochastic
+Processes and their Applications 12, 313--326.
+U.~G.~Haussmann and E.~Pardoux, 1986, ``Time reversal of diffusions'', Annals of
+Probability 14, 1188--1205.
+Y.~Song, C.~Durkan, I.~Murray and S.~Ermon, 2021, ``Maximum likelihood training of
+score-based diffusion models'', Advances in Neural Information Processing Systems 34.
+P.~E.~Kloeden and E.~Platen, 1992, \emph{Numerical Solution of Stochastic Differential
+Equations}, Springer.
+G.~J.~Sz\'ekely and M.~L.~Rizzo, 2013, ``Energy statistics: a class of statistics based
+on distances'', Journal of Statistical Planning and Inference 143, 1249--1272.
+J.~Rabin, G.~Peyr\'e, J.~Delon and M.~Bernot, 2012, ``Wasserstein barycenter and its
+application to texture mixing'', Scale Space and Variational Methods in Computer
+Vision, Lecture Notes in Computer Science 6667, 435--446.

@@ -1,0 +1,410 @@
+\chapter{Maximum likelihood and expectation--maximisation}
+\label{ch:maximum-likelihood-em}
+
+The paper's learning method is expectation--maximisation (EM) for the marginal
+likelihood of noised sequences, with the exact E-step of \cref{ch:factor-graphs-bp}.
+This chapter supplies the statistical background in the order a reader needs it: what a
+likelihood and a maximum-likelihood estimator are and what consistency and efficiency
+mean; what changes when the model has latent variables; Jensen's inequality; the EM
+algorithm derived twice, as coordinate ascent on a free-energy bound (Neal and Hinton)
+and in the original form of Dempster, Laird and Rubin, with the monotonicity proof;
+its generalisations (generalised EM, expectation--conditional maximisation) and why
+they keep the monotone ascent; its convergence rate and the fraction of missing
+information; stopping rules and the unit of the paper's tolerance; and why EM slows
+when the data carry little information about a coordinate, which is the mechanism the
+paper's Section 4 invokes when it says the iteration budget binds at high noise.
+
+\section{Likelihood, maximum likelihood, consistency, efficiency}
+
+\subsection{Definitions}
+
+A \term{statistical model} is a family of densities $\{p_\params:\params\in\Theta\}$ on a
+sample space, indexed by a parameter in an open set $\Theta\subseteq\Reals^P$. Given
+observations $x^1,\dots,x^\nseq$ drawn independently from $p_{\params_0}$ for some
+unknown \term{true parameter} $\params_0$, the \term{likelihood} is the joint density as
+a function of the parameter, and its logarithm is the \term{log-likelihood}
+\begin{equation}
+  \Lik(\params)=\sum_{\mu=1}^{\nseq}\log p_\params(x^\mu).
+  \label{eq:ml-loglik}
+\end{equation}
+The \term{maximum-likelihood estimator} (MLE) is any maximiser
+$\hat\params=\argmax_\params\Lik(\params)$. Its gradient $\nabla_\params\log p_\params(x)$
+is the \term{score} of the model (not to be confused with the score of a density in the
+diffusion sense, which is a gradient in $x$; the paper uses ``score'' for the latter and
+``Fisher's identity'' for the former); the covariance of the score under $p_\params$ is
+the \term{Fisher information} $I(\params)$, treated in the compendium's chapter on Fisher
+information and the Cram\'er--Rao bound.
+
+\subsection{Consistency and efficiency in one page}
+
+Two facts justify maximum likelihood. Both are stated for a \term{regular} model: the
+densities have a common support, are twice continuously differentiable in $\params$,
+differentiation under the integral is allowed, the information matrix is finite and
+non-singular, and the parameter is \term{identifiable}, $p_\params=p_{\params'}$ only if
+$\params=\params'$.
+
+\emph{Consistency.} By the law of large numbers, $\Lik(\params)/\nseq\to\E_{\params_0}\log p_\params(x)$
+for every $\params$, and the limit equals $\E_{\params_0}\log p_{\params_0}(x)-\KL(p_{\params_0}\|p_\params)$.
+The Kullback--Leibler divergence is non-negative and zero only at $p_\params=p_{\params_0}$
+(this is Gibbs' inequality, itself a consequence of Jensen's inequality below), so the
+limiting objective has a unique maximum at $\params_0$ under identifiability. With a
+uniform law of large numbers on compact sets, the maximiser of the sample objective
+converges to the maximiser of the limit: $\hat\params\to\params_0$ in probability. This
+is Wald's argument.
+
+\emph{Asymptotic normality and efficiency.} Expand the score equation
+$\nabla\Lik(\hat\params)=0$ around $\params_0$:
+$0=\nabla\Lik(\params_0)+\nabla^2\Lik(\bar\params)(\hat\params-\params_0)$ for some
+intermediate $\bar\params$. The first term is a sum of $\nseq$ independent zero-mean
+vectors (the score has mean zero: $\E_\params\nabla\log p_\params=\nabla\int p_\params=0$),
+so by the central limit theorem $\nabla\Lik(\params_0)/\sqrt{\nseq}\to\normal{0}{I(\params_0)}$;
+the second factor divided by $\nseq$ converges to $-I(\params_0)$ (the information
+identity $\E[-\nabla^2\log p]=\E[\nabla\log p\,\nabla\log p^{\!\top}]$, from differentiating
+$\int\nabla p=0$ once more). Hence
+\begin{equation}
+  \sqrt{\nseq}\,(\hat\params-\params_0)\ \to\ \normal{0}{I(\params_0)^{-1}}.
+  \label{eq:ml-asymp}
+\end{equation}
+The Cram\'er--Rao bound says no unbiased estimator has covariance below $I(\params_0)^{-1}/\nseq$;
+an estimator attaining \cref{eq:ml-asymp} is \term{asymptotically efficient}, and the
+MLE is one. The local asymptotic minimax theorem of H\'ajek and Le Cam, which the
+paper's sample-complexity corollary invokes, is the sharp form: over shrinking neighbourhoods
+$|\params'-\params_0|\le c/\sqrt\nseq$ no estimator sequence does better than
+$1/I(\params_0)$ in the limit, and the MLE attains it. Three caveats travel with these
+statements and the paper repeats them: they are limits in $\nseq$ at fixed model, they
+say nothing about a finite optimisation budget, and for a bounded coordinate the local
+statement is empty once $1/\sqrt{\nseq I}$ exceeds the coordinate's range.
+
+\section{Latent-variable models}
+
+A \term{latent-variable model} specifies a joint density $p_\params(x,z)$ of an observed
+variable $x$ and an unobserved (\term{latent}, \term{hidden}, \term{missing}) variable
+$z$, and the likelihood of the data is the \term{marginal likelihood}
+\begin{equation}
+  p_\params(x)=\int p_\params(x,z)\dd z.
+  \label{eq:ml-marginal}
+\end{equation}
+The joint is usually simple, often in an exponential family whose log-likelihood is
+linear in a few sufficient statistics of $(x,z)$; the marginal is usually not, because
+the integral destroys the structure. In the paper $x$ is a noised sequence, $z$ is the
+clean chain, the joint is $\Pz(\va)\prod_i\like(x_i\mid a_i)$, and the integral over the
+chain is what the two sweeps of \cref{ch:factor-graphs-bp} compute. The
+\term{complete-data log-likelihood} $\log p_\params(x,z)$ is the object EM works with:
+were $z$ observed, maximising it would be easy; it is not, so EM replaces it by its
+conditional expectation given the data.
+
+\section{Jensen's inequality}
+
+\begin{lemma}[Jensen]
+\label{lem:ml-jensen}
+Let $\phi$ be a concave function on an interval $J$ and $Y$ a random variable with
+values in $J$ and finite expectation. Then $\phi(\E Y)\ge\E\phi(Y)$, with equality if
+$\phi$ is strictly concave only when $Y$ is almost surely constant.
+\end{lemma}
+\begin{proof}
+A concave function lies below every one of its supporting lines: at the point
+$m=\E Y$ there is a slope $s$ with $\phi(y)\le\phi(m)+s(y-m)$ for all $y\in J$ (for a
+differentiable $\phi$, $s=\phi'(m)$; in general any element of the superdifferential).
+Take expectations: $\E\phi(Y)\le\phi(m)+s(\E Y-m)=\phi(m)$. For strict concavity the
+inequality $\phi(y)<\phi(m)+s(y-m)$ is strict for $y\ne m$, so equality of expectations
+forces $Y=m$ almost surely.
+\end{proof}
+
+With $\phi=\log$, which is strictly concave on $(0,\infty)$, two consequences follow.
+\term{Gibbs' inequality}: for densities $p,q$ with $q\ll p$,
+$\int p\log(q/p)\le\log\int p\,(q/p)=\log\int q\le0$, so $\KL(p\|q)=\int p\log(p/q)\ge0$
+with equality only at $p=q$. And the \term{evidence lower bound} of the next section.
+
+\section{Expectation--maximisation}
+
+\subsection{The free-energy view}
+
+Fix the data $x$ and consider an arbitrary density $q(z)$ over the latent variable.
+Write the log marginal likelihood as an expectation under $q$ and apply
+\cref{lem:ml-jensen}:
+\begin{equation}
+  \log p_\params(x)=\log\int q(z)\frac{p_\params(x,z)}{q(z)}\dd z
+  \ \ge\ \int q(z)\log\frac{p_\params(x,z)}{q(z)}\dd z
+  =\underbrace{\E_q\log p_\params(x,z)}_{\text{energy}}+\underbrace{H(q)}_{\text{entropy}}
+  =:F(q,\params).
+  \label{eq:ml-elbo}
+\end{equation}
+The bound $F$ is the \term{free energy} (negative, in the physicists' sign) or
+\term{evidence lower bound}; it is exact in the sense that
+\begin{equation}
+  \log p_\params(x)-F(q,\params)=\KL\bigl(q\,\|\,p_\params(\cdot\mid x)\bigr)\ \ge0,
+  \label{eq:ml-gap}
+\end{equation}
+which one checks by writing $p_\params(x,z)=p_\params(x)p_\params(z\mid x)$ inside the
+integral. So $F(q,\params)\le\log p_\params(x)$ for every $q$, with equality exactly when
+$q$ is the posterior $p_\params(\cdot\mid x)$.
+
+The EM algorithm of Neal and Hinton (1998) is \term{coordinate ascent} on $F$:
+\begin{itemize}
+\item \term{E-step}: with $\params^{(k)}$ fixed, maximise $F$ over $q$. By
+\cref{eq:ml-gap} the maximiser is the posterior $q^{(k+1)}=p_{\params^{(k)}}(\cdot\mid x)$,
+and at it $F=\log p_{\params^{(k)}}(x)$.
+\item \term{M-step}: with $q^{(k+1)}$ fixed, maximise $F$ over $\params$. The entropy
+does not depend on $\params$, so this is maximising the expected complete-data
+log-likelihood $\E_{q^{(k+1)}}\log p_\params(x,z)$; call the maximiser $\params^{(k+1)}$.
+\end{itemize}
+Each step does not decrease $F$, and after every E-step $F$ equals the log-likelihood.
+Hence $\log p_{\params^{(k+1)}}(x)=F(q^{(k+2)},\params^{(k+1)})\ge F(q^{(k+1)},\params^{(k+1)})\ge F(q^{(k+1)},\params^{(k)})=\log p_{\params^{(k)}}(x)$:
+the marginal likelihood never decreases. The view also explains partial versions of
+either step: any $q$ that increases $F$ and any $\params$ that increases $F$ preserve
+the monotonicity, because $F$ is the single objective both steps ascend.
+
+\subsection{The Dempster--Laird--Rubin view and the Q-function}
+
+Define the \term{Q-function}
+\begin{equation}
+  \Qfun(\params\mid\params')=\E_{p_{\params'}(z\mid x)}\bigl[\log p_\params(x,z)\bigr]
+  =\int p_{\params'}(z\mid x)\log p_\params(x,z)\dd z,
+  \label{eq:ml-Q}
+\end{equation}
+the expected complete-data log-likelihood at $\params$ under the posterior computed at
+$\params'$. The E-step computes whatever expectations $\Qfun(\cdot\mid\params^{(k)})$
+needs; the M-step sets $\params^{(k+1)}=\argmax_\params\Qfun(\params\mid\params^{(k)})$. The
+original monotonicity proof (Dempster, Laird and Rubin, 1977) is the following.
+
+\begin{theorem}[Monotone ascent of EM]
+\label{thm:ml-monotone}
+If $\Qfun(\params^{(k+1)}\mid\params^{(k)})\ge\Qfun(\params^{(k)}\mid\params^{(k)})$, then
+$\log p_{\params^{(k+1)}}(x)\ge\log p_{\params^{(k)}}(x)$, with equality only if the
+posteriors at the two parameters coincide and the $\Qfun$ values are equal.
+\end{theorem}
+\begin{proof}
+Write $\log p_\params(x)=\log p_\params(x,z)-\log p_\params(z\mid x)$ for any $z$ and take
+the expectation under $p_{\params'}(z\mid x)$, which leaves the left side unchanged:
+\begin{equation}
+  \log p_\params(x)=\Qfun(\params\mid\params')-\mathcal H(\params\mid\params'),\qquad
+  \mathcal H(\params\mid\params')=\E_{p_{\params'}(z\mid x)}\log p_\params(z\mid x).
+  \label{eq:ml-decomp}
+\end{equation}
+By Gibbs' inequality, $\mathcal H(\params\mid\params')\le\mathcal H(\params'\mid\params')$ for every
+$\params$ (the cross-entropy of the posterior at $\params'$ against the posterior at
+$\params$ is largest when the two agree). Subtracting \cref{eq:ml-decomp} at
+$\params=\params^{(k+1)}$ from itself at $\params=\params^{(k)}$, both with
+$\params'=\params^{(k)}$,
+\[
+  \log p_{\params^{(k+1)}}(x)-\log p_{\params^{(k)}}(x)
+  =\bigl[\Qfun(\params^{(k+1)}\mid\params^{(k)})-\Qfun(\params^{(k)}\mid\params^{(k)})\bigr]
+  +\bigl[\mathcal H(\params^{(k)}\mid\params^{(k)})-\mathcal H(\params^{(k+1)}\mid\params^{(k)})\bigr],
+\]
+and both brackets are non-negative.
+\end{proof}
+
+The theorem asks only that $\Qfun$ \emph{increase}, not that it be maximised. This is the
+definition of \term{generalised EM} (GEM): any M-step that ascends $\Qfun$ preserves
+the monotone increase of the likelihood. A useful special case is
+\term{expectation--conditional maximisation} (ECM, Meng and Rubin, 1993): partition the
+parameter into blocks $\params=(\params_1,\dots,\params_B)$ and replace the M-step by a
+sweep of \term{conditional maximisations}, each maximising $\Qfun$ over one block with
+the others held at their most recent values. Each conditional maximisation cannot
+decrease $\Qfun$ (it maximises it over a subset containing the current point), so the
+sweep ascends $\Qfun$ and \cref{thm:ml-monotone} applies; several sweeps, or a
+different order, are equally admissible. Meng and Rubin also show that if every
+conditional maximiser is unique and the blocks together span the parameter space in a
+suitable sense, the fixed points of ECM are the stationary points of the likelihood,
+as for EM. The paper's mixture-innovation M-step is an ECM sweep, block by block,
+which is why the paper calls it ``a generalised EM whose ascent is monotone'' and
+cites Meng and Rubin.
+
+\subsection{Fixed points are stationary points}
+
+At a fixed point $\params^\ast$ of EM, $\params^\ast$ maximises $\Qfun(\cdot\mid\params^\ast)$,
+so $\nabla_\params\Qfun(\params\mid\params^\ast)|_{\params=\params^\ast}=0$. Differentiating
+\cref{eq:ml-decomp} in $\params$ at $\params=\params'$ shows
+$\nabla_\params\mathcal H(\params\mid\params')|_{\params=\params'}=\E_{p_{\params'}(z\mid x)}\nabla\log p_{\params'}(z\mid x)=0$
+(the posterior score has mean zero under the posterior), hence
+\begin{equation}
+  \nabla_\params\log p_\params(x)=\nabla_\params\Qfun(\params\mid\params')\big|_{\params'=\params}
+  =\E_{p_\params(z\mid x)}\bigl[\nabla_\params\log p_\params(x,z)\bigr].
+  \label{eq:ml-fisher}
+\end{equation}
+This is \term{Fisher's identity}: the gradient of the marginal log-likelihood is the
+posterior expectation of the complete-data gradient. It says that fixed points of EM
+are stationary points of the likelihood, and, more usefully for the paper, that the
+E-step delivers the exact gradient of the marginal likelihood as a by-product.
+\Cref{ch:em-through-noise} derives it again directly, in the form the paper uses.
+
+\section{Convergence rate and the fraction of missing information}
+
+EM defines a map $\params^{(k+1)}=\mathcal M(\params^{(k)})$. Near a fixed point $\params^\ast$
+with a non-singular Hessian, $\params^{(k+1)}-\params^\ast\approx J(\params^{(k)}-\params^\ast)$
+with $J=\nabla\mathcal M(\params^\ast)$ the Jacobian of the map, so the error contracts
+linearly with rate equal to the largest eigenvalue of $J$. Dempster, Laird and Rubin
+identified $J$. Define the \term{complete information}
+$I_{\mathrm{com}}=-\nabla^2_\params\Qfun(\params\mid\params')|_{\params=\params'=\params^\ast}$,
+the expected negative Hessian of the complete-data log-likelihood under the posterior,
+and the \term{observed information} $I_{\mathrm{obs}}=-\nabla^2\log p_{\params^\ast}(x)$. Then
+\begin{equation}
+  J=I_{\mathrm{mis}}\,I_{\mathrm{com}}^{-1},\qquad I_{\mathrm{mis}}=I_{\mathrm{com}}-I_{\mathrm{obs}},
+  \qquad\text{so}\quad J=\Id-I_{\mathrm{obs}}I_{\mathrm{com}}^{-1}.
+  \label{eq:ml-rate}
+\end{equation}
+The matrix $I_{\mathrm{mis}}$ is the \term{missing information}, the expected information
+that the latent variable would have added, and $J$ is the \term{fraction of missing
+information}. The derivation is one line from the M-step's stationarity condition:
+$\nabla_\params\Qfun(\mathcal M(\params')\mid\params')=0$ for all $\params'$; differentiate
+in $\params'$ at the fixed point to get
+$-I_{\mathrm{com}}J+\nabla_{\params'}\nabla_\params\Qfun=0$, and the mixed derivative equals
+$I_{\mathrm{com}}-I_{\mathrm{obs}}$ by differentiating \cref{eq:ml-decomp} twice (the
+second derivative of $\mathcal H$ in its first argument at the fixed point is minus the
+posterior information, and the identity rearranges to \cref{eq:ml-rate}).
+
+The reading is the important part. When the data determine the parameter almost as
+well as the complete data would, $I_{\mathrm{obs}}\approx I_{\mathrm{com}}$, $J\approx0$ and
+EM converges in a few iterations. When the observed information is a small fraction of
+the complete information, the eigenvalues of $J$ approach one and EM crawls: each
+iteration removes only the fraction $1-\lambda_{\max}(J)$ of the remaining error, and
+the number of iterations to reduce the error by a factor $e$ is about
+$1/(1-\lambda_{\max}(J))$. In a multi-parameter problem the rate is direction-dependent:
+a coordinate about which the data are nearly uninformative has its own eigenvalue
+near one and converges last, however fast the others settle. This is the observation
+the next section, and the paper, build on.
+
+\section{Stopping rules}
+
+An EM run is stopped by a \term{tolerance} on the increase of the log-likelihood, by an
+\term{iteration cap}, or by an external \term{selection rule}. The paper uses all three
+and the compendium should say what each measures.
+
+\paragraph{Units.} The total log-likelihood \cref{eq:ml-loglik} of $\nseq$ sequences of
+$\nsites$ sites is a sum over $\nseq(\nsites-1)$ transitions (plus the first sites), so
+it grows with the dataset, and so does its increment per iteration. A tolerance in
+absolute nats means something different at every sample size. A relative tolerance
+$|\Delta\Lik|\le\tau|\Lik|$ is scale-free, because the increment and the total are sums
+over the same transitions; the docstring of \code{fit\_em} in
+\code{src/markov\_score/em.py} records that this was measured to be invariant to the
+sample size to every digit, so the relative rule was not wrong. What the paper's code
+does instead is to express the increment in \term{nats per transition},
+$\Delta\Lik/\bigl(\nseq(\nsites-1)\bigr)$, and to stop when it lies in $[0,\tau]$ with
+$\tau=10^{-9}$. The unit buys interpretability: a constant threshold in nats per
+transition means the same thing at every sample size and every noise level, whereas a
+relative threshold tightens as $|\Lik|$ falls along the run and changes its meaning
+with the level (at high noise $|\Lik|$ per transition is close to the entropy of a
+standard Gaussian and the increments are tiny in comparison).
+
+\paragraph{Sign.} An exact EM cannot decrease the likelihood. A stopping test on
+$|\Delta\Lik|$ accepts a small \emph{decrease} as convergence and thereby hides a defect
+(a wrong M-step, or a generalised step that overshot). The code's test is signed:
+convergence requires $0\le\Delta\Lik\le\tau$ per transition; any decrease is recorded as
+a \code{monotone\_violation} and is a bug report, not a stop. A run that exhausts its
+iteration cap without meeting the signed test is labelled \term{censored}, and the
+label travels with the fitted kernel so that a comparison of estimators can tell
+whether it compares converged runs. The returned kernel is always the iterate whose
+likelihood is the last trace entry: the loop scores each proposal after the M-step that
+produced it. An earlier version returned a kernel one update beyond anything evaluated,
+which made the reported likelihood belong to the previous iterate; the tests in
+\code{tests/test\_em\_bp.py} and \code{tests/test\_gradient\_trace\_alignment.py} pin
+this alignment.
+
+\paragraph{Selection.} At the budgets of the paper's experiments, the per-transition
+increments EM takes are far above $10^{-9}$ for hundreds of iterations, so the
+tolerance rarely fires and what ends a run is the cap of the \term{checkpoint ladder}
+(\cref{ch:em-through-noise}). Which rung is reported is then decided by a validation
+bundle, not by the likelihood: the rung with the smallest score error on held-out
+sequences. This is \term{early stopping}, and it is a form of regularisation, because
+successive EM iterates move from the initialisation towards the maximiser and an early
+rung is a shrunken estimate. The paper's Section 4 reads its own fits this way: at
+high noise the validation-selected iterate is a shrinkage estimator whose shape
+collapses towards a Gaussian innovation. The paper's Appendix E (E20) checks that
+selecting the rung by held-out log-evidence instead of by the validation score error
+picks the same rung in most seeds, so the selection needs no oracle.
+
+\section{Why EM slows when information is scarce}
+\label{sec:ml-slow}
+
+Combine \cref{eq:ml-rate} with the paper's order-by-order decay theorem. In the
+noised-sequence problem
+the complete data are the clean chains, and the complete information about the kernel
+parameters is of order $\nseq(\nsites-1)$ times a constant that does not depend on the
+noise level, since it is the information the clean transitions carry. The observed
+information is $\nseq$ times the per-sequence Fisher information $I_t(\params)$, which
+decays as $e^{-4t}$ for a covariance coordinate and $e^{-8t}$ for a shape coordinate.
+Hence the fraction of missing information along each coordinate,
+\begin{equation}
+  \lambda(\params_j)\approx1-\frac{I_t(\params_j)}{I_{\mathrm{com}}(\params_j)},
+  \label{eq:ml-fraction}
+\end{equation}
+approaches one as $t$ grows, and does so faster for the shape coordinate. Two
+consequences follow, both visible in the paper. First, the number of iterations to
+converge grows like $1/(1-\lambda)$, so at high noise the ladder's cap is reached
+before the tolerance fires: the paper reports that at the two highest levels of its
+learning experiment the validation-selected rung is the last of the ladder in most
+cells, ``whether the excess over the reference at those two levels is information or
+budget the run cannot say'', and registers a control with a sixfold longer ladder
+(E06c). Second, at any fixed noise level the correlation coordinate (degree two)
+converges in far fewer iterations than the shape coordinate (degree four), because
+its missing fraction is smaller by roughly $e^{-4t}$ in the information ratio; the
+paper's ``convergence asymmetry'' (correlation settles in tens of updates, shape in
+hundreds) is \cref{eq:ml-fraction} read coordinate by coordinate.
+\Cref{ch:em-through-noise} adds the second mechanism specific to the mixture kernel,
+the inner latent label, which slows the shape further.
+
+\section{A worked example: one mixing weight}
+
+Let $y_1,y_2,y_3=-1.5,\ 0.2,\ 1.0$ be three observations from the two-component
+mixture $p_\pi(y)=\pi\,\phi(y-1)+(1-\pi)\,\phi(y+1)$ with $\phi$ the standard Gaussian
+density and the mixing weight $\pi$ unknown. The latent variable is the component
+label $z_i\in\{0,1\}$; the complete-data log-likelihood is
+$\sum_i[z_i\log\pi+(1-z_i)\log(1-\pi)]+\text{const}$, linear in the $z_i$, so the E-step
+needs only the \term{responsibilities} $r_i=\E[z_i\mid y_i]=\pi\phi(y_i-1)/p_\pi(y_i)$, and
+the M-step maximises $\sum_i[r_i\log\pi+(1-r_i)\log(1-\pi)]$, giving
+$\pi^{\mathrm{new}}=\tfrac13\sum_ir_i$.
+
+The densities are
+\[
+  \phi(y_i-1)=(0.01753,\,0.28969,\,0.39894),\qquad
+  \phi(y_i+1)=(0.35207,\,0.19419,\,0.05399).
+\]
+Start at $\pi^{(0)}=0.5$. The log-likelihood is
+$\sum_i\log[0.5\phi(y_i-1)+0.5\phi(y_i+1)]=-4.59273$. The responsibilities are
+$r=(0.04743,\,0.59869,\,0.88080)$ and the M-step gives $\pi^{(1)}=0.50897$. The
+log-likelihood rises to $-4.59199$; the new responsibilities are
+$(0.04907,\,0.60728,\,0.88451)$ and $\pi^{(2)}=0.51362$, with log-likelihood
+$-4.59180$; then $\pi^{(3)}=0.51602$,
+$\pi^{(4)}=0.51725$, $\pi^{(5)}=0.51789$, with log-likelihoods $-4.59174$, $-4.59173$,
+$-4.59173$: monotone, as \cref{thm:ml-monotone} requires, and slowing.
+
+The maximiser is $\pi^\ast=0.51855$. The successive errors $|\pi^{(k)}-\pi^\ast|$ shrink
+by the factor $0.514$, $0.514$, $0.513$, \dots\ per iteration. \Cref{eq:ml-rate}
+predicts this number: at $\pi^\ast$ the complete information is
+$I_{\mathrm{com}}=\sum_i[r_i/\pi^2+(1-r_i)/(1-\pi)^2]=12.02$, the observed information is
+minus the second derivative of the log-likelihood, $I_{\mathrm{obs}}=5.86$ (a finite
+difference suffices), and $1-I_{\mathrm{obs}}/I_{\mathrm{com}}=0.513$. Half the information
+about $\pi$ is missing, and EM removes half of the remaining error per iteration. Had
+the two components been closer (means $\pm0.2$ instead of $\pm1$), the responsibilities
+would be near $\tfrac12$ for every observation, the observed information a small
+fraction of the complete one, and the rate near one: the situation of
+\cref{sec:ml-slow}.
+
+\where{The paper, Section 4 (``expectation--maximisation around the same exact
+recursion'', generalised EM with conditional-maximisation sweeps, the convergence
+asymmetry, the iteration budget at high noise), the sample-complexity corollary and its
+caveats (local
+asymptotic minimax, the MLE attains it), Appendix C (the checkpoint ladder and
+validation selection), Appendix E (E20). Code: \code{src/markov\_score/em.py}, whose
+\code{fit\_em} carries the docstring on the stopping rule and whose \code{EMTrace}
+records \code{monotone\_violation}, \code{converged} and \code{stop\_reason}, with
+\code{q\_value} and \code{q\_gradient} beside them; and the ECM sweeps of the mixture
+kernel's \code{m\_step} in \code{src/markov\_score/kernels.py}. Tests: monotonicity,
+the signed stopping test, censored against converged and the stationarity of the fixed
+point in \code{tests/test\_em\_bp.py}; the iterate-to-trace alignment in
+\code{tests/test\_gradient\_trace\_alignment.py}.}
+
+\paragraph{References.}
+A.~P.~Dempster, N.~M.~Laird and D.~B.~Rubin (1977), ``Maximum likelihood from incomplete
+data via the EM algorithm'', \emph{Journal of the Royal Statistical Society B} 39(1).
+R.~M.~Neal and G.~E.~Hinton (1998), ``A view of the EM algorithm that justifies
+incremental, sparse, and other variants'', in \emph{Learning in Graphical Models}, ed.\
+M.~I.~Jordan, Kluwer.
+X.-L.~Meng and D.~B.~Rubin (1993), ``Maximum likelihood estimation via the ECM algorithm:
+a general framework'', \emph{Biometrika} 80(2).
+C.~F.~J.~Wu (1983), ``On the convergence properties of the EM algorithm'', \emph{Annals of
+Statistics} 11(1).
+A.~W.~van der Vaart (1998), \emph{Asymptotic Statistics}, Cambridge University Press,
+Chapters 5, 7 and 8.
+O.~Capp\'e, E.~Moulines and T.~Ryd\'en (2005), \emph{Inference in Hidden Markov Models},
+Springer, Chapter 10.

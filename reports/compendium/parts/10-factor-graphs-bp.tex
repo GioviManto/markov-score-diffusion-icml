@@ -1,0 +1,510 @@
+\chapter{Factor graphs and belief propagation}
+\label{ch:factor-graphs-bp}
+% colours of the paper's house palette (tools/figstyle.py), defined locally so this part
+% compiles inside the compendium preamble, which does not load the paper's main.tex
+\definecolor{bpBlue}{HTML}{2A78D6}
+\definecolor{bpInk}{HTML}{52514E}
+\definecolor{bpFill}{HTML}{E1E0DC}
+
+The paper's central computational claim is that the score of a non-Gaussian,
+correlated law in $\nsites$ dimensions is available exactly, by ``one forward--backward
+sweep of functional message passing''. This chapter builds the objects in that sentence
+from scratch: what a factor graph is, what the sum-product algorithm does on it, why the
+algorithm is exact when the graph is a tree, and why conditioning the chain prior on
+coordinatewise noised observations leaves a tree. It then specialises the general
+algorithm to the two message sweeps of the paper's equation for $\lmsg_i$ and $\rmsg_i$
+(Appendix B, the equation labelled \emph{bp}), reads off the site marginals, the pairwise
+marginals and the evidence, and places the recursion next to its two classical
+relatives, the forward--backward algorithm for hidden Markov models and the Kalman
+smoother.
+
+\section{Graphical models and factor graphs}
+
+\subsection{Factorised functions}
+
+Let $a=(a_1,\dots,a_\nsites)$ be a vector of variables, each taking values in a set
+$\mathcal{A}$ (a finite alphabet, or $\Reals$). A \term{factorisation} of a
+non-negative function $f$ of $a$ is a representation
+\begin{equation}
+  f(a)=\prod_{\alpha\in\mathcal{F}}\psi_\alpha(a_{\partial\alpha}),
+  \label{eq:bp-factorisation}
+\end{equation}
+where $\mathcal{F}$ is a finite index set of \term{factors}, each factor $\alpha$ has a
+\term{scope} $\partial\alpha\subseteq\{1,\dots,\nsites\}$, and $a_{\partial\alpha}$ is the
+sub-vector of the variables in that scope. The \term{factor graph} of the factorisation
+is the bipartite graph with one \term{variable node} per index $i$, one \term{factor
+node} per factor $\alpha$, and an edge between $i$ and $\alpha$ whenever
+$i\in\partial\alpha$. A factor with a scope of size one is called
+\term{unary}; a scope of size two is \term{pairwise}.
+
+When $f$ is a probability density up to a constant, $p(a)=f(a)/Z$ with
+$Z=\int f(a)\dd a$, the factor graph is a \term{graphical model} of $p$. The constant
+$Z$ is the \term{normaliser}, also called the \term{partition function} in physics and,
+when $f$ is a joint density of data and latent variables evaluated at the observed data,
+the \term{evidence} or \term{marginal likelihood}.
+
+\begin{example}[The chain prior]
+\label{ex:bp-chain-prior}
+The paper's clean law, its Section 2, equation \emph{prior}, is
+$\Pz(\va)=\mu(a_1)\prod_{i=2}^{\nsites}\kernel(a_i\mid a_{i-1})$. It is a factorisation
+with one unary factor $\mu$ of scope $\{1\}$ and $\nsites-1$ pairwise factors
+$\kernel(\cdot\mid\cdot)$ of scopes $\{i-1,i\}$. Its factor graph is a path: variable
+nodes $a_1,a_2,\dots,a_\nsites$ with a factor node between each consecutive pair, and
+a dangling unary factor at $a_1$. Here $Z=1$ because each $\kernel(\cdot\mid a)$
+integrates to one.
+\end{example}
+
+\subsection{Conditional independence}
+
+The factor graph encodes which variables are conditionally independent of which. The
+statement we need is the following. If removing the variable node $a_i$ (together with
+its edges) disconnects the graph into components $\mathcal{C}_1,\dots,\mathcal{C}_r$,
+then under $p$ the groups of variables in different components are conditionally
+independent given $a_i$. The proof is one line: every factor lies inside one component
+(its scope, minus $i$, is connected through the factor node), so
+$f(a)=\prod_j g_j(a_{\mathcal{C}_j},a_i)$, and a joint density that is a product of
+functions of the separate groups (each also depending on $a_i$) is, given $a_i$, a
+product density.
+
+Applied to the path of \cref{ex:bp-chain-prior}, removing $a_i$ separates the past
+$\{a_1,\dots,a_{i-1}\}$ from the future $\{a_{i+1},\dots,a_\nsites\}$: this is the
+\term{Markov property}, and it is the only use we make of the word ``Markov''.
+
+\subsection{Trees, and why marginalisation is hard in general}
+
+A factor graph is a \term{tree} when it is connected and has no cycles. A path is a
+tree. The \term{marginal} of $p$ at a variable $i$ is
+$p_i(a_i)=\frac1Z\int f(a)\dd a_{\setminus i}$, integrating over every variable but the
+$i$-th. Written out on a finite alphabet of size $\ngrid$, the integral is a sum over
+$\ngrid^{\nsites-1}$ configurations, which for the paper's $\ngrid=401$ and $\nsites=32$
+is not a computation. Every algorithm in this chapter is a way of organising that sum
+so that it costs $O(\nsites\ngrid^2)$ instead, and the organisation is possible exactly
+because the graph is a tree.
+
+\section{The sum-product algorithm}
+
+\subsection{Messages}
+
+The \term{sum-product algorithm}, also called \term{belief propagation}, passes two
+kinds of functions along the edges of the factor graph. For an edge between variable
+$i$ and factor $\alpha$:
+\begin{align}
+  \text{variable to factor:}\qquad
+  m_{i\to\alpha}(a_i)&=\prod_{\beta\in\partial i\setminus\{\alpha\}} m_{\beta\to i}(a_i),
+  \label{eq:bp-v2f}\\
+  \text{factor to variable:}\qquad
+  m_{\alpha\to i}(a_i)&=\int\psi_\alpha(a_{\partial\alpha})
+    \prod_{j\in\partial\alpha\setminus\{i\}} m_{j\to\alpha}(a_j)\dd a_{\partial\alpha\setminus i},
+  \label{eq:bp-f2v}
+\end{align}
+where $\partial i$ is the set of factors whose scope contains $i$. An empty product is
+$1$, so a leaf variable (one attached to a single factor) sends the constant message
+$1$, and a leaf factor (a unary factor) sends its own function
+$m_{\alpha\to i}(a_i)=\psi_\alpha(a_i)$. The names are literal: a message is a function
+of the variable at the edge's variable end, and \cref{eq:bp-f2v} sums (integrates) a
+product.
+
+On a tree, every message can be computed once and in a definite order: root the tree
+anywhere, compute messages from the leaves towards the root, then from the root back
+towards the leaves. Each edge carries one message in each direction, and each message
+is computed after all the messages it depends on. The \term{belief} at a variable and at
+a factor are then
+\begin{equation}
+  b_i(a_i)\propto\prod_{\alpha\in\partial i} m_{\alpha\to i}(a_i),\qquad
+  b_\alpha(a_{\partial\alpha})\propto\psi_\alpha(a_{\partial\alpha})
+   \prod_{j\in\partial\alpha} m_{j\to\alpha}(a_j).
+  \label{eq:bp-beliefs}
+\end{equation}
+
+\subsection{Exactness on a tree}
+
+\begin{theorem}[Sum-product is exact on a tree]
+\label{thm:bp-exact}
+Let the factor graph of \cref{eq:bp-factorisation} be a tree. Then the beliefs of
+\cref{eq:bp-beliefs} are the exact marginals: $b_i=p_i$ and $b_\alpha=p_{\partial\alpha}$,
+where $p_{\partial\alpha}$ is the marginal of $p$ on the scope of $\alpha$. Moreover, for
+every variable $i$, $Z=\int\prod_{\alpha\in\partial i} m_{\alpha\to i}(a_i)\dd a_i$.
+\end{theorem}
+
+\begin{proof}
+The proof is an induction on subtrees, and it rests on one fact about integrals of
+products: the \term{distributive law}, $\int g(u)h(v)\dd u\dd v=\int g\dd u\int h\dd v$
+when the two factors depend on disjoint sets of variables.
+
+Fix an edge $(i,\alpha)$ and delete it. Because the graph is a tree, this splits it into
+two subtrees; call $T_{\alpha\to i}$ the one containing $\alpha$ and $T_{i\to\alpha}$ the one
+containing $i$. Write $F_{\alpha\to i}(a_i)$ for the integral, over every variable of
+$T_{\alpha\to i}$ other than $a_i$, of the product of all factors in $T_{\alpha\to i}$; and
+$F_{i\to\alpha}(a_i)$ likewise for $T_{i\to\alpha}$ (the factors on the $i$ side other than
+$\alpha$). We claim
+\begin{equation}
+  m_{\alpha\to i}=F_{\alpha\to i},\qquad m_{i\to\alpha}=F_{i\to\alpha}.
+  \label{eq:bp-claim}
+\end{equation}
+The claim is proved by induction on the number of nodes in the subtree behind the
+message. If $T_{\alpha\to i}$ consists of $\alpha$ alone, then $\alpha$ is unary and both
+sides equal $\psi_\alpha(a_i)$. If $T_{i\to\alpha}$ consists of $i$ alone, both sides are
+$1$. Otherwise, suppose the claim holds for all smaller subtrees. The subtree
+$T_{\alpha\to i}$ is $\alpha$ together with, for each $j\in\partial\alpha\setminus\{i\}$, the
+subtree $T_{j\to\alpha}$; these subtrees are disjoint (no cycles) and share no variables
+with one another (a shared variable would be a cycle through $\alpha$). Hence the product
+of all factors in $T_{\alpha\to i}$ is $\psi_\alpha\prod_j(\text{factors of }T_{j\to\alpha})$,
+and integrating out the variables of each $T_{j\to\alpha}$ other than $a_j$ can be done
+separately by the distributive law, giving $\psi_\alpha\prod_j F_{j\to\alpha}(a_j)$; the
+remaining integral over $a_{\partial\alpha\setminus i}$ is exactly \cref{eq:bp-f2v} once
+$F_{j\to\alpha}=m_{j\to\alpha}$ by the induction hypothesis. The variable-to-factor case
+is the same argument with the subtrees $T_{\beta\to i}$, $\beta\in\partial i\setminus\{\alpha\}$,
+which share only the variable $a_i$; no integral is needed and
+\cref{eq:bp-v2f} follows.
+
+Now take a variable $i$. The whole graph is the union of the subtrees $T_{\alpha\to i}$,
+$\alpha\in\partial i$, which pairwise share only $a_i$. By the distributive law again,
+$\int f(a)\dd a_{\setminus i}=\prod_{\alpha\in\partial i}F_{\alpha\to i}(a_i)$, and by
+\cref{eq:bp-claim} this is the unnormalised belief. Integrating once more over $a_i$
+gives $Z$. For a factor $\alpha$, the whole graph is $\alpha$ together with the subtrees
+$T_{j\to\alpha}$, $j\in\partial\alpha$, sharing no variables, and the same reasoning gives
+$b_\alpha=p_{\partial\alpha}$.
+\end{proof}
+
+Three remarks on the theorem. First, nothing in the proof depends on the variables
+being discrete: on $\Reals$ the messages are functions and the sums are integrals,
+which is what the paper means by \emph{functional} message passing. Second, the
+proof shows that the belief at a factor integrates, over the variables of the factor
+other than $i$, to the belief at $i$: beliefs are \term{locally consistent}. Third,
+on a graph with cycles the messages of \cref{eq:bp-v2f,eq:bp-f2v} still make sense
+and can be iterated (\term{loopy belief propagation}), but the induction fails at the
+first cycle and the beliefs are approximations. The paper's claim is that its
+inference is \emph{tree-exact}: the posterior graph is a tree, so no such approximation
+is made.
+
+\section{The chain posterior of the paper}
+
+\subsection{Conditioning adds only unary factors}
+
+The observation model is the coordinatewise channel of the paper's equation
+\emph{channel}: given the clean chain $\va$, the coordinates of
+$\vx=e^{-t}\va+\sqrt{\Dt}\vz$ are independent, each with density
+$\normal{e^{-t}a_i}{\Dt}$ in $x_i$. By Bayes' rule,
+\begin{equation}
+  p_t(\va\mid\vx)=\frac{\Pz(\va)\prod_{i=1}^{\nsites}\like(x_i\mid a_i)}{\Pt(\vx)},\qquad
+  \like(x_i\mid a_i)=\frac{1}{\sqrt{2\pi\Dt}}\exp\!\Bigl[-\frac{(x_i-e^{-t}a_i)^2}{2\Dt}\Bigr].
+  \label{eq:bp-posterior}
+\end{equation}
+Compared with the prior, the numerator has one extra factor per site, each of scope
+$\{i\}$: a \term{unary likelihood factor}. No factor couples two latent variables that
+were not already coupled. The factor graph of the posterior is therefore the prior's
+path with a unary factor hanging from every variable node; it is still a tree
+(\cref{fig:bp-chain}). This is the whole content of the sentence ``conditioning leaves
+the posterior factor graph a tree''. It would fail for a channel that mixed coordinates
+(a non-diagonal noise covariance would add pairwise factors among the $a_i$, closing
+cycles), and it holds for any prior whose graph is a tree, not only for a path.
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}[
+    x=1cm, y=1cm, font=\small,
+    lat/.style={circle, draw=bpInk, line width=0.5pt, fill=white, minimum size=6.2mm, inner sep=0pt},
+    obs/.style={circle, draw=bpInk, line width=0.5pt, fill=bpFill, minimum size=6.2mm, inner sep=0pt},
+    fac/.style={rectangle, draw=bpInk, line width=0.5pt, fill=bpInk, minimum size=2.2mm, inner sep=0pt},
+    ufac/.style={rectangle, draw=bpInk, line width=0.5pt, fill=white, minimum size=2.2mm, inner sep=0pt},
+    edge/.style={draw=bpInk, line width=0.5pt},
+    gap/.style={inner sep=0pt, minimum size=6.2mm, text=bpInk},
+    msg/.style={-{Latex[length=1.8mm, width=1.4mm]}, line width=0.8pt, draw=bpBlue},
+    rowlab/.style={anchor=east, inner sep=0pt},
+  ]
+    \def\dx{1.55}
+    \def\ya{1.5}\def\yl{0.75}\def\yx{0.0}
+    \foreach \i/\al in {1/a_1, 2/a_2, 4/a_i, 6/a_\nsites} {
+      \node[lat] (a\i) at (\dx*\i, \ya) {$\al$};
+    }
+    \foreach \i in {3,5} { \node[gap] (a\i) at (\dx*\i, \ya) {$\cdots$}; }
+    \foreach \i/\j in {1/2,2/3,3/4,4/5,5/6} {
+      \node[fac] (k\i) at ($(a\i)!0.5!(a\j)$) {};
+      \draw[edge] (a\i) -- (k\i) -- (a\j);
+    }
+    \foreach \i/\xl in {1/x_1, 2/x_2, 4/x_i, 6/x_\nsites} {
+      \node[ufac] (l\i) at (\dx*\i, \yl) {};
+      \node[obs]  (x\i) at (\dx*\i, \yx) {$\xl$};
+      \draw[edge] (a\i) -- (l\i) -- (x\i);
+    }
+    \foreach \i in {3,5} { \node[gap] (x\i) at (\dx*\i, \yx) {$\cdots$}; }
+    \node[fac] (m1) at (\dx*1-0.75, \ya) {};
+    \draw[edge] (m1) -- (a1);
+    \node[anchor=east, inner sep=1pt, font=\footnotesize] at (\dx*1-0.85, \ya) {$\mu$};
+    \node[rowlab] at (\dx-1.35, \ya+0.55) {$\kernel(a_i\!\mid\! a_{i-1})$};
+    \node[rowlab] at (\dx-1.35, \yl) {$\like(x_i\!\mid\! a_i)$};
+    \node[rowlab] at (\dx-1.35, \yx) {$\vx_t$};
+    \draw[msg] ($(a1)+(0.35,0.55)$) -- ($(a4)+(-0.4,0.55)$)
+      node[midway, above=1pt, text=bpBlue, inner sep=1pt] {$\lmsg$};
+    \draw[msg] ($(a6)+(-0.35,0.55)$) -- ($(a4)+(0.4,0.55)$)
+      node[midway, above=1pt, text=bpBlue, inner sep=1pt] {$\rmsg$};
+  \end{tikzpicture}
+  \caption{The factor graph of the chain posterior, drawn as in the paper's Figure 1.
+  Latent sites (white circles) are joined by the transition factors $\kernel$ (filled
+  squares) and, at the left end, by the initial factor $\mu$. Conditioning attaches one
+  unary likelihood factor (open square) per site, joining $a_i$ to its own observation
+  $x_i$ (shaded circle), and adds no edge among the latent variables. The graph is a
+  tree, so the forward sweep $\protect\lmsg$ and the backward sweep $\protect\rmsg$ of the sum-product
+  algorithm are exact; they meet at the query site $i$.}
+  \label{fig:bp-chain}
+\end{figure}
+
+\subsection{From the general rules to the two sweeps}
+
+Specialise \cref{eq:bp-v2f,eq:bp-f2v} to \cref{fig:bp-chain}. Each latent variable $a_i$
+has at most three neighbouring factors: the transition factor on its left, the
+transition factor on its right, and its unary likelihood. Write $\kernel_{i}$ for the
+factor between $a_{i-1}$ and $a_i$ (with $\kernel_1=\mu$ the unary initial factor).
+Going left to right, the message that $\kernel_{i}$ sends into $a_i$ is, by
+\cref{eq:bp-f2v}, an integral over $a_{i-1}$ of $\kernel(a_i\mid a_{i-1})$ times the
+message $a_{i-1}$ sends into $\kernel_i$; and that message is, by \cref{eq:bp-v2f}, the
+product of what $a_{i-1}$ receives from its other two neighbours, its own unary factor
+$\like(x_{i-1}\mid\cdot)$ and the transition factor on its left. Naming
+$\lmsg_i(a)=m_{\kernel_i\to a_i}(a)$, this reads
+\begin{equation}
+  \lmsg_1(a)=\mu(a),\qquad
+  \lmsg_i(a)=\int\kernel(a\mid a')\,\like(x_{i-1}\mid a')\,\lmsg_{i-1}(a')\dd a',\quad i\ge2.
+  \label{eq:bp-forward}
+\end{equation}
+Going right to left, name $\rmsg_i(a)=m_{\kernel_{i+1}\to a_i}(a)$ the message that the
+transition factor on the right of $a_i$ sends into $a_i$; for the last site there is
+no such factor and $\rmsg_\nsites\equiv1$ (an empty product). The same two rules give
+\begin{equation}
+  \rmsg_\nsites(a)=1,\qquad
+  \rmsg_i(a)=\int\kernel(a''\mid a)\,\like(x_{i+1}\mid a'')\,\rmsg_{i+1}(a'')\dd a'',\quad i\le\nsites-1.
+  \label{eq:bp-backward}
+\end{equation}
+These are, up to the proportionality signs discussed in \cref{sec:bp-normalisation},
+the two lines of the paper's equation \emph{bp}. The paper's convention for
+$\lmsg_1$ differs from \cref{eq:bp-forward} in one cosmetic respect: it writes
+$\lmsg_1\equiv1$ and treats $\mu$ as if it were part of the first site's unary factor.
+The code follows \cref{eq:bp-forward}, with \code{L[0] = exp(log\_mu)} and
+\code{R[-1] = 1} in \code{src/markov\_score/bp\_grid.py}. Note the asymmetry of the
+kernel's arguments: forward, the integration variable is the \emph{conditioning}
+argument of $\kernel$; backward, it is the \emph{conditioned} one. The transition
+matrix on a grid, $\kernel[k,l]=\kernel(\gridpt{k}\mid\gridpt{l})$ with column index
+the parent, enters the forward sweep as $\kernel$ and the backward sweep as
+$\kernel^{\!\top}$, which is exactly what the code does.
+
+Two conventions are worth fixing, because both appear in the literature. The messages
+\cref{eq:bp-forward,eq:bp-backward} \emph{exclude} the unary factor of the site they
+arrive at; they are the factor-to-variable messages of the general algorithm. The
+alternative convention (the ``filtered'' forward variable of the HMM literature)
+multiplies the local likelihood in and would be $\lmsg_i\like$. The paper and the code
+use the excluded form, so that the local factor appears once, explicitly, in every
+formula below.
+
+\subsection{Site marginals, pairwise marginals and the evidence}
+
+By \cref{eq:bp-beliefs}, the belief at site $i$ is the product of what it receives from
+its three neighbours,
+\begin{equation}
+  p_t(a_i\mid\vx)=\frac{\lmsg_i(a_i)\,\like(x_i\mid a_i)\,\rmsg_i(a_i)}{Z_i},\qquad
+  Z_i=\int\lmsg_i\like(x_i\mid\cdot)\rmsg_i\dd a_i,
+  \label{eq:bp-site}
+\end{equation}
+and by \cref{thm:bp-exact} it is the exact posterior marginal. The paper's phrase
+``site marginals $\propto\lmsg_i\like\rmsg_i$'' is this line. The belief at the
+transition factor between $a_{i-1}$ and $a_i$ is
+\begin{equation}
+  p_t(a_{i-1},a_i\mid\vx)=\frac{\lmsg_{i-1}(a_{i-1})\,\like(x_{i-1}\mid a_{i-1})\,
+    \kernel(a_i\mid a_{i-1})\,\like(x_i\mid a_i)\,\rmsg_i(a_i)}{Z_{i-1,i}},
+  \label{eq:bp-pair}
+\end{equation}
+the exact \term{pairwise marginal}, whose two single-site margins are \cref{eq:bp-site}
+at $i-1$ and at $i$ (local consistency). The pairwise marginals are what the
+expectation--maximisation chapter (\cref{ch:em-through-noise}) sums into the expected
+transition statistic $\Xis$; they come from the same two sweeps at no extra cost beyond
+the outer products.
+
+The normaliser is available at any site, $Z_i=\Pt(\vx)$ for every $i$, because every
+$Z_i$ equals $\int\Pz(\va)\prod_j\like(x_j\mid a_j)\dd\va$ by the proof of
+\cref{thm:bp-exact}; the same holds for every $Z_{i-1,i}$. In particular the forward
+sweep alone gives it, as $Z_\nsites=\int\lmsg_\nsites\like(x_\nsites\mid\cdot)\dd a$ once
+$\rmsg_\nsites\equiv1$. This number, $\log\Pt(\vx)$, is the \term{log-evidence}: the
+marginal log-likelihood of one noised sequence under the chain prior, which the paper's
+Section 4 maximises over the parameters of the kernel and which its Appendix E uses,
+summed over a held-out bundle, as an oracle-free model-selection criterion.
+
+\subsection{From the marginal to the score}
+
+The paper needs one number per site, the posterior mean
+$\pmeansite{i}=\int a_i\,p_t(a_i\mid\vx)\dd a_i$, because Tweedie's identity
+(the chapter on the Ornstein--Uhlenbeck channel) converts it into the score,
+$\score(\vx,t)_i=-(x_i-e^{-t}\pmeansite{i})/\Dt$. Thus the whole of ``the exact score''
+is: two sweeps, $\nsites$ one-dimensional integrals for the means, and one subtraction
+per site. The word ``exact'' refers to \cref{thm:bp-exact}; what is not exact is the
+numerical representation of the messages, which is the subject of
+\cref{ch:grid-quadrature}.
+
+\subsection{Normalisation and the log-normaliser}
+\label{sec:bp-normalisation}
+
+Messages are defined up to a positive constant: multiplying $\lmsg_i$ by $c$ multiplies
+every later forward message and every belief involving it by $c$, and the
+normalised beliefs \cref{eq:bp-site,eq:bp-pair} are unchanged. This is why the paper
+writes $\propto$ in its recursion. Numerically, unnormalised messages on a long chain
+underflow or overflow (each step multiplies by a likelihood of order
+$1/\sqrt{2\pi\Dt}$ and by a kernel of order $1/\sqrt{\ivar}$), so an implementation
+rescales each message to unit mass and keeps the discarded constants:
+\begin{equation}
+  \tilde{\lmsg}_{i}=\frac{\lmsg_i}{c_i},\qquad c_i=\int\lmsg_i\dd a,\qquad
+  \log\Pt(\vx)=\sum_{i=2}^{\nsites}\log c_i+\log\int\tilde{\lmsg}_\nsites\like(x_\nsites\mid\cdot)\dd a,
+  \label{eq:bp-logZ}
+\end{equation}
+where each $c_i$ is computed from the \emph{already rescaled} previous message, so
+that the product of the $c_i$ is the total constant removed. The log-evidence is thus
+assembled from a sum of logarithms and never as a product of small numbers.
+\Cref{ch:grid-quadrature} gives the grid version, including the constants of the
+likelihood factors that the implementation removes for stability and restores at the
+end.
+
+\subsection{Cost}
+
+On a grid of $\ngrid$ points, a message is a vector of length $\ngrid$ and a
+transition integral is a matrix--vector product with the $\ngrid\times\ngrid$ matrix
+$\kernel[k,l]$, costing $O(\ngrid^2)$. The forward sweep performs $\nsites-1$ of them,
+the backward sweep the same, and the beliefs cost $O(\nsites\ngrid)$. The total is
+$O(\nsites\ngrid^2)$ per sequence and per noise level, as the paper states in its
+conclusion, and it is linear in the chain length: this is why the length-extrapolation
+study of the paper's Section 5 costs nothing extra at $\nsites=256$. For a batch of
+$B$ sequences the matrix--vector products become matrix--matrix products
+$(\ngrid\times\ngrid)(\ngrid\times B)$, which is how \code{grid\_bp\_batch} in
+\code{src/markov\_score/bp\_grid.py} organises the computation.
+
+\section{Three names for one recursion}
+
+\paragraph{Forward--backward for hidden Markov models.}
+When the state space is a finite set of $\ngrid$ symbols, \cref{eq:bp-forward,eq:bp-backward}
+are the forward and backward recursions of Baum and colleagues (1970) and Rabiner's
+tutorial (1989), usually written for the filtered variable
+$\alpha_i(k)=P(a_i=k,x_1,\dots,x_i)$ and the backward variable
+$\beta_i(k)=P(x_{i+1},\dots,x_\nsites\mid a_i=k)$. In our notation
+$\alpha_i=\lmsg_i\like(x_i\mid\cdot)$ and $\beta_i=\rmsg_i$; the posterior at a site is
+$\alpha_i\beta_i/\Pt(\vx)$ and the pairwise posterior is
+$\alpha_{i-1}\kernel\like\beta_i/\Pt(\vx)$, both as above. The pairwise posteriors summed
+over sites are the ``expected transition counts'' of the Baum--Welch algorithm, and
+their continuous analogue on the grid is exactly the paper's $\Xis$. The paper's
+recursion is therefore not a new algorithm; the paper says so in its related work,
+citing Baum and Rabiner.
+
+\paragraph{The Kalman smoother.}
+When $\mu$, $\kernel$ and $\like$ are all Gaussian, every message is Gaussian (a
+product of Gaussians is Gaussian, and the convolution of a Gaussian with a Gaussian
+kernel is Gaussian), so each message is carried by two numbers, a mean and a variance,
+or equivalently a precision and an information vector. The forward sweep is then the
+Kalman filter and the combination of forward and backward messages is the
+Rauch--Tung--Striebel smoother. \Cref{ch:gaussian-closure-lmmse} writes out the two
+moment maps and proves the paper's Proposition 1, which says that projecting every
+message onto a Gaussian, for \emph{any} innovation law with the same variance,
+reproduces this smoother. The implementation of the Gaussian case is
+\code{gaussian\_chain\_bp} in \code{src/markov\_score/bp\_gaussian.py}.
+
+\paragraph{Functional message passing and Kitagawa's grid smoother.}
+When the state is continuous and non-Gaussian, the messages are genuine functions on
+$\Reals$ and have no finite parametrisation. The paper calls the recursion
+``functional message passing'' to stress that the algorithm is defined at the level of
+functions, before any discretisation, and ``tree-exact inference'' to stress that the
+only approximation is in representing those functions. Representing them by their
+values on a grid and replacing integrals by quadrature is Kitagawa's non-Gaussian
+smoother (1987), which the paper also cites. The phrase ``the score'' throughout the
+paper means: the posterior mean obtained by this recursion, evaluated on a grid whose
+adequacy is measured (\cref{ch:grid-quadrature}), inserted into Tweedie's identity.
+
+\section{A worked example: three sites, three states}
+\label{sec:bp-example}
+
+Take $\nsites=3$ sites and a three-point alphabet $\{\gridpt{1},\gridpt{2},\gridpt{3}\}=\{-1,0,1\}$
+with no quadrature weights (a finite-state model, so that every integral is a sum).
+Let the initial law, the transition matrix and the three likelihood rows be
+\[
+  \mu=\begin{pmatrix}0.25\\0.5\\0.25\end{pmatrix},\qquad
+  \kernel=\begin{pmatrix}0.6&0.2&0.1\\0.3&0.6&0.3\\0.1&0.2&0.6\end{pmatrix},\qquad
+  \ell_1=\begin{pmatrix}0.2\\0.5\\0.3\end{pmatrix},\;
+  \ell_2=\begin{pmatrix}0.1\\0.3\\0.6\end{pmatrix},\;
+  \ell_3=\begin{pmatrix}0.4\\0.4\\0.2\end{pmatrix},
+\]
+where $\kernel[k,l]$ is the probability of moving from state $l$ (column) to state $k$
+(row), so the columns sum to one, and $\ell_i[k]$ (the unary factor $\like(x_i\mid\gridpt{k})$ of the chapter, written as a plain vector here) is the likelihood of the $i$-th
+observation given $a_i=\gridpt{k}$ (any positive numbers; they are not normalised over
+$k$ and need not be).
+
+\emph{Forward sweep.} $\lmsg_1=\mu$. The message into site 2 is
+$\lmsg_2=\kernel(\lmsg_1\circ\ell_1)$, with $\circ$ the elementwise product:
+$\lmsg_1\circ\ell_1=(0.05,\,0.25,\,0.075)$, and
+\[
+  \lmsg_2=\begin{pmatrix}0.6\cdot0.05+0.2\cdot0.25+0.1\cdot0.075\\
+                         0.3\cdot0.05+0.6\cdot0.25+0.3\cdot0.075\\
+                         0.1\cdot0.05+0.2\cdot0.25+0.6\cdot0.075\end{pmatrix}
+        =\begin{pmatrix}0.0875\\0.1875\\0.1\end{pmatrix}.
+\]
+Then $\lmsg_2\circ\ell_2=(0.00875,\,0.05625,\,0.06)$ and
+$\lmsg_3=\kernel(\lmsg_2\circ\ell_2)=(0.0225,\,0.054375,\,0.048125)$.
+
+\emph{Backward sweep.} $\rmsg_3=(1,1,1)$. Then
+$\rmsg_2=\kernel^{\!\top}(\rmsg_3\circ\ell_3)=\kernel^{\!\top}(0.4,0.4,0.2)$: the first
+entry is $0.6\cdot0.4+0.3\cdot0.4+0.1\cdot0.2=0.38$, and altogether
+$\rmsg_2=(0.38,\,0.36,\,0.28)$. Next $\rmsg_2\circ\ell_2=(0.038,\,0.108,\,0.168)$ and
+$\rmsg_1=\kernel^{\!\top}(\rmsg_2\circ\ell_2)=(0.072,\,0.106,\,0.137)$.
+
+\emph{Evidence.} From the end of the forward sweep,
+$Z=\sum_k\lmsg_3[k]\ell_3[k]=0.0225\cdot0.4+0.054375\cdot0.4+0.048125\cdot0.2=0.040375$.
+The same number is obtained at site 1, $\sum_k\mu[k]\ell_1[k]\rmsg_1[k]
+=0.25\cdot0.2\cdot0.072+0.5\cdot0.5\cdot0.106+0.25\cdot0.3\cdot0.137=0.040375$, and at
+site 2, as \cref{thm:bp-exact} requires.
+
+\emph{Site marginals.} At site 1 the unnormalised belief is
+$\mu\circ\ell_1\circ\rmsg_1=(0.0036,\,0.0265,\,0.010275)$; dividing by $Z$ gives
+$p(a_1\mid\vx)=(0.0892,\,0.6564,\,0.2545)$ and posterior mean
+$-0.0892+0.2545=0.1653$. At site 2 the unnormalised belief is
+\[
+  \lmsg_2\circ\ell_2\circ\rmsg_2=(0.003325,\,0.02025,\,0.0168),
+\]
+so that the normalised marginal is $p(a_2\mid\vx)=(0.0824,\,0.5015,\,0.4161)$, with
+mean $0.3337$. At site 3 the same steps give $p(a_3\mid\vx)=(0.2229,\,0.5387,\,0.2384)$
+and the mean $0.0155$. Enumerating all $27$
+configurations of $(a_1,a_2,a_3)$ and summing gives the same $Z$ and the same three
+marginals, which is the finite version of \cref{thm:bp-exact}.
+
+\emph{Pairwise marginal.} On the edge $(1,2)$, \cref{eq:bp-pair} gives the matrix with
+entries
+\[
+  p(a_2=\gridpt{k},a_1=\gridpt{l}\mid\vx)=\rmsg_2[k]\,\ell_2[k]\,\kernel[k,l]\,\lmsg_1[l]\,\ell_1[l]/Z;
+\]
+for instance the entry $(k,l)=(2,2)$, staying at $0$, is
+$0.108\cdot0.6\cdot0.25/0.040375=0.4012$, and the full matrix is
+\[
+  p(a_2=\gridpt{k},a_1=\gridpt{l}\mid\vx)=
+  \begin{pmatrix}0.0282&0.0471&0.0071\\0.0401&0.4012&0.0602\\0.0208&0.2081&0.1872\end{pmatrix},
+\]
+whose column sums are the site-1 marginal and whose row sums are the site-2 marginal,
+to the rounding shown. This is the object that \cref{ch:em-through-noise} accumulates
+into $\Xis$: summing the two edge matrices of this chain gives a $3\times3$ matrix of
+total mass $2$, the number of transitions.
+
+\where{The paper, Section 2 (``the score is a posterior mean, and the posterior is a
+tree'', Figure 1) and Appendix B (the recursion \emph{bp}); Section 4 (the pairwise
+marginals behind $\Xis$); Appendix E (the log-evidence as a selection criterion, E20).
+Code: \code{src/markov\_score/bp\_grid.py} (\code{grid\_bp} and \code{grid\_bp\_batch}),
+\code{src/markov\_score/em.py} (\code{e\_step}, which adds the pairwise accumulation to
+the same sweeps), \code{src/markov\_score/bp\_gaussian.py} (the Gaussian special case),
+and \code{paper/figures/fig\_mechanism.tex} (the figure mirrored above). Tests: the
+brute-force enumeration test in \code{tests/test\_em\_bp.py};
+\code{tests/test\_fisher\_bruteforce.py}, which checks the evidence and the pairwise
+marginals against enumeration on a five-state, four-site chain; and
+\code{tests/test\_gaussian\_bp\_equivalence.py}. Experiments: every registered
+experiment, E01 to E21, scores against this recursion.}
+
+\paragraph{References.}
+J.~Pearl (1988), \emph{Probabilistic Reasoning in Intelligent Systems}, Morgan Kaufmann.
+F.~R.~Kschischang, B.~J.~Frey and H.-A.~Loeliger (2001), ``Factor graphs and the sum-product
+algorithm'', \emph{IEEE Transactions on Information Theory} 47(2).
+L.~E.~Baum, T.~Petrie, G.~Soules and N.~Weiss (1970), ``A maximization technique occurring
+in the statistical analysis of probabilistic functions of Markov chains'', \emph{Annals of
+Mathematical Statistics} 41(1).
+L.~R.~Rabiner (1989), ``A tutorial on hidden Markov models and selected applications in
+speech recognition'', \emph{Proceedings of the IEEE} 77(2).
+G.~Kitagawa (1987), ``Non-Gaussian state-space modeling of nonstationary time series'',
+\emph{Journal of the American Statistical Association} 82(400).
+M.~M\'ezard and A.~Montanari (2009), \emph{Information, Physics, and Computation}, Oxford
+University Press, Chapter 14.

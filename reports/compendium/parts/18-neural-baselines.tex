@@ -1,0 +1,454 @@
+\chapter{The neural baselines}
+\label{ch:neural-baselines}
+
+The paper compares its structured estimator with six neural sequence denoisers. This
+chapter explains each of them from scratch, for a reader who has never built a neural
+network: what a layer is, what the six architectures compute, how many numbers each one
+holds, how the noise level enters, what the network is asked to output and why that
+output is a score, the single training recipe every architecture shares, the two losses
+(denoising and implicit score matching), the three ways of computing the divergence
+that the implicit loss needs, and what experiments E03, E08 and E14 do with all of this.
+Everything here is implemented in one file, \code{src/markov\_score/nn\_torch.py}, and
+the section headings follow it.
+
+\section{From a map to a score}
+\label{sec:net-io}
+
+\subsection{What a denoiser network is}
+
+A \term{neural network} here is a function $f_\theta:\Reals^{\nsites}\times(0,\infty)\to\Reals^{\nsites}$
+that takes a noised sequence $\vx$ and a level $t$ and returns one number per site,
+built from a fixed sequence of simple operations whose numerical constants, the
+\term{parameters} $\theta$, are chosen by minimising a loss on data. The paper's networks
+are \term{denoisers}: their output is used to form an estimate of the posterior mean
+$\pmean{\va}=\E[\va\mid\vx_t=\vx]$, from which Tweedie's identity
+(\Cref{ch:ou-channel-tweedie}) gives an estimate of the score,
+\begin{equation}
+  \hat\score(\vx,t)=-\frac{\vx-e^{-t}\hat m(\vx,t)}{\Dt}.
+  \label{eq:score-from-mean}
+\end{equation}
+The paper's estimand compares $\hat\score$ with the tree-exact score, so the network is
+judged as a score estimator whatever it was trained to output.
+
+\subsection{The two output parameterisations}
+
+Write $\alpha=e^{-t}$ and $\vx=\alpha\va+\sqrt{\Dt}\vz$. Two ways of turning the
+network's output into $\hat m$ are kept, because the diffusion literature uses both and
+the screen lets each family pick the one it trains better with:
+\begin{itemize}
+\item the \term{x0 parameterisation}: the output is the mean itself, $\hat m=f_\theta(\vx,t)$;
+\item the \term{eps parameterisation}: the output is an estimate $\hat\varepsilon$ of the
+  standardised noise $\vz$, and the mean is recovered by inverting the channel,
+  $\hat m=(\vx-\sqrt{\Dt}\,\hat\varepsilon)/\alpha$.
+\end{itemize}
+(\code{Denoiser.posterior\_mean}.) At the optimum the two are equivalent, because
+$\E[\vz\mid\vx]=(\vx-\alpha\E[\va\mid\vx])/\sqrt{\Dt}$ is a bijective affine image of
+$\E[\va\mid\vx]$; they differ in how the training loss weights the levels and in the
+scale of the output the network must produce (order one for eps at every $t$; order one
+for x0 too, but with a factor $1/\alpha$ amplifying its errors in the mean at high $t$).
+Substituting the eps form into \cref{eq:score-from-mean} gives the identity
+$\hat\score=-\hat\varepsilon/\sqrt{\Dt}$: an eps network is a score network up to the
+scalar $-1/\sqrt{\Dt}$.
+
+\subsection{The time features}
+
+The level enters every architecture through a small vector, the \term{Fourier features}
+of $\log t$ (\code{TimeFeatures}):
+\begin{equation}
+  \tau(t)=\bigl(\log t,\ \sin(2^k\log t),\ \cos(2^k\log t)\bigr)_{k=0,1,2,3}\in\Reals^{9}.
+  \label{eq:time-features}
+\end{equation}
+Two choices are deliberate. The argument is $\log t$ rather than $t$ because the
+twelve levels of the schedule are log-spaced on $[0.05,3]$ (\Cref{ch:protocol}), so in
+$\log t$ they are equally spaced and the network sees a uniform grid. The sines and
+cosines at four octaves give the network smooth, non-monotone basis functions of the
+level, so that a level-dependent gain (the correct denoiser shrinks less at low noise
+and more at high) can be represented by a linear combination in the first layer. The
+MLP concatenates $\tau(t)$ once to its input; every other architecture projects it with
+a linear map to its channel width and adds the result at every site, so that the level
+modulates every position identically, which is the natural symmetry of a coordinatewise
+channel.
+
+\section{The building blocks}
+\label{sec:blocks}
+
+\paragraph{Affine layers and activations.}
+An \term{affine layer} (\code{nn.Linear}) maps $\vect{h}\in\Reals^{n}$ to
+$\mat{W}\vect{h}+\vect{b}$ with a weight matrix $\mat{W}\in\Reals^{m\times n}$ and a bias
+$\vect{b}\in\Reals^m$: $mn+m$ parameters. An \term{activation} is a fixed nonlinear
+scalar function applied entrywise; the code uses $\tanh$ and the \term{GELU},
+$x\,\Phi(x)$ with $\Phi$ the standard normal distribution function, a smooth relative of
+the rectifier. Without activations a stack of affine layers is one affine layer, so the
+activations are what make a network more than a linear map.
+
+\paragraph{One-dimensional convolution.}
+A \term{1-D convolution} with $C$ input channels, $O$ output channels, kernel width $k$
+and dilation $d$ maps a signal $\vect{h}\in\Reals^{C\times\nsites}$ to
+\begin{equation}
+  (\mat{W}\ast\vect{h})_{o,i}=b_o+\sum_{c=1}^{C}\sum_{j=0}^{k-1}W_{o,c,j}\,h_{c,\,i+d(j-r)},
+  \qquad r=\tfrac{k-1}2,
+  \label{eq:conv}
+\end{equation}
+with $h_{c,i}=0$ for $i$ outside $\{1,\dots,\nsites\}$ (\term{zero padding}). It has
+$OCk+O$ parameters, the same weights at every site $i$ (\term{weight sharing}), and its
+output at $i$ depends on the inputs at sites $i-dr,\dots,i+dr$ only: its
+\term{receptive radius} is $dr$. Weight sharing is the network's version of the chain's
+homogeneity (the same kernel at every transition), and the receptive radius is the
+network's version of locality. The code implements \cref{eq:conv} as a gather followed by
+a matrix product (\code{FastConv1d}), which is algebraically identical to the framework's
+convolution and was ten to a hundred times faster on the laptop's CPU; the test suite
+checks the two agree to round-off.
+
+\paragraph{Residual connections and layer normalisation.}
+A \term{residual connection} replaces a block $g$ by $\vect{h}\mapsto\vect{h}+g(\vect{h})$,
+so that the block learns a correction to the identity and deep stacks train stably.
+\term{Layer normalisation} rescales a vector to zero mean and unit variance across its
+channels and then applies a learned per-channel gain and shift ($2d$ parameters for
+width $d$); the transformer applies it before each block (\term{pre-LN}).
+
+\section{The six architectures}
+\label{sec:archs}
+
+\subsection{The fully connected network (MLP)}
+
+The \term{multilayer perceptron} sees the whole sequence at once, with no structure
+imposed: the input is the concatenation $(\vx,\tau(t))\in\Reals^{\nsites+9}$, followed by
+two hidden affine layers with $\tanh$ and an output affine layer to $\Reals^{\nsites}$:
+\begin{equation}
+  f(\vx,t)=\mat{W}_3\tanh\bigl(\mat{W}_2\tanh(\mat{W}_1(\vx,\tau(t))+\vect{b}_1)+\vect{b}_2\bigr)+\vect{b}_3 .
+\end{equation}
+Every output depends on every input through dense matrices, there is no weight sharing
+across sites, and the network is tied to the length it was trained at (\code{length\_agnostic
+= False}), so it is excluded from the length study. It is the baseline against which
+weight sharing is measured.
+
+\subsection{The weight-shared window head}
+
+The \term{window head} is the smallest local architecture: one convolution of width
+$2r+1$ from one channel to $w$ channels (zero-padded, so the output has the input's
+length), the level added through a linear projection of $\tau(t)$ to the $w$ channels,
+then a \term{pointwise MLP}, that is, two convolutions of width one (affine maps applied
+at each site separately) with $\tanh$ between and after the first:
+\begin{equation}
+  \vect{h}_i=\tanh\bigl(\mat{W}_{\mathrm{conv}}\ast\vx\big|_i+\mat{W}_\tau\tau(t)+\vect{b}\bigr),\qquad
+  f(\vx,t)_i=\vect{w}_2^\top\tanh(\mat{W}_1\vect{h}_i+\vect{b}_1)+b_2 .
+\end{equation}
+Its output at site $i$ depends on $x_{i-r},\dots,x_{i+r}$ only: the receptive radius is
+exactly $r$, and the module declares it (\code{receptive\_radius = radius}), which is what
+the coloured-probe divergence of \Cref{sec:divergence} relies on. It is length-agnostic,
+since nothing in it refers to $\nsites$. The screen chose radius $4$ and width $64$ for
+E03; E08 uses radius $2$ and width $64$.
+
+\subsection{The dilated temporal convolutional network (TCN)}
+
+A \term{temporal convolutional network} stacks convolutions of width three with
+dilations $d\in\{1,2,4,8\}$, each in a residual block:
+\begin{equation}
+  \vect{h}^{(0)}=\mat{W}_0\ast\vx+\mat{W}_\tau\tau(t),\qquad
+  \vect{h}^{(\ell)}=\vect{h}^{(\ell-1)}+\mat{P}_\ell\bigl(\tanh(\mat{W}_\ell\ast_{d_\ell}\vect{h}^{(\ell-1)})\bigr),\qquad
+  f=\vect{w}^\top\vect{h}^{(4)}+b,
+\end{equation}
+with $\mat{P}_\ell$ a width-one convolution and $\ast_{d}$ the dilated convolution
+\cref{eq:conv}. The convolutions are non-causal (they look both ways), as they should
+for a smoother. Each block of dilation $d$ widens the receptive radius by $d$, so the
+stack sees $1+2+4+8=15$ sites on either side: a long range at a cost that grows linearly
+in the depth rather than in the radius, which is the point of dilation. It is
+length-agnostic. The screen chose $32$ channels.
+
+\subsection{The bidirectional gated recurrent unit (bi-GRU)}
+
+A \term{recurrent network} processes the sequence site by site, carrying a hidden state
+$\vect{h}_i\in\Reals^H$ from $i-1$ to $i$. The \term{gated recurrent unit} updates it by
+\begin{equation}
+\begin{aligned}
+  \vect{r}_i&=\sigma(\mat{W}_r\vect{u}_i+\mat{U}_r\vect{h}_{i-1}+\vect{b}_r),\qquad
+  \vect{z}_i=\sigma(\mat{W}_z\vect{u}_i+\mat{U}_z\vect{h}_{i-1}+\vect{b}_z),\\
+  \tilde{\vect{h}}_i&=\tanh\bigl(\mat{W}_n\vect{u}_i+\vect{r}_i\odot(\mat{U}_n\vect{h}_{i-1}+\vect{b}_n)+\vect{b}_n'\bigr),\qquad
+  \vect{h}_i=(1-\vect{z}_i)\odot\tilde{\vect{h}}_i+\vect{z}_i\odot\vect{h}_{i-1},
+\end{aligned}
+\end{equation}
+where $\sigma$ is the logistic function, $\odot$ the entrywise product, and
+$\vect{u}_i=\tanh(\mat{W}_{\mathrm{in}}(x_i,\tau(t))+\vect{b}_{\mathrm{in}})$ the per-site
+input. The \term{reset gate} $\vect{r}_i$ and the \term{update gate} $\vect{z}_i$ let the
+state be overwritten or kept, which is what allows information to travel far along the
+chain without vanishing. \term{Bidirectional} means two such recurrences, one running
+left to right and one right to left, whose states are concatenated; a per-site head then
+maps $(\vect{h}_i^{\rightarrow},\vect{h}_i^{\leftarrow},x_i)$ through one hidden layer to the
+output. The analogy with the forward and backward messages of \Cref{ch:factor-graphs-bp}
+is exact in shape and inexact in content: the GRU's state is a learned vector, not a
+function on the grid. The recurrence has $6H^2+6H$ parameters per direction. Global
+propagation, shared weights, length-agnostic; the screen chose $H=32$.
+
+\subsection{The transformer encoder with relative-position bias}
+
+The \term{transformer} replaces recurrence by \term{self-attention}: every site forms a
+weighted average of every other site's representation, with weights it computes
+itself. With $\mat{H}\in\Reals^{\nsites\times d}$ the current representation (row $i$ for
+site $i$), one head computes queries, keys and values $\mat{Q}=\mat{H}\mat{W}_q$,
+$\mat{K}=\mat{H}\mat{W}_k$, $\mat{V}=\mat{H}\mat{W}_v$ of width $d_h=d/\text{heads}$ and
+\begin{equation}
+  \mathrm{att}_{ij}=\frac{\exp\bigl(\vect{q}_i\cdot\vect{k}_j/\sqrt{d_h}+\beta_{c(i-j)}\bigr)}{\sum_{j'}\exp\bigl(\vect{q}_i\cdot\vect{k}_{j'}/\sqrt{d_h}+\beta_{c(i-j')}\bigr)},
+  \qquad
+  \mathrm{out}_i=\sum_j\mathrm{att}_{ij}\,\vect{v}_j ,
+  \label{eq:attention}
+\end{equation}
+where $c(k)=\max(-D,\min(D,k))$ clips the offset at $D=32$ and $\beta_{-D},\dots,\beta_D$
+are $2D+1$ learned numbers per head, the \term{relative-position bias}
+(\code{RelPosAttention}). The heads are concatenated and projected; the block is
+$\mat{H}\leftarrow\mat{H}+\mathrm{Attn}(\mathrm{LN}(\mat{H}))$ followed by
+$\mat{H}\leftarrow\mat{H}+\mathrm{FF}(\mathrm{LN}(\mat{H}))$ with a two-layer feed-forward
+map of inner width $2d$ and GELU, repeated for two layers; a final layer normalisation
+and a linear map give one output per site. Why this design is \emph{length-agnostic}:
+the network never sees an absolute position. It sees $x_i$, the level, and offsets
+$i-j$ through the bias, so the same weights apply to a sequence of any length. Why it
+nevertheless fails to extrapolate in the paper's length study is also visible in
+\cref{eq:attention}: with training length $\nsites=32$ the offsets range over
+$-31,\dots,31$, so the clipped entries $\beta_{\pm32}$ never receive a gradient and stay
+at their zero initialisation, while at test length $256$ most pairs have $|i-j|\ge32$
+and use exactly those entries; and the softmax normalises over eight times more keys,
+which changes every attention weight. The paper attributes the degradation to the
+positional encoding rather than to attention as such, with references to the length
+extrapolation literature. The screen chose $d=32$, four heads, two layers.
+
+\subsection{The two-level one-dimensional U-Net}
+
+A \term{U-Net} processes the sequence at two resolutions. An encoder of two width-three
+convolutions with GELU acts at full resolution ($c$ channels); a strided convolution
+(width four, stride two) halves the length and doubles the channels; a second encoder
+acts at half resolution; a transposed convolution (the adjoint of a strided
+convolution) restores the length; the result is concatenated with the full-resolution
+encoder output (the \term{skip connection}) and a decoder of two more convolutions and a
+width-one head produce the output. The level is added after the first encoder. The
+coarse branch sees a receptive field twice as wide per layer, so the network combines
+local detail with a wider, cheaper view; the skip connection keeps the fine detail the
+downsampling would lose. Multiscale, shared weights, length-agnostic (a one-site
+padding fixes odd lengths); the screen chose $c=16$.
+
+\subsection{Parameter counts}
+
+The number of parameters of a network is fixed by its architecture and can be counted
+by hand; the code's \code{n\_params} sums them. For the six screened configurations the
+counts are $26{,}016$ (MLP), $5{,}505$ (window head), $17{,}057$ (TCN), $15{,}169$ (bi-GRU),
+$18{,}057$ (transformer) and $13{,}713$ (U-Net); these are the values in the paper's screen
+table, obtained there from the code and here from the architecture, which is a useful
+check that the two agree.
+
+\begin{example}[Two parameter counts, by hand]
+\label{ex:params}
+\emph{The window head} at radius $4$, width $64$: the first convolution has one input
+channel, $64$ output channels and width $2\cdot4+1=9$, so $64\cdot1\cdot9+64=640$
+parameters; the level projection is an affine map from $9$ to $64$, $9\cdot64+64=640$;
+the pointwise MLP is a width-one convolution from $64$ to $64$, $64\cdot64+64=4160$, and
+one from $64$ to $1$, $64+1=65$. Total $640+640+4160+65=5505$. \emph{The MLP} with two
+hidden layers of $128$ at $\nsites=32$: the input has $32+9=41$ entries, so the layers hold
+$41\cdot128+128=5376$, $128\cdot128+128=16512$ and $128\cdot32+32=4128$ parameters,
+total $26016$. The MLP has five times the parameters of the window head and, at every
+sample size in the paper's baseline table, several times its error: what it lacks is
+not capacity but the weight sharing and locality that match the data.
+\end{example}
+
+\section{The one training recipe}
+\label{sec:recipe}
+
+Every architecture, at every interface, trains under the same \code{TrainConfig}:
+\begin{itemize}
+\item \term{batch} $64$: each gradient step uses $64$ sequences drawn with replacement
+  from the training set;
+\item \term{per-example level}: each sequence in the batch receives its own level $t$,
+  drawn uniformly from the twelve frozen levels, so a batch mixes levels and the
+  network learns all of them together;
+\item fresh \term{corruption} at every step under interface~A: $\vz\sim\normal0{\Id}$ is
+  redrawn for every sequence in every batch (\code{\_draw\_batch});
+\item \term{Adam}, a first-order optimiser that scales each parameter's step by a
+  running estimate of its gradient's magnitude, with learning rate $10^{-3}$ or
+  $3\cdot10^{-3}$ (the screen chooses);
+\item \term{gradient clipping} at norm $1$: if the gradient of the loss over all
+  parameters has Euclidean norm above $1$ it is rescaled to norm $1$ before the step,
+  which prevents a rare large batch from throwing the parameters far;
+\item a \term{checkpoint ladder} $\{500,1000,2000,4000,8000,16000,32000\}$: the parameters
+  are copied at each rung and the rung is chosen afterwards (\Cref{ch:model-selection});
+\item both output parameterisations screened, one run per configuration in the screen
+  (the pre-data amendment of E03 cut three restarts to one for budget), and a seed for
+  the initialisation and the batch stream derived from the cell's tags by
+  \code{rng\_for}, so a run is reproducible from its row;
+\item one thread per process; the confirmatory runs used the CPU code path
+  operation for operation.
+\end{itemize}
+The recipe is what makes a difference between two rows of the baseline table a
+difference between architectures. The earlier screen of this model, which the audit
+found had given the long-range architectures one level per step and one restart against
+the window head's twelve and eight, is the counterexample the recipe was written against.
+
+\section{The two losses}
+\label{sec:losses}
+
+\subsection{Denoising score matching (DSM)}
+
+Under interface~A the network regresses on a clean target:
+\begin{equation}
+  \mathcal L_{\mathrm{DSM}}(\theta)=\E\bigl\lVert f_\theta(\vx,t)-\vect{y}\bigr\rVert^2,
+  \qquad
+  \vect{y}=\begin{cases}\vz&\text{(eps)},\\ \va&\text{(x0)},\end{cases}
+  \label{eq:dsm}
+\end{equation}
+averaged over the batch, the level and the corruption (\code{dsm\_loss}). Why this
+learns the score is a two-line argument. For a fixed $(\vx,t)$ the squared loss is
+minimised by the conditional expectation of the target,
+$f^\ast(\vx,t)=\E[\vect{y}\mid\vx,t]$, because $\E\lVert f-\vect{y}\rVert^2=\E\lVert f-\E[\vect{y}\mid\vx]\rVert^2+\E\lVert\vect{y}-\E[\vect{y}\mid\vx]\rVert^2$
+and only the first term depends on $f$. For the x0 target this is $\E[\va\mid\vx]$, the
+posterior mean, and \cref{eq:score-from-mean} turns it into the score. For the eps
+target, $\E[\vz\mid\vx]=(\vx-\alpha\E[\va\mid\vx])/\sqrt{\Dt}=-\sqrt{\Dt}\,\score(\vx,t)$:
+the optimal eps network is minus $\sqrt{\Dt}$ times the score. This is Vincent's
+connection between denoising and score matching, and \Cref{ch:score-matching} gives it
+with more care. The clean chain enters only as the regression target; the interface-B
+variant of E03 and E14 keeps the same loss but with one fixed $(\vz,t)$ per chain.
+
+\subsection{Implicit score matching (ISM)}
+
+Under interface~C there is no clean target, and the network minimises Hyv\"arinen's
+objective on the noised views alone:
+\begin{equation}
+  \mathcal L_{\mathrm{ISM}}(\theta)=\E\Bigl[\tfrac12\lVert\hat\score_\theta(\vx,t)\rVert^2+\nabla_{\vx}\!\cdot\hat\score_\theta(\vx,t)\Bigr],
+  \qquad
+  \hat\score_\theta=-\frac{\vx-\alpha\hat m_\theta}{\Dt},
+  \label{eq:ism-loss}
+\end{equation}
+where $\hat m_\theta$ is formed from the network output by the parameterisation in use;
+the functions are \code{ism\_loss} and \code{\_score\_from\_out}.
+\Cref{ch:model-selection} derives the identity
+\begin{equation}
+  \mathcal L_{\mathrm{ISM}}(\theta)=\tfrac12\E\lVert\hat\score_\theta-\score\rVert^2+\text{const}
+\end{equation}
+that makes this a score-matching loss without the score. Its cost is the divergence term,
+a sum of $\nsites$ partial derivatives of the network's own output with respect to its
+own input, which must be differentiated again for the gradient step
+(\code{create\_graph=True}). The batches are drawn from the fixed set of one-view samples
+(no redrawing, there is nothing to redraw), each with the level it was observed at.
+
+\section{Three divergence estimators}
+\label{sec:divergence}
+
+Let $\mat{J}(\vx)=\partial\hat\score/\partial\vx$ be the $\nsites\times\nsites$ Jacobian of
+the score map at $\vx$. The divergence is $\tr\mat{J}=\sum_iJ_{ii}$. Automatic
+differentiation provides, for a cost comparable to one forward pass, the product
+$\mat{J}^\top\vect{v}$ for any vector $\vect{v}$ (one backward pass through the network),
+but not $\mat{J}$ itself. The function \code{divergence} offers three ways to obtain the
+trace from such products.
+
+\paragraph{Exact.} Take $\vect{v}=\vect{e}_i$ for $i=1,\dots,\nsites$: the $i$-th backward
+pass returns row $i$ of $\mat{J}$, whose $i$-th entry is $J_{ii}$. Cost: $\nsites$
+backward passes per batch, thirty-two at the paper's length, at every training step.
+
+\paragraph{Hutchinson's estimator.} Draw one probe $\vect{v}\sim\normal0{\Id}$ and use
+$\vect{v}^\top\mat{J}\vect{v}$. Since $\E[v_iv_j]=\delta_{ij}$,
+$\E[\vect{v}^\top\mat{J}\vect{v}]=\sum_{ij}J_{ij}\E[v_iv_j]=\tr\mat{J}$: unbiased at the cost
+of one backward pass. Its variance is $\sum_{i\ne j}J_{ij}^2+\sum_{ij}J_{ij}J_{ji}$ for a
+Gaussian probe, of the order of the squared off-diagonal mass of $\mat{J}$, which for a
+dense map at low noise is large; the estimator adds noise to every gradient step, and
+the audit's record of E14's first screen (\Cref{ch:protocol}) shows what that noise did to
+a window head trained with it.
+
+\paragraph{Coloured probes for a banded Jacobian.} If output $i$ depends only on inputs
+$j$ with $|i-j|\le r$, then $\mat{J}$ is banded with bandwidth $r$, and $p=2r+1$
+deterministic probes give the trace exactly.
+
+\begin{proposition}[Coloured trace]
+\label{prop:coloured}
+Let $J_{ij}=0$ whenever $|i-j|>r$, let $p=2r+1$ and let $\vect{v}^{(k)}\in\{0,1\}^{\nsites}$
+have entries $v^{(k)}_j=\mathbf 1\{j\equiv k\pmod p\}$ for $k=0,\dots,p-1$. Then
+$\sum_{k=0}^{p-1}\vect{v}^{(k)\top}\mat{J}\vect{v}^{(k)}=\tr\mat{J}$.
+\end{proposition}
+\begin{proof}
+$\vect{v}^{(k)\top}\mat{J}\vect{v}^{(k)}=\sum_{i\equiv k}\sum_{j\equiv k}J_{ij}$. Two indices in the
+same residue class differ by a multiple of $p=2r+1$, so either $i=j$ or $|i-j|\ge p>r$,
+in which case $J_{ij}=0$. Hence the sum is $\sum_{i\equiv k}J_{ii}$, and summing over the
+$p$ classes covers every $i$ once.
+\end{proof}
+
+This is the graph-colouring idea of Curtis, Powell and Reid for sparse Jacobians: sites
+of the same colour do not interact, so one probe per colour suffices. The zero padding at
+the ends only removes dependencies and never adds one, so the band structure holds at
+the boundary sites too. For the window head the code's \code{receptive\_radius} supplies
+$r$; for a dense map the function refuses the coloured mode, since a transformer's or
+GRU's output at $i$ depends on every input and the proposition does not apply. Cost:
+$2r+1$ backward passes, nine at radius $4$, against thirty-two for the exact loop, with
+no variance. E14 trains the window head with the coloured probes, the transformer with
+Hutchinson's estimator, and selects every arm's checkpoint with an exact trace
+(coloured for the head, the $\nsites$-pass loop for the transformer); the test suite
+checks that the coloured and exact traces agree to $10^{-5}$ and that Hutchinson's
+estimator averages to them.
+
+\begin{example}[Coloured probes at length five, radius one]
+\label{ex:coloured}
+With $\nsites=5$ and $r=1$, $p=3$ and the probes are
+$\vect{v}^{(0)}=(1,0,0,1,0)$, $\vect{v}^{(1)}=(0,1,0,0,1)$, $\vect{v}^{(2)}=(0,0,1,0,0)$.
+The Jacobian is tridiagonal. Then
+$\vect{v}^{(0)\top}\mat{J}\vect{v}^{(0)}=J_{11}+J_{14}+J_{41}+J_{44}=J_{11}+J_{44}$ because
+$|1-4|=3>1$; likewise $\vect{v}^{(1)\top}\mat{J}\vect{v}^{(1)}=J_{22}+J_{55}$ and
+$\vect{v}^{(2)\top}\mat{J}\vect{v}^{(2)}=J_{33}$; the three sum to the trace, with three
+backward passes instead of five. At $\nsites=128$ and $r=4$ the saving is nine passes
+against a hundred and twenty-eight, which is what made the interface-C window head
+affordable in the longer regime of E14.
+\end{example}
+
+\section{What the experiments do with the networks}
+\label{sec:net-experiments}
+
+\paragraph{E03: the screen, the confirmatory table, the matched arm and the length study.}
+\Cref{ch:model-selection} describes the screen and the confirmation. The
+\emph{matched} part trains the two families that carry the interface-C comparison, the
+window head and the transformer, by implicit score matching on the one-view groups with
+the exact divergence for the head and Hutchinson's estimator for the transformer, and
+selects on the held-out implicit objective; beside each it trains the interface-B arm
+(denoising loss on the clean chain with one fixed corruption). The \emph{length} part
+loads each family's selected confirmatory checkpoint at $\nsites=32$ (saved under
+\code{outputs/E03/ckpts/}) and scores it, unchanged, against the tree-exact score of chains
+of length $64$, $128$ and $256$; the MLP is excluded as not length-agnostic. The paper's
+Section~5 reports all four parts (the baseline table, the matched paragraph, the length
+table) and its Appendix A3 the screen.
+
+\paragraph{E08: one window head against the misspecified chain.}
+The misspecification experiment's network arm is a radius-$2$, width-$64$ window head
+trained under interface~A for $16{,}000$ steps with learning rate $10^{-3}$ and the eps
+parameterisation, checkpoint on the validation bulk risk (\Cref{ch:misspecification-edgeworth}).
+The paper names its configuration in the figure caption and the protocol appendix; it is
+not the screen's radius-$4$ winner, and the audit asked that this be said.
+
+\paragraph{E14: the matched comparison across regimes.}
+The network arms train exactly as E03's matched winners: the window head with the
+coloured-probe divergence at learning rate $10^{-3}$, the transformer with Hutchinson's
+estimator at $3\cdot10^{-3}$, eps parameterisation for both, re-screened inside each
+$(\corr,\nsites)$ regime over E03's candidate grid on two development seeds for $8{,}000$
+steps, then confirmed for $32{,}000$; checkpoints selected on the held-out implicit
+objective with the exact trace. The arms are \code{em\_bp}, \code{em\_bp\_evidence},
+\code{ism\_one\_view}, \code{dsm\_one\_corruption}, \code{lmmse\_true} and
+\code{isotropic}, each defined in \Cref{ch:model-selection}. The device is chosen at run
+time (\code{pick\_device}), so the same code runs on the cluster's GPUs; state dictionaries
+are always saved on the CPU so a checkpoint is portable.
+
+\paragraph{E05: the networks as samplers.}
+The generation experiment drives its reverse SDE (\Cref{ch:reverse-sde-generation}) with
+each arm's score, and its network arms are the selected confirmatory checkpoints of E03,
+loaded per cell so that the network is paired with the other arms within a seed.
+
+\where{\begingroup\sloppy The paper, Section~5 (baselines under one recipe; the
+comparison at matched information; length extrapolation), Section~1 (the list of
+architectures), Appendix A3 (the recipe and the screen table) and the misspecification
+figure. Code: \code{src/markov\_score/nn\_torch.py} (all architectures, \code{TrainConfig},
+\code{train}, \code{dsm\_loss}, \code{ism\_loss}, \code{divergence}, \code{ism\_objective},
+\code{Denoiser}), \code{tests/test\_nn\_torch.py}, \code{experiments/e03\_baselines.py},
+\code{experiments/e14\_regime\_baselines.py}, \code{experiments/e08\_misspecification.py},
+\code{experiments/e05\_generation.py}, \code{tools/make\_baseline\_numbers.py}.\par\endgroup}
+
+\paragraph{References.}
+\begingroup\sloppy
+P.~Vincent, 2011, A connection between score matching and denoising autoencoders, \emph{Neural Computation} 23, 1661--1674.
+A.~Hyv\"arinen, 2005, Estimation of non-normalized statistical models by score matching, \emph{Journal of Machine Learning Research} 6, 695--709.
+M.~F.~Hutchinson, 1989, A stochastic estimator of the trace of the influence matrix for Laplacian smoothing splines, \emph{Communications in Statistics: Simulation and Computation} 18, 1059--1076.
+A.~R.~Curtis, M.~J.~D.~Powell and J.~K.~Reid, 1974, On the estimation of sparse Jacobian matrices, \emph{Journal of the Institute of Mathematics and its Applications} 13, 117--119.
+D.~P.~Kingma and J.~Ba, 2015, Adam: a method for stochastic optimization, \emph{International Conference on Learning Representations}.
+K.~Cho, B.~van Merri\"enboer, C.~Gulcehre, D.~Bahdanau, F.~Bougares, H.~Schwenk and Y.~Bengio, 2014, Learning phrase representations using RNN encoder--decoder for statistical machine translation, \emph{EMNLP}.
+A.~Vaswani et al., 2017, Attention is all you need, \emph{Advances in Neural Information Processing Systems} 30.
+S.~Bai, J.~Z.~Kolter and V.~Koltun, 2018, An empirical evaluation of generic convolutional and recurrent networks for sequence modeling, arXiv:1803.01271.
+O.~Ronneberger, P.~Fischer and T.~Brox, 2015, U-Net: convolutional networks for biomedical image segmentation, \emph{MICCAI}.
+O.~Press, N.~A.~Smith and M.~Lewis, 2022, Train short, test long: attention with linear biases enables input length extrapolation, \emph{International Conference on Learning Representations}.\par\endgroup

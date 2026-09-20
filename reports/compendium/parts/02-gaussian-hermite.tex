@@ -1,0 +1,585 @@
+\chapter{Gaussian integrals and Hermite polynomials}
+\label{ch:gaussian-hermite}
+
+The paper's first theorem says that the Ornstein--Uhlenbeck channel multiplies the
+Hermite moment of degree $m$ by $e^{-mt}$, exactly, for every law with finite moments
+of that order. Its proof is four lines long once three classical facts are in place:
+the Gaussian generating function, the generating function of the Hermite polynomials,
+and Mehler's formula. This chapter builds those facts from the Gaussian integral
+upwards, proves Mehler's formula and the paper's Theorem 1 in full, derives the two
+exact consequences the paper states after it, works out the Wick (Isserlis) rule and
+the second-moment lemma that produce the constants $\tfrac16$ and $\tfrac1{24}$,
+explains when a density ratio belongs to $L^2(\gamma)$ and why the paper does not need
+it to, and defines the first Edgeworth correction that the chapter on
+misspecification uses.
+
+\section{Gaussian integrals}
+
+\begin{lemma}[The scalar Gaussian integral and its moments]
+\label{lem:gauss-scalar}
+$\int_{\Reals}e^{-x^2/2}\dd x=\sqrt{2\pi}$. Writing $\gamma(x)=(2\pi)^{-1/2}e^{-x^2/2}$
+for the \term{standard Gaussian density} and $Z\sim\gamma$,
+\begin{equation}
+  \E[e^{sZ}]=e^{s^2/2},\qquad \E[Z^{2k}]=(2k-1)!!=\frac{(2k)!}{2^kk!},\qquad \E[Z^{2k+1}]=0.
+  \label{eq:gauss-moments}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Squaring the integral and passing to polar coordinates,
+\[
+  \Bigl(\int e^{-x^2/2}\dd x\Bigr)^2=\int_0^{2\pi}\!\!\int_0^\infty e^{-r^2/2}r\,\dd r\,\dd\phi=2\pi .
+\]
+Completing the square, $sz-z^2/2=-(z-s)^2/2+s^2/2$, so
+\[
+  \E[e^{sZ}]=e^{s^2/2}(2\pi)^{-1/2}\int e^{-(z-s)^2/2}\dd z=e^{s^2/2}.
+\]
+Expanding both sides in $s$, $\sum_n\E[Z^n]s^n/n!=\sum_k s^{2k}/(2^kk!)$, and comparing
+coefficients of $s^{2k}$ gives $\E[Z^{2k}]=(2k)!/(2^kk!)$, which equals
+$(2k-1)!!=1\cdot3\cdots(2k-1)$; odd coefficients vanish. The exchange of sum and expectation is justified by
+$\sum_n|s|^n|Z|^n/n!=e^{|s||Z|}$, which is integrable.
+\end{proof}
+
+So $\E Z^2=1$, $\E Z^4=3$, $\E Z^6=15$. The number $(2k-1)!!$ is the number of ways of
+pairing $2k$ objects, which is the content of the next section.
+
+\begin{lemma}[The multivariate Gaussian integral]
+\label{lem:gauss-multi}
+For a symmetric positive definite $\mat A$ on $\Reals^{\nsites}$ and $\vect b\in\Reals^{\nsites}$,
+\begin{equation}
+  \int_{\Reals^{\nsites}}\exp\bigl(-\tfrac12\vect x^{\!\top}\mat A\vect x+\vect b^{\!\top}\vect x\bigr)\dd\vect x
+  =(2\pi)^{\nsites/2}(\det\mat A)^{-1/2}\exp\bigl(\tfrac12\vect b^{\!\top}\mat A^{-1}\vect b\bigr).
+  \label{eq:gauss-multi}
+\end{equation}
+Consequently $\normal{\vect m}{\Sig}$ has density
+$(2\pi)^{-\nsites/2}(\det\Sig)^{-1/2}\exp(-\tfrac12(\vect x-\vect m)^{\!\top}\Sig^{-1}(\vect x-\vect m))$
+and generating function $\E[e^{\vect s^{\!\top}\vect X}]=\exp(\vect s^{\!\top}\vect m+\tfrac12\vect s^{\!\top}\Sig\vect s)$.
+\end{lemma}
+\begin{proof}
+Complete the square,
+\[
+  -\tfrac12\vect x^{\!\top}\mat A\vect x+\vect b^{\!\top}\vect x
+  =-\tfrac12(\vect x-\mat A^{-1}\vect b)^{\!\top}\mat A(\vect x-\mat A^{-1}\vect b)+\tfrac12\vect b^{\!\top}\mat A^{-1}\vect b,
+\]
+shift, and diagonalise $\mat A=\mat O\diag(\lambda_k)\mat O^{\!\top}$ with $\mat O$ orthogonal;
+in the rotated coordinates $\vect y=\mat O^{\!\top}\vect x$ the integral factorises into
+\[
+  \prod_k\int e^{-\lambda_ky_k^2/2}\dd y_k=\prod_k\sqrt{2\pi/\lambda_k}=(2\pi)^{\nsites/2}(\det\mat A)^{-1/2}.
+\]
+The density and the generating function follow with $\mat A=\Sig^{-1}$.
+\end{proof}
+
+The standard Gaussian on $\Reals^{\nsites}$, written $\gamma$ throughout, is the case
+$\Sig=\Id$; its coordinates are independent standard Gaussians, which is the fact
+that reduces every multivariate Hermite statement below to the scalar one.
+
+\section{Isserlis' theorem (Wick's rule)}
+
+\begin{theorem}[Isserlis]
+\label{thm:isserlis}
+Let $\vect X\sim\normal{\vect0}{\Sig}$. For any indices $i_1,\dots,i_{2k}$ (repetitions
+allowed),
+\begin{equation}
+  \E[X_{i_1}\cdots X_{i_{2k}}]=\sum_{\text{pairings }\pi}\ \prod_{\{a,b\}\in\pi}\Sigma_{i_ai_b},
+  \label{eq:isserlis}
+\end{equation}
+the sum over the $(2k-1)!!$ ways of partitioning $\{1,\dots,2k\}$ into $k$ unordered
+pairs; products of an odd number of coordinates have expectation zero.
+\end{theorem}
+\begin{proof}[Proof sketch]
+By \cref{lem:gauss-multi}, $\E[e^{\vect s^{\!\top}\vect X}]=\exp(\tfrac12\sum_{ab}\Sigma_{ab}s_as_b)$.
+The moment $\E[X_{i_1}\cdots X_{i_{2k}}]$ is the mixed derivative
+$\partial_{s_{i_1}}\cdots\partial_{s_{i_{2k}}}$ at $\vect s=\vect 0$ of the left side.
+On the right side, expand the exponential: the term of order $k$ is
+$\tfrac1{k!}(\tfrac12\sum_{ab}\Sigma_{ab}s_as_b)^k$, a homogeneous polynomial of degree
+$2k$ in $\vect s$; differentiating it $2k$ times and setting $\vect s=\vect 0$ picks out,
+for each way of assigning the $2k$ differentiations to the $k$ factors in pairs, the
+product of the corresponding $\Sigma$ entries. Each unordered pairing arises
+$k!\,2^k$ times (order of the factors, order within each pair), which cancels the
+$\tfrac1{k!}\tfrac1{2^k}$ in front. Odd derivatives vanish because the right side is
+even in $\vect s$.
+\end{proof}
+
+For $k=2$ this is $\E[X_iX_jX_kX_l]=\Sigma_{ij}\Sigma_{kl}+\Sigma_{ik}\Sigma_{jl}+\Sigma_{il}\Sigma_{jk}$,
+the three pairings that appeared in the fourth-cumulant formula of the chapter on
+moments and cumulants: for a Gaussian vector the fourth moment is exactly the sum over
+pairings, so the fourth cumulant, which subtracts that sum, vanishes.
+
+\section{Probabilists' Hermite polynomials}
+
+\begin{definition}[Rodrigues formula]
+The \term{probabilists' Hermite polynomial} of degree $n$ is
+\begin{equation}
+  \Hen{n}(x)=(-1)^ne^{x^2/2}\frac{\dd^n}{\dd x^n}e^{-x^2/2},\qquad n=0,1,2,\dots
+  \label{eq:rodrigues}
+\end{equation}
+\end{definition}
+
+Differentiating $e^{-x^2/2}$ once gives $-xe^{-x^2/2}$, twice $(x^2-1)e^{-x^2/2}$, and
+so on; each derivative is a polynomial times $e^{-x^2/2}$, and the sign $(-1)^n$ makes
+the polynomial monic. The first seven are
+\begin{equation}
+\begin{aligned}
+  \Hen{0}(x)&=1, & \Hen{1}(x)&=x, & \Hen{2}(x)&=x^2-1,\\
+  \Hen{3}(x)&=x^3-3x, & \Hen{4}(x)&=x^4-6x^2+3, & \Hen{5}(x)&=x^5-10x^3+15x,\\
+  \Hen{6}(x)&=x^6-15x^4+45x^2-15.
+\end{aligned}
+\label{eq:he-list}
+\end{equation}
+$\Hen{n}$ has the parity of $n$. The coefficient pattern is the Gaussian moment
+sequence with alternating signs: $\Hen{n}(x)=\sum_k(-1)^k\binom{n}{2k}(2k-1)!!\,x^{n-2k}$,
+which the generating function below explains.
+
+\begin{proposition}[Generating function]
+\label{prop:he-gf}
+For all real $x$ and $s$,
+\begin{equation}
+  e^{sx-s^2/2}=\sum_{n\ge0}\Hen{n}(x)\frac{s^n}{n!}.
+  \label{eq:he-gf}
+\end{equation}
+\end{proposition}
+\begin{proof}
+Write $e^{-(x-s)^2/2}=e^{-x^2/2}e^{sx-s^2/2}$. The left side, as a function of $s$,
+is entire, and its Taylor expansion at $s=0$ is
+$\sum_n\frac{s^n}{n!}\frac{\dd^n}{\dd s^n}e^{-(x-s)^2/2}\big|_{s=0}$. Since
+$\frac{\dd}{\dd s}f(x-s)=-f'(x-s)$, the $n$-th derivative at $s=0$ is
+$(-1)^n\frac{\dd^n}{\dd x^n}e^{-x^2/2}=\Hen{n}(x)e^{-x^2/2}$ by \cref{eq:rodrigues}.
+Dividing by $e^{-x^2/2}$ gives \cref{eq:he-gf}.
+\end{proof}
+
+Two identities follow by differentiating \cref{eq:he-gf}. Differentiating in $x$,
+$s\,e^{sx-s^2/2}=\sum_n\Hen{n}'(x)s^n/n!$, and comparing coefficients,
+\begin{equation}
+  \Hen{n}'(x)=n\Hen{n-1}(x).
+  \label{eq:he-derivative}
+\end{equation}
+Differentiating in $s$, $(x-s)e^{sx-s^2/2}=\sum_n\Hen{n}(x)s^{n-1}/(n-1)!$, and
+comparing coefficients of $s^n/n!$,
+\begin{equation}
+  \Hen{n+1}(x)=x\Hen{n}(x)-n\Hen{n-1}(x),
+  \label{eq:he-recursion}
+\end{equation}
+the three-term recursion that \code{src/markov\_score/theory.py} (function \code{he})
+uses to evaluate the polynomials. Expanding $e^{sx}e^{-s^2/2}$ as a product of two
+series and collecting $s^n$ gives the explicit coefficient formula stated above.
+
+\begin{proposition}[Orthogonality]
+\label{prop:he-orth}
+$\E_\gamma[\Hen{n}(Z)\Hen{m}(Z)]=n!\,\delta_{nm}$.
+\end{proposition}
+\begin{proof}
+Multiply two copies of \cref{eq:he-gf} with parameters $s$ and $u$ and take the
+expectation under $\gamma$:
+\[
+  \E_\gamma\bigl[e^{sZ-s^2/2}e^{uZ-u^2/2}\bigr]=e^{-(s^2+u^2)/2}\E_\gamma[e^{(s+u)Z}]
+  =e^{-(s^2+u^2)/2}e^{(s+u)^2/2}=e^{su}=\sum_{n\ge0}\frac{s^nu^n}{n!}.
+\]
+On the other side the product of the two series is
+$\sum_{n,m}\E_\gamma[\Hen{n}\Hen{m}]\,s^nu^m/(n!\,m!)$. Comparing the coefficient of
+$s^nu^m$ gives $\E_\gamma[\Hen{n}\Hen{m}]/(n!\,m!)=\delta_{nm}/n!$, which is the claim. The exchange of expectation and double sum is justified as in
+\cref{lem:gauss-scalar}, the double series being dominated by $e^{(|s|+|u|)|Z|}$.
+\end{proof}
+
+So $\{\Hen{n}/\sqrt{n!}\}_{n\ge0}$ is an orthonormal system in $L^2(\gamma)$, the
+space of functions $f$ with $\E_\gamma[f(Z)^2]<\infty$. It is also complete: the
+polynomials are dense in $L^2(\gamma)$ (one proof: if $f\in L^2(\gamma)$ is orthogonal to
+every polynomial then the entire function $s\mapsto\E_\gamma[f(Z)e^{sZ}]$ has every
+derivative equal to zero at the origin, hence the Fourier transform of $f\gamma$ vanishes,
+hence $f=0$). A function $f\in L^2(\gamma)$ therefore has the \term{Hermite expansion}
+\begin{equation}
+  f=\sum_{n\ge0}\frac{\E_\gamma[f\Hen{n}]}{n!}\Hen{n},\qquad
+  \E_\gamma[f^2]=\sum_{n\ge0}\frac{\E_\gamma[f\Hen{n}]^2}{n!},
+  \label{eq:hermite-expansion}
+\end{equation}
+with convergence in $L^2(\gamma)$ and the Parseval identity on the right. The
+\term{Hermite moment} of degree $n$ of a law $P$ is $\E_P[\Hen{n}]$; when $P$ has a
+density and $P/\gamma\in L^2(\gamma)$, these are the expansion coefficients of the
+density ratio: $P/\gamma=\sum_n\E_P[\Hen{n}]\Hen{n}/n!$.
+
+\section{Products of Hermite polynomials and Wick products}
+
+\begin{definition}[Multivariate Hermite products]
+For a multi-index $\nu\in\mathbb N^{\nsites}$,
+\[
+  H_\nu(\vx)=\prod_{i=1}^{\nsites}\Hen{\nu_i}(x_i),\qquad |\nu|=\sum_i\nu_i,\qquad \nu!=\prod_i\nu_i!,
+\]
+and $|\nu|$ is the \term{degree} of $H_\nu$.
+\end{definition}
+
+Under $\gamma$ on $\Reals^{\nsites}$ the coordinates are independent, so the expectation
+of a product factorises and \cref{prop:he-orth} gives at once
+\begin{equation}
+  \E_\gamma[H_\nu H_\mu]=\prod_i\E_\gamma[\Hen{\nu_i}\Hen{\mu_i}]=\prod_i\nu_i!\,\delta_{\nu_i\mu_i}=\nu!\,\delta_{\nu\mu}.
+  \label{eq:multi-orth}
+\end{equation}
+This is the normalisation the paper states in Section 3; $\{H_\nu/\sqrt{\nu!}\}$ is an
+orthonormal basis of $L^2(\gamma)$ on $\Reals^{\nsites}$ (completeness by the same
+argument coordinatewise), and the \term{chaos expansion} of $f\in L^2(\gamma)$ is
+$f=\sum_\nu\E_\gamma[fH_\nu]H_\nu/\nu!$. The paper writes $H_\nu$ with a capital $H$;
+it is the product of probabilists' polynomials, not a physicists' polynomial (see the
+chapter on conventions).
+
+The same objects appear in the paper's proofs in a second notation, the
+\term{Wick product} ${:}x_{i_1}\cdots x_{i_n}{:}$, defined by the multivariate
+generating function
+\begin{equation}
+  e^{\vect s^{\!\top}\vx-|\vect s|^2/2}=\sum_{n\ge0}\frac1{n!}\sum_{i_1,\dots,i_n}s_{i_1}\cdots s_{i_n}\,{:}x_{i_1}\cdots x_{i_n}{:}\,.
+  \label{eq:wick-gf}
+\end{equation}
+Since the left side is $\prod_ie^{s_ix_i-s_i^2/2}=\prod_i\sum_k\Hen{k}(x_i)s_i^k/k!$,
+comparing the coefficient of a monomial $\prod_is_i^{\nu_i}$ (which appears
+$n!/\nu!$ times among the ordered tuples $(i_1,\dots,i_n)$) shows
+\begin{equation}
+  {:}x_{i_1}\cdots x_{i_n}{:}=H_\nu(\vx)\qquad\text{where $\nu_i$ is the number of times $i$ occurs in $(i_1,\dots,i_n)$}.
+  \label{eq:wick-is-hermite}
+\end{equation}
+The Wick product is symmetric in its indices and depends only on the multiset. Two
+degrees are needed explicitly. For degree two, ${:}x_ix_j{:}=x_ix_j-\delta_{ij}$, so that
+${:}\vx\vx^{\!\top}{:}=\vx\vx^{\!\top}-\Id$. For degree four, expanding \cref{eq:wick-gf} or
+multiplying out $\Hen{k}$'s,
+\begin{equation}
+\begin{aligned}
+  {:}x_ix_jx_kx_l{:}={}&x_ix_jx_kx_l
+  -\bigl(\delta_{ij}x_kx_l+\delta_{ik}x_jx_l+\delta_{il}x_jx_k+\delta_{jk}x_ix_l+\delta_{jl}x_ix_k+\delta_{kl}x_ix_j\bigr)\\
+  &+\bigl(\delta_{ij}\delta_{kl}+\delta_{ik}\delta_{jl}+\delta_{il}\delta_{jk}\bigr),
+\end{aligned}
+\label{eq:wick4}
+\end{equation}
+the inclusion--exclusion over pairs and double pairs; on the diagonal $i=j=k=l$ it
+gives $x^4-6x^2+3=\Hen{4}(x)$, as it must. \Cref{eq:wick4} is what the paper means by
+``the cumulant contractions with $\delta_{ii}$ are exactly the terms that convert
+monomials into Hermite polynomials''.
+
+\begin{lemma}[Second moment of a symmetric contraction]
+\label{lem:wick-second-moment}
+Let $\mat T$ be a symmetric tensor of order $n$ on $\Reals^{\nsites}$. Then
+\begin{equation}
+  \E_\gamma\Bigl[\Bigl(\sum_{i_1\cdots i_n}T_{i_1\cdots i_n}\,{:}x_{i_1}\cdots x_{i_n}{:}\Bigr)^2\Bigr]
+  =n!\sum_{i_1\cdots i_n}T_{i_1\cdots i_n}^2=n!\,\Frob{\mat T}^2 .
+  \label{eq:wick-second-moment}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Group the ordered tuples by their multiset $\nu$: each $\nu$ with $|\nu|=n$ collects
+$n!/\nu!$ tuples, all with the same entry $T_\nu$ (symmetry) and the same Wick product
+$H_\nu$ (\cref{eq:wick-is-hermite}). So the sum is $\sum_{|\nu|=n}(n!/\nu!)T_\nu H_\nu$,
+and by \cref{eq:multi-orth} its second moment is
+$\sum_\nu(n!/\nu!)^2T_\nu^2\,\nu!=n!\sum_\nu(n!/\nu!)T_\nu^2=n!\sum_{\text{ordered}}T^2$.
+\end{proof}
+
+\why{This lemma is where the paper's two constants come from. The leading term of
+the score gap has $m$-th component $\tfrac16\sum_{jkl}\kappa_4[mjkl]\,{:}x_jx_kx_l{:}$
+times $e^{-4t}$; with $n=3$ and the symmetric tensor $T_{jkl}=\kappa_4[mjkl]$,
+\cref{eq:wick-second-moment} gives a $\gamma$-second moment of
+$\tfrac1{36}\cdot3!\sum_{jkl}\kappa_4[mjkl]^2$, and summing over $m$ gives
+$\tfrac16\Frob{\kfour}^2$. The leading term of a shape score is
+$\tfrac1{24}\sum\partial_\theta\kappa_4[ijkl]\,{:}x_ix_jx_kx_l{:}$ times $e^{-4t}$; with
+$n=4$, its second moment is $\tfrac{4!}{24^2}\Frob{\partial_\theta\kfour}^2=\tfrac1{24}\Frob{\partial_\theta\kfour}^2$.
+The paper's Appendix A states both computations in one line each; this lemma is that
+line.}
+
+\section{When is a density ratio in $L^2(\gamma)$, and why Theorem 1 does not care}
+\label{sec:l2}
+
+The Hermite expansion \cref{eq:hermite-expansion} of a density ratio $P/\gamma$
+requires $P/\gamma\in L^2(\gamma)$, that is
+\begin{equation}
+  \int\frac{P(\vx)^2}{\gamma(\vx)}\dd\vx<\infty,
+  \qquad\text{equivalently}\qquad \chi^2(P\,\|\,\gamma)=\int\frac{P^2}{\gamma}-1<\infty .
+\end{equation}
+This is a strong condition: it asks $P$ to have tails no heavier than $\sqrt\gamma$,
+that is $P(\vx)\lesssim e^{-|\vx|^2/4}$ in every direction.
+
+\begin{proposition}[Gaussian laws]
+\label{prop:l2-gaussian}
+Let $P=\normal{\vect0}{\Sig}$. Then $P/\gamma\in L^2(\gamma)$ if and only if
+$\lmax(\Sig)<2$, and in that case
+$\int P^2/\gamma=\prod_k\bigl(\lambda_k(2-\lambda_k)\bigr)^{-1/2}$ over the eigenvalues
+$\lambda_k$ of $\Sig$.
+\end{proposition}
+\begin{proof}
+$P^2/\gamma=(2\pi)^{-\nsites/2}(\det\Sig)^{-1}\exp\bigl(-\tfrac12\vx^{\!\top}(2\Sig^{-1}-\Id)\vx\bigr)$.
+By \cref{lem:gauss-multi} the integral is finite if and only if $2\Sig^{-1}-\Id\succ0$,
+i.e. $\Sig\prec2\Id$, and then equals $(\det\Sig)^{-1}\det(2\Sig^{-1}-\Id)^{-1/2}=\det\bigl(\Sig(2\Id-\Sig)\bigr)^{-1/2}$.
+\end{proof}
+
+Two applications, both stated in the paper's Section 3. First, the clean Gaussian
+chain at $\corr=0.85$ has $\lmax(\Sig_0)>2$ (the chapter on Markov chains bounds
+$\lmax$ between the row sums of the Toeplitz matrix and $(1+\corr)/(1-\corr)$, and
+already the $2\times2$ block $\begin{psmallmatrix}1&\corr\\\corr&1\end{psmallmatrix}$ has
+eigenvalue $1+\corr>2$ when $\corr>1$, while for $\nsites=32$ the Rayleigh quotient of
+the constant vector exceeds $2$ as soon as $\corr\gtrsim0.35$), so $\Pz/\gamma\notin L^2(\gamma)$
+for the Gaussian chain itself. Second, the noised law $\Pt=\normal{\vect0}{\Sig_t}$ with
+$\Sig_t=e^{-2t}\Sig_0+\Dt\Id$ has eigenvalues $e^{-2t}\lambda_k+1-e^{-2t}$, which are all
+below $2$ if and only if $e^{-2t}(\lmax-1)<1$, i.e.
+\begin{equation}
+  \Pt/\gamma\in L^2(\gamma)\iff e^{2t}>\lmax(\Sig_0)-1 ,
+  \label{eq:l2-crossover}
+\end{equation}
+the exact statement in the paper's paragraph ``Where the asymptote begins''.
+
+\begin{proposition}[The Laplace law]
+\label{prop:l2-laplace}
+If $P$ is the scalar Laplace density $\tfrac1{2b}e^{-|x|/b}$, then $P/\gamma\notin L^2(\gamma)$
+for every $b>0$. The same holds for the Laplace chain on $\Reals^{\nsites}$.
+\end{proposition}
+\begin{proof}
+$P(x)^2/\gamma(x)=\tfrac{\sqrt{2\pi}}{4b^2}\exp\bigl(x^2/2-2|x|/b\bigr)$, and $x^2/2-2|x|/b\to+\infty$,
+so the integrand is unbounded and not integrable. For the chain,
+$\Pz(\va)=\mu(a_1)\prod_{i\ge2}\innov(a_i-\corr a_{i-1})$ with $\innov$ Laplace; along the
+ray $\va=u\vect e_{\nsites}$ (all sites zero except the last) the ratio
+$\Pz^2/\gamma$ is proportional to $\exp(u^2/2-2|u|/b)$, and by continuity the same
+growth holds on a tube around the ray, so the integral over $\Reals^{\nsites}$ diverges.
+\end{proof}
+
+Exponential tails are lighter than Gaussian ones in the sense of moments, and the
+Laplace law has an exponential moment; but they are heavier than $e^{-x^2/4}$, and that
+is what $L^2(\gamma)$ asks. The same is true of every family in the paper other than
+the uniform and the mixture.
+
+\paragraph{Why the paper's Theorem 1 does not need it.}
+A tempting route to attenuation is spectral: the Ornstein--Uhlenbeck semigroup
+$(\mathcal P_tf)(a)=\E[f(e^{-t}a+\sqrt{\Dt}Z)]$ is self-adjoint on $L^2(\gamma)$ with
+eigenfunctions $\Hen{n}$ and eigenvalues $e^{-nt}$, so one could expand $\Pz/\gamma$ in
+the chaos basis and let the semigroup act coefficient by coefficient. That route
+needs $\Pz/\gamma\in L^2(\gamma)$, which the two propositions above show fails for the
+paper's chain, Gaussian or Laplace. Theorem 1 is instead an identity for one
+expectation, $\E_{\Pt}[H_\nu(\vx_t)]$, proved by Fubini for each fixed $\nu$; it needs
+only $\E|\va|^{|\nu|}<\infty$, so that $H_\nu(\va)$ is integrable. No expansion of a
+density is ever summed. This is why the paper can state the theorem for every law
+with finite moments, and why its proofs of the asymptotic theorems go through the
+damped cumulant-generating function $\Lambda$ rather than through the chaos expansion of $\Pt/\gamma$.
+
+\section{Mehler's formula and the paper's Theorem 1}
+
+\begin{theorem}[Mehler's formula, moment form]
+\label{thm:mehler}
+Let $Z\sim\normal01$, $a\in\Reals$, $\alpha\in[0,1]$ and $\beta=\sqrt{1-\alpha^2}$. Then
+for every $n\ge0$,
+\begin{equation}
+  \E_Z\bigl[\Hen{n}(\alpha a+\beta Z)\bigr]=\alpha^n\Hen{n}(a).
+  \label{eq:mehler}
+\end{equation}
+\end{theorem}
+\begin{proof}
+Put $x=\alpha a+\beta Z$ in the generating function \cref{eq:he-gf} and take the
+expectation over $Z$:
+\[
+  \E_Z\bigl[e^{s(\alpha a+\beta Z)-s^2/2}\bigr]
+  =e^{s\alpha a-s^2/2}\,\E_Z\bigl[e^{s\beta Z}\bigr]
+  =e^{s\alpha a-s^2/2}\,e^{s^2\beta^2/2}
+  =e^{s\alpha a-s^2\alpha^2/2},
+\]
+using \cref{eq:gauss-moments} and $\beta^2=1-\alpha^2$. The right-hand side is the
+generating function \cref{eq:he-gf} evaluated at $x=a$ and parameter $\alpha s$:
+$e^{(\alpha s)a-(\alpha s)^2/2}=\sum_n\Hen{n}(a)\alpha^ns^n/n!$. The left-hand side is
+$\E_Z[\sum_n\Hen{n}(\alpha a+\beta Z)s^n/n!]$, and the expectation may be taken inside
+the sum: the series $\sum_n|\Hen{n}(x)||s|^n/n!$ is dominated, for $|s|\le1$, by a
+polynomial in $|x|$ times $e^{|x|}$ (from the explicit coefficient formula,
+$|\Hen{n}(x)|\le\sum_k\binom n{2k}(2k-1)!!|x|^{n-2k}\le(1+|x|)^n\,n!!$), which is
+integrable against the Gaussian law of $Z$, so dominated convergence applies.
+Comparing the coefficients of $s^n/n!$ on the two sides gives \cref{eq:mehler}.
+\end{proof}
+
+The name refers to Mehler's 1866 kernel identity,
+\[
+  \sum_{n\ge0}\Hen{n}(x)\Hen{n}(y)\frac{\alpha^n}{n!}
+  =\frac{1}{\sqrt{1-\alpha^2}}\exp\Bigl(-\frac{\alpha^2(x^2+y^2)-2\alpha xy}{2(1-\alpha^2)}\Bigr),
+\]
+which is the transition density of the Ornstein--Uhlenbeck process divided by
+$\gamma(y)$; \cref{eq:mehler} is its moment form, and says that $\Hen{n}$ is an
+eigenfunction of the channel with eigenvalue $\alpha^n=e^{-nt}$.
+
+\begin{theorem}[Hermite attenuation; the paper's Theorem 1]
+\label{thm:hermite-attenuation}
+Let $\vx_t=e^{-t}\va+\sqrt{\Dt}\vz$ with $\va\sim\Pz$ and $\vz\sim\normal{\vect0}{\Id}$
+independent. For every multi-index $\nu$ with $\E_{\Pz}|\va|^{|\nu|}<\infty$,
+\begin{equation}
+  \E_{\Pt}[H_\nu(\vx_t)]=e^{-|\nu|t}\,\E_{\Pz}[H_\nu(\va)].
+  \label{eq:attenuation}
+\end{equation}
+\end{theorem}
+\begin{proof}
+Condition on $\va$. Given $\va$, the coordinates $x_{t,i}=e^{-t}a_i+\sqrt{\Dt}z_i$ are
+independent, each of the form $\alpha a_i+\beta z_i$ with $\alpha=e^{-t}$,
+$\beta=\sqrt{1-\alpha^2}=\sqrt{\Dt}$. So
+\[
+  \E\bigl[H_\nu(\vx_t)\,\big|\,\va\bigr]=\prod_i\E_{z_i}\bigl[\Hen{\nu_i}(\alpha a_i+\beta z_i)\bigr]
+  =\prod_i\alpha^{\nu_i}\Hen{\nu_i}(a_i)=\alpha^{|\nu|}H_\nu(\va)
+\]
+by \cref{thm:mehler} applied coordinate by coordinate. Taking the expectation over
+$\va\sim\Pz$ gives \cref{eq:attenuation}, provided $H_\nu(\va)$ is integrable, which
+holds because $|H_\nu(\va)|\le C(1+|\va|)^{|\nu|}$ and $\E|\va|^{|\nu|}<\infty$; the
+tower property $\E[\E[\cdot\mid\va]]=\E[\cdot]$ is Fubini's theorem, which also needs
+only that integrability.
+\end{proof}
+
+The theorem is exact at every $t$, needs no assumption on the dependence between
+sites, and needs no $L^2(\gamma)$ condition. It is verified by Monte Carlo in
+\code{tests/test\_theory\_hermite.py} on a Laplace sample, and the cases $n\le4$ are
+checked in Lean as polynomial identities under the first four Gaussian moments
+(\code{lean/README.md}).
+
+\section{Two exact consequences}
+
+\begin{corollary}[Cumulants of order three and higher]
+\label{cor:cumulant-attenuation}
+For every $m\ge3$ with $\E|\va|^m<\infty$, the order-$m$ cumulant tensor of $\vx_t$ is
+$e^{-mt}$ times that of $\va$. The covariance is $\Cov(\vx_t)=e^{-2t}\Sig_0+\Dt\Id$.
+\end{corollary}
+\begin{proof}
+$\vx_t=e^{-t}\va+\sqrt{\Dt}\vz$ is a sum of two independent vectors. By additivity and
+the transformation rule of the chapter on moments and cumulants, the order-$m$
+cumulant tensor of $\vx_t$ is $e^{-mt}$ times that of $\va$ plus $\Dt^{m/2}$ times that
+of $\vz$; the Gaussian $\vz$ has no cumulant tensor of order $m\ge3$. For $m=2$ the
+Gaussian contributes $\Dt\Id$.
+\end{proof}
+
+This corollary uses no Hermite polynomials, only the arithmetic of cumulants; the
+paper's parenthesis ``Gaussian noise has none'' is the whole proof. The Hermite form
+of the theorem is nevertheless the one the paper needs, because Fisher information is
+built from moments, and the next corollary says how the Hermite moments of degree
+four see the fourth cumulant.
+
+\begin{corollary}[Degree-four Hermite moments and the fourth-cumulant tensor]
+\label{cor:degree-four}
+Let $\va$ have mean zero, covariance $\Sig_0$ and finite fourth moments. For any
+indices, with $\nu$ the multiset of $(i,j,k,l)$,
+\begin{equation}
+  \E[H_\nu(\va)]=\E[{:}a_ia_ja_ka_l{:}]
+  =\kappa_4[ijkl]+(\Sig_0-\Id)_{ij}(\Sig_0-\Id)_{kl}+(\Sig_0-\Id)_{ik}(\Sig_0-\Id)_{jl}+(\Sig_0-\Id)_{il}(\Sig_0-\Id)_{jk}.
+  \label{eq:he4-kappa4}
+\end{equation}
+Consequently, if two laws have the same covariance $\Sig_0$, their degree-four
+Hermite moments differ exactly by the difference of their fourth-cumulant tensors,
+and after noising that difference is $e^{-4t}(\kfour-\kfour')$.
+\end{corollary}
+\begin{proof}
+Take the expectation of \cref{eq:wick4}. By the fourth-cumulant formula of the chapter
+on moments and cumulants, $\E[a_ia_ja_ka_l]=\kappa_4[ijkl]+\Sigma_{ij}\Sigma_{kl}+\Sigma_{ik}\Sigma_{jl}+\Sigma_{il}\Sigma_{jk}$
+with $\Sigma=\Sig_0$; the six pair terms give $-\delta_{ij}\Sigma_{kl}-\dots$; the three
+double-pair terms give $+\delta_{ij}\delta_{kl}+\dots$. Collecting by pairing,
+$\Sigma_{ij}\Sigma_{kl}-\delta_{ij}\Sigma_{kl}-\Sigma_{ij}\delta_{kl}+\delta_{ij}\delta_{kl}=(\Sigma-\Id)_{ij}(\Sigma-\Id)_{kl}$,
+and likewise for the other two pairings. The second statement follows because the
+product terms depend only on $\Sig_0$, and the attenuation by $e^{-4t}$ is
+\cref{thm:hermite-attenuation} with $|\nu|=4$.
+\end{proof}
+
+For the paper's variance-matched families, $\Sig_0$ is the same for all, so the
+degree-four Hermite moment of the chain differs from that of its covariance twin by
+exactly $\kfour$; on the diagonal, $\E[\Hen{4}(a_i)]=\kappa_4(a_i)$ because $\Var(a_i)=1$.
+Degree two works the same way: $\E[{:}a_ia_j{:}]=(\Sig_0-\Id)_{ij}$, attenuated by $e^{-2t}$,
+which is the ``correlation coordinate'' and is consistent with
+\cref{cor:cumulant-attenuation}. This is the paper's second exact consequence, checked
+in Lean as target 2 (\code{lean/README.md}).
+
+\section{The Edgeworth expansion: the first correction}
+\label{sec:edgeworth}
+
+The paper's E16 asks how much of the gap between the true score and the twin's is
+explained by ``adding the fourth-order term back''. The object added is the first
+term of the Edgeworth (Gram--Charlier A) expansion, defined here; the chapter on
+misspecification and Edgeworth corrections uses it.
+
+\paragraph{Scalar form.}
+Let $X$ have mean $0$, variance $1$ and cumulants $\kappa_3,\kappa_4,\dots$. Formally,
+its generating function is $\exp(\tfrac12s^2+\sum_{n\ge3}\kappa_ns^n/n!)$, that of the
+standard Gaussian times $\exp(\sum_{n\ge3}\kappa_ns^n/n!)$; since multiplying a
+generating function by $s^n$ corresponds to applying $(-\dd/\dd x)^n$ to the density,
+and $(-\dd/\dd x)^n\gamma=\Hen{n}\gamma$ by the Rodrigues formula \cref{eq:rodrigues},
+\begin{equation}
+  p(x)\ \text{``$=$''}\ \exp\Bigl(\sum_{n\ge3}\frac{\kappa_n}{n!}\bigl(-\tfrac{\dd}{\dd x}\bigr)^n\Bigr)\gamma(x)
+  =\gamma(x)\Bigl[1+\frac{\kappa_3}{6}\Hen{3}(x)+\frac{\kappa_4}{24}\Hen{4}(x)+\dots\Bigr],
+  \label{eq:edgeworth-scalar}
+\end{equation}
+where the dots collect $\kappa_3^2\Hen{6}/72$ and all higher terms. The
+\term{first Edgeworth correction} is the truncation
+$p\approx\gamma(1+\kappa_3\Hen{3}/6+\kappa_4\Hen{4}/24)$, and for a symmetric law it
+is $p\approx\gamma(1+\kappa_4\Hen{4}/24)$. The series need not converge (it does not
+for the Laplace law, whose $\kappa_n$ grow like $n!$), and even when it does the
+truncation can be negative for large $|x|$; the expansion is an asymptotic device,
+exact order by order in the cumulants, and the paper reports where it helps and where
+it diverges rather than assuming either.
+
+\paragraph{Multivariate form around a Gaussian with covariance $\Sig$.}
+Replace $\gamma$ by $\gamma_{\Sig}$, the density of $\normal{\vect0}{\Sig}$, and the
+Hermite polynomials by the $\Sig$-\term{Hermite tensors}
+\[
+  h_{i_1\cdots i_n}(\vx)=(-1)^n\,\frac{\partial_{i_1}\cdots\partial_{i_n}\gamma_\Sig(\vx)}{\gamma_\Sig(\vx)} .
+\]
+With $\vect y=\Sig^{-1}\vx$, $\partial_i\gamma_\Sig=-y_i\gamma_\Sig$ and
+$\partial_iy_j=(\Sig^{-1})_{ij}$, so the fourth tensor is
+\begin{equation}
+\begin{aligned}
+  h_{ijkl}(\vx)={}&y_iy_jy_ky_l-\bigl[(\Sig^{-1})_{ij}y_ky_l+\text{five more}\bigr]\\
+  &+\bigl[(\Sig^{-1})_{ij}(\Sig^{-1})_{kl}+(\Sig^{-1})_{ik}(\Sig^{-1})_{jl}+(\Sig^{-1})_{il}(\Sig^{-1})_{jk}\bigr],
+\end{aligned}
+\end{equation}
+\cref{eq:wick4} with $\vx\mapsto\vect y$ and $\delta\mapsto\Sig^{-1}$. For a symmetric
+law with fourth-cumulant tensor $\mat K$ the first correction is
+$p\approx\gamma_\Sig(1+\epsilon)$ with $\epsilon=\tfrac1{24}\sum_{ijkl}K_{ijkl}h_{ijkl}$;
+contracting a symmetric $\mat K$ with the three groups of terms gives, with
+$A_{kl}=\sum_{ij}K_{ijkl}(\Sig^{-1})_{ij}$,
+\begin{equation}
+  \epsilon(\vx)=\frac1{24}\Bigl[\mat K[\vect y,\vect y,\vect y,\vect y]-6\,\vect y^{\!\top}\mat A\vect y+3\langle\mat A,\Sig^{-1}\rangle\Bigr],
+  \qquad
+  \nabla\epsilon=\frac16\Sig^{-1}\mat K[\cdot,\vect y,\vect y,\vect y]-\frac12\Sig^{-1}\mat A\vect y,
+  \label{eq:edgeworth-multi}
+\end{equation}
+where $\mat K[\vect y,\vect y,\vect y,\vect y]=\sum K_{ijkl}y_iy_jy_ky_l$ and
+$\langle\mat A,\Sig^{-1}\rangle=\sum_{kl}A_{kl}(\Sig^{-1})_{kl}$; the six pair terms
+each contract to $\vect y^{\!\top}\mat A\vect y$ and the three double-pair terms each to
+$\langle\mat A,\Sig^{-1}\rangle$ by the symmetry of $\mat K$, and the gradient uses
+$\nabla_{\vx}=\Sig^{-1}\nabla_{\vect y}$. The score of the corrected density is
+$\nabla\log[\gamma_\Sig(1+\epsilon)]=-\Sig^{-1}\vx+\nabla\epsilon/(1+\epsilon)$. This is
+exactly the formula in the paper's Appendix E for E16, with $\Sig=\Sig_t$ and
+$\mat K=e^{-4t}\kfour$: by \cref{cor:cumulant-attenuation} the noised chain has
+covariance $\Sig_t$ and fourth-cumulant tensor $e^{-4t}\kfour$, so the first
+Edgeworth correction around the covariance twin is the degree-four Hermite term that
+the paper's Theorem 2 identifies as the whole of the leading gap.
+
+\section{Worked example: a unit-variance Laplace site at $t=\log2$}
+
+Let $a$ have the unit-variance Laplace law, $b=1/\sqrt2$, with $\kappa_4=3$ (chapter on
+moments and cumulants), and let $x_t=e^{-t}a+\sqrt{\Dt}z$ at $t=\log2$, so
+$\alpha=e^{-t}=\tfrac12$ and $\Dt=\tfrac34$. Theorem 1 predicts
+\[
+  \E[\Hen{4}(x_t)]=\alpha^4\E[\Hen{4}(a)]=\tfrac1{16}\bigl(\E a^4-6\E a^2+3\bigr)=\tfrac1{16}(6-6+3)=\tfrac3{16},
+\]
+using $\E a^4=24b^4=6$. Directly: $\E x_t^2=\tfrac14+\tfrac34=1$ and
+$\E x_t^4=\alpha^4\E a^4+6\alpha^2\Dt\E a^2\E z^2+\Dt^2\E z^4=\tfrac6{16}+6\cdot\tfrac14\cdot\tfrac34+\tfrac9{16}\cdot3=\tfrac{6+18+27}{16}=\tfrac{51}{16}$,
+so $\E[\Hen{4}(x_t)]=\tfrac{51}{16}-6+3=\tfrac3{16}$, as predicted. The fourth cumulant of
+$x_t$ is $\kappa_4(x_t)=\E x_t^4-3=\tfrac3{16}=e^{-4t}\kappa_4(a)$, illustrating
+\cref{cor:cumulant-attenuation}; and the degree-two moment $\E[\Hen{2}(x_t)]=\E x_t^2-1=0$
+equals $e^{-2t}\E[\Hen{2}(a)]=0$, as unit variance requires.
+
+For the constant of \cref{lem:wick-second-moment} in the scalar case: the leading term
+of the score gap is $(\kappa_4/6)\Hen{3}(x)e^{-4t}$, whose $\gamma$-second moment is
+$(\kappa_4/6)^2\cdot3!\,e^{-8t}=(\kappa_4^2/6)e^{-8t}$, that is $\tfrac96e^{-8t}=1.5\,e^{-8t}$
+for the Laplace law; this is the value that \code{tests/test\_theory\_hermite.py}
+compares with a fine quadrature of the scalar noised density.
+
+\where{The paper's Section 3 (Theorem 1 and its two consequences, the Hermite
+normalisation $\nu!$, the $L^2(\gamma)$ remarks, the Edgeworth paragraph ``The gap is
+the fourth-order term''), Appendix A (the proofs of Theorems 1 and 2, Wick's theorem
+for the constants, the crossover $e^{2t}>\lmax-1$) and Appendix E (E16). Experiments
+E01, E16, E18, E21. Code: the functions \code{he}, \code{hermite\_moment\_attenuation},
+\code{score\_gap\_constant} and \code{shape\_information\_constant} of
+\code{src/markov\_score/theory.py}; the Edgeworth oracle
+\code{experiments/e16\_edgeworth\_oracle.py}; the tests in
+\code{tests/test\_theory\_hermite.py}; and the Lean targets listed in
+\code{lean/README.md}.}
+
+\paragraph{References.}
+G. Szeg\H{o} (1975), \emph{Orthogonal Polynomials}, 4th edition, American Mathematical
+Society (Chapter V: Hermite polynomials, generating function, Mehler's formula).
+L. Isserlis (1918), ``On a formula for the product-moment coefficient of any order of a
+normal frequency distribution in any number of variables'', Biometrika 12, 134--139.
+F. G. Mehler (1866), ``Ueber die Entwicklung einer Function von beliebig vielen
+Variablen nach Laplaceschen Functionen h\"oherer Ordnung'', Journal f\"ur die reine und
+angewandte Mathematik 66, 161--176.
+S. Janson (1997), \emph{Gaussian Hilbert Spaces}, Cambridge University Press (Wick
+products, chaos expansion, the Ornstein--Uhlenbeck semigroup on $L^2(\gamma)$).
+P. Hall (1992), \emph{The Bootstrap and Edgeworth Expansion}, Springer (Chapter 2:
+the Edgeworth expansion and its first terms).
+P. McCullagh (1987), \emph{Tensor Methods in Statistics}, Chapman and Hall (Chapter 5:
+Edgeworth series in several variables, Hermite tensors).

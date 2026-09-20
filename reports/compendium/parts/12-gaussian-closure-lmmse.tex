@@ -1,0 +1,421 @@
+\chapter{Gaussian closure and the LMMSE floor}
+\label{ch:gaussian-closure-lmmse}
+
+The paper's Proposition 1 is short: run the sum-product recursion of
+\cref{ch:factor-graphs-bp}, but after every transition integral replace the message by
+the Gaussian with the same mean and variance; then, whatever the innovation law, the
+posterior means you obtain are those of the \emph{Gaussian} chain with the same
+correlation and innovation variance, and those are the linear minimum-mean-square
+estimator $e^{-t}\Sig_0\Sig_t^{-1}\vx$. The proposition turns an approximation that
+practitioners make for convenience (Gaussian message passing, assumed-density
+filtering, the Kalman smoother applied to a non-Gaussian model) into an object with a
+name and a closed form, and it gives the paper an apparatus check that is used in
+every experiment: a Gaussian-innovation kernel fitted by maximum likelihood must land
+on that closed form. This chapter defines the projection, derives the linear
+estimator from first principles, shows that the Gaussian chain's forward--backward is
+the Kalman smoother, proves the proposition in full, derives the two consequences the
+paper draws from it, and explains what the gap between the true score and the
+Gaussian one measures.
+
+\section{The Gaussian moment projection}
+
+\begin{definition}[Gaussian moment projection]
+\label{def:gc-proj}
+For a non-negative integrable function $g$ on $\Reals$ with finite second moment,
+let $\bar g=g/\!\int g$ be its normalisation, $m=\int a\,\bar g(a)\dd a$ its mean and
+$v=\int(a-m)^2\bar g(a)\dd a$ its variance. The \term{Gaussian moment projection} of $g$
+is $\Pgauss g=\normal{m}{v}$, the Gaussian density with the same first two moments as
+$\bar g$.
+\end{definition}
+
+The operator is defined on shapes: the normalisation of $g$ is discarded, which is
+harmless because messages are defined up to a constant. Two facts make $\Pgauss$ the
+natural projection rather than one choice among many. First, among all Gaussians,
+$\Pgauss g$ is the one closest to $\bar g$ in Kullback--Leibler divergence
+$\KL(\bar g\,\|\,\cdot)$: writing $\normal{m'}{v'}$ for a candidate,
+$-\int\bar g\log\normal{m'}{v'}=\tfrac12\log(2\pi v')+\bigl(v+(m-m')^2\bigr)/2v'$ is
+minimised at $m'=m$ and $v'=v$, since the term is a function of the first two moments of
+$\bar g$ only. Second, and this is the property the proof of Proposition 1 uses, a
+Gaussian is determined by its first two moments, so $\Pgauss$ forgets everything about
+$g$ except $(m,v)$.
+
+\term{Moment-projected sum-product} is the recursion of \cref{ch:factor-graphs-bp} with
+$\Pgauss$ applied to each message after every transition integral: in the notation of
+that chapter,
+\begin{equation}
+\begin{aligned}
+  \lmsg^{\mathrm p}_i&=\Pgauss\!\Bigl[\int\kernel(\cdot\mid a')\like(x_{i-1}\mid a')\lmsg^{\mathrm p}_{i-1}(a')\dd a'\Bigr],\\
+  \rmsg^{\mathrm p}_i&=\Pgauss\!\Bigl[\int\kernel(a''\mid\cdot)\like(x_{i+1}\mid a'')\rmsg^{\mathrm p}_{i+1}(a'')\dd a''\Bigr],
+\end{aligned}
+  \label{eq:gc-projected}
+\end{equation}
+with the same starting values as before. In the literature this is Gaussian
+assumed-density filtering, or expectation propagation with a single Gaussian per
+message and one forward and one backward pass. The paper's phrase is ``single-Gaussian
+message closure''. Note where the projection is applied: after the transition integral,
+and not after the multiplication by the unary factor, which would be a different
+algorithm. For the Gaussian likelihood of the channel the difference is immaterial,
+because a Gaussian message times a Gaussian likelihood is already Gaussian; the paper
+fixes the order once so that the statement is unambiguous.
+
+\section{The linear minimum-mean-square estimator}
+
+\subsection{Derivation}
+
+Let $(\va,\vx)$ be a pair of random vectors with finite second moments, means zero,
+and second-moment matrices $\Sig_{aa}=\E[\va\va^{\!\top}]$, $\Sig_{ax}=\E[\va\vx^{\!\top}]$,
+$\Sig_{xx}=\E[\vx\vx^{\!\top}]$, the last invertible. A \term{linear estimator} of $\va$
+from $\vx$ is $\hat\va=G\vx$ for a fixed matrix $G$, and its \term{mean-square error} is
+$R(G)=\E\lVert\va-G\vx\rVert^2=\tr\Sig_{aa}-2\tr(G\Sig_{ax}^{\!\top})+\tr(G\Sig_{xx}G^{\!\top})$,
+by expanding the square and using linearity of expectation. The function $R$ is a
+quadratic in the entries of $G$ with positive semidefinite Hessian (it is
+$\tr(G\Sig_{xx}G^{\!\top})$ plus lower-order terms, and $\Sig_{xx}\succ0$), so its
+stationary point is its minimum. Differentiating, $\partial R/\partial G=-2\Sig_{ax}+2G\Sig_{xx}$,
+which vanishes at
+\begin{equation}
+  G^\ast=\Sig_{ax}\Sig_{xx}^{-1},\qquad
+  \lmmse=\Sig_{ax}\Sig_{xx}^{-1}\vx,\qquad
+  R(G^\ast)=\tr\bigl(\Sig_{aa}-\Sig_{ax}\Sig_{xx}^{-1}\Sig_{ax}^{\!\top}\bigr).
+  \label{eq:gc-lmmse}
+\end{equation}
+This is the \term{linear minimum-mean-square estimator} (LMMSE), also called the Wiener
+or normal-equation estimator; the matrix $G^\ast$ solves the \term{normal equations}
+$G\Sig_{xx}=\Sig_{ax}$. The error $\va-G^\ast\vx$ is uncorrelated with $\vx$ (the
+\term{orthogonality principle}: $\E[(\va-G^\ast\vx)\vx^{\!\top}]=\Sig_{ax}-G^\ast\Sig_{xx}=0$),
+which is another way of saying that no linear correction can lower the error.
+
+Apply this to the channel $\vx=e^{-t}\va+\sqrt{\Dt}\vz$ with $\va\sim\Pz$ of covariance
+$\Sig_0$ and $\vz\sim\normal{0}{\Id}$ independent of $\va$. Then
+$\Sig_{ax}=\E[\va(e^{-t}\va+\sqrt{\Dt}\vz)^{\!\top}]=e^{-t}\Sig_0$ and
+$\Sig_{xx}=e^{-2t}\Sig_0+\Dt\Id=\Sig_t$, so
+\begin{equation}
+  \lmmse=e^{-t}\Sig_0\Sig_t^{-1}\vx,\qquad \Sig_t=e^{-2t}\Sig_0+\Dt\Id.
+  \label{eq:gc-lmmse-channel}
+\end{equation}
+The derivation used only the first two moments of $\Pz$: every law with covariance
+$\Sig_0$ has the same LMMSE, which is why the paper calls the Gaussian with covariance
+$\Sig_0$ the \term{covariance twin} of $\Pz$ and \cref{eq:gc-lmmse-channel} ``the LMMSE
+of the covariance twin''.
+
+\subsection{When it is the MMSE, and when it is only the best linear map}
+
+The \term{minimum-mean-square estimator} without the word ``linear'' is the conditional
+mean $\E[\va\mid\vx]$, the minimiser of $\E\lVert\va-f(\vx)\rVert^2$ over all measurable
+$f$ (the standard argument: for any $f$, $\E\lVert\va-f\rVert^2=\E\lVert\va-\E[\va\mid\vx]\rVert^2+\E\lVert\E[\va\mid\vx]-f\rVert^2$,
+the cross term vanishing by the tower property). If $(\va,\vx)$ is jointly Gaussian,
+the conditional mean is linear, $\E[\va\mid\vx]=\Sig_{ax}\Sig_{xx}^{-1}\vx$, so the LMMSE
+\emph{is} the MMSE. This is the case of the Gaussian chain: $\va$ Gaussian and $\vz$
+Gaussian independent make $(\va,\vx)$ jointly Gaussian. For any other $\Pz$ the
+conditional mean is a nonlinear function of $\vx$, the LMMSE is only the best among
+linear maps, and the difference
+$\E\lVert\E[\va\mid\vx]-\lmmse\rVert^2=\E\lVert\va-\lmmse\rVert^2-\E\lVert\va-\E[\va\mid\vx]\rVert^2$
+is the price of linearity. Through Tweedie's identity, the score of the covariance
+twin is
+\begin{equation}
+  \Sgauss(\vx,t)=-\frac{\vx-e^{-t}\lmmse}{\Dt}
+  =-\frac{1}{\Dt}\bigl(\Id-e^{-2t}\Sig_0\Sig_t^{-1}\bigr)\vx=-\Sig_t^{-1}\vx,
+  \label{eq:gc-score-twin}
+\end{equation}
+where the last step uses $\Id-e^{-2t}\Sig_0\Sig_t^{-1}=(\Sig_t-e^{-2t}\Sig_0)\Sig_t^{-1}=\Dt\Sig_t^{-1}$.
+So $\Sgauss=-\Sig_t^{-1}\vx$ is at once the score of $\normal{0}{\Sig_t}$, which is the
+noised law of the Gaussian twin, and the Tweedie image of the LMMSE. The paper's
+Section 2 states both forms.
+
+\section{The Gaussian chain and the Kalman smoother}
+\label{sec:gc-kalman}
+
+For the Gaussian chain, $\mu=\normal{0}{1}$, $\kernel(a'\mid a)=\normal{\corr a}{\ivar}$,
+$\like(x\mid a)\propto\normal{x}{\Dt}$ evaluated at $e^{-t}a$, every message of
+\cref{ch:factor-graphs-bp} is a Gaussian in $a$ and is carried by two numbers. It is
+convenient to use the \term{information form}: a Gaussian shape $\propto\exp(-\lambda a^2/2+ha)$
+has precision $\lambda$, information $h$, mean $h/\lambda$ and variance $1/\lambda$;
+products of shapes add $(\lambda,h)$; a flat message is $\lambda=0$, $h=0$. The unary
+factor, as a function of $a$, has $\lambda_{\like}=e^{-2t}/\Dt$ and
+$h_{\like}=e^{-t}x_i/\Dt$.
+
+\paragraph{Forward step.} Let $\lmsg_{i-1}=\normal{m}{v}$. Multiplying by $\like(x_{i-1}\mid\cdot)$
+gives the \term{tilted} Gaussian with $\lambda'=1/v+\lambda_{\like}$, $h'=m/v+h_{\like}$,
+mean $m'=h'/\lambda'$ and variance $v'=1/\lambda'$. The transition integral is
+$\int\normal{\corr a'}{\ivar}(a)\,\normal{m'}{v'}(a')\dd a'$, the density of
+$\corr a'+\varepsilon$ with $a'\sim\normal{m'}{v'}$ and $\varepsilon\sim\normal{0}{\ivar}$
+independent, which is $\normal{\corr m'}{\corr^2v'+\ivar}$. Hence
+\begin{equation}
+  (m,v)\ \xrightarrow{\ \text{tilt}\ }\ (m',v')\ \xrightarrow{\ \text{transition}\ }\
+  \bigl(\corr m',\ \corr^2v'+\ivar\bigr).
+  \label{eq:gc-forward-map}
+\end{equation}
+This is the Kalman filter: the tilt is the measurement update and the transition is
+the prediction step.
+
+\paragraph{Backward step.} Let $\rmsg_{i+1}=\normal{m}{v}$ and tilt it by
+$\like(x_{i+1}\mid\cdot)$ to $\normal{m'}{v'}$. The backward integral is
+$\int\normal{\corr a}{\ivar}(a'')\,\normal{m'}{v'}(a'')\dd a''$, a function of $a$: it is
+$h(\corr a)$ with $h(u)=\int\normal{u}{\ivar}(a'')\normal{m'}{v'}(a'')\dd a''$ the density
+of $a''-\varepsilon$ at $u$, which is $\normal{m'}{v'+\ivar}(u)$. As a function of $a$,
+$\normal{m'}{v'+\ivar}(\corr a)\propto\exp[-(\corr a-m')^2/2(v'+\ivar)]$ is a Gaussian
+shape in $a$ with mean $m'/\corr$ and variance $(v'+\ivar)/\corr^2$, provided $\corr\ne0$:
+\begin{equation}
+  (m,v)\ \xrightarrow{\ \text{tilt}\ }\ (m',v')\ \xrightarrow{\ \text{transition}^{-1}\ }\
+  \bigl(m'/\corr,\ (v'+\ivar)/\corr^2\bigr).
+  \label{eq:gc-backward-map}
+\end{equation}
+At $\corr=0$ the backward message is constant in $a$, has no normalised moments, and
+the map is undefined; the recursion is still fine (a flat message is $\lambda=0$), but
+the moment description is not. This is the origin of the condition $\corr\ne0$ in the
+proposition. The terminal message $\rmsg_\nsites\equiv1$ is flat and is never projected;
+the backward induction starts from the tilt by $\like(x_\nsites\mid\cdot)$.
+
+\paragraph{Beliefs.} At site $i$ the belief has precision
+$\lambda_i^{\lmsg}+\lambda_{\like}+\lambda_i^{\rmsg}$ and information
+$h_i^{\lmsg}+h_{\like}+h_i^{\rmsg}$; its mean is the posterior mean and its variance the
+posterior variance. Combining a forward filter with a backward pass in this way is the
+Rauch--Tung--Striebel smoother written in information form, and the code is
+\code{gaussian\_chain\_bp} in \code{src/markov\_score/bp\_gaussian.py}, which is tested
+against the closed form $e^{-t}\Sig_0\Sig_t^{-1}\vx$ to machine precision
+(\code{tests/test\_gaussian\_bp\_equivalence.py}).
+
+\section{Proposition 1 and its proof}
+
+\begin{proposition}[Gaussian closure computes the LMMSE of the covariance twin]
+\label{prop:gc-lmmse}
+Let the chain have $a_1\sim\normal{0}{1}$, $a_i=\corr a_{i-1}+\varepsilon_i$ with
+$\corr\ne0$ and innovations $\varepsilon_i$ i.i.d.\ from any law $\innov$ of mean zero
+and variance $\ivar$. Then moment-projected sum-product \cref{eq:gc-projected} on the
+chain posterior returns, at every site, the belief of the covariance-matched Gaussian
+chain, and hence the posterior means $e^{-t}\Sig_0\Sig_t^{-1}\vx$, the same for every
+such $\innov$.
+\end{proposition}
+
+The proof needs one lemma about convolutions.
+
+\begin{lemma}[First two moments of a convolution]
+\label{lem:gc-conv}
+Let $U$ and $V$ be independent with finite variances, means $m_U,m_V$ and variances
+$v_U,v_V$. Then $\corr U+V$ has mean $\corr m_U+m_V$ and variance $\corr^2v_U+v_V$, and
+$U-V$ has mean $m_U-m_V$ and variance $v_U+v_V$.
+\end{lemma}
+\begin{proof}
+Linearity of expectation gives the means. For the variances,
+$\Var(\corr U+V)=\corr^2\Var U+\Var V+2\corr\Cov(U,V)$ and the covariance vanishes by
+independence; likewise for $U-V$. No other property of the laws of $U$ and $V$ enters.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:gc-lmmse}]
+Write $\lmsg^{\mathrm p}_i$ and $\rmsg^{\mathrm p}_i$ for the projected messages and
+$\lmsg^{\mathrm G}_i$, $\rmsg^{\mathrm G}_i$ for the exact messages of the Gaussian chain
+with the same $(\corr,\ivar)$, which are Gaussians with the moments given by
+\cref{eq:gc-forward-map,eq:gc-backward-map}. We prove by induction along the chain
+that $\lmsg^{\mathrm p}_i=\lmsg^{\mathrm G}_i$ and $\rmsg^{\mathrm p}_i=\rmsg^{\mathrm G}_i$ for
+every $i$.
+
+\emph{Forward, base case.} $\lmsg_1=\mu=\normal{0}{1}$ in both chains; it is Gaussian,
+so projecting it changes nothing.
+
+\emph{Forward, inductive step.} Suppose $\lmsg^{\mathrm p}_{i-1}=\lmsg^{\mathrm G}_{i-1}=\normal{m}{v}$.
+Multiplying by the Gaussian unary factor gives the tilted Gaussian $\normal{m'}{v'}$,
+identical in the two chains. The transition integral in the non-Gaussian chain,
+$\int\innov(a-\corr a')\normal{m'}{v'}(a')\dd a'$, is the density of $\corr U+V$ with
+$U\sim\normal{m'}{v'}$ and $V\sim\innov$ independent; by \cref{lem:gc-conv} its mean is
+$\corr m'$ and its variance $\corr^2v'+\ivar$, whatever $\innov$ is beyond its first two
+moments. The projection therefore returns $\normal{\corr m'}{\corr^2v'+\ivar}$, which by
+\cref{eq:gc-forward-map} is $\lmsg^{\mathrm G}_i$. The non-Gaussian shape of the integral
+before projection (a mixture, a Laplace-smoothed Gaussian, whatever it may be) is
+discarded by $\Pgauss$ and never influences a later step.
+
+\emph{Backward, base case.} $\rmsg_\nsites\equiv1$ in both chains; it is not projected.
+The first backward integral starts from the tilt of the flat message by
+$\like(x_\nsites\mid\cdot)$, which is the Gaussian $\normal{x_\nsites/e^{-t}}{\Dt/e^{-2t}}$
+in both chains.
+
+\emph{Backward, inductive step.} Suppose $\rmsg^{\mathrm p}_{i+1}=\rmsg^{\mathrm G}_{i+1}$,
+and let the tilt by $\like(x_{i+1}\mid\cdot)$ be $\normal{m'}{v'}$. The backward integral
+in the non-Gaussian chain is $\int\innov(a''-\corr a)\normal{m'}{v'}(a'')\dd a''=h(\corr a)$
+with $h(u)=\int\innov(a''-u)\normal{m'}{v'}(a'')\dd a''$, the density at $u$ of $U-V$ with
+$U\sim\normal{m'}{v'}$, $V\sim\innov$; by \cref{lem:gc-conv} $h$ integrates to one and
+has mean $m'$ and variance $v'+\ivar$. As a function of $a$, $h(\corr a)$ has mass
+$1/|\corr|$, normalised mean $m'/\corr$ and normalised variance $(v'+\ivar)/\corr^2$
+(substitute $u=\corr a$ in the moment integrals). Here $\corr\ne0$ is used: at
+$\corr=0$ the function $h(0)$ is constant in $a$ and has no normalised moments. The
+projection returns $\normal{m'/\corr}{(v'+\ivar)/\corr^2}$, which by
+\cref{eq:gc-backward-map} is $\rmsg^{\mathrm G}_i$.
+
+\emph{Beliefs.} At every site the projected belief is the product of three Gaussians,
+$\lmsg^{\mathrm G}_i\like\rmsg^{\mathrm G}_i$, the belief of the Gaussian chain; its mean is
+the Gaussian chain's posterior mean, which is the conditional mean of a jointly Gaussian
+pair and hence, by \cref{eq:gc-lmmse-channel}, the LMMSE $e^{-t}\Sig_0\Sig_t^{-1}\vx$.
+The recursion read $\innov$ only through $(0,\ivar)$, so the result is the same for
+every such law. Nothing assumed stationarity: the induction carries site-dependent
+$(m,v)$, and $\Sig_0$ is whatever covariance the chain has (with $a_1\sim\normal01$ and
+$\ivar=1-\corr^2$ it is $\corr^{|i-j|}$, but the proposition does not need that).
+\end{proof}
+
+Two remarks on what is and is not checked by machine. The paper reports that the two
+moment maps as integrals, the covariance identities $\Sig_{ax}=e^{-t}\Sig_0$,
+$\Sig_{xx}=\Sig_t$, and the optimality of the normal-equation gain in arbitrary dimension
+are verified in Lean~4 (\code{lean/README.md}), for a \emph{Gaussian} innovation; the
+projection step and the moments-only clause of \cref{lem:gc-conv}, which are the
+content of the proposition, are prose. That is an accurate description, and the reader
+who wants to check the load-bearing step should check the two applications of
+\cref{lem:gc-conv} above. Numerically, the proposition is checked in
+\code{tests/test\_gaussian\_bp\_equivalence.py} by running a grid-mediated projection on
+a Laplace chain and comparing with the information-form Gaussian recursion; the two
+agree to the grid's accuracy at moderate $t$. The same file records an instability of
+the grid-mediated projection at weakly informative $t$ (a nearly flat outgoing
+message whose maximiser lies outside the domain is dragged to the boundary by the
+truncation before projection), which is why the closed-form information recursion,
+and not the grid projection, is what the paper uses for the LMMSE arm.
+
+\section{Two consequences}
+
+The paper draws two corollaries from the proposition ``as checks''. They are different
+facts and each needs its own line.
+
+\begin{corollary}[Every Gaussian-kernel sum-product is a linear map]
+\label{cor:gc-linear}
+Sum-product with a Gaussian transition kernel $\normal{\corr' a}{\ivar'}$ (any
+$\corr',\ivar'$, not necessarily the truth) on the chain posterior returns posterior means
+that are a fixed linear map $G(\corr',\ivar')\vx$. Consequently its mean-square error is at
+least that of the LMMSE with the true covariance, and its score error is at least the
+LMMSE floor $\E\lVert\score-\Sgauss\rVert^2$.
+\end{corollary}
+\begin{proof}
+With a Gaussian kernel every message is Gaussian without any projection
+(\cref{sec:gc-kalman}), the recursion is the Kalman smoother of the Gaussian chain with
+parameters $(\corr',\ivar')$, and its posterior means are $\Sig'_{ax}\Sig'^{-1}_{xx}\vx$ for
+the covariances of that chain: a linear map. By \cref{eq:gc-lmmse} the LMMSE with the
+true second moments minimises the mean-square error over all linear maps, so it is a
+floor for this one. For the score, Tweedie's identity gives
+$\hat\score-\score=(e^{-t}/\Dt)(\hat\va-\pmean{\va})$ for any estimator $\hat\va$ of the
+posterior mean, so the squared score error is $(e^{-2t}/\Dt^2)$ times the excess
+mean-square error over the MMSE, and the ordering of estimators is the same.
+\end{proof}
+
+This is the sense in which the LMMSE is a \term{floor for every second-order
+estimator}: a Gaussian-innovation kernel however fitted, a linear denoiser however
+trained, and the Kalman smoother with any parameters all compute linear maps of $\vx$,
+and none can beat $e^{-t}\Sig_0\Sig_t^{-1}\vx$. The paper uses the floor as a reference
+line in every figure and table.
+
+\begin{corollary}[The Gaussian quasi-likelihood sees only the covariance]
+\label{cor:gc-quasi}
+Fit the Gaussian chain with parameters $(\corr',\ivar')$ to noised data by maximising the
+Gaussian marginal log-likelihood. That objective depends on the data only through the
+sample covariance $\hat\Sig=\frac1\nseq\sum_\mu\vx^\mu\vx^{\mu\top}$ (per level), whose
+expectation is $e^{-2t}\Sig_0+\Dt\Id$ whatever the innovation law; the population
+maximiser is the true $(\corr,\ivar)$, so the fitted Gaussian kernel is consistent for
+them and its sum-product lands on the LMMSE floor.
+\end{corollary}
+\begin{proof}
+The Gaussian marginal log-likelihood of one sequence at level $t$ is
+\[
+  -\tfrac12\log\det(2\pi\Sig'_t)-\tfrac12\vx^{\!\top}\Sig'^{-1}_t\vx,\qquad
+  \Sig'_t=e^{-2t}\Sig'_0+\Dt\Id;
+\]
+summed over sequences the data enter only through
+$\sum_\mu\vx^{\mu\top}\Sig'^{-1}_t\vx^\mu=\nseq\tr(\Sig'^{-1}_t\hat\Sig)$. The expectation of
+the per-sequence log-likelihood is
+$-\tfrac12\log\det(2\pi\Sig'_t)-\tfrac12\tr(\Sig'^{-1}_t\Sig_t)$, which as a function of $\Sig'_t$ is maximised uniquely at $\Sig'_t=\Sig_t$ (the Gaussian
+cross-entropy is minimised at the matching covariance); in the two-parameter family
+$\Sig_t$ determines $(\corr,\ivar)$, since $\Sig_0=(\Sig_t-\Dt\Id)e^{2t}$ has entries
+$\corr^{|i-j|}$ scaled by the variances determined by $\ivar$. Consistency of the
+maximiser follows from the law of large numbers for $\hat\Sig$ and the continuity of the
+objective.
+\end{proof}
+
+The distinction between the two corollaries is the distinction between the
+proposition's two uses in the paper. \Cref{cor:gc-linear} says that the $\ncomp=1$ arm
+\emph{cannot go below} the floor; \cref{cor:gc-quasi} says that it \emph{lands on} it,
+which is what the capacity table and the regime sweep verify at every cell, and what
+makes those cells an apparatus check of the whole pipeline (grid, sweeps, EM, scoring).
+
+\section{The price of second-order closure}
+
+Define the \term{closure gap} at level $t$ as $\E_{\Pt}\lVert\score-\Sgauss\rVert^2$, the
+mean-square distance between the true score and that of the covariance twin, and the
+\term{relative score error} of any estimator $\hat\score$ as
+$\bigl(\sum_t\sum_{\mu,i}(\hat\score-\score)_i^2/\sum_t\sum_{\mu,i}\score_i^2\bigr)^{1/2}$,
+pooled over the schedule (the paper's estimand, Appendix C). By
+\cref{prop:gc-lmmse,cor:gc-linear} the closure gap is three things at once: the error of
+Gaussian message passing on the non-Gaussian chain; the error of the best linear
+denoiser; and the error of a Gaussian-innovation kernel fitted with infinite data. That
+is why the paper calls it ``the price of second-order closure'' and ``what any estimator
+that carries only second-order structure must leave on the table''. Its size is the
+subject of the paper's order-by-order decay theorem (its Section 3): to leading order $\tfrac16\Frob{\kfour}^2e^{-8t}$,
+the degree-four Hermite term the twin lacks, and the compendium's chapter on the
+attenuation theorems derives it. Pooled over the twelve-level schedule and expressed
+as a relative error it is the number the paper's Appendix D lists in the LMMSE column,
+per innovation family.
+
+The other reference point in that table is the \term{isotropic score} $-\vx$, the
+score of $\normal{0}{\Id}$, which is the noised law of independent unit-variance sites.
+It is the estimator that knows the marginal variance and nothing else. Through Tweedie,
+$-\vx=-(\vx-e^{-t}\hat\va)/\Dt$ gives $\hat\va=(1-\Dt)\vx/e^{-t}=e^{-t}\vx$: the isotropic
+denoiser shrinks the observation by $e^{-t}$, which is the LMMSE for $\Sig_0=\Id$, that
+is, for a chain with $\corr=0$. Its relative error rises with $\corr$ because the
+covariance itself is then most of what there is to learn, which is the paper's reading
+of the figure in its Appendix F on the second-order floor across correlation. The
+code for both references is \code{lmmse\_posterior\_mean},
+\code{lmmse\_score} and \code{isotropic\_score} in \code{src/markov\_score/theory.py};
+the isotropic posterior mean is written there as $(\vx-\Dt\vx)/e^{-t}$, the same thing.
+
+\section{A worked example: two sites}
+
+Take $\nsites=2$, $\corr=\tfrac12$, $\ivar=\tfrac34$ (so that $\Var a_2=\corr^2+\ivar=1$),
+and a level with $e^{-t}=0.8$, $\Dt=0.36$. Observe $\vx=(1,0)$.
+
+\emph{Closed form.} $\Sig_0=\begin{psmallmatrix}1&0.5\\0.5&1\end{psmallmatrix}$,
+$\Sig_t=0.64\Sig_0+0.36\Id=\begin{psmallmatrix}1&0.32\\0.32&1\end{psmallmatrix}$ with
+determinant $1-0.32^2=0.8976$, so
+$\Sig_t^{-1}=\tfrac{1}{0.8976}\begin{psmallmatrix}1&-0.32\\-0.32&1\end{psmallmatrix}
+=\begin{psmallmatrix}1.1141&-0.3565\\-0.3565&1.1141\end{psmallmatrix}$. Then
+$\Sig_t^{-1}\vx=(1.1141,\,-0.3565)$, $\Sig_0\Sig_t^{-1}\vx=(1.1141-0.1783,\,0.5570-0.3565)=(0.9358,\,0.2005)$,
+and the LMMSE is $0.8\times(0.9358,\,0.2005)=(0.7487,\,0.1604)$. The twin's score is
+$-\Sig_t^{-1}\vx=(-1.1141,\,0.3565)$, and Tweedie's identity from the LMMSE gives the
+same: $-(1-0.8\cdot0.7487)/0.36=-1.1141$ and $-(0-0.8\cdot0.1604)/0.36=0.3565$.
+
+\emph{The two sweeps.} The unary factor has $\lambda_{\like}=0.64/0.36=1.7778$ and
+$h_{\like}=0.8x_i/0.36$, that is $2.2222$ at site 1 and $0$ at site 2. Forward: the
+prior at site 1 is $(\lambda,h)=(1,0)$; tilting gives $\lambda'=2.7778$, $m'=2.2222/2.7778=0.8$,
+$v'=0.36$; the transition maps this to $m=0.5\cdot0.8=0.4$, $v=0.25\cdot0.36+0.75=0.84$:
+$\lmsg_2=\normal{0.4}{0.84}$. Backward: the terminal message is flat; tilting it at
+site 2 gives $m'=0$, $v'=1/1.7778=0.5625$; the inverse transition maps this to
+$m=0/0.5=0$, $v=(0.5625+0.75)/0.25=5.25$: $\rmsg_1=\normal{0}{5.25}$. Belief at site 1:
+precision $1+1.7778+1/5.25=2.9683$, information $0+2.2222+0=2.2222$, mean
+$2.2222/2.9683=0.7487$. Belief at site 2: precision $1/0.84+1.7778=2.9683$, information
+$0.4/0.84+0=0.4762$, mean $0.1604$. Both agree with the closed form, and the common
+posterior variance $1/2.9683=0.3369$ is the diagonal of $\Sig_0-e^{-2t}\Sig_0\Sig_t^{-1}\Sig_0$.
+
+\emph{A non-Gaussian innovation.} Replace $\innov$ by the two-point law
+$\varepsilon=\pm\sqrt{0.75}$ with probability $\tfrac12$ each, which has the same mean and
+variance. The exact forward message at site 2 is now the mixture
+$\tfrac12\normal{0.4+0.866}{0.09}+\tfrac12\normal{0.4-0.866}{0.09}$, a bimodal shape whose
+mean is $0.4$ and whose variance is $0.09+0.75=0.84$ (\cref{lem:gc-conv}). Its projection
+is $\normal{0.4}{0.84}$, the Gaussian chain's message, and every later step is identical:
+the projected recursion returns $(0.7487,\,0.1604)$ for this law too. The exact
+posterior mean for the two-point law is different, and the difference is the closure
+gap of this tiny example.
+
+\where{The paper, Section 2 (``the covariance twin and the price of second-order
+closure'', Proposition 1 and the two consequences), Appendix A (the proof), Section 3
+(the size of the gap, the decay theorem), Section 5 and Appendices D and F (the LMMSE and
+isotropic reference points, the $\ncomp=1$ arm landing on the floor in E02a, E02b, E13),
+Appendix E (the Gaussian twin's windowed LMMSE in E15). Code:
+\code{src/markov\_score/bp\_gaussian.py}, which holds \code{gaussian\_chain\_bp} and the
+legacy grid-projected variant kept to document its instability;
+\code{src/markov\_score/theory.py}, which holds \code{chain\_covariance},
+\code{lmmse\_posterior\_mean}, \code{lmmse\_score} and \code{isotropic\_score};
+\code{src/markov\_score/exact\_scores.py}; and \code{lean/README.md} for what is
+machine-checked. Tests: \code{tests/test\_gaussian\_bp\_equivalence.py} and the
+Gaussian-recovery test of \code{tests/test\_em\_bp.py}.}
+
+\paragraph{References.}
+R.~E.~Kalman (1960), ``A new approach to linear filtering and prediction problems'',
+\emph{Journal of Basic Engineering} 82(1).
+H.~E.~Rauch, F.~Tung and C.~T.~Striebel (1965), ``Maximum likelihood estimates of linear
+dynamic systems'', \emph{AIAA Journal} 3(8).
+T.~P.~Minka (2001), ``Expectation propagation for approximate Bayesian inference'',
+\emph{Proceedings of UAI}.
+S.~M.~Kay (1993), \emph{Fundamentals of Statistical Signal Processing: Estimation Theory},
+Prentice Hall, Chapters 11 and 12.
+C.~M.~Bishop (2006), \emph{Pattern Recognition and Machine Learning}, Springer,
+Sections 2.3 and 13.3.

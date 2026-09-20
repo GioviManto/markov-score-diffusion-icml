@@ -1,0 +1,360 @@
+\chapter{Conventions and notation}
+\label{ch:conventions}
+
+\newcommand{\cvMac}[1]{\texttt{\textbackslash #1}}
+
+This chapter fixes the symbols, the typographical rules and the index conventions
+that the rest of the compendium and the paper share. Everything here is a decision,
+not a result. The decisions were taken once, in the file \code{paper/notation.tex},
+and every chapter of this compendium is written against that file. A reader who
+wants to check the paper line by line should read this chapter first, because several
+of the paper's choices differ from the habits of the diffusion literature, and the
+differences are deliberate.
+
+\section{How to read this compendium}
+
+Every chapter is self-contained at the level of a chapter: it defines the objects it
+uses, derives every formula it states (the scalar case in full, then the multivariate
+statement), and works one small example by hand. Four typographical devices recur.
+
+\begin{itemize}
+\item A \term{term} in bold at its first use is a definition; the term is also entered
+  in the index at the end of the document.
+\item A paragraph opening with \emph{Where it is used} closes each chapter and names
+  the paper sections, the experiment identifiers (E01 to E21) and the code paths in
+  which the chapter's objects appear.
+\item A paragraph opening with \emph{Why it matters here} explains, inside a
+  derivation, why a particular hypothesis or constant is the one the paper needs.
+\item A path set in typewriter, such as \code{src/markov\_score/theory.py}, is a file
+  of the repository. Every such path was checked to exist when the chapter was written.
+\end{itemize}
+
+Theorems, propositions, lemmas and corollaries are numbered within chapters, as are
+definitions, examples, assumptions and remarks. ``The paper'' always means the ICML
+manuscript \emph{What Survives Diffusion Noise?}; its sections, theorems and figures
+are referred to in words (``the paper, Section 3, Theorem 2''), never by cross-reference,
+because the two documents are compiled separately. Experiments are referred to by
+their registry identifier (E01, \dots, E21), which names an entry of
+\code{experiments/registry/}. No measured number from the experiments is typed in this
+compendium: those numbers live in generated macros of the paper, and the compendium
+says ``see the paper, Figure 2'' instead. Analytic constants such as $\tfrac16$,
+$\tfrac1{24}$ or $e^{-4t}$ are typed freely.
+
+\section{The symbol table}
+
+\Cref{tab:symbols} lists every macro of \code{paper/notation.tex} and every macro
+added in the compendium's preamble, with its rendering, its meaning and the chapter
+in which the object is defined from scratch. The macro names are given so that a
+reader of the sources can search for them.
+
+{\small
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{7.1cm}>{\raggedright\arraybackslash}p{3.3cm}@{}}
+\caption{Every macro of the paper's notation file and of the compendium preamble.}
+\label{tab:symbols}\\
+\toprule
+macro & renders as & meaning & defined in \\
+\midrule
+\endfirsthead
+\toprule
+macro & renders as & meaning & defined in \\
+\midrule
+\endhead
+\multicolumn{4}{@{}l}{\emph{Diffusion}}\\
+\cvMac{Pz} & $\Pz$ & the clean law of a sequence, a density on $\Reals^{\nsites}$ & Markov chains \\
+\cvMac{Pt} & $\Pt$ & the noised law at diffusion time $t$, the law of $\vx_t$ & The OU channel and Tweedie \\
+\cvMac{Dt} & $\Dt$ & $1-e^{-2t}$, the conditional variance of one noised coordinate & The OU channel and Tweedie \\
+\cvMac{score} & $\score$ & the diffusion score $\score(\vx,t)=\nabla_{\vx}\log\Pt(\vx)$ & The OU channel and Tweedie \\
+\cvMac{gwn} & $\gwn$ & standardised Gaussian white noise, $\langle\eta_i(t)\eta_j(t')\rangle=\delta_{ij}\delta(t-t')$ & The OU channel and Tweedie \\
+\cvMac{tmin}, \cvMac{tmax} & $\tmin$, $\tmax$ & the ends of the noise schedule & The protocol \\
+\cvMac{pmean\{$\cdot$\}} & $\pmean{\va}$ & posterior mean $\E[\va\mid\vx_t=\vx]$, in bracket notation & The OU channel and Tweedie \\
+\cvMac{pmeansite\{i\}} & $\pmeansite{i}$ & posterior mean of one site & The OU channel and Tweedie \\
+\addlinespace
+\multicolumn{4}{@{}l}{\emph{Vectors and matrices}}\\
+\cvMac{vect\{v\}}, \cvMac{mat\{A\}} & $\vect{v}$, $\mat{A}$ & bold lowercase for vectors, bold uppercase for matrices and tensors & this chapter \\
+\cvMac{va} & $\va$ & the clean chain, a point of $\Reals^{\nsites}$; its sites are the scalars $a_i$ & Markov chains \\
+\cvMac{vx} & $\vx$ & the noised chain, $\vx=\vx_t\in\Reals^{\nsites}$ & The OU channel and Tweedie \\
+\cvMac{vz} & $\vz$ & a standard normal draw in $\Reals^{\nsites}$ & Gaussian integrals and Hermite \\
+\cvMac{Sig} & $\Sig$ & a covariance matrix; $\Sig_0$ is the clean chain's, $\Sig_t=e^{-2t}\Sig_0+\Dt\Id$ the noised one's & Markov chains \\
+\cvMac{Id} & $\Id$ & the identity matrix & this chapter \\
+\addlinespace
+\multicolumn{4}{@{}l}{\emph{Chain and graphical model}}\\
+\cvMac{nsites} & $\nsites$ & chain length, equal to the ambient dimension & Markov chains \\
+\cvMac{nseq} & $\nseq$ & number of observed sequences & Markov chains \\
+\cvMac{ngrid} & $\ngrid$ & number of quadrature grid points & Grid quadrature \\
+\cvMac{gridpt\{k\}} & $\gridpt{k}$ & the $k$-th grid point & Grid quadrature \\
+\cvMac{gridh} & $\gridh$ & the grid spacing & Grid quadrature \\
+\cvMac{halfwidth} & $\halfwidth$ & the grid half-width; the domain is $[-\halfwidth,\halfwidth]$ & Grid quadrature \\
+\cvMac{kernel} & $\kernel$ & the Markov transition kernel $\kernel(a'\mid a)$ & Markov chains \\
+\cvMac{kernelth} & $\kernelth$ & a transition kernel with parameters $\params$ & Maximum likelihood and EM \\
+\cvMac{like} & $\like$ & the unary likelihood factor $\like(x_i\mid a_i)$ & Factor graphs and BP \\
+\cvMac{lmsg}, \cvMac{rmsg} & $\lmsg$, $\rmsg$ & forward and backward messages & Factor graphs and BP \\
+\cvMac{innov} & $\innov$ & the innovation density & Markov chains \\
+\cvMac{corr} & $\corr$ & the autoregression coefficient & Markov chains \\
+\cvMac{ivar} & $\ivar$ & the innovation variance, $\ivar=1-\corr^2$ in the paper & Markov chains \\
+\cvMac{ncomp} & $\ncomp$ & number of mixture components of the fitted innovation & Maximum likelihood and EM \\
+\addlinespace
+\multicolumn{4}{@{}l}{\emph{Estimation}}\\
+\cvMac{params} & $\params$ & a parameter vector & Fisher information \\
+\cvMac{Qfun} & $\Qfun$ & the EM auxiliary function & Maximum likelihood and EM \\
+\cvMac{Xis} & $\Xis$ & the expected transition statistic, a matrix on the grid & Maximum likelihood and EM \\
+\cvMac{Lik} & $\Lik$ & the marginal log-likelihood & Maximum likelihood and EM \\
+\cvMac{mmse}, \cvMac{lmmse} & $\mmse$, $\lmmse$ & the posterior mean and the linear MMSE estimator & Gaussian closure and LMMSE \\
+\addlinespace
+\multicolumn{4}{@{}l}{\emph{Operators}}\\
+\cvMac{E}, \cvMac{Prob} & $\E$, $\Prob$ & expectation, probability & Moments and cumulants \\
+\cvMac{Reals} & $\Reals$ & the real line & this chapter \\
+\cvMac{Cov}, \cvMac{Var} & $\Cov$, $\Var$ & covariance, variance & Moments and cumulants \\
+\cvMac{KL} & $\KL$ & Kullback--Leibler divergence & Maximum likelihood and EM \\
+\cvMac{normal\{m\}\{v\}} & $\normal{m}{v}$ & the Gaussian law with mean $m$ and variance $v$ & Gaussian integrals and Hermite \\
+\cvMac{Pgauss} & $\Pgauss$ & Gaussian moment projection: the Gaussian with the argument's mean and variance & Gaussian closure and LMMSE \\
+\cvMac{dd} & $\dd$ & the differential in integrals, $\dd x$ & this chapter \\
+\addlinespace
+\multicolumn{4}{@{}l}{\emph{Pending-data guard and repository pointers}}\\
+\cvMac{needsdata} & red bracket & with an argument naming the slot: marks a place in the paper still waiting for a frozen number; the build fails if any survives & this chapter \\
+\cvMac{codepath}, \cvMac{codefile} & typewriter & a repository path & this chapter \\
+\cvMac{coderef\{p\}\{f\}} & path $\rightarrow$ name & a path with a function or target inside it & this chapter \\
+\addlinespace
+\multicolumn{4}{@{}l}{\emph{Macros the paper defines in \code{paper/main.tex}}}\\
+\cvMac{Frob\{T\}} & $\Frob{\mat{T}}$ & Frobenius norm, the root of the sum of squares over ordered indices & Moments and cumulants \\
+\cvMac{Hen\{k\}} & $\Hen{k}$ & the $k$-th probabilists' Hermite polynomial & Gaussian integrals and Hermite \\
+\cvMac{kfour} & $\kfour$ & the fourth-cumulant tensor of the clean law & Moments and cumulants \\
+\cvMac{Sgauss} & $\Sgauss$ & the score of the covariance-matched Gaussian twin, $-\Sig_t^{-1}\vx$ & Gaussian closure and LMMSE \\
+\cvMac{tstar} & $\tstar$ & the crossover time $\tfrac12\log\lmax(\Sig_0)$ & Markov chains; Attenuation theorems \\
+\cvMac{lmax} & $\lmax$ & the largest eigenvalue of a symmetric matrix & Markov chains \\
+\cvMac{Pgaussl} & $\Pgaussl$ & the Gaussian law with the clean chain's covariance (the twin) & Gaussian closure and LMMSE \\
+\addlinespace
+\multicolumn{4}{@{}l}{\emph{Compendium-only macros}}\\
+\cvMac{tr}, \cvMac{diag} & $\tr$, $\diag$ & trace; diagonal matrix built from a vector & this chapter \\
+\cvMac{argmax}, \cvMac{argmin} & $\argmax$, $\argmin$ & maximiser and minimiser & this chapter \\
+\cvMac{term\{$\cdot$\}} & bold & a defined term, also indexed & this chapter \\
+\cvMac{where\{$\cdot$\}}, \cvMac{why\{$\cdot$\}} & italic lead-in & the two closing paragraphs described above & this chapter \\
+\cvMac{code\{$\cdot$\}} & typewriter & a repository path or identifier & this chapter \\
+\bottomrule
+\end{longtable}}
+
+Three macros are typeset slightly differently in the paper and in this compendium,
+and the reader should not be surprised by the difference. The paper writes the
+fourth-cumulant tensor as $\kappa_4$ in light face, the compendium as $\kfour$ in
+bold, because the compendium's rule is that tensors are bold. The paper writes the
+twin's score with a superscript, $S^{\mathrm{G}}$, the compendium with a subscript,
+$\Sgauss$. The paper writes the crossover as $t_\ast$ and the compendium as $\tstar$.
+The objects are the same.
+
+\section{Indices: sites, sequences, grid points, and why $n$ and $d$ are not used}
+
+\term{Sites} are the coordinates of a sequence. A clean sequence is
+$\va=(a_1,\dots,a_{\nsites})$, and $i$, $j$ always index sites, $i\in\{1,\dots,\nsites\}$.
+The \term{chain length} $\nsites$ is therefore also the \term{ambient dimension} of
+the space in which the diffusion runs: the noised sequence $\vx_t$ lives in
+$\Reals^{\nsites}$, the score is a map $\Reals^{\nsites}\times[0,\infty)\to\Reals^{\nsites}$,
+and every covariance matrix is $\nsites\times\nsites$. The paper writes this
+identification once, as $n=\nsites$, and then never uses $n$ again.
+
+\term{Sequences} are the independent draws. The data are $\nseq$ sequences
+$\va^{1},\dots,\va^{\nseq}$ (or their noised versions), and $\mu$ indexes sequences,
+$\mu\in\{1,\dots,\nseq\}$. Fisher information is stated \emph{per sequence}, and the
+Cram\'er--Rao and local asymptotic minimax statements are in the limit
+$\nseq\to\infty$ at fixed $\nsites$ and fixed $t$.
+
+\term{Grid points} are the abscissae on which messages are stored. There are
+$\ngrid$ of them, $\gridpt{1},\dots,\gridpt{\ngrid}$, uniformly spaced by $\gridh$ on
+$[-\halfwidth,\halfwidth]$, and $k$, $l$ index them. A matrix on the grid, such as the
+discretised kernel $\kernel(\gridpt{k}\mid\gridpt{l})$ or the expected transition
+statistic $\Xis_{kl}$, is $\ngrid\times\ngrid$ and is indexed \emph{child first, parent
+second}: $k$ is the site $a_i$, $l$ is the site $a_{i-1}$. This orientation is the one
+thing a self-consistent recursion cannot catch if it is wrong, which is why
+\code{tests/test\_fisher\_bruteforce.py} checks it against an enumeration that shares
+nothing with the recursion.
+
+\term{Multi-indices} $\nu=(\nu_1,\dots,\nu_{\nsites})\in\mathbb{N}^{\nsites}$ label
+Hermite products; the \term{degree} is $|\nu|=\sum_i\nu_i$ and $\nu!=\prod_i\nu_i!$.
+
+Why $n$ and $d$ are avoided. Much of the diffusion literature writes $n$ for the number
+of samples and $d$ for the dimension of the data, and much of the statistics
+literature writes $n$ for the sample size as well. In this laboratory the dimension
+\emph{is} the chain length, and the reader should never have to remember that a
+statement ``in dimension $d$'' is a statement about a chain of $d$ sites; so the
+dimension is called $\nsites$ and the number of sequences $\nseq$. The letter $n$ is
+kept for the degree of a scalar Hermite polynomial $\Hen{n}$ and for nothing else.
+Two further collisions were removed at the same time: the transition kernel is $\kernel$
+and only $\kernel$, and the number of grid points is $\ngrid$, whereas an earlier draft
+used $K$ for the grid size and $W$ for the kernel.
+
+Levels. The noise schedule is a finite set of diffusion times, twelve of them
+log-spaced on $[\tmin,\tmax]$ in the frozen protocol; ``level'' means one such $t$.
+A statistic ``pooled over the schedule'' sums over levels before taking a root or a
+ratio; see the chapter on the statistics of the experiments.
+
+\section{Vectors, matrices, tensors and scalars}
+
+Vectors are bold lowercase ($\va$, $\vx$, $\vz$, $\vect{s}$), matrices and tensors bold
+uppercase ($\Sig$, $\Id$, $\Xis$, $\kfour$). Anything indexed down to a scalar loses its
+bold: $a_i$ is the $i$-th site of $\va$, $\Sigma_{ij}$ an entry of $\Sig$,
+$\kappa_4[ijkl]$ an entry of $\kfour$. The Euclidean norm of a vector is $|\va|$ or
+$\lVert\va\rVert$; the Frobenius norm of a matrix or of a symmetric tensor is
+$\Frob{\mat{T}}$, with
+\begin{equation}
+  \Frob{\mat{T}}^2=\sum_{i_1,\dots,i_r}T_{i_1\cdots i_r}^2,
+  \label{eq:frob}
+\end{equation}
+the sum running over \emph{ordered} index tuples. For a symmetric matrix this counts
+each off-diagonal entry twice, and for a symmetric 4-tensor it counts an entry with
+distinct indices $24$ times. The paper's constants $\tfrac12\Frob{\partial_\theta\Sig_0}^2$
+and $\tfrac16\Frob{\kfour}^2$ are stated with this convention, and
+\code{src/markov\_score/theory.py} sums the full $(\nsites,\nsites,\nsites,\nsites)$
+array; the chapter on moments and cumulants explains how the ordered-index sum turns
+into a sum over multisets with weights $4!/\nu!$, which is where the paper's $\tfrac1{24}$
+comes from.
+
+$\Id$ is the identity, $\tr$ the trace, $\diag(\vect{v})$ the diagonal matrix with
+$\vect{v}$ on the diagonal, $\mat{A}\succ0$ positive definiteness, $\lmax(\mat{A})$ the
+largest eigenvalue. $\normal{m}{v}$ is the Gaussian law with mean $m$ and variance (or
+covariance matrix) $v$. The symbol $\gamma$ is reserved for the standard Gaussian
+density on $\Reals^{\nsites}$, and $\gamma_{\Dt}$ for $\normal{0}{\Dt\Id}$.
+
+\section{Hermite polynomials: probabilists' versus physicists'}
+
+Two families of polynomials carry the name Hermite, and they differ by a rescaling
+that changes every constant. The \term{probabilists' Hermite polynomials} are
+\begin{equation}
+  \Hen{n}(x)=(-1)^n e^{x^2/2}\frac{\dd^n}{\dd x^n}e^{-x^2/2},
+  \label{eq:he-def}
+\end{equation}
+so that $\Hen{0}=1$, $\Hen{1}=x$, $\Hen{2}=x^2-1$, $\Hen{3}=x^3-3x$, $\Hen{4}=x^4-6x^2+3$; they are
+monic and orthogonal under the standard Gaussian, with $\E_\gamma[\Hen{n}\Hen{m}]=n!\,\delta_{nm}$.
+The \term{physicists' Hermite polynomials} are
+$H_n(x)=(-1)^ne^{x^2}\frac{\dd^n}{\dd x^n}e^{-x^2}$, with leading coefficient $2^n$ and
+orthogonal under $e^{-x^2}$ with norm $2^nn!\sqrt\pi$. The two are related by
+\begin{equation}
+  H_n(x)=2^{n/2}\Hen{n}(\sqrt2\,x),\qquad \Hen{n}(x)=2^{-n/2}H_n(x/\sqrt2).
+\end{equation}
+The paper and this compendium use the probabilists' family throughout, because the
+noise is standardised and the orthogonality weight is then exactly the law of the
+noise. One notational hazard must be named: the paper writes $H_\nu(\vx)=\prod_i\Hen{\nu_i}(x_i)$
+for the \emph{multivariate product} of probabilists' polynomials. That $H_\nu$ is not
+a physicists' polynomial, despite the capital letter; it is the product of
+probabilists' ones, and $\E_\gamma[H_\nu H_\mu]=\nu!\,\delta_{\nu\mu}$. The chapter on
+Gaussian integrals and Hermite polynomials derives all of this.
+
+\section{Standardised white noise and the explicit $\sqrt2$}
+
+The forward process is written, in the paper and in the code
+(\code{src/markov\_score/noising.py}), as the Ornstein--Uhlenbeck equation
+\begin{equation}
+  \dd\vx_t=-\vx_t\,\dd t+\sqrt2\,\dd\vect{W}_t,\qquad \vx_0=\va\sim\Pz,
+  \label{eq:ou-sde}
+\end{equation}
+with $\vect{W}$ a standard Brownian motion, equivalently with a \term{standardised
+white noise} $\gwn$ satisfying $\langle\eta_i(t)\eta_j(t')\rangle=\delta_{ij}\delta(t-t')$
+and $\dd\vect{W}_t=\gwn(t)\dd t$. The factor $\sqrt2$ is carried explicitly for one
+reason: with it, the stationary variance of each coordinate is exactly one. Solving
+\cref{eq:ou-sde} by variation of constants,
+\begin{equation}
+  \vx_t=e^{-t}\va+\sqrt2\int_0^te^{-(t-s)}\dd\vect{W}_s,
+  \qquad
+  \Var\Bigl(\sqrt2\int_0^te^{-(t-s)}\dd W_s\Bigr)=2\int_0^te^{-2(t-s)}\dd s=1-e^{-2t},
+\end{equation}
+so that, conditionally on $\va$,
+\begin{equation}
+  \vx_t\mid\va\ \sim\ \normal{e^{-t}\va}{\Dt\Id},\qquad \Dt=1-e^{-2t},
+  \qquad\text{that is}\qquad \vx_t=e^{-t}\va+\sqrt{\Dt}\,\vz,\ \vz\sim\normal{0}{\Id}.
+  \label{eq:channel-conv}
+\end{equation}
+Since $e^{-2t}+\Dt=1$, a coordinate of unit variance keeps unit variance at every $t$,
+and $\Pt\to\normal{0}{\Id}$. Two other conventions appear in the literature and are
+\emph{not} used here. The physicists' convention absorbs the $\sqrt2$ into the noise
+by demanding $\langle\eta(t)\eta(t')\rangle=2\delta(t-t')$; the formulas are the same
+but the noise is no longer standardised. The ``variance-preserving'' convention of the
+score-based literature writes $\dd\vx=-\tfrac12\beta(t)\vx\,\dd t+\sqrt{\beta(t)}\,\dd\vect W$
+with a schedule $\beta(t)$; \cref{eq:ou-sde} is the case $\beta\equiv2$, and the
+noise level is then parameterised by $t$ directly. The decay factor is written
+$e^{-t}$ in every displayed equation of the paper and is never abbreviated to
+$\alpha_t$; inside proofs the paper allows the local abbreviation $\alpha=e^{-t}$,
+always introduced in the sentence that uses it, and this compendium does the same.
+The \term{signal-to-noise ratio} of the channel is $e^{-2t}/\Dt$, which is
+$e^{-2t}(1+O(e^{-2t}))$ at large $t$; this is why the paper's expansions are in
+powers of $e^{-2t}$.
+
+\section{What ``the score'' means in the paper}
+
+The word \term{score} is used in two different senses in statistics and in diffusion
+modelling, and the paper is careful to use it in one of them. The
+\term{diffusion score} is the gradient of the log-density of the \emph{noised data law}
+with respect to the \emph{data},
+\begin{equation}
+  \score(\vx,t)=\nabla_{\vx}\log\Pt(\vx),
+\end{equation}
+a vector field on $\Reals^{\nsites}$ for each $t$. The \term{statistical score} is the
+gradient of a log-likelihood with respect to a \emph{parameter},
+$\partial_\theta\log p_\theta(\vx)$, a function of $\theta$ for fixed data. The chapter on
+Fisher information and the Cram\'er--Rao bound defines both and keeps them apart; the
+paper writes ``the score'' for the diffusion score and ``the likelihood score'' or
+``per-sequence scores obtained by Fisher's identity'' for the statistical one.
+
+Within the diffusion sense, four objects have to be distinguished, and the paper's
+sentence ``throughout, `the score' means this tree-exact inference, evaluated by
+validated quadrature'' names one of them. They are:
+\begin{enumerate}[label=(L\arabic*)]
+\item exact functional sum-product on the posterior factor graph, which for this model
+  is a chain and therefore a tree, so that the forward and backward messages are
+  exact and Tweedie's identity $\score(\vx,t)=-(\vx-e^{-t}\pmean{\va})/\Dt$ turns the
+  exact posterior mean into the exact score;
+\item Gaussian-projected sum-product, in which every message is replaced by the Gaussian
+  with its first two moments; the paper's Proposition 1 shows this returns the linear
+  MMSE estimator of the covariance twin;
+\item the numerical implementation of (L1) on a grid of $\ngrid$ points on
+  $[-\halfwidth,\halfwidth]$ with trapezoidal weights, at the frozen setting
+  $\ngrid=401$, $\halfwidth=8$, validated by refinement and by an independent brute-force
+  enumeration on short chains;
+\item the LMMSE estimator of the true covariance, $e^{-t}\Sig_0\Sig_t^{-1}\vx$, and its
+  score $\Sgauss=-\Sig_t^{-1}\vx$, which is what (L2) computes.
+\end{enumerate}
+``The score'' in the paper is (L1) computed as (L3). It is the reference against which
+every estimator, whether the EM-fitted kernel or a trained network, is scored; the
+estimand of the experiments is the relative error to this reference, pooled over the
+schedule. It is never the output of a learned model; those are ``estimates'',
+``fits'' or ``arms''. The grid setting is not inherited from the literature but
+measured: the chapter on grid quadrature explains what truncation and quadrature
+errors are and how the paper controls them, and why a heavy-tailed innovation tests the
+domain $\halfwidth$ rather than the spacing $\gridh$.
+
+\section{Other fixed choices}
+
+\begin{itemize}
+\item The clean chain has $a_1\sim\normal{0}{1}$, $|\corr|<1$, innovation variance
+  $\ivar=1-\corr^2$, so that $\Var(a_i)=1$ and $\Cov(a_i,a_j)=\corr^{|i-j|}$ for every
+  innovation law. The frozen configuration is $\corr=0.85$, $\nsites=32$, Laplace
+  innovations; every departure from it is stated where it occurs.
+\item Innovation families are always \emph{variance-matched}: each is parameterised
+  by its variance $\ivar$, and the remaining parameter, if any, is a shape parameter
+  (the Student-$t$ degrees of freedom $\nu$, the mixture separation $\kappa$, the
+  generalised-Gaussian exponent $\beta$).
+\item Cumulants are written $\kappa_m$; the excess kurtosis of a scalar law is
+  $\kappa_4/\kappa_2^2$; the fourth-cumulant tensor of a vector is $\kfour$.
+\item $\log$ is the natural logarithm; a ``log-slope'' is a derivative or a regression
+  coefficient of $\log y$ against $t$, so that $y\propto e^{-8t}$ has log-slope $-8$.
+\item British spelling and the serial ``and'' are used; no number is typed from a
+  measurement.
+\end{itemize}
+
+\where{Every chapter. The symbol file is \code{paper/notation.tex}, read verbatim by
+\code{paper/main.tex} and by \code{reports/compendium/compendium.tex}; the channel
+convention is implemented in \code{src/markov\_score/noising.py} (the functions
+\code{alpha\_delta} and \code{ou\_noise\_sample}); the Hermite convention in
+\code{src/markov\_score/theory.py} (the function \code{he}); the frozen configuration
+in \code{experiments/frozen\_config.py} and the comparison protocol in
+\code{experiments/protocol.py}. The paper's Section 2 fixes the chain and the channel,
+its Section 3 the Hermite notation, and its Appendix B the grid.}
+
+\paragraph{References.}
+Y. Song, J. Sohl-Dickstein, D. P. Kingma, A. Kumar, S. Ermon and B. Poole (2021),
+``Score-based generative modeling through stochastic differential equations'', ICLR.
+M. M\'ezard and A. Montanari (2009), \emph{Information, Physics, and Computation},
+Oxford University Press.
+G. Szeg\H{o} (1975), \emph{Orthogonal Polynomials}, 4th edition, American Mathematical
+Society (Chapter V for the two Hermite conventions).
+C. W. Gardiner (2009), \emph{Stochastic Methods}, 4th edition, Springer (Chapter 4 for
+the Ornstein--Uhlenbeck process and the white-noise conventions).
+B. Efron (2011), ``Tweedie's formula and selection bias'', Journal of the American
+Statistical Association 106, 1602--1614.

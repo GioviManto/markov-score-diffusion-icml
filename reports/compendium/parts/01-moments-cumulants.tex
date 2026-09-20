@@ -1,0 +1,533 @@
+\chapter{Moments and cumulants}
+\label{ch:moments-cumulants}
+
+The paper's laboratory is built on one arithmetic fact: a linear recursion with
+independent innovations has cumulants that add. That fact fixes the covariance of
+the chain independently of the innovation law, places every non-Gaussian feature in
+the cumulants of order four and higher, and gives the fourth-cumulant tensor $\kfour$
+that appears in the constants $\tfrac16\Frob{\kfour}^2$ and $\tfrac1{24}\Frob{\partial_\theta\kfour}^2$.
+This chapter builds cumulants from moments, derives their three properties (shift,
+homogeneity, additivity), extends them to tensors of a random vector, computes the
+cumulants of the stationary AR(1) marginal, derives the excess kurtosis of every
+innovation family the paper uses, and ends with the exponential-moment assumption
+under which the paper's Theorem 2 is proved.
+
+\section{Moments and central moments}
+
+Let $X$ be a real random variable. Its \term{moment} of order $n$ is
+$m_n=\E[X^n]$, defined whenever $\E|X|^n<\infty$. Its \term{central moment} of order
+$n$ is $\mu_n=\E[(X-m_1)^n]$. If $\E|X|^n<\infty$ then $\E|X|^k<\infty$ for every
+$k\le n$, because $|x|^k\le1+|x|^n$; so the moments that exist form an initial segment
+of the orders. The variance is $\mu_2=\Var(X)=m_2-m_1^2$.
+
+A law is \term{symmetric} if $-X$ has the law of $X$; then every odd moment that
+exists vanishes, $m_{2k+1}=0$, because $\E[X^{2k+1}]=\E[(-X)^{2k+1}]=-\E[X^{2k+1}]$.
+Every innovation law in the paper is symmetric, which is why the first non-Gaussian
+cumulant is the fourth and not the third.
+
+The \term{kurtosis} of a law with finite fourth moment is $\mu_4/\mu_2^2$ and its
+\term{excess kurtosis} is $\mu_4/\mu_2^2-3$. The subtraction of $3$ makes the excess
+kurtosis of every Gaussian zero, which the next section explains.
+
+\section{Generating functions and cumulants}
+
+\begin{definition}[Moment- and cumulant-generating functions]
+The \term{moment-generating function} of $X$ is $M(s)=\E[e^{sX}]$, $s\in\Reals$, an
+extended-real quantity in $(0,\infty]$ with $M(0)=1$. The
+\term{cumulant-generating function} is $K(s)=\log M(s)$ wherever $M(s)<\infty$.
+\end{definition}
+
+The set where $M$ is finite is an interval containing $0$, because $e^{sx}$ is convex
+in $s$. Two cases matter for the paper.
+
+\begin{lemma}[Exponential moment and analyticity]
+\label{lem:mgf-analytic}
+Suppose $\E[e^{\lambda|X|}]<\infty$ for some $\lambda>0$. Then $M(s)<\infty$ for
+$|s|<\lambda$, every moment $m_n$ is finite with $m_n\le n!\,\lambda^{-n}\E[e^{\lambda|X|}]$,
+and $M(s)=\sum_{n\ge0}m_ns^n/n!$ for $|s|<\lambda$.
+\end{lemma}
+\begin{proof}
+For $|s|<\lambda$, $e^{sX}\le e^{\lambda|X|}$, so $M(s)<\infty$. From
+$e^{\lambda|x|}\ge\lambda^n|x|^n/n!$ (one term of the exponential series) we get
+$|x|^n\le n!\lambda^{-n}e^{\lambda|x|}$ and the moment bound. Finally
+$\sum_n|s|^n|X|^n/n!=e^{|s||X|}\le e^{\lambda|X|}$ is integrable, so the series
+$e^{sX}=\sum_ns^nX^n/n!$ may be integrated term by term by dominated convergence.
+\end{proof}
+
+If the exponential moment fails, $M(s)$ may be $+\infty$ for every $s\ne0$ even
+though many moments are finite; the Student-$t$ law of \cref{sec:expmoment} is the
+paper's example. In that case $K$ is not a function whose Taylor series one can take,
+but cumulants of every order for which the moments exist are still defined by the
+polynomial relations that follow, read as identities of formal power series.
+
+\begin{definition}[Cumulants]
+The \term{cumulant} of order $n$ is $\kappa_n=K^{(n)}(0)$, so that
+$K(s)=\sum_{n\ge1}\kappa_ns^n/n!$ near the origin when \cref{lem:mgf-analytic} applies.
+In general $\kappa_n$ is the polynomial in $m_1,\dots,m_n$ obtained by expanding
+$\log(1+\sum_{k\ge1}m_ks^k/k!)$ formally and reading off the coefficient of $s^n/n!$.
+\end{definition}
+
+\paragraph{The first four cumulants.}
+Centre $X$ so that $m_1=0$ (the effect of a shift is treated below); then
+$M(s)=1+\mu_2s^2/2+\mu_3s^3/6+\mu_4s^4/24+O(s^5)$ and, using
+$\log(1+u)=u-u^2/2+O(u^3)$ with $u=O(s^2)$,
+\begin{equation}
+  K(s)=\frac{\mu_2s^2}{2}+\frac{\mu_3s^3}{6}+\frac{\mu_4s^4}{24}
+      -\frac12\Bigl(\frac{\mu_2s^2}{2}\Bigr)^2+O(s^5)
+      =\frac{\mu_2}{2}s^2+\frac{\mu_3}{6}s^3+\frac{\mu_4-3\mu_2^2}{24}s^4+O(s^5).
+\end{equation}
+Reading off coefficients of $s^n/n!$,
+\begin{equation}
+  \kappa_1=m_1,\qquad \kappa_2=\mu_2,\qquad \kappa_3=\mu_3,\qquad \kappa_4=\mu_4-3\mu_2^2.
+  \label{eq:kappa1234}
+\end{equation}
+So the fourth cumulant is the fourth central moment minus three times the squared
+variance, and the excess kurtosis is exactly $\kappa_4/\kappa_2^2$. The factor $3$ is
+the number of ways to pair four objects, which \cref{sec:cumulant-tensors} and the
+chapter on Gaussian integrals explain.
+
+\begin{proposition}[Three properties of cumulants]
+\label{prop:cumulant-props}
+Let $X$, $Y$ be random variables with the relevant moments finite, and $c\in\Reals$.
+\begin{enumerate}[label=(\roman*)]
+\item Shift: $\kappa_1(X+c)=\kappa_1(X)+c$ and $\kappa_n(X+c)=\kappa_n(X)$ for $n\ge2$.
+\item Homogeneity: $\kappa_n(cX)=c^n\kappa_n(X)$.
+\item Additivity: if $X$ and $Y$ are independent, $\kappa_n(X+Y)=\kappa_n(X)+\kappa_n(Y)$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+When the generating functions exist near the origin the three statements are read
+off $K_{X+c}(s)=cs+K_X(s)$, $K_{cX}(s)=K_X(cs)$ and, by independence,
+$M_{X+Y}(s)=M_X(s)M_Y(s)$, hence $K_{X+Y}=K_X+K_Y$. Each statement is a polynomial
+identity in finitely many moments, so it holds whenever those moments are finite,
+by the formal-series definition.
+\end{proof}
+
+\begin{proposition}[Gaussian cumulants]
+\label{prop:gauss-cumulants}
+If $X\sim\normal{m}{\sigma^2}$ then $K(s)=ms+\tfrac12\sigma^2s^2$, so $\kappa_1=m$,
+$\kappa_2=\sigma^2$ and $\kappa_n=0$ for every $n\ge3$.
+\end{proposition}
+\begin{proof}
+For $Z\sim\normal{0}{1}$, completing the square in the exponent,
+$\E[e^{sZ}]=(2\pi)^{-1/2}\int e^{sz-z^2/2}\dd z=e^{s^2/2}(2\pi)^{-1/2}\int e^{-(z-s)^2/2}\dd z=e^{s^2/2}$;
+then $X=m+\sigma Z$ and \cref{prop:cumulant-props} give the rest.
+\end{proof}
+
+A theorem of Marcinkiewicz says the converse: if $K$ is a polynomial then its degree
+is at most two and the law is Gaussian. So ``non-Gaussian'' means ``some cumulant of
+order at least three is non-zero'', and for a symmetric law ``some cumulant of order
+at least four''. This is the sense in which the paper's families ``differ only through
+cumulants of order four and higher''.
+
+\why{Additivity and homogeneity are what make the channel act on cumulants
+diagonally. If $x_t=e^{-t}a+\sqrt{\Dt}\,z$ with $z$ Gaussian and independent of
+$a$, then $\kappa_m(x_t)=e^{-mt}\kappa_m(a)+\Dt^{m/2}\kappa_m(z)=e^{-mt}\kappa_m(a)$ for
+$m\ge3$. This is the paper's first ``exact consequence'' of Theorem 1, and it needs
+nothing but this section.}
+
+\section{Cumulant tensors of a random vector}
+\label{sec:cumulant-tensors}
+
+Let $\vect{X}=(X_1,\dots,X_{\nsites})$ be a random vector. The joint generating
+functions are $M(\vect{s})=\E[e^{\vect{s}^{\!\top}\vect{X}}]$ and $K(\vect{s})=\log M(\vect{s})$,
+and the \term{joint cumulant} of the coordinates $X_{i_1},\dots,X_{i_n}$ is
+\begin{equation}
+  \operatorname{cum}(X_{i_1},\dots,X_{i_n})=\frac{\partial^nK}{\partial s_{i_1}\cdots\partial s_{i_n}}(\vect{0}),
+\end{equation}
+a quantity symmetric in its arguments and multilinear in them. Collected over all
+index tuples it forms the \term{cumulant tensor} of order $n$, an array with
+$\nsites^n$ entries. The order-two tensor is the covariance matrix, since
+$\partial_i\partial_jK(\vect 0)=\E[X_iX_j]-\E[X_i]\E[X_j]$. The order-four tensor is
+the object the paper writes $\kfour$.
+
+\begin{lemma}[Fourth joint cumulant of a zero-mean vector]
+\label{lem:kappa4-tensor}
+If $\E[\vect X]=\vect 0$ and fourth moments are finite, with $\Sigma_{ij}=\E[X_iX_j]$,
+\begin{equation}
+  \kappa_4[ijkl]=\E[X_iX_jX_kX_l]-\Sigma_{ij}\Sigma_{kl}-\Sigma_{ik}\Sigma_{jl}-\Sigma_{il}\Sigma_{jk}.
+  \label{eq:kappa4-tensor}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Expand
+\[
+  M(\vect s)=1+\tfrac12\sum_{ij}\Sigma_{ij}s_is_j+\tfrac16\sum_{ijk}\E[X_iX_jX_k]s_is_js_k
+  +\tfrac1{24}\sum_{ijkl}\E[X_iX_jX_kX_l]s_is_js_ks_l+O(|\vect s|^5)
+\]
+and take $\log(1+u)=u-u^2/2+\dots$; the only fourth-order contribution of $-u^2/2$ is
+\[
+  -\tfrac18\Bigl(\sum_{ij}\Sigma_{ij}s_is_j\Bigr)^2=-\tfrac18\sum_{ijkl}\Sigma_{ij}\Sigma_{kl}s_is_js_ks_l .
+\]
+The coefficient of $s_is_js_ks_l$ in $K$, symmetrised, is therefore
+$\tfrac1{24}\bigl(\E[X_iX_jX_kX_l]-3\,\mathrm{sym}(\Sigma_{ij}\Sigma_{kl})\bigr)$, where the
+symmetrisation of $\Sigma_{ij}\Sigma_{kl}$ over the $24$ permutations of $(i,j,k,l)$
+produces each of the three pairings $8$ times, that is
+\[
+  \mathrm{sym}(\Sigma_{ij}\Sigma_{kl})=\tfrac13\bigl(\Sigma_{ij}\Sigma_{kl}+\Sigma_{ik}\Sigma_{jl}+\Sigma_{il}\Sigma_{jk}\bigr).
+\]
+Multiplying by $4!$ gives \cref{eq:kappa4-tensor}. On the diagonal $i=j=k=l$ it
+reduces to \cref{eq:kappa1234}.
+\end{proof}
+
+The three properties of \cref{prop:cumulant-props} have tensor versions, proved the
+same way from $K$. Shifts change only the first-order tensor. Independence gives
+additivity: if $\vect X$ and $\vect Y$ are independent then the cumulant tensors of
+$\vect X+\vect Y$ are the sums of those of $\vect X$ and of $\vect Y$. Homogeneity
+becomes the \term{transformation rule} for a linear map $\mat A$:
+\begin{equation}
+  \operatorname{cum}\bigl((\mat A\vect X)_{i_1},\dots,(\mat A\vect X)_{i_n}\bigr)
+  =\sum_{j_1,\dots,j_n}A_{i_1j_1}\cdots A_{i_nj_n}\operatorname{cum}(X_{j_1},\dots,X_{j_n}),
+  \label{eq:cum-transform}
+\end{equation}
+which follows from $K_{\mat A\vect X}(\vect s)=K_{\vect X}(\mat A^{\!\top}\vect s)$ and the
+chain rule. A Gaussian vector has $K(\vect s)=\vect m^{\!\top}\vect s+\tfrac12\vect s^{\!\top}\Sig\vect s$
+and no cumulant tensor of order three or more.
+
+\paragraph{The Frobenius norm over ordered indices.}
+For a tensor $\mat T$ of order $r$, $\Frob{\mat T}^2=\sum_{i_1\cdots i_r}T_{i_1\cdots i_r}^2$,
+the sum over all ordered tuples. This is the Euclidean norm of $\mat T$ viewed as a
+vector with $\nsites^r$ entries, and it is invariant under orthogonal changes of
+coordinates, because by \cref{eq:cum-transform} an orthogonal $\mat O$ acts on the
+tensor by $\mat O\otimes\cdots\otimes\mat O$, which is orthogonal on $\Reals^{\nsites^r}$.
+For a symmetric tensor the ordered sum can be regrouped by \term{multisets}: an ordered
+tuple with multiplicities $\nu=(\nu_1,\dots,\nu_{\nsites})$, $|\nu|=r$, has $r!/\nu!$
+rearrangements, all carrying the same entry $T_\nu$, so
+\begin{equation}
+  \Frob{\mat T}^2=\sum_{|\nu|=r}\frac{r!}{\nu!}\,T_\nu^2,
+  \qquad\text{equivalently}\qquad
+  \sum_{|\nu|=r}\frac{T_\nu^2}{\nu!}=\frac{1}{r!}\Frob{\mat T}^2.
+  \label{eq:frob-multiset}
+\end{equation}
+For $r=4$ the right-hand side is $\Frob{\mat T}^2/24$. This is the origin of the paper's
+constant $\tfrac1{24}\Frob{\partial_\theta\kfour}^2$: the general-order theorem gives
+$\sum_{|\nu|=4}(\partial_\theta\E H_\nu)^2/\nu!$, the degree-four Hermite moments of a
+variance-matched family are the entries of $\kfour$ (chapter on Gaussian integrals and
+Hermite polynomials), and \cref{eq:frob-multiset} converts the multiset sum into the
+ordered-index norm. For a symmetric matrix ($r=2$), $\sum_{i\le j}$ with weights
+$2$ off the diagonal gives $\tfrac12\Frob{\partial_\theta\Sig_0}^2=\sum_i\tfrac12(\partial\Sigma_{ii})^2+\sum_{i<j}(\partial\Sigma_{ij})^2$,
+the paper's constant for a covariance coordinate.
+
+\section{Cumulants of the stationary AR(1) marginal}
+\label{sec:ar1-cumulants}
+
+Let $(\varepsilon_k)_{k\in\mathbb Z}$ be independent copies of a law with mean zero,
+variance $\ivar$ and finite cumulants up to the order considered, and let $|\corr|<1$.
+The \term{moving-average representation}
+\begin{equation}
+  X=\sum_{k\ge0}\corr^k\varepsilon_{-k}
+  \label{eq:ma-rep}
+\end{equation}
+converges in mean square (its partial sums are Cauchy in $L^2$ because
+$\sum_k\corr^{2k}<\infty$) and almost surely, and $X$ has the \term{invariant law} of
+the recursion $a_i=\corr a_{i-1}+\varepsilon_i$: if $a_{i-1}$ has the law of $X$ then
+so does $a_i$, since $\corr X+\varepsilon$ is again of the form \cref{eq:ma-rep}. The
+chapter on Markov chains returns to this.
+
+\begin{proposition}[Cumulants of the AR(1) marginal]
+\label{prop:ar1-cumulants}
+If $\E|\varepsilon|^n<\infty$ then $\E|X|^n<\infty$ and
+\begin{equation}
+  \kappa_n(X)=\frac{\kappa_n(\varepsilon)}{1-\corr^n},\qquad n\ge1.
+  \label{eq:ar1-cumulants}
+\end{equation}
+\end{proposition}
+\begin{proof}
+For the finite sum $X_N=\sum_{k=0}^N\corr^k\varepsilon_{-k}$, additivity and homogeneity
+give $\kappa_n(X_N)=\kappa_n(\varepsilon)\sum_{k=0}^N\corr^{nk}$. Since
+$\E|X_N-X|^n\to0$ (Minkowski's inequality and the tail $\sum_{k>N}|\corr|^k$), every
+moment of order at most $n$ of $X_N$ converges to that of $X$, so the cumulants,
+polynomials in those moments, converge too. Summing the geometric series gives
+\cref{eq:ar1-cumulants}.
+\end{proof}
+
+Two consequences fix the paper's laboratory. With $\ivar=1-\corr^2$,
+\begin{equation}
+  \Var(X)=\frac{\ivar}{1-\corr^2}=1,
+\end{equation}
+so the choice of innovation variance is exactly the one that gives unit marginal
+variance, whatever the innovation law. And the fourth cumulant and excess kurtosis
+of the marginal are
+\begin{equation}
+  \kappa_4(X)=\frac{\kappa_4(\varepsilon)}{1-\corr^4},\qquad
+  \frac{\kappa_4(X)}{\Var(X)^2}=\frac{\kappa_4(\varepsilon)}{\ivar^2}\cdot\frac{\ivar^2}{1-\corr^4}
+  =\gamma_2(\varepsilon)\,\frac{(1-\corr^2)^2}{(1-\corr^2)(1+\corr^2)}
+  =\gamma_2(\varepsilon)\,\frac{1-\corr^2}{1+\corr^2},
+  \label{eq:ar1-kurtosis}
+\end{equation}
+where $\gamma_2(\varepsilon)=\kappa_4(\varepsilon)/\ivar^2$ is the innovation's excess
+kurtosis. For Laplace innovations, $\gamma_2(\varepsilon)=3$ (next section), the
+marginal's excess kurtosis is $3(1-\corr^2)/(1+\corr^2)$, which is the expression the
+paper uses in its regime sweep (Section 5) and in the hypothesis of E14. It falls from
+$3$ at $\corr=0$ to $0$ as $\corr\to1$: a strongly correlated chain has a nearly
+Gaussian marginal, because each site is the sum of many independent innovations with
+slowly decaying weights, and cumulants of order four add with weights $\corr^{4k}$
+while the variance adds with weights $\corr^{2k}$.
+
+\begin{remark}[The paper's chain is not started in its invariant law]
+The paper's chain has $a_1\sim\normal{0}{1}$, which is the invariant law only for
+Gaussian innovations. For every other family the first site has no fourth cumulant,
+and the site-$i$ marginal has
+\[
+  \kappa_4(a_i)=\kappa_4(\varepsilon)\sum_{m=2}^{i}\corr^{4(i-m)}
+  =\kappa_4(\varepsilon)\,\frac{1-\corr^{4(i-1)}}{1-\corr^4},
+\]
+which rises geometrically to the stationary value \cref{eq:ar1-kurtosis}. The
+covariance is unaffected (chapter on Markov chains); the fourth-cumulant tensor of
+\code{src/markov\_score/theory.py} (function \code{chain\_kappa4}) carries the exact
+site-dependent form, and the moment estimator of E19
+(\code{experiments/e19\_moment\_estimators.py}) uses the site-dependent factor
+$(1-\corr^{4(i-1)})/(1-\corr^4)$ when it converts a per-site fourth cumulant into an
+estimate of $\kappa_4(\varepsilon)$. The paper's sentence
+``its excess kurtosis falling as $3(1-\corr^2)/(1+\corr^2)$'' refers to the stationary
+marginal.
+\end{remark}
+
+\section{The innovation families at variance $\ivar$}
+\label{sec:families}
+
+Every family below is symmetric, so $\kappa_3=0$, and is parameterised so that its
+variance is exactly $\ivar$. The remaining freedom, if any, is a shape parameter. For
+each we derive the fourth moment by hand and record the excess kurtosis
+$\gamma_2=\mu_4/\ivar^2-3$ and the fourth cumulant $\kappa_4=\gamma_2\ivar^2$. The
+parameterisations are those of \code{src/markov\_score/priors.py} and
+\code{src/markov\_score/shape\_kernel.py}.
+
+\paragraph{Gaussian.}
+$\varepsilon\sim\normal{0}{\ivar}$. By \cref{prop:gauss-cumulants}, $\kappa_4=0$ and
+$\gamma_2=0$; $\mu_4=3\ivar^2$.
+
+\paragraph{Laplace.}
+Density $\innov(e)=\tfrac{1}{2b}e^{-|e|/b}$. The absolute moments are
+$\E|\varepsilon|^n=\tfrac1b\int_0^\infty e^ne^{-e/b}\dd e=n!\,b^n$ (the Gamma integral),
+so $\mu_2=2b^2$ and $\mu_4=24b^4$. Variance matching sets $2b^2=\ivar$, i.e.
+$b=\sqrt{\ivar/2}$, and then
+\begin{equation}
+  \gamma_2=\frac{24b^4}{(2b^2)^2}-3=6-3=3,\qquad \kappa_4=3\ivar^2.
+\end{equation}
+
+\paragraph{Student-$t_\nu$.}
+$\varepsilon=sT$ with $T$ a Student-$t$ variable with $\nu$ degrees of freedom,
+density proportional to $(1+u^2/\nu)^{-(\nu+1)/2}$. Writing $T=Z/\sqrt{V/\nu}$ with
+$Z\sim\normal01$ and $V\sim\chi^2_\nu$ independent, $\E[T^{2k}]=\E[Z^{2k}]\,\nu^k\E[V^{-k}]$,
+and $\E[V^{-k}]=\prod_{j=1}^k(\nu-2j)^{-1}$ for $\nu>2k$ (the inverse moments of a
+chi-square). Hence $\E[T^2]=\nu/(\nu-2)$ for $\nu>2$ and $\E[T^4]=3\nu^2/((\nu-2)(\nu-4))$
+for $\nu>4$. Variance matching sets $s^2\nu/(\nu-2)=\ivar$, and
+\begin{equation}
+  \gamma_2=\frac{3\nu^2}{(\nu-2)(\nu-4)}\cdot\frac{(\nu-2)^2}{\nu^2}-3
+  =\frac{3(\nu-2)}{\nu-4}-3=\frac{6}{\nu-4},\qquad \kappa_4=\frac{6}{\nu-4}\ivar^2.
+\end{equation}
+At $\nu=5$, the paper's choice, $\gamma_2=6$. Moments of order $r$ exist only for
+$r<\nu$: the $t_5$ law has finite moments up to order four and an infinite sixth moment,
+so its cumulants beyond the fourth do not exist. Its tail is polynomial,
+$\innov(e)\sim c|e|^{-\nu-1}$, which is what \cref{sec:expmoment} is about.
+
+\paragraph{Uniform.}
+$\varepsilon\sim\mathrm{Uniform}(-h,h)$, density $1/(2h)$ on $[-h,h]$. Then
+$\mu_2=\tfrac1{2h}\int_{-h}^he^2\dd e=h^2/3$ and $\mu_4=h^4/5$. Variance matching sets
+$h=\sqrt{3\ivar}$, and
+\begin{equation}
+  \gamma_2=\frac{h^4/5}{h^4/9}-3=\frac95-3=-\frac65=-1.2,\qquad \kappa_4=-\frac65\ivar^2.
+\end{equation}
+This is the most platykurtic law of the paper, and it is compactly supported: the
+conditional law of $a_i$ given $a_{i-1}$ is zero outside an interval, which is a
+different failure of Gaussian closure from heavy tails.
+
+\paragraph{Symmetric two-component mixture.}
+$\varepsilon\sim\tfrac12\normal{m}{s^2}+\tfrac12\normal{-m}{s^2}$ with $m^2=\kappa\ivar$
+and $s^2=(1-\kappa)\ivar$, $\kappa\in[0,1)$; $\kappa$ is the separation fraction and
+the frozen value is $\kappa=0.6$. For the $+m$ component, $\E[(m+sZ)^4]=m^4+6m^2s^2+3s^4$
+(binomial expansion and Gaussian moments $\E Z^2=1$, $\E Z^4=3$, odd ones zero); the
+$-m$ component gives the same, so $\mu_4=m^4+6m^2s^2+3s^4$ and $\mu_2=m^2+s^2=\ivar$.
+Substituting,
+\begin{equation}
+  \gamma_2=\frac{\kappa^2+6\kappa(1-\kappa)+3(1-\kappa)^2}{1}-3
+  =\kappa^2+6\kappa-6\kappa^2+3-6\kappa+3\kappa^2-3=-2\kappa^2,\qquad \kappa_4=-2\kappa^2\ivar^2.
+\end{equation}
+At $\kappa=0.6$, $\gamma_2=-0.72$, the value in the paper's oracle table. The law is
+bimodal for $\kappa$ large enough, and at $\kappa=0$ it is the Gaussian.
+
+\paragraph{Generalised Gaussian with exponent $\beta$.}
+Density $\innov_\beta(e)=\dfrac{\beta}{2s\,\Gamma(1/\beta)}\exp\bigl(-(|e|/s)^\beta\bigr)$,
+$\beta>0$. The substitution $u=(e/s)^\beta$, $e=su^{1/\beta}$, $\dd e=(s/\beta)u^{1/\beta-1}\dd u$
+turns the absolute moments into Gamma integrals:
+\begin{equation}
+  \E|\varepsilon|^k=\frac{\beta}{s\,\Gamma(1/\beta)}\int_0^\infty e^ke^{-(e/s)^\beta}\dd e
+  =\frac{s^k}{\Gamma(1/\beta)}\int_0^\infty u^{(k+1)/\beta-1}e^{-u}\dd u
+  =s^k\,\frac{\Gamma\bigl((k+1)/\beta\bigr)}{\Gamma(1/\beta)}.
+\end{equation}
+(At $k=0$ this confirms the normalisation.) Hence $\mu_2=s^2\Gamma(3/\beta)/\Gamma(1/\beta)$,
+so variance matching sets $s_\beta=\sqrt{\ivar\,\Gamma(1/\beta)/\Gamma(3/\beta)}$, and
+\begin{equation}
+  \gamma_2(\beta)=\frac{\Gamma(5/\beta)\,\Gamma(1/\beta)}{\Gamma(3/\beta)^2}-3.
+  \label{eq:gg-kurtosis}
+\end{equation}
+Three values by hand. At $\beta=1$: $\Gamma(5)\Gamma(1)/\Gamma(3)^2-3=24/4-3=3$, the
+Laplace law (indeed $s_1=\sqrt{\ivar\cdot1/2}=b$). At $\beta=2$:
+$\Gamma(5/2)\Gamma(1/2)/\Gamma(3/2)^2-3=(\tfrac34\sqrt\pi)(\sqrt\pi)/(\tfrac12\sqrt\pi)^2-3=3-3=0$,
+the Gaussian. At $\beta=6$: $\Gamma(5/6)\Gamma(1/6)/\Gamma(1/2)^2-3$, and by the
+reflection formula $\Gamma(z)\Gamma(1-z)=\pi/\sin(\pi z)$, $\Gamma(1/6)\Gamma(5/6)=\pi/\sin(\pi/6)=2\pi$
+while $\Gamma(1/2)^2=\pi$; so $\gamma_2(6)=2-3=-1$ exactly. As $\beta\to\infty$ the law
+tends to the uniform and $\gamma_2\to-6/5$. The exponent $\beta$ therefore moves the
+excess kurtosis continuously from $+3$ through $0$ to $-1$ on the range $\beta\in[1,6]$
+that the paper's protocol declares for E02b, at fixed variance and (for the chain)
+fixed covariance; the paper's Section 2 quotes the platykurtic end as $-1.1$, a value
+that \cref{eq:gg-kurtosis} reaches only near $\beta\approx9.5$. Along the family
+$\ivar$ is fixed and $\beta$ is a pure \term{shape coordinate}: $\partial_\beta\Sig_0=0$
+and $\partial_\beta\kfour\ne0$, which is exactly what the paper's Theorem 2 needs for
+its $e^{-8t}$ statement.
+
+\begin{table}[t]
+\centering
+\caption{The innovation families at variance $\ivar$: parameter, excess kurtosis
+$\gamma_2$ (the fourth cumulant is $\kappa_4=\gamma_2\ivar^2$), and the range of
+$\lambda$ for which the exponential moment of \cref{sec:expmoment} is finite.}
+\label{tab:families}
+\footnotesize
+\begin{tabular}{@{}llcl@{}}
+\toprule
+family & parameter at variance $\ivar$ & $\gamma_2$ & $\E e^{\lambda|\varepsilon|}<\infty$ \\
+\midrule
+Gaussian & --- & $0$ & all $\lambda$ \\
+Laplace & $b=\sqrt{\ivar/2}$ & $3$ & $\lambda<1/b$ \\
+Student-$t_\nu$ & $s=\sqrt{\ivar(\nu-2)/\nu}$ & $6/(\nu-4)$ & no $\lambda$ \\
+uniform & $h=\sqrt{3\ivar}$ & $-6/5$ & all $\lambda$ \\
+mixture, separation $\kappa$ & $m^2=\kappa\ivar$, $s^2=(1-\kappa)\ivar$ & $-2\kappa^2$ & all $\lambda$ \\
+generalised Gaussian, $\beta$ & $s_\beta=\sqrt{\ivar\Gamma(1/\beta)/\Gamma(3/\beta)}$ & \cref{eq:gg-kurtosis} & all if $\beta>1$; $\lambda<1/s_1$ if $\beta=1$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{The exponential-moment assumption}
+\label{sec:expmoment}
+
+\begin{assumption}[Exponential moment]
+\label{ass:expmoment}
+A law has an \term{exponential moment} if $\E[e^{\lambda|X|}]<\infty$ for some $\lambda>0$.
+For a random vector the condition is $\E[e^{\lambda|\vect X|}]<\infty$ with $|\cdot|$
+the Euclidean norm.
+\end{assumption}
+
+This is the paper's Assumption 1, the one hypothesis under which its Theorem 2 is
+proved. Its consequences, all used in that proof, are collected here.
+
+\begin{proposition}
+\label{prop:expmoment-consequences}
+Under \cref{ass:expmoment}:
+\begin{enumerate}[label=(\roman*)]
+\item all moments are finite, and the cumulant-generating function $K(\vect s)$ is
+  finite and real-analytic on $\{|\vect s|<\lambda\}$;
+\item the law is determined by its moments;
+\item for the scalar Student-$t_\nu$ law the assumption fails for every $\lambda>0$,
+  and $K(s)=+\infty$ for every $s\ne0$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(i) is \cref{lem:mgf-analytic} applied to $\vect s^{\!\top}\vect X\le|\vect s||\vect X|$; the
+power series of $M$ converges on the ball and $\log$ of a positive analytic function
+is analytic. (ii) The characteristic function $\phi(\vect s)=\E[e^{\mathrm i\vect s^{\!\top}\vect X}]$
+extends to an analytic function of complex $\vect s$ on the strip $|\operatorname{Im}\vect s|<\lambda$,
+because $\E[e^{\lambda|\vect X|}]<\infty$ dominates the integrand there; an analytic
+function on a strip containing the real axis is determined by its derivatives at the
+origin, which are the moments up to powers of $\mathrm i$; and the characteristic
+function determines the law. (iii) The density of $T$ satisfies $\innov(u)\ge c\,u^{-\nu-1}$
+for $u\ge u_0$, so for $s>0$,
+$\E[e^{sT}]\ge c\int_{u_0}^\infty e^{su}u^{-\nu-1}\dd u=\infty$, because
+$e^{su}u^{-\nu-1}\to\infty$; by symmetry the same holds for $s<0$. Then $M(s)=\infty$
+for all $s\ne0$, so $\E[e^{\lambda|T|}]\ge\E[e^{\lambda T}]=\infty$.
+\end{proof}
+
+\paragraph{What fails without it.}
+For the Student-$t$ law the moments up to order $\lfloor\nu\rfloor$ exist and so do
+the cumulants up to that order, as polynomials in them; but $K$ is not the sum of the
+series $\sum\kappa_ns^n/n!$, because $K$ is infinite off the origin. A Taylor expansion
+of $K$ with a Lagrange remainder therefore does not exist, and this is the reason the
+paper's Theorem 2 excludes Student-$t$ and treats it separately as a heavy-tailed
+regime with a rate of its own, supported by quadrature and not claimed as a theorem.
+The paper's damped generating function
+$\Lambda(\vect s,b)=\log\E_{\Pz}\exp(\vect s^{\!\top}\va-b|\va|^2/2)$ is the cumulant-generating
+function of the linear form $\vect s^{\!\top}\va$, damped by a Gaussian factor; for $b>0$
+the damping makes it finite for every $\vect s$ and every law, but the expansion the
+theorem needs is at $b=0$, where $\Lambda(\vect s,0)=K(\vect s)$, and \cref{ass:expmoment}
+is what makes that expansion legitimate on $|\vect s|<\lambda$ uniformly in $b\ge0$.
+
+\paragraph{Which families satisfy it.}
+The Gaussian, the uniform and the mixture have all exponential moments (the Gaussian
+by $\E e^{\lambda|Z|}\le2e^{\lambda^2/2}$, the others by bounded support or by being
+mixtures of Gaussians). The Laplace law with scale $b$ has
+$\E e^{\lambda|\varepsilon|}=\tfrac1b\int_0^\infty e^{(\lambda-1/b)e}\dd e=(1-\lambda b)^{-1}$
+for $\lambda<1/b$ and $+\infty$ for $\lambda\ge1/b$: the assumption holds, with a
+finite range of $\lambda$. The generalised Gaussian with $\beta>1$ has all exponential
+moments, since $\lambda e-(e/s)^\beta\to-\infty$; at $\beta=1$ it is the Laplace case.
+Student-$t$ fails, by (iii). This is the last column of \cref{tab:families}.
+
+\paragraph{From the innovation to the chain.}
+The chain $\va$ has an exponential moment if and only if its innovation does. If it
+does, write $a_i=\corr^{i-1}a_1+\sum_{m=2}^i\corr^{i-m}\varepsilon_m$; then
+$|\va|\le\sum_i|a_i|\le C|a_1|+C\sum_m|\varepsilon_m|$ with $C=\sum_{k\ge0}|\corr|^k=(1-|\corr|)^{-1}$,
+so by independence
+\[
+  \E e^{\lambda|\va|}\le\E e^{\lambda C|a_1|}\prod_{m=2}^{\nsites}\E e^{\lambda C|\varepsilon_m|}<\infty
+\]
+for $\lambda C$ below the innovation's threshold. Conversely, if the chain has one
+then so does $a_2$, and from $|\varepsilon_2|\le|a_2|+|\corr||a_1|$ and the
+Cauchy--Schwarz inequality,
+\[
+  \E e^{\lambda|\varepsilon_2|}\le\bigl(\E e^{2\lambda|a_2|}\bigr)^{1/2}\bigl(\E e^{2\lambda|\corr||a_1|}\bigr)^{1/2}<\infty
+\]
+for $\lambda$ small enough. So the assumption is a property of the innovation family,
+and \cref{tab:families} settles it for the chain as well.
+
+\section{Worked example: the Laplace chain at $\corr=0.85$}
+
+Take the frozen configuration. The innovation variance is
+$\ivar=1-\corr^2=1-0.7225=0.2775$, so the Laplace scale is
+$b=\sqrt{\ivar/2}=\sqrt{0.13875}\approx0.3725$. The innovation's fourth cumulant is
+$\kappa_4(\varepsilon)=3\ivar^2=3\times0.07701\approx0.2310$, and its excess kurtosis
+is $3$ whatever $\corr$ is.
+
+The stationary marginal has, by \cref{eq:ar1-cumulants}, $\kappa_4(X)=\kappa_4(\varepsilon)/(1-\corr^4)$
+with $\corr^4=0.7225^2\approx0.5220$, so $\kappa_4(X)\approx0.2310/0.4780\approx0.4833$;
+since $\Var(X)=1$ this is also the marginal excess kurtosis, and \cref{eq:ar1-kurtosis}
+gives the same number directly: $3\times0.2775/1.7225\approx0.4833$. The marginal is
+six times less kurtotic than the innovation: most of the fourth-order structure of the
+innovation is averaged away by the correlation, which is the direction of the paper's
+regime sweep.
+
+Along the paper's chain, which starts at a Gaussian site, the site-$i$ fourth cumulant
+is $\kappa_4(\varepsilon)(1-\corr^{4(i-1)})/(1-\corr^4)$: it is $0$ at site $1$,
+$\kappa_4(\varepsilon)\approx0.231$ at site $2$, $\kappa_4(\varepsilon)(1+\corr^4)\approx0.352$
+at site $3$, $\approx0.415$ at site $4$, and within one per cent of the stationary
+value from site $9$ on, since $\corr^{32}\approx0.0056$. The exponential moment holds
+for $\lambda<1/b\approx2.68$.
+
+The scalar leading constant of the paper's closure gap, $\kappa_4^2/6$ for a unit-variance
+law, is $9/6=1.5$ for the unit-variance Laplace law (excess kurtosis $3$, so
+$\kappa_4=3$); the chain constant $\tfrac16\Frob{\kfour}^2$ is a sum of squares of the
+site-dependent tensor of the chapter on Markov chains, and its numerical value at
+$\nsites=32$ is a generated macro of the paper, not typed here.
+
+\where{The paper's Section 2 (variance matching, the families and their excess
+kurtoses), Section 3 (the two exact consequences of Theorem 1, the constants
+$\tfrac16\Frob{\kfour}^2$ and $\tfrac1{24}\Frob{\partial_\theta\kfour}^2$, Assumption 1
+and the heavy-tailed paragraph), Section 5 (the marginal excess kurtosis in the regime
+sweep) and Appendix A (the grading of $\Lambda$ by cumulants). Experiments E01, E02b,
+E13, E14, E18, E19, E21. Code: \code{src/markov\_score/priors.py} (the families and
+their \code{innovation\_excess\_kurtosis} properties),
+\code{src/markov\_score/shape\_kernel.py} (the generalised Gaussian, its scale at fixed
+variance and \code{generalized\_gaussian\_excess\_kurtosis}),
+\code{src/markov\_score/theory.py} (\code{chain\_kappa4}, \code{score\_gap\_constant},
+\code{excess\_kurtosis\_to\_kappa4}), \code{tests/test\_theory\_hermite.py}
+(the fourth-cumulant tensor against brute-force cumulants of sampled chains).}
+
+\paragraph{References.}
+P. McCullagh (1987), \emph{Tensor Methods in Statistics}, Chapman and Hall (Chapters 2
+and 3 for cumulant tensors and the transformation rule).
+P. Billingsley (1995), \emph{Probability and Measure}, 3rd edition, Wiley (Sections 21
+and 26 for moments, generating functions and the moment problem).
+E. Lukacs (1970), \emph{Characteristic Functions}, 2nd edition, Griffin (analytic
+characteristic functions; Marcinkiewicz's theorem).
+P. J. Brockwell and R. A. Davis (1991), \emph{Time Series: Theory and Methods},
+2nd edition, Springer (the moving-average representation of AR(1)).
+S. Nadarajah (2005), ``A generalized normal distribution'', Journal of Applied
+Statistics 32, 685--694 (moments of the generalised Gaussian).

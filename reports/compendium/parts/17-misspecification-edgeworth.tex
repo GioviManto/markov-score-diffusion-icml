@@ -1,0 +1,451 @@
+\chapter{Misspecification and the Edgeworth correction}
+\label{ch:misspecification-edgeworth}
+
+Two questions in the paper have the same mathematical shape: what does a maximum
+likelihood estimator converge to when the model it fits is wrong, and what does the
+Gaussian covariance twin lack when it stands in for the true score? Both are answered
+by a projection. The first is the Kullback--Leibler projection of the true law onto the
+model family, whose image is the \emph{pseudo-true parameter} of White; the paper turns
+it into a closed-form asymptotic bias $b(\varepsilon)$ for each of its four
+misspecification mechanisms (Section~5 of the paper, experiments E08 and E17). The second
+is the expansion of the true noised law around its Gaussian twin in Hermite polynomials,
+whose first non-trivial term is the fourth-cumulant correction of Edgeworth; the paper
+adds that term back and measures how much of the closure gap it closes (Section~3 of the
+paper, experiment E16). This chapter builds both, derives the formulas the paper quotes,
+and records how the experiments used them.
+
+\section{The Kullback--Leibler projection and the pseudo-true parameter}
+\label{sec:kl-projection}
+
+\subsection{What a misspecified likelihood converges to}
+
+Let the data $\vx^1,\dots,\vx^{\nseq}$ be i.i.d.\ from a law $P^\star$ and let
+$\{Q_\params\}$ be a family of densities that may not contain $P^\star$. The
+\term{misspecified maximum-likelihood estimator} is
+$\hat\params=\argmax_\params\sum_\mu\log Q_\params(\vx^\mu)$. Dividing by $\nseq$, the
+law of large numbers gives
+\begin{equation}
+  \frac1\nseq\sum_\mu\log Q_\params(\vx^\mu)\ \to\ \E_{P^\star}\log Q_\params(\vx)
+  =\E_{P^\star}\log P^\star(\vx)-\KL\bigl(P^\star\,\|\,Q_\params\bigr),
+  \label{eq:pop-loglik}
+\end{equation}
+since $\KL(P^\star\|Q)=\E_{P^\star}[\log P^\star-\log Q]$ (\Cref{ch:conventions}). The first
+term does not depend on $\params$.
+
+\begin{definition}[Pseudo-true parameter; Kullback--Leibler projection]
+\label{def:pseudo-true}
+The \term{pseudo-true parameter} is
+\begin{equation}
+  \params^\ast=\argmin_\params\KL\bigl(P^\star\,\|\,Q_\params\bigr),
+  \label{eq:pseudo-true}
+\end{equation}
+and $Q_{\params^\ast}$ is the \term{Kullback--Leibler projection} of $P^\star$ onto the
+family. When $P^\star=Q_{\params_0}$ belongs to the family, $\params^\ast=\params_0$.
+\end{definition}
+
+\begin{proposition}[White]
+\label{prop:white}
+If the minimiser \cref{eq:pseudo-true} is unique and the usual regularity holds, then
+$\hat\params\to\params^\ast$ in probability, and
+$\sqrt\nseq(\hat\params-\params^\ast)$ is asymptotically normal with the sandwich
+covariance $\mat{J}^{-1}\mat{V}\mat{J}^{-1}$, $\mat{J}=-\E_{P^\star}\partial^2_\params\log Q_{\params^\ast}$,
+$\mat{V}=\Var_{P^\star}(\partial_\params\log Q_{\params^\ast})$.
+\end{proposition}
+
+The proof is the M-estimator argument of \Cref{ch:quasi-likelihood-moments}: the
+objective converges uniformly to \cref{eq:pop-loglik}, whose unique maximiser is
+$\params^\ast$. The content of the proposition is the reading: a wrong model does not
+make the estimator wander; it makes it converge, to a definite point, and more data
+only sharpens the convergence. The error that remains at $\params^\ast$ is a
+\term{bias} in the strict sense that no sample size removes it. This is the sentence
+the paper's misspecification section ends on.
+
+\subsection{Why EM--BP's limit is a Gaussian projection here}
+
+The paper's misspecification experiment fits the mixture-innovation AR(1) kernel of
+\Cref{ch:em-through-noise} to data from a Gaussian truth that is not an AR(1) chain. The
+fitted innovation turns out Gaussian to three decimals (the paper reports the fitted
+excess kurtosis; E08 records it per cell), which is what one expects: with a Gaussian
+truth there is no fourth-order structure for the mixture to fit, and the extra
+components only add variance. The paper therefore takes the $\nseq\to\infty$ limit of
+EM--BP to be the projection onto the \emph{Gaussian} AR(1) family, a two-parameter family
+$(\corr,\ivar)$, and computes it in closed form. Strictly the projection onto the
+mixture family could be non-Gaussian even for a Gaussian truth, since the truth is
+outside both families; the paper's justification is empirical (the fitted kurtosis)
+and the closed form is checked against the measured $\nseq=2048$ errors, which is the
+right order of argument.
+
+\section{The paper's closed-form bias}
+\label{sec:bias}
+
+\subsection{The projection under the one-view protocol}
+
+Let the truth be Gaussian with clean covariance $\Sig(\varepsilon)$, so its noised law at
+level $t$ is $\normal{0}{\Sig_t(\varepsilon)}$ with $\Sig_t(\varepsilon)=e^{-2t}\Sig(\varepsilon)+\Dt\Id$.
+The model is the Gaussian chain with $\hat\Sig_t(\corr,\ivar)=e^{-2t}\Sig_0(\corr,\ivar)+\Dt\Id$,
+where $\Sig_0(\corr,\ivar)$ is the general chain covariance of
+\Cref{ch:quasi-likelihood-moments}. Under the one-view protocol the $\nseq$ sequences are
+split evenly over the twelve levels, so the population log-likelihood is an average
+over levels with equal weights, and the pseudo-true parameter is
+\begin{equation}
+  \params^\ast(\varepsilon)=\argmin_{(\corr,\ivar)}\sum_{t\in\mathcal T}
+  \KL\Bigl(\normal{0}{\Sig_t(\varepsilon)}\,\Big\|\,\normal{0}{\hat\Sig_t(\corr,\ivar)}\Bigr),
+  \label{eq:theta-star}
+\end{equation}
+which is the formula of the paper's Appendix A5. The Gaussian divergence is
+\cref{eq:kl-gauss} of \Cref{ch:quasi-likelihood-moments}, so up to terms without
+$\params$ the objective is
+\begin{equation}
+  F(\corr,\ivar)=\frac12\sum_t\Bigl[\log\det\hat\Sig_t+\tr\bigl(\hat\Sig_t^{-1}\Sig_t(\varepsilon)\bigr)\Bigr],
+  \label{eq:F}
+\end{equation}
+exactly what \code{kl\_project} in \code{experiments/e17\_misspec\_bias.py} minimises by
+Nelder--Mead over $(\tanh^{-1}\corr,\log\ivar)$, the reparameterisation keeping
+$|\corr|<1$ and $\ivar>0$. Setting the gradient of $F$ to zero gives the two
+\term{projection equations}
+\begin{equation}
+  \sum_t\tr\Bigl(\hat\Sig_t^{-1}\,\partial_\theta\hat\Sig_t\,\hat\Sig_t^{-1}\bigl(\Sig_t(\varepsilon)-\hat\Sig_t\bigr)\Bigr)=0,
+  \qquad\theta\in\{\corr,\ivar\},
+  \label{eq:proj-eqs}
+\end{equation}
+the population version of the quasi-score equations of
+\Cref{ch:quasi-likelihood-moments}: the projected covariance agrees with the truth in the
+two directions $\hat\Sig_t^{-1}\partial_\theta\hat\Sig_t\hat\Sig_t^{-1}$, summed over the levels.
+
+\subsection{The relative score error of the projected model}
+
+At the projection the model's score is $-\hat\Sig_t^{-1}\vx$ and the truth's is
+$-\Sig_t^{-1}\vx$ (write $\Sig_t$ for $\Sig_t(\varepsilon)$). The paper's estimand pools
+squared errors and reference energies over the schedule
+(\Cref{ch:experimental-statistics}); its population version is
+\begin{equation}
+  b(\varepsilon)^2=\frac{\sum_t\E\lVert(\hat\Sig_t^{-1}-\Sig_t^{-1})\vx\rVert^2}{\sum_t\E\lVert\Sig_t^{-1}\vx\rVert^2}
+  \qquad(\vx\sim\normal{0}{\Sig_t}\text{ at level }t),
+\end{equation}
+with equal numbers of sequences at every level, as in the test bundles. Both
+expectations are of quadratic forms: for $\vx\sim\normal0{\Sig}$ and any matrix $\mat{D}$,
+$\E\lVert\mat{D}\vx\rVert^2=\E[\vx^\top\mat{D}^\top\mat{D}\vx]=\tr(\mat{D}^\top\mat{D}\Sig)=\tr(\mat{D}\Sig\mat{D}^\top)$.
+With $\mat{D}=\hat\Sig_t^{-1}-\Sig_t^{-1}$ (symmetric) in the numerator and
+$\mat{D}=\Sig_t^{-1}$ in the denominator,
+\begin{equation}
+  b(\varepsilon)^2=\frac{\sum_t\tr\bigl[(\hat\Sig_t^{-1}-\Sig_t^{-1})\,\Sig_t\,(\hat\Sig_t^{-1}-\Sig_t^{-1})\bigr]}{\sum_t\tr\,\Sig_t^{-1}},
+  \qquad\hat\Sig_t=\hat\Sig_t\bigl(\params^\ast(\varepsilon)\bigr),
+  \label{eq:bias}
+\end{equation}
+which is the trace formula of the paper's Appendix A5 and the function
+\code{pooled\_err} of E17. No Monte Carlo enters: $b(\varepsilon)$ is a deterministic
+function of the mechanism, its strength, the chain length and the schedule.
+
+E17 computes a second projection beside the Kullback--Leibler one: the \term{lag-one
+plug-in}, the AR(1) covariance $\corr_1^{|i-j|}$ whose correlation $\corr_1$ is the mean
+lag-one correlation of the truth. It is the population limit of the moment estimator of
+\Cref{ch:quasi-likelihood-moments} and of E08's \code{lmmse\_ar1} arm, and the paper
+quotes both, noting that the measured EM--BP fit sits between the two because the
+mixture kernel is not exactly Gaussian and a finite-sample fit undershoots the
+Kullback--Leibler optimum.
+
+\subsection{The finite-sample prediction \texorpdfstring{$\sqrt{b^2+v/\nseq}$}{sqrt(b2 + v/M)}}
+
+At finite $\nseq$ the fitted parameter is $\hat\params=\params^\ast+\delta$ with
+$\delta=O(\nseq^{-1/2})$ by \Cref{prop:white}. Expanding the model score to first order
+in $\delta$, $\hat s=s_{\params^\ast}+\delta\cdot\partial_\params s_{\params^\ast}$, and
+the squared error against the truth is
+\begin{equation}
+  \lVert\hat s-s\rVert^2=\lVert s_{\params^\ast}-s\rVert^2
+  +2\,\delta\cdot\bigl\langle\partial_\params s_{\params^\ast},\,s_{\params^\ast}-s\bigr\rangle
+  +\lVert\delta\cdot\partial_\params s_{\params^\ast}\rVert^2 .
+\end{equation}
+Take expectations over the test data and over the training sample that produced
+$\delta$. The first term is $b^2$ times the reference energy. The cross term vanishes to
+leading order because $\E\delta=o(\nseq^{-1/2})$ and $\delta$ is independent of the test
+sequences. The last term is a quadratic form in $\delta$ whose expectation is
+$\tr(\Var(\delta)\,\mat{G})$ for a fixed matrix $\mat{G}$, hence $v/\nseq$ for a constant
+$v$ that depends on the sandwich covariance and the mechanism. Therefore
+\begin{equation}
+  \text{risk}(\nseq,\varepsilon)^2\approx b(\varepsilon)^2+\frac{v(\varepsilon)}{\nseq}.
+  \label{eq:finite-sample}
+\end{equation}
+The paper reads $v$ off the well-specified cells: at $\varepsilon=0$ the bias vanishes,
+so $v=\nseq\cdot\text{risk}(\nseq,0)^2$, and it takes $v$ to be the same at every
+strength (E17's setting \code{v\_const}), a simplification that the agreement at both
+sizes in every mechanism justifies after the fact. The two sizes of E08, $512$ and $2048$,
+separate the two terms: where the risk falls by a factor of two between them the
+variance term dominates, and where it does not move the bias does. The paper's Figure~5
+(bottom row) draws $b(\varepsilon)$ and \cref{eq:finite-sample} through the measured
+points (\Cref{ch:reading-the-figures}).
+
+\section{The order of the bias in the strength}
+\label{sec:bias-order}
+
+\subsection{First-order perturbation of a projection}
+
+Write $\Sig(\varepsilon)=\Sig_0+\varepsilon\mat{D}+O(\varepsilon^2)$ with $\Sig_0=\Sig_0(\params_0)$
+in the family, and consider one level for simplicity (the sum over levels adds the
+same terms). Linearising the projection equations \cref{eq:proj-eqs} around
+$\params_0$ gives $\params^\ast(\varepsilon)=\params_0+\varepsilon\,\delta\params+O(\varepsilon^2)$ with
+\begin{equation}
+  \delta\params=\mat{I}(\params_0)^{-1}\,\bigl\langle\Sig_0^{-1}\partial_\theta\Sig_0\Sig_0^{-1},\mat{D}\bigr\rangle_\theta,
+  \qquad
+  \mat{I}_{\theta\theta'}=\bigl\langle\Sig_0^{-1}\partial_\theta\Sig_0\Sig_0^{-1},\partial_{\theta'}\Sig_0\bigr\rangle,
+\end{equation}
+where $\langle\mat{A},\mat{B}\rangle=\tr(\mat{A}\mat{B})$: the projection moves the
+parameter by the \emph{Fisher-metric projection} of the perturbation $\mat{D}$ onto the
+tangent space of the family, spanned by $\partial_\corr\Sig_0$ and $\partial_\ivar\Sig_0$. The
+projected covariance is then
+$\hat\Sig(\varepsilon)=\Sig_0+\varepsilon\,\delta\params\cdot\partial_\params\Sig_0+O(\varepsilon^2)$, and
+the mismatch $\hat\Sig-\Sig=\varepsilon(\delta\params\cdot\partial_\params\Sig_0-\mat{D})+O(\varepsilon^2)$
+is $\varepsilon$ times the component of $\mat{D}$ \emph{orthogonal} to the tangent space in
+the Fisher metric. Inserting into \cref{eq:bias}, with
+$\hat\Sig^{-1}-\Sig^{-1}=-\Sig^{-1}(\hat\Sig-\Sig)\Sig^{-1}+O(\varepsilon^2)$,
+\begin{equation}
+  b(\varepsilon)=\varepsilon\,\lVert\mat{D}^\perp\rVert_{\Sig_0^{-1}}\big/\sqrt{\tr\Sig_0^{-1}}+O(\varepsilon^2),
+  \qquad \lVert\mat{A}\rVert^2_{\Sig^{-1}}=\tr(\Sig^{-1}\mat{A}\Sig^{-1}\mat{A}\Sig^{-1}\Sig)=\tr\bigl((\Sig^{-1}\mat{A})^2\bigr).
+  \label{eq:bias-first-order}
+\end{equation}
+
+\begin{proposition}[Order of the bias]
+\label{prop:bias-order}
+$b(\varepsilon)=\Theta(\varepsilon)$ if the first-order perturbation $\mat{D}$ of the
+covariance has a nonzero component outside the tangent space of the family at
+$\params_0$, and $b(\varepsilon)=\Theta(\varepsilon^2)$ if $\mat{D}=0$, that is, if the
+covariance depends on the strength only through $\varepsilon^2$.
+\end{proposition}
+
+The second case is the \term{rank-one latent} of E08: $a=(y+\beta g)/\sqrt{1+\beta^2}$
+with $y$ an AR(1) chain and $g$ a single standard normal shared by all sites, so
+$\Cov(a_i,a_j)=(\corr^{|i-j|}+\beta^2)/(1+\beta^2)$ for $i\ne j$ (\code{GaussianAR1PlusGlobal}
+in \code{src/markov\_score/priors.py}). The covariance is even in $\beta$, its first-order
+term in $\beta$ vanishes, and the bias is $\Theta(\beta^2)$. The audit adds a second
+reason the latent is weak: the perturbation $\beta^2\mathbf 1\mathbf 1^\top$ has rank one,
+so it moves one eigendirection of $\Sig_0$ among $\nsites$, and its share of the score
+energy is $O(1/\nsites)$ as well as $O(\beta^2)$. The other three mechanisms perturb
+of order $\nsites$ directions at first order and have $b=\Theta(\varepsilon)$, which is
+what E17's small-$\varepsilon$ local exponents report (the paper quotes them as macros).
+
+\begin{example}[A projection and its bias, by hand]
+\label{ex:projection}
+Take $\nsites=2$ and a single level with $t\to0$, so that $\Sig_t\to\Sig$ and the
+model covariance is $\hat\Sig(\corr,\ivar)=\begin{psmallmatrix}1&\corr\\ \corr&\corr^2+\ivar\end{psmallmatrix}$,
+with $\det\hat\Sig=\ivar$ and
+$\hat\Sig^{-1}=\ivar^{-1}\begin{psmallmatrix}\corr^2+\ivar&-\corr\\-\corr&1\end{psmallmatrix}$.
+Let the truth be $\Sig(\varepsilon)=\begin{psmallmatrix}1+\varepsilon&c\\ c&1-\varepsilon\end{psmallmatrix}$,
+a chain with lag-one correlation $c$ whose two variances have been tilted by
+$\pm\varepsilon$; this perturbation lies outside the family, whose first variance is
+fixed at $1$. The objective \cref{eq:F} is
+$F=\ivar^{-1}[(\corr^2+\ivar)(1+\varepsilon)-2\corr c+1-\varepsilon]+\log\ivar$.
+Setting $\partial_\corr F=0$ gives $\corr^\ast=c/(1+\varepsilon)$; setting
+$\partial_\ivar F=0$ gives $\ivar^\ast=\corr^{\ast2}(1+\varepsilon)-2\corr^\ast c+1-\varepsilon=1-\varepsilon-c^2/(1+\varepsilon)$.
+The projected covariance is
+\begin{equation}
+  \hat\Sig^\ast=\begin{pmatrix}1&c/(1+\varepsilon)\\ c/(1+\varepsilon)&1-\varepsilon-c^2\varepsilon/(1+\varepsilon)^2\end{pmatrix}
+  =\Sig(\varepsilon)-\varepsilon\,\vect{v}\vect{v}^\top+O(\varepsilon^2),\qquad\vect{v}=\begin{pmatrix}1\\ c\end{pmatrix}.
+\end{equation}
+So the residual mismatch is rank one, along $\vect{v}$: the family absorbs the
+perturbation of the second variance and of the lag-one entry, and what it cannot absorb
+is the first variance, which it pins at one. Then
+$\hat\Sig^{\ast-1}-\Sig^{-1}=\varepsilon\,\Sig^{-1}\vect{v}\vect{v}^\top\Sig^{-1}+O(\varepsilon^2)$ and
+the numerator of \cref{eq:bias} is $\varepsilon^2(\vect{v}^\top\Sig^{-1}\vect{v})^2$. At
+$\varepsilon=0$, $\Sig_0^{-1}=(1-c^2)^{-1}\begin{psmallmatrix}1&-c\\-c&1\end{psmallmatrix}$ and
+$\vect{v}^\top\Sig_0^{-1}\vect{v}=(1-2c^2+c^2)/(1-c^2)=1$, while the denominator is
+$\tr\Sig_0^{-1}=2/(1-c^2)$. Hence
+\begin{equation}
+  b(\varepsilon)=\varepsilon\sqrt{\frac{1-c^2}{2}}+O(\varepsilon^2),
+\end{equation}
+linear in the strength as \Cref{prop:bias-order} says, with a coefficient that is
+smaller for a more correlated chain: at $c=0.85$, $\sqrt{0.2775/2}\approx0.37$, so a
+ten per cent tilt of the variances costs a relative score error of about $0.04$.
+Had the truth been $\begin{psmallmatrix}1&c+\varepsilon\\ c+\varepsilon&1\end{psmallmatrix}$
+instead, the perturbation would lie in the family (it is the chain at correlation
+$c+\varepsilon$ with $\ivar=1-(c+\varepsilon)^2$) and $b\equiv0$.
+\end{example}
+
+\section{The misspecification mechanisms of E08}
+\label{sec:e08}
+
+E08 (\code{experiments/e08\_misspecification.py}) keeps every truth Gaussian, so that its
+score is $-\Sig_t^{-1}\vx$ by linear algebra and no grid enters the reference. The four
+mechanisms, each with a strength whose zero is the well-specified chain at
+$\corr=0.85$, $\nsites=32$:
+\begin{description}[leftmargin=2em,itemsep=0.25em]
+\item[\code{global}, rank-one latent $\beta$.] $\Cov(a_i,a_j)=(\corr^{|i-j|}+\beta^2)/(1+\beta^2)$
+  off the diagonal, unit variances; Gaussian and variance-preserving but not Markov.
+  Strengths $\beta\in\{0,0.1,0.25,0.5,1\}$.
+\item[\code{longrange}, long-range precision coupling $\gamma$.] The precision matrix is
+  the tridiagonal AR(1) precision plus $\gamma$ times a matrix with entries
+  $-e^{-|i-j|/8}$ for $|i-j|\ge2$ and a diagonal compensation that keeps it diagonally
+  dominant; the covariance is its inverse rescaled to unit diagonal
+  (\code{GaussianLongRange}). Strengths $\gamma\in\{0,0.05,0.1,0.2,0.4\}$.
+\item[\code{ar2}, a second autoregressive coefficient $\corr_2$.] A stationary AR(2)
+  $a_i=\corr_1a_{i-1}+\corr_2a_{i-2}+\varepsilon_i$ with $\corr_1=\corr(1-\corr_2)$, which keeps
+  the lag-one correlation at $\corr$ (from the first Yule--Walker equation
+  $\gamma_1=\corr_1/(1-\corr_2)$); the covariance follows from the Yule--Walker
+  recursion $\gamma_k=\corr_1\gamma_{k-1}+\corr_2\gamma_{k-2}$ (\code{\_ar2\_cov}).
+  Strengths $\corr_2\in\{0,0.1,0.2,0.3,0.4\}$.
+\item[\code{sitevar}, site-dependent correlation $\delta$.] $a_i=\corr_ia_{i-1}+\varepsilon_i$
+  with $\corr_i=\corr+\delta\cos(2\pi i/\nsites)$ and $\Var\varepsilon_i=1-\corr_i^2$, so every
+  site keeps unit variance and $\Cov(a_i,a_j)=\prod_{k=i+1}^{j}\corr_k$
+  (\code{\_sitevar\_cov}). The construction needs $|\corr_i|<1$ at every site, which at
+  $\corr=0.85$ bounds the amplitude by $0.15$; the registered strength $0.2$ was invalid
+  by construction and was replaced by $0.14$ in a recorded amendment before any number
+  was read (\Cref{ch:protocol}). Strengths $\delta\in\{0,0.05,0.1,0.14\}$.
+\end{description}
+Each truth is fitted by four arms on identical bundles: \code{em\_bp} (the
+eight-component mixture kernel, one noised view per sequence, checkpoint on the
+validation bulk risk); \code{window} (a radius-$2$, width-$64$ window head trained under
+interface~A for $16{,}000$ steps with the ladder $\{500,\dots,16000\}$, checkpoint on the
+validation bulk risk; \Cref{ch:neural-baselines}); \code{lmmse\_ar1} (the LMMSE of the
+AR(1) covariance with the truth's mean lag-one correlation: the best a Gaussian AR(1)
+with that correlation can do); and \code{isotropic}. Two sizes, $\nseq\in\{512,2048\}$, so
+that the estimation term and the bias term of \cref{eq:finite-sample} can be told apart.
+The predeclared analysis (\code{tools/make\_misspec\_numbers.py}) is the mean and standard
+error of each arm per cell, the paired per-seed ratio window/EM--BP, and the
+\term{break-even} strength: the paper reports the two grid points that bracket the
+sign change of the mean log-ratio and never a fitted crossing, because with the
+available seeds the crossing is resolved only to the grid. The registry entry declares
+eight seeds; the script's default is the protocol's seed list, and the paper's macro for
+the seed count records what was actually run.
+
+\section{The Edgeworth correction around the covariance twin}
+\label{sec:edgeworth}
+
+\subsection{Expanding a law around a Gaussian with the same covariance}
+
+Let $\vx\sim\Pt$ have mean zero, covariance $\Sig_t$ and fourth-cumulant tensor
+$\mat{K}=\kfour[\vx]=e^{-4t}\kfour[\va]$ (\Cref{ch:attenuation-theorems}); its third
+cumulants vanish by the symmetry of the chain. The characteristic function of $\Pt$
+and of its twin $\normal0{\Sig_t}$ have log-characteristic functions that agree to second
+order and differ at fourth:
+\begin{equation}
+  \log\E e^{i\vect{s}\cdot\vx}=-\tfrac12\vect{s}^\top\Sig_t\vect{s}+\tfrac{1}{24}\mat{K}[\vect{s},\vect{s},\vect{s},\vect{s}]+\dots
+  \qquad(\text{cumulant expansion, \Cref{ch:moments-cumulants}}).
+\end{equation}
+Exponentiating and keeping the first correction,
+$\E e^{i\vect{s}\cdot\vx}\approx e^{-\frac12\vect{s}^\top\Sig_t\vect{s}}\bigl(1+\tfrac1{24}\mat{K}[\vect{s},\vect{s},\vect{s},\vect{s}]\bigr)$.
+Under the inverse Fourier transform a factor $(i s_j)$ becomes $-\partial_j$, so
+$s_is_js_ks_l$ becomes $\partial_i\partial_j\partial_k\partial_l$ acting on the Gaussian density
+$\phi_{\Sig_t}$:
+\begin{equation}
+  \Pt(\vx)\approx\phi_{\Sig_t}(\vx)\Bigl[1+\frac1{24}\sum_{ijkl}K_{ijkl}\,H^{\Sig_t}_{ijkl}(\vx)\Bigr],
+  \qquad
+  H^{\Sig}_{ijkl}(\vx)=\frac{\partial_i\partial_j\partial_k\partial_l\phi_\Sig(\vx)}{\phi_\Sig(\vx)} .
+  \label{eq:edgeworth}
+\end{equation}
+This is the \term{first Edgeworth correction} (also called the Gram--Charlier
+correction at this order; the two series differ in how they group higher terms, not in
+this term). The tensors $H^\Sig_{ijkl}$ are the \term{multivariate Hermite polynomials}
+of the Gaussian $\normal0\Sig$. With $\vect{y}=\Sig^{-1}\vx$ one has
+$\partial_i\phi_\Sig=-y_i\phi_\Sig$ and $\partial_iy_j=(\Sig^{-1})_{ij}$, and four
+differentiations give
+\begin{equation}
+  H^\Sig_{ijkl}=y_iy_jy_ky_l-\bigl[y_iy_j(\Sig^{-1})_{kl}+\text{five more pairings}\bigr]
+  +\bigl[(\Sig^{-1})_{ij}(\Sig^{-1})_{kl}+\text{two more}\bigr],
+\end{equation}
+the exact analogue of $\Hen{4}(x)=x^4-6x^2+3$ (\Cref{ch:gaussian-hermite}). Contracting
+with the symmetric tensor $\mat{K}$ collapses the six pairings into one term and the
+three into one:
+\begin{equation}
+  \epsilon(\vx):=\frac1{24}\sum_{ijkl}K_{ijkl}H^{\Sig_t}_{ijkl}(\vx)
+  =\frac1{24}\Bigl[\mat{K}[\vect{y},\vect{y},\vect{y},\vect{y}]-6\,\vect{y}^\top\mat{A}\vect{y}+3\,\langle\mat{A},\Sig_t^{-1}\rangle\Bigr],
+  \label{eq:eps}
+\end{equation}
+with $A_{ml}=\sum_{jk}K_{mjkl}(\Sig_t^{-1})_{jk}$ a symmetric matrix (the partial
+contraction of the tensor with the precision), which is the formula of the paper's
+Appendix A5 and of E16.
+
+\subsection{The corrected score}
+
+The score of the corrected density $\phi_{\Sig_t}(1+\epsilon)$ is
+\begin{equation}
+  \score^{\mathrm{E4}}(\vx)=\nabla\log\phi_{\Sig_t}+\nabla\log(1+\epsilon)=\Sgauss(\vx)+\frac{\nabla\epsilon(\vx)}{1+\epsilon(\vx)},
+  \label{eq:score-e4}
+\end{equation}
+with $\Sgauss=-\Sig_t^{-1}\vx$ the twin's score, and, differentiating \cref{eq:eps} with
+$\partial_my_j=(\Sig_t^{-1})_{mj}$,
+\begin{equation}
+  \nabla\epsilon=\frac16\,\Sig_t^{-1}\mat{K}[\,\cdot\,,\vect{y},\vect{y},\vect{y}]-\frac12\,\Sig_t^{-1}\mat{A}\vect{y}
+  \label{eq:grad-eps}
+\end{equation}
+(the quartic gives four equal terms, the quadratic two, and the constant none). E16
+evaluates both the \term{log form} \cref{eq:score-e4} and the \term{linear form}
+$\Sgauss+\nabla\epsilon$, which drops the denominator; the two agree where $\epsilon$ is
+small and differ where it is not.
+
+\subsection{When the expansion diverges}
+
+\Cref{eq:edgeworth} is an asymptotic expansion in the size of the fourth cumulant
+relative to the covariance. Its correction $\epsilon(\vx)$ is a quartic in
+$\vect{y}$ with coefficient of order $e^{-4t}\Frob{\kfour[\va]}$, so three things go
+wrong at low noise. The correction is not small on the bulk of the distribution, so the
+truncated series is not close to $\Pt$; $1+\epsilon$ can be negative, so the corrected
+``density'' is not one and the log form's denominator can change sign (E16 clips it at
+$0.1$); and the quartic always wins in the tail, so far out the correction is large at
+every $t$. The expansion is useful exactly where the paper's Theorem~3 is an asymptotic
+statement, above the crossover, and the paper says so: below a level among the lowest
+rungs of the schedule (the paper quotes it as a macro) the correction hurts, and pooled over the twelve-level schedule the corrected score is
+worse than the twin because the lowest levels carry most of the reference energy.
+
+\begin{example}[The scalar correction, by hand]
+\label{ex:edgeworth-scalar}
+For $\nsites=1$ and unit variance, $\Sig_t=1$, $\vect{y}=x$, $\mat{K}=\mat{A}=K$, and
+\cref{eq:eps} reads $\epsilon(x)=\tfrac{K}{24}(x^4-6x^2+3)=\tfrac{K}{24}\Hen{4}(x)$, with
+$\nabla\epsilon=\tfrac K6(x^3-3x)=\tfrac K6\Hen{3}(x)$: the scalar leading term of the
+paper's Theorem~3, whose $\gamma$-second moment $\tfrac{K^2}{36}\E\Hen{3}^2=\tfrac{K^2}{36}\cdot3!=K^2/6$
+is the closure constant. For a unit-variance Laplace law $\kfour=3$, so $K=3e^{-4t}$.
+At $t=1$, $K=3e^{-4}\approx0.0549$ and $\epsilon(x)\approx0.00229\,\Hen{4}(x)$: at
+$x=0$ it is $0.0069$, at $x=2$ ($\Hen{4}=-5$) it is $-0.011$, at $x=3$ ($\Hen{4}=30$) it
+is $0.069$, all small, and the correction is a genuine improvement of the twin over
+the bulk; at $x=5$ ($\Hen{4}=478$) it is $1.09$, larger than one, but $x=5$ is five
+standard deviations out. At $t=0.1$, $K=3e^{-0.4}\approx2.01$ and
+$\epsilon(x)\approx0.0838\,\Hen{4}(x)$: $0.25$ at $x=0$, $-0.42$ at $x=2$, $2.5$ at
+$x=3$. The correction is of order one on the bulk and the series is not an expansion
+at all there. The dividing line, where $\tfrac{K}{24}\max_{|x|\le2}|\Hen{4}|=\tfrac{5K}{24}$
+reaches, say, one tenth, is $K\approx0.5$, that is $e^{-4t}\approx1/6$, $t\approx0.45$; on
+the chain the relevant size is $e^{-4t}\Frob{\kfour[\va]}$ against $\lmax(\Sig_0)^2$,
+which puts the line near the crossover $\tstar$, consistent with what E16 measures.
+\end{example}
+
+\subsection{How E16 used it}
+
+E16 (\code{experiments/e16\_edgeworth\_oracle.py}) takes the closure protocol of E01:
+$512$ chains from the stream \code{rng\_for("e01-closure", family, 0)} for the Laplace,
+bimodal, uniform and Student-$t_5$ chains at $\corr=0.85$, one common Gaussian draw
+$\vz$ reused across the twelve levels and the two extra levels $3.5$ and $4$, and the
+tree-exact reference on the $(801,8)$ grid. Per family and level it computes the twin's
+score, the linear and the log corrected scores with the \emph{true} $\Sig_0$ and the
+\emph{true} tensor $\kfour[\va]$ (\code{theory.chain\_kappa4}, an oracle), and reports
+the relative score error of each against the reference and the fraction of the squared
+closure gap closed,
+\begin{equation}
+  \text{closed}(t)=1-\frac{\sum_j\lVert\score^{\mathrm{E4}}(\vx_j)-\score(\vx_j)\rVert^2}{\sum_j\lVert\Sgauss(\vx_j)-\score(\vx_j)\rVert^2},
+\end{equation}
+which is one when the correction is the whole gap, zero when it does nothing, and
+negative when it hurts. The predeclared reading is the level above which the log form
+closes more than ninety per cent, the level below which it is negative, and the pooled
+error of the three estimators over the schedule. The paper quotes the closed fractions at
+several levels for the Laplace chain and the ninety-per-cent levels for the bimodal and
+uniform chains (Section~3 and Appendix A5, macros \code{audEdge\ldots}). Two cautions
+the registry and the audit attach: on Student-$t_5$ the reference on the $(801,8)$ grid
+is dominated by the truncated prior above $t\approx3$ (\Cref{ch:grid-quadrature}), so the
+Student-$t$ fractions at those levels measure the truncation and are not used; and the
+oracle uses the true fourth cumulant, so it bounds what a moment method built on
+fourth-order statistics could do rather than being one (a version with the moment
+estimate of \Cref{ch:quasi-likelihood-moments} in place of the true tensor would be the
+competitor, and the audit recommends it).
+
+\where{\begingroup\sloppy The paper, Section~3 (``the gap is the fourth-order term''),
+Section~5 (misspecification; Figure~5) and Appendix A5 (E16, E17). Code:
+\code{experiments/e17\_misspec\_bias.py} (\code{kl\_project}, \code{pooled\_err}),
+\code{experiments/e08\_misspecification.py} (\code{\_truth}, \code{\_ar2\_cov},
+\code{\_sitevar\_cov}), \code{src/markov\_score/priors.py} (\code{GaussianAR1PlusGlobal},
+\code{GaussianLongRange}), \code{experiments/e16\_edgeworth\_oracle.py},
+\code{src/markov\_score/theory.py} (\code{chain\_kappa4}, \code{score\_gap\_constant}),
+\code{tools/make\_misspec\_numbers.py}, \code{tools/make\_audit\_numbers.py}.\par\endgroup}
+
+\paragraph{References.}
+\begingroup\sloppy
+H.~White, 1982, Maximum likelihood estimation of misspecified models, \emph{Econometrica} 50, 1--25.
+S.~Kullback and R.~A.~Leibler, 1951, On information and sufficiency, \emph{Annals of Mathematical Statistics} 22, 79--86.
+H.~Cram\'er, 1946, \emph{Mathematical Methods of Statistics}, Princeton University Press (chapter 17: the Edgeworth and Gram--Charlier series).
+P.~McCullagh, 1987, \emph{Tensor Methods in Statistics}, Chapman and Hall (multivariate Hermite polynomials and cumulant tensors).
+O.~E.~Barndorff-Nielsen and D.~R.~Cox, 1989, \emph{Asymptotic Techniques for Use in Statistics}, Chapman and Hall.
+A.~Katsevich and A.~S.~Bandeira, 2023, Likelihood maximization and moment matching in low SNR Gaussian mixture models, \emph{Communications on Pure and Applied Mathematics} 76, 788--842.\par\endgroup

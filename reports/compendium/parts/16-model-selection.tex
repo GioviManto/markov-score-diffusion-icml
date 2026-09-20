@@ -1,0 +1,449 @@
+\chapter{Model selection without the truth}
+\label{ch:model-selection}
+
+Every estimator in the paper has a knob that is not a parameter of the model: the
+number of EM iterations, or the number of gradient steps, at which the fit is read off.
+The error of a fit is a function of that knob, usually falling and then rising, and the
+value reported for an arm is its error at the knob's chosen position. How the position
+is chosen is therefore part of the estimator, and the paper spends a surprising amount
+of its protocol on it: validation and test bundles, checkpoint ladders, a selection
+rule per arm, a screening stage on seeds that never enter a reported number, and a
+control experiment (E20) whose only purpose is to show that one arm's selection does
+not depend on the truth. This chapter defines each of these objects, explains why they
+are there, and gives the three information interfaces A, B and C that the paper uses to
+say what each learner was allowed to see.
+
+\section{Bundles: what a fit sees and what it is scored on}
+\label{sec:bundles}
+
+\subsection{Three disjoint samples}
+
+A \term{bundle} is a fixed set of sequences together with everything derived from them
+that an experiment needs. The paper keeps three per cell:
+\begin{itemize}
+\item the \term{training bundle}, $\nseq$ clean chains $\va^1,\dots,\va^{\nseq}$ drawn from
+  the prior, from which each arm builds whatever it is allowed to see (\Cref{sec:interfaces});
+\item the \term{validation bundle}, $1024$ chains, used only to choose the knob;
+\item the \term{test bundle}, $2048$ chains, used only to score the chosen fit.
+\end{itemize}
+For the validation and test bundles the code draws the chains once and then, for every
+level $t$ of the twelve-level schedule, one noised view $\vx=e^{-t}\va+\sqrt{\Dt}\vz$ of
+every chain and the reference posterior mean $\pmean{\va}$ of that view under the
+\emph{true} kernel, computed by the tree-exact recursion of \Cref{ch:factor-graphs-bp}
+on the frozen grid (\code{\_bundle} in \code{experiments/e03\_baselines.py}; the same
+function shape in E02, E08, E14). A bundle is therefore a dictionary
+$t\mapsto(\mat{X}_t,\mat{M}_t)$ of the noised views and their reference means at each
+level, and its SHA-256 hash over those two arrays is stored with every row of every CSV,
+so that two arms claiming to be scored on the same bundle can be checked to have been
+(\Cref{ch:protocol}).
+
+\subsection{Keyed random streams}
+
+The three bundles are drawn from three random streams keyed by a tag, the seed and, for
+the training bundle, the size. In the code the training stream is
+\code{rng\_for("exp31-train", seed, M)}, the validation stream is
+\code{rng\_for("exp31-val", seed)} and the test stream is
+\code{rng\_for("exp31-test", seed)}. Two consequences
+matter for model selection. First, the streams are disjoint by construction (different
+tags), so no validation or test chain is ever a training chain. Second, they are the
+same across experiments: E02a's EM--BP fit and E03's network fit at $(\text{seed},\nseq)$
+see the identical training chains and are scored on the identical test bundle, which is
+what makes their ratio a \term{paired} comparison rather than a difference of two
+averages (\Cref{ch:experimental-statistics}). The registry calls the pair of tags and
+sizes the \emph{bundle protocol}; \Cref{ch:protocol} explains the tag mechanism.
+
+\subsection{The one-view groups}
+
+EM--BP never sees the clean training chains. From them the code derives the
+\term{one-view groups}: a random permutation of the $\nseq$ chains is split into twelve
+consecutive blocks of (nearly) equal size, block $k$ is assigned to level $t_k$, and
+each chain in it receives \emph{one} noised view at that level, drawn once from the
+stream \code{rng\_for("exp31-em-noise", seed)} and never redrawn
+(\code{\_one\_view\_groups}). The result is a list of twelve pairs
+$(\mat{X}_{t_k},t_k)$ with about $\nseq/12$ rows each. This is the data of interface~C.
+A held-out one-view bundle for selection is built the same way from the validation
+chains with a different noise stream.
+
+\section{Checkpoint ladders}
+\label{sec:ladders}
+
+\begin{definition}[Checkpoint ladder]
+\label{def:ladder}
+A \term{checkpoint ladder} is a fixed, increasing list of budgets at which a fit is
+saved. For EM--BP it is the list of iteration counts
+\begin{equation}
+  \{10,\,20,\,40,\,60,\,80,\,120,\,160,\,220,\,300,\,400,\,600,\,800,\,1200\},
+\end{equation}
+and for the networks the list of gradient-step counts
+\begin{equation}
+  \{500,\,1000,\,2000,\,4000,\,8000,\,16000,\,32000\}.
+\end{equation}
+A \term{rung} is one entry; the
+\term{cap} is the last rung. The \term{selected checkpoint} is the rung the selection
+rule picks, and a cell is \term{at cap} when the selected rung is the last one.
+\end{definition}
+
+Two things the definition does not say deserve saying. The ladder is coarse on purpose:
+its rungs are spaced roughly geometrically, so the selection can tell a factor of two
+in budget apart but not ten per cent. And the ladder is not a stopping rule: the fit is
+always run to the cap (unless EM's own likelihood tolerance ends it first,
+\Cref{ch:maximum-likelihood-em}), the kernel or network state at every rung is saved, and
+the choice is made afterwards, with every rung available. This is what fixed the
+stopping-rule artefact of the earlier capacity study, where one arm stopped at its
+tolerance near its optimum and the others ran to a fixed cap past theirs (see the paper,
+Appendix on the previous capacity reading).
+
+The at-cap fraction of a set of cells is a diagnostic the paper reports whenever it
+bears on a claim: if the selected rung is the cap in most cells, validation was still
+improving when the ladder ran out, and the reported error is an upper bound on what a
+longer ladder would give. The paper says so for the largest networks at
+$\nseq=2048$ and for EM--BP at the two highest levels of the learning experiment; the
+budget controls E02a\_v1 and E06c exist to settle whether the cap binds.
+
+\section{Oracle selection: validation risk against the true kernel}
+\label{sec:oracle-selection}
+
+\begin{definition}[Oracle selection rule]
+\label{def:oracle-rule}
+Let $\hat m^{(r)}(\vx,t)$ be the posterior-mean map of the fit at rung $r$. Its
+\term{validation risk} is the schedule-pooled relative score error of
+\Cref{ch:experimental-statistics},
+\begin{equation}
+  R_{\mathrm{val}}(r)=\Biggl(\frac{\sum_t\sum_{j}\sum_{i\in B}\bigl(\hat s^{(r)}_t(\vx_j)_i-s_t(\vx_j)_i\bigr)^2}{\sum_t\sum_j\sum_{i\in B}s_t(\vx_j)_i^2}\Biggr)^{1/2},
+  \label{eq:val-risk}
+\end{equation}
+where $s_t(\vx)=-(\vx-e^{-t}\pmean{\va})/\Dt$ and $\hat s^{(r)}_t$ is the same expression
+with $\hat m^{(r)}$ in place of $\pmean{\va}$,
+all computed on the validation bundle over the \term{bulk} region $B$ of sites $5$ to
+$\nsites-4$, with $s_t$ the reference score built from the true kernel's posterior means
+stored in the bundle. The \term{oracle rule} selects $r^\ast=\argmin_rR_{\mathrm{val}}(r)$.
+\end{definition}
+
+The rule is called an oracle because $s_t$ is the score of the true law, which a
+practitioner does not have. Three remarks.
+
+\paragraph{Why the bulk.} Every arm is scored on all sites for the headline, but
+selected on the interior. The boundary sites are where the arms differ for reasons
+unrelated to what is being selected (a zero-padded convolution behaves differently at
+the ends; the chain's first site has no left neighbour), and a selection statistic that
+weights them would let a boundary artefact choose the rung. The paper's protocol
+appendix records the three regions (all, bulk, centre) and which one is used for what.
+
+\paragraph{Why it is legitimate for a comparison.} The oracle rule is applied
+identically to every arm: EM--BP at every capacity, the six architectures under
+interface~A, the fixed-corruption arm. A comparison between arms that all selected on
+the same oracle statistic is fair as a comparison; what it cannot support is a claim
+that any single arm could be deployed at its reported error without the truth. The
+paper draws exactly this line: the only arm selected without an oracle is the
+implicit-score-matching arm, and E20 checks EM--BP.
+
+\paragraph{Selection is a shrinkage.} Choosing the rung on validation is early
+stopping, and early stopping is a regulariser: an EM run stopped before convergence
+sits between the initialisation and the maximum-likelihood estimate. The audit's
+per-level reading of the learning experiment (\Cref{ch:em-through-noise}) turns on this:
+at high noise the selected fits are shrunk toward the Gaussian initialisation, which is
+why they can sit \emph{below} an unbiased-estimator bound.
+
+\section{Oracle-free selection for EM--BP: held-out log-evidence}
+\label{sec:evidence-selection}
+
+\subsection{The statistic}
+
+\begin{definition}[Held-out one-view log-evidence per edge]
+\label{def:evidence}
+Let $\{(\mat{X}_{t_k},t_k)\}$ be a held-out one-view bundle of $n$ chains and let
+$\kernelth^{(r)}$ be the kernel at rung $r$. The \term{held-out log-evidence per edge} is
+\begin{equation}
+  E(r)=\frac{1}{n(\nsites-1)}\sum_{k}\sum_{\vx\in\mat{X}_{t_k}}\log P_{t_k,\params^{(r)}}(\vx),
+  \label{eq:evidence}
+\end{equation}
+the average over held-out views of the marginal log-likelihood of the view under the
+fitted kernel, divided by the number of transitions per chain. The \term{evidence rule}
+selects $r^\ast=\argmax_rE(r)$.
+\end{definition}
+
+The marginal log-likelihood $\log P_{t,\params}(\vx)$ is exactly what the forward sweep
+of the discretised model returns when its normalising constants are accumulated
+(\Cref{ch:grid-quadrature}; the field \code{log\_evidence} returned by
+\code{e\_step\_multi} in \code{src/markov\_score/em.py}). No clean chain and no true kernel enters: the statistic
+is a function of the fitted kernel and of noised data only. Dividing by the number of
+edges makes it comparable across chain lengths and sizes (E14 uses it at $\nsites=128$).
+
+\subsection{Why maximising held-out likelihood is a valid rule}
+
+For a held-out sample from the true noised law $\Pt$, the average log-likelihood of a
+candidate law $Q$ is an unbiased estimate of $\E_{\Pt}\log Q(\vx)$, and
+\begin{equation}
+  \E_{\Pt}\log Q(\vx)=\E_{\Pt}\log\Pt(\vx)-\KL(\Pt\,\|\,Q).
+  \label{eq:heldout-kl}
+\end{equation}
+The first term does not depend on $Q$. So the rung with the largest held-out evidence
+is, up to the sampling error of the held-out set, the rung whose fitted law is closest
+to the truth in Kullback--Leibler divergence. It is the same principle as
+cross-validation of a likelihood, and it is oracle-free because \cref{eq:heldout-kl}
+never requires $\Pt$ to be known, only sampled.
+
+Two caveats keep the rule honest. The criterion is Kullback--Leibler divergence of the
+noised law, not the relative score error the paper reports; the two are different
+functionals of $Q$ and can rank two rungs differently. And the held-out set is finite,
+so $E(r)$ carries sampling noise of order $n^{-1/2}$ per edge, which can blur the choice
+between neighbouring rungs whose evidence differs by less than that. Both are visible in
+the control.
+
+\subsection{E20}
+
+E20 (\code{experiments/e20\_evidence\_selection.py}) replicates E02a cells exactly, at
+$\ncomp=8$ with the same bundle tags, the same initialisation stream and the same ladder,
+and records at every rung three numbers: the oracle validation risk
+\cref{eq:val-risk}, the held-out one-view evidence \cref{eq:evidence} computed on the
+validation chains with a fresh noise stream (tags \code{e20-split}, \code{e20-noise}),
+and the test risk at the rungs the two rules and the cap pick. The comparison is the
+test risk under the evidence rule against the test risk under the oracle rule, paired
+by seed, and the fraction of seeds in which the two rules pick the same rung. The design
+concentrates on $\nseq=32$, the size at which the choice of rung matters most (at
+$\nseq=2048$ the frozen validation curves are monotone through the ladder, so every rule
+picks the cap and the control is empty); the $\nseq=512$ arm was dropped for cost, as
+the registry records. The paper quotes the result in Section~5 and Appendix A5: the two
+rules pick the same rung in most seeds, give the same test error within seed noise,
+and both are far below the error at the cap. The sentence it licenses is that EM--BP's
+reported numbers do not depend on the oracle, not that the oracle rule was never used.
+
+\section{Oracle-free selection for networks: the implicit objective}
+\label{sec:ism-selection}
+
+\subsection{Hyv\"arinen's identity}
+
+A network trained by implicit score matching (\Cref{ch:score-matching,ch:neural-baselines})
+minimises, over noisy samples $\vx\sim\Pt$ only,
+\begin{equation}
+  J(\theta)=\E_{\Pt}\Bigl[\tfrac12\lVert s_\theta(\vx)\rVert^2+\nabla\!\cdot s_\theta(\vx)\Bigr].
+  \label{eq:ism}
+\end{equation}
+The reason this is a score-matching objective is an integration by parts. For a
+smooth density $p$ and a smooth vector field $s_\theta$ whose product with $p$ vanishes
+at infinity,
+\begin{equation}
+  \E_p[\nabla\!\cdot s_\theta]=\int(\nabla\!\cdot s_\theta)\,p\dd\vx=-\int s_\theta\cdot\nabla p\dd\vx
+  =-\E_p[s_\theta\cdot\nabla\log p],
+\end{equation}
+so
+\begin{equation}
+  J(\theta)=\tfrac12\E_p\lVert s_\theta\rVert^2-\E_p[s_\theta\cdot s_p]
+  =\tfrac12\E_p\lVert s_\theta-s_p\rVert^2-\tfrac12\E_p\lVert s_p\rVert^2 ,
+  \label{eq:hyvarinen}
+\end{equation}
+with $s_p=\nabla\log p$ the true score. The last term does not depend on $\theta$.
+Minimising $J$ is minimising the \term{Fisher divergence} $\tfrac12\E_p\lVert s_\theta-s_p\rVert^2$
+without ever evaluating $s_p$.
+
+\subsection{As a selection rule}
+
+The same identity makes $J$ a model-selection criterion. Evaluate
+\cref{eq:ism} on a held-out one-view bundle: the empirical average is an unbiased
+estimate of $J$ at that rung, hence of the Fisher divergence up to a constant common to
+all rungs. Selecting $r^\ast=\argmin_rJ_{\mathrm{held}}(r)$ picks the rung closest to the
+true score in Fisher divergence, with no clean chain and no true score anywhere
+(\code{ism\_objective} in \code{src/markov\_score/nn\_torch.py}). Three details of the
+paper's implementation:
+\begin{itemize}
+\item the divergence in the selection statistic is computed \emph{exactly}: by the
+  coloured probes for the window head and by $\nsites$ backward passes for a dense map
+  (\Cref{ch:neural-baselines}); a stochastic estimate would add noise to a comparison
+  between rungs that may differ by little;
+\item the held-out bundle carries one view per chain split across the twelve levels,
+  exactly as the training data, so the criterion weights the levels as the data do:
+  equal numbers of sequences per level, each contributing its own
+  $\tfrac12\E\lVert s_\theta-s_p\rVert^2$; the paper's estimand instead pools squared
+  errors and divides by the pooled reference energy, which weights the low levels more
+  (\Cref{ch:experimental-statistics}), so the two can rank rungs differently;
+\item the whole held-out curve $r\mapsto J_{\mathrm{held}}(r)$ is stored in the CSV, not
+  only its minimum, so that a run whose curve never turns over can be recognised as a
+  divergence of the optimisation rather than reported as the network's error; E03 saw
+  this at $\nseq=32$, where implicit score matching on a tiny sample is known to be
+  unstable, and the paper says so.
+\end{itemize}
+
+\section{Screening and confirmation}
+\label{sec:screening}
+
+\subsection{Two kinds of seeds}
+
+The paper's protocol names two disjoint sets of seeds. The \term{development seeds}
+$10000$ to $10003$ (E03's screen used the first two after a pre-data amendment) are for
+every choice a designer makes: architecture family, hyperparameters, learning rate,
+output parameterisation. The \term{confirmatory seeds} $0$ to $15$ (eight of them in the
+regime sweeps) are for the reported numbers. The rule is stated twice in the contract
+and once in the paper: development seeds never enter a reported number; confirmatory
+seeds never enter a selection.
+
+\subsection{Why: the winner's curse}
+
+Suppose $K$ configurations are tried on the same data and the best one's error is
+reported. Even if all $K$ have the same true error, the reported minimum is biased
+downward, because it is the minimum of $K$ noisy measurements. The paper avoids this by
+choosing on one set of seeds and reporting on another: the confirmatory error of the
+chosen configuration is then an ordinary, unbiased estimate of that configuration's
+error, because the choice did not look at the confirmatory data.
+
+\begin{example}[The winner's curse for two candidates, by hand]
+\label{ex:winners-curse}
+Two configurations have the same true risk $R$, and their measured risks on the
+development seeds are $R+\sigma Z_1$ and $R+\sigma Z_2$ with $Z_1,Z_2$ independent
+standard normal. The screen reports $\min(R+\sigma Z_1,R+\sigma Z_2)=R-\sigma\max(-Z_1,-Z_2)$.
+For two independent standard normals, $\max(Z_1,Z_2)$ has expectation
+$\E|Z_1-Z_2|/2=\tfrac12\cdot2/\sqrt{\pi}\cdot\tfrac{1}{\sqrt2}\cdot\sqrt2=1/\sqrt\pi$: indeed
+$\max(a,b)=\tfrac12(a+b)+\tfrac12|a-b|$, the first term has mean zero, and $Z_1-Z_2$ is
+normal with variance $2$, so $\E|Z_1-Z_2|=\sqrt{2}\cdot\sqrt{2/\pi}=2/\sqrt\pi$. Hence the
+screened minimum has expectation $R-\sigma/\sqrt\pi\approx R-0.56\sigma$: with a
+screen noise of, say, five per cent of the risk, reporting the screen's own number
+would understate the risk by nearly three per cent for two candidates, and by more for
+the sixty-eight configurations of E03's screen. Reporting the winner's risk on fresh
+seeds removes the bias entirely; the fresh measurement has its own noise but no
+preference for the small side.
+\end{example}
+
+\subsection{What a fair screen is}
+
+\begin{definition}[Fair screen]
+\label{def:fair-screen}
+A screen is \term{fair} when every candidate is trained under the same recipe (loss,
+optimiser, batch, gradient clipping, level sampling, corruption), for the same budget
+(steps and restarts), on the same bundles, with the same checkpoint ladder and the same
+selection statistic, and the winner of each family is chosen by the same rule on
+development seeds disjoint from the confirmatory ones.
+\end{definition}
+
+The definition is a list because each item names a way the earlier screen of this
+model was unfair, as the audit found: the long-range architectures had been trained with
+one noise level per gradient step where the window head had twelve, and with one
+restart where the head had eight, so a difference between families was partly a
+difference in training. E03's screen (\code{part\_screen} in
+\code{experiments/e03\_baselines.py}) gives every family the recipe of
+\Cref{ch:neural-baselines}: per-example level from the twelve, batch $64$, Adam,
+clipping at $1$, both parameterisations, learning rates $\{10^{-3},3\cdot10^{-3}\}$, a
+family-specific hyperparameter grid (radius and width for the window head; channels for
+the TCN; hidden size for the GRU; width, heads and depth for the transformer; channels
+for the U-Net; hidden widths for the MLP), one run of $16{,}000$ steps per configuration
+at the two sizes $\nseq\in\{32,2048\}$ on two development seeds, the checkpoint selected
+by the oracle rule on the bulk, and the family's winner chosen by the pooled bulk risk
+over development seeds and sizes (\code{winners\_from\_screening}). The winners are
+written to \code{outputs/E03/winners.json} and are the configurations of every
+confirmatory row. The paper reports the screen in its protocol appendix (the screen
+table) and says that the screen's numbers are never a headline.
+
+\subsection{Confirmation}
+
+The \term{confirmatory run} (\code{part\_confirm}) trains each family's winner on the
+sixteen confirmatory seeds at the four sizes $\{32,128,512,2048\}$ for the full
+$32{,}000$ steps, selects the rung by the oracle rule, and scores on the test bundle in
+all three regions. Its rows are what the baseline table shows and what the paired
+ratios against EM--BP are computed from, joined on the seed, the size and the test-bundle
+hash.
+
+\section{The three information interfaces}
+\label{sec:interfaces}
+
+The paper's comparisons are organised by what a learner is allowed to see. The
+definitions below are the code's, made explicit.
+
+\begin{definition}[Interfaces A, B and C]
+\label{def:interfaces}
+Let $\{\va^\mu\}_{\mu\le\nseq}$ be the training chains and let each chain be assigned one
+level $t_\mu$ by the even split of \Cref{sec:bundles}.
+\begin{itemize}
+\item \term{Interface A} (the standard denoising recipe). The learner may query the clean
+  chains at every gradient step, together with a freshly drawn level $t$ (uniform on the
+  twelve) and a freshly drawn corruption $\vz$; its training pairs are
+  $(\va^\mu,\ e^{-t}\va^\mu+\sqrt{\Dt}\vz)$ with new $(t,\vz)$ every time. The checkpoint
+  is selected by the oracle rule.
+\item \term{Interface B} (one fixed corruption). The learner sees the pairs
+  $(\va^\mu,\vx^\mu)$ with $\vx^\mu=e^{-t_\mu}\va^\mu+\sqrt{\Delta_{t_\mu}}\vz^\mu$, one
+  corruption per chain, drawn once. It still regresses on the clean chain. The
+  checkpoint is selected by the oracle rule.
+\item \term{Interface C} (one noised view per sequence and nothing else). The learner
+  sees $\{(\vx^\mu,t_\mu)\}$ only: the one-view groups. It never sees a clean chain, and
+  its checkpoint is selected without the true score, by the held-out implicit
+  objective (networks) or the held-out evidence (EM--BP, E20 and E14's second row).
+\end{itemize}
+\end{definition}
+
+The three are nested in what they reveal: C sees a function of what B sees, and B sees
+one draw of what A can draw indefinitely. The paper's Section~5 uses the nesting in one
+sentence: the gap between the interface-A rows and the interface-C row is the value of
+clean data with fresh corruptions; the factor that remains at C is what the
+factorisation and the exact E-step are worth at equal information. Interface~B is the
+control that separates the two ingredients of A: it gives the clean target but not the
+augmentation, so a network at B that is still far behind EM--BP shows that one
+corruption per sequence, not the absence of the clean chain, is what it cannot recover
+from. The audit's correction of 18 September was precisely a relabelling: an arm that
+sees $\va^\mu$ is at B, not at C, whatever its loss is called, and the headline
+``matched'' number has to be the interface-C arm.
+
+EM--BP is at interface~C by construction: its E-step reads $\{(\vx^\mu,t_\mu)\}$ and
+nothing else (\Cref{ch:em-through-noise}). Its selection rule in the capacity and
+baseline experiments is the oracle one, which is why E20 exists; in E14 both rules are
+run side by side.
+
+\section{The regime sweep of the matched comparison: E14}
+\label{sec:e14}
+
+E14 (\code{experiments/e14\_regime\_baselines.py}) repeats the interface-C comparison
+away from the frozen point: correlations $\corr\in\{0.5,0.85,0.95\}$, chain lengths
+$\nsites\in\{32,128\}$, Laplace innovations, $\nseq=2048$, eight confirmatory seeds, with
+its own bundles (tags \code{e14-train}, \code{e14-val}, \code{e14-test},
+\code{e14-valchains}, keyed by seed and length). Each cell scores six arms on a common
+test bundle:
+\begin{description}[leftmargin=2.2em,itemsep=0.25em]
+\item[\code{em\_bp}] the eight-component mixture kernel fitted by EM--BP on the one-view
+  groups, rung selected by the held-out BP risk of the validation bundle against the
+  true kernel's posterior means (the oracle rule of \Cref{def:oracle-rule}, on all sites
+  here);
+\item[\code{em\_bp\_evidence}] the same EM run and the same ladder, rung selected by the
+  held-out one-view log-evidence per edge on the noised views of the validation chains
+  (the evidence rule of \Cref{def:evidence}): the oracle-free EM--BP;
+\item[\code{ism\_one\_view}] a network trained by implicit score matching on the same
+  one-view groups, rung selected on the held-out implicit objective with the exact
+  divergence; one row per architecture family (window head, transformer), each with the
+  hyperparameters that won a screen \emph{inside the regime} on two development seeds
+  over E03's candidate grid, $8{,}000$ steps for the screen and $32{,}000$ for the
+  confirmation; the window head trains with the coloured-probe divergence and learning
+  rate $10^{-3}$, the transformer with Hutchinson's estimator and $3\cdot10^{-3}$, as
+  E03's winners did;
+\item[\code{dsm\_one\_corruption}] the same architectures at interface~B: denoising score
+  matching on clean targets paired with the very same one noised view per chain
+  (the index arrays of the split are returned so the pairing is exact), rung selected by
+  the validation BP risk;
+\item[\code{lmmse\_true}] the LMMSE estimator with the true covariance, the second-order
+  floor (\Cref{ch:gaussian-closure-lmmse});
+\item[\code{isotropic}] the score $-\vx$ of the standard Gaussian, the reference of a
+  model that learned nothing beyond the unit variance.
+\end{description}
+The predeclared analysis is, per cell, the mean pooled relative score error of every arm
+and the paired ratio of the best network to EM--BP over seeds with a percentile
+bootstrap, with the trend in $\corr$ reported against the marginal's excess kurtosis
+$3(1-\corr^2)/(1+\corr^2)$ as a direction, not a fitted law. The registry entry carries a
+pre-data amendment worth reading as a specimen of the protocol: the first screen had
+trained the window head with Hutchinson's one-probe divergence and obtained risks far
+above the same network's E03 value; the cause was identified as the estimator, not the
+regime, the screen was kept as a negative result, and the design was re-run with the
+coloured probes before any confirmatory cell had run (\Cref{ch:protocol}). At the time
+of writing E14 is queued on the cluster and no number from it is in the paper; the
+chapter describes the design, not a result.
+
+\where{\begingroup\sloppy The paper, Section~5 (the three interfaces; the oracle-free
+selection sentence), Appendix A3 (arms and interfaces; the screen table) and Appendix A5
+(E20); \Cref{ch:neural-baselines} for the losses and \Cref{ch:em-through-noise} for the
+EM side. Code: \code{experiments/protocol.py} (bundle tags, ladders, regions, dev and
+confirmatory seeds), \code{experiments/e03\_baselines.py} (screen, confirm, matched,
+length), \code{experiments/e20\_evidence\_selection.py},
+\code{experiments/e14\_regime\_baselines.py}, \code{experiments/e02\_capacity.py},
+\code{src/markov\_score/nn\_torch.py} (\code{ism\_objective}),
+\code{src/markov\_score/em.py} (\code{e\_step\_multi}, \code{fit\_em}),
+\code{tools/make\_baseline\_numbers.py} (the matched macros by arm).\par\endgroup}
+
+\paragraph{References.}
+A.~Hyv\"arinen, 2005, Estimation of non-normalized statistical models by score matching, \emph{Journal of Machine Learning Research} 6, 695--709.
+M.~Stone, 1974, Cross-validatory choice and assessment of statistical predictions, \emph{Journal of the Royal Statistical Society B} 36, 111--147.
+L.~Prechelt, 1998, Early stopping, but when?, in \emph{Neural Networks: Tricks of the Trade}, Springer, 55--69.
+G.~C.~Cawley and N.~L.~C.~Talbot, 2010, On over-fitting in model selection and subsequent selection bias in performance evaluation, \emph{Journal of Machine Learning Research} 11, 2079--2107.
+P.~Vincent, 2011, A connection between score matching and denoising autoencoders, \emph{Neural Computation} 23, 1661--1674.

@@ -1,0 +1,442 @@
+\chapter{Messages on a grid: quadrature, truncation and their diagnostics}
+\label{ch:grid-quadrature}
+
+The recursion of \cref{ch:factor-graphs-bp} is exact for functions. A computer holds a
+function by finitely many numbers, and the paper's choice is the simplest one: the
+values of each message at $\ngrid$ equally spaced points of an interval
+$[-\halfwidth,\halfwidth]$, with integrals replaced by the composite trapezoidal rule.
+The paper summarises the consequence in one clause, ``exact for the discretised factor
+model and controlled for the continuous one'', and devotes Appendix B to measuring the
+control. This chapter explains the clause word by word: what the discretised model is
+and why forward--backward is exact for it; where the trapezoidal rule's error comes
+from, why it is far smaller than its textbook order for smooth rapidly decaying
+integrands and why it is not for a discontinuous kernel; what happens when the domain
+is too narrow for the data; and what each of the paper's diagnostics (column-mass
+defect, boundary belief mass, drift, exceedance count) measures. It ends with the
+normalisation bookkeeping of the implementation.
+
+\section{Functions as vectors}
+
+\subsection{The grid and its weights}
+
+Fix a \term{half-width} $\halfwidth>0$ and a number of points $\ngrid\ge2$. The
+\term{grid} is $\gridpt{k}=-\halfwidth+(k-1)\gridh$ for $k=1,\dots,\ngrid$ with
+\term{spacing} $\gridh=2\halfwidth/(\ngrid-1)$; the paper's operating grid has
+$\ngrid=401$, $\halfwidth=8$ and hence $\gridh=0.04$. A function $g$ on $\Reals$ is
+represented by the vector $(g(\gridpt{1}),\dots,g(\gridpt{\ngrid}))$, and an integral
+by the \term{composite trapezoidal rule}
+\begin{equation}
+  \int_{-\halfwidth}^{\halfwidth}g(a)\dd a\;\approx\;\sum_{k=1}^{\ngrid}w_k\,g(\gridpt{k}),
+  \qquad w_1=w_{\ngrid}=\tfrac{\gridh}{2},\quad w_k=\gridh\ \text{otherwise}.
+  \label{eq:gq-trap}
+\end{equation}
+The weights come from integrating the piecewise linear interpolant of $g$ through the
+grid values: each interior cell $[\gridpt{k},\gridpt{k+1}]$ contributes
+$\gridh\,(g(\gridpt{k})+g(\gridpt{k+1}))/2$, and summing over cells gives every interior
+point the weight $\gridh$ and the two end points half of it. The code is
+\code{make\_grid} in \code{src/\allowbreak markov\_score/bp\_grid.py}.
+
+\subsection{The discretised factor model}
+
+Replacing the integrals of the chain posterior by \cref{eq:gq-trap} amounts to
+replacing the continuous model by a finite-state one. Define the
+\term{discretised factor model} as the probability mass function on
+$\{1,\dots,\ngrid\}^{\nsites}$
+\begin{equation}
+  \hat p(k_1,\dots,k_\nsites\mid\vx)\propto
+  \mu(\gridpt{k_1})w_{k_1}\prod_{i=2}^{\nsites}\kernel(\gridpt{k_i}\mid\gridpt{k_{i-1}})w_{k_i}
+  \prod_{i=1}^{\nsites}\like(x_i\mid\gridpt{k_i}).
+  \label{eq:gq-discretised}
+\end{equation}
+It is a hidden Markov model with $\ngrid$ states whose transition matrix is
+$\hat\kernel[k,l]=\kernel(\gridpt{k}\mid\gridpt{l})\,w_k$, that is, the continuous
+kernel sampled on the grid and multiplied by the quadrature weight of the destination
+state. Two remarks. First, $\hat\kernel$ is not exactly stochastic: its column sums
+$\sum_k\hat\kernel[k,l]$ are trapezoidal estimates of $\int\kernel(a\mid\gridpt{l})\dd a=1$
+and miss one by the quadrature and truncation error of that integral. The recursion
+normalises every message, so this deficit never accumulates, but it is the natural
+scalar diagnostic of the discretisation at its source and is measured as the
+\term{column-mass defect} $\max_l\bigl|\sum_k\kernel(\gridpt{k}\mid\gridpt{l})w_k-1\bigr|$
+(\cref{sec:gq-diagnostics}). Second, running the two sweeps of \cref{ch:factor-graphs-bp}
+with the matrix $\hat\kernel$ is the forward--backward algorithm on this finite-state
+model, and by the exactness theorem of that chapter it returns the marginals and the
+normaliser of \cref{eq:gq-discretised} \emph{exactly}, up to floating point. The
+returned evidence is $\log\hat Z(\vx)$, the normaliser of the discretised model: exact
+bookkeeping of an approximate object. This is the first half of the paper's clause.
+The tests \code{test\_xi\_matches\_brute\_force\_enumeration} in
+\code{tests/test\_em\_bp.py} and \code{tests/\allowbreak test\_fisher\_bruteforce.py} check exactly
+this statement, by enumerating \cref{eq:gq-discretised} on a tiny grid.
+
+The second half, ``controlled for the continuous one'', concerns the distance between
+the marginals of \cref{eq:gq-discretised}, read as functions on the grid, and those of
+the continuous posterior. That distance has two sources, treated in turn:
+\term{quadrature error}, from replacing integrals over $[-\halfwidth,\halfwidth]$ by
+sums, and \term{truncation error}, from ignoring the part of $\Reals$ outside the
+domain.
+
+\section{The trapezoidal rule and its error}
+
+\subsection{Euler--Maclaurin}
+
+Let $g$ be $2m$ times continuously differentiable on $[-\halfwidth,\halfwidth]$ and
+write $T_\gridh(g)$ for the right-hand side of \cref{eq:gq-trap}. The
+\term{Euler--Maclaurin formula} states
+\begin{equation}
+\begin{aligned}
+  T_\gridh(g)-\int_{-\halfwidth}^{\halfwidth}g\dd a
+  &=\sum_{j=1}^{m-1}\frac{B_{2j}}{(2j)!}\gridh^{2j}\Bigl[g^{(2j-1)}(\halfwidth)-g^{(2j-1)}(-\halfwidth)\Bigr]+R_m,\\
+  |R_m|&\le C_m\,\gridh^{2m}\int_{-\halfwidth}^{\halfwidth}|g^{(2m)}|\dd a,
+\end{aligned}
+  \label{eq:gq-em}
+\end{equation}
+where $B_2=\tfrac16$, $B_4=-\tfrac1{30}$, $B_6=\tfrac1{42}$, \dots\ are the Bernoulli
+numbers and $C_m$ is an absolute constant. The derivation for one cell is worth
+seeing once. On $[0,\gridh]$, integrate by parts with the polynomial
+$P_1(a)=a-\gridh/2$ (whose derivative is $1$ and which is odd about the midpoint):
+$\int_0^\gridh g\dd a=\bigl[P_1 g\bigr]_0^\gridh-\int_0^\gridh P_1g'\dd a
+=\tfrac\gridh2\bigl(g(0)+g(\gridh)\bigr)-\int_0^\gridh P_1g'\dd a$. The first term is the
+trapezoidal rule on the cell; the second is the error. Integrating by parts again with
+$P_2$ chosen so that $P_2'=P_1$ and $P_2(0)=P_2(\gridh)=\gridh^2/12$ turns it into
+$-\tfrac{\gridh^2}{12}\bigl(g'(\gridh)-g'(0)\bigr)+\int_0^\gridh P_2g''\dd a$, and
+summing over the cells telescopes the boundary terms to the two ends of
+$[-\halfwidth,\halfwidth]$, giving the $j=1$ term of \cref{eq:gq-em} with
+$B_2/2!=1/12$. Continuing the integrations by parts generates the higher Bernoulli
+terms. The textbook conclusion is that the trapezoidal rule is \term{second order}:
+its error is $O(\gridh^2)$, with constant $\tfrac1{12}|g'(\halfwidth)-g'(-\halfwidth)|$.
+The paper's Appendix B calls the quadrature error ``second order in the spacing'' for
+this reason.
+
+\subsection{Why the rule is much better than second order on a Gaussian}
+
+Look again at \cref{eq:gq-em}. Every term of the sum involves derivatives of $g$ at the
+end points of the domain. If $g$ and all its derivatives are negligible there, as they
+are for a Gaussian-like integrand whose domain is several standard deviations wide,
+every power of $\gridh$ in the expansion has a vanishing coefficient, and the error is
+smaller than any power of $\gridh$. This property is called \term{spectral accuracy}
+(or super-algebraic convergence). It can be made exact for an integrand on the whole
+line: for $g$ smooth and rapidly decaying, the \term{Poisson summation formula} gives
+\begin{equation}
+  \gridh\sum_{k\in\mathbb{Z}}g(k\gridh)-\int_\Reals g\dd a
+  =\sum_{n\ne0}\hat g\!\left(\frac{2\pi n}{\gridh}\right),\qquad
+  \hat g(\omega)=\int_\Reals g(a)e^{-i\omega a}\dd a,
+  \label{eq:gq-poisson}
+\end{equation}
+so the error of the infinite trapezoidal sum is the sum of the Fourier transform of
+$g$ at the frequencies $2\pi n/\gridh$: it decays as fast as $\hat g$ does. For the
+standard Gaussian density, $\hat g(\omega)=e^{-\omega^2/2}$ and the error is
+$2\sum_{n\ge1}e^{-2\pi^2n^2/\gridh^2}$, dominated by $2e^{-2\pi^2/\gridh^2}$. At
+$\gridh=1$ this is $2e^{-19.74}\approx5\times10^{-9}$; at $\gridh=0.5$ it is
+$2e^{-79}\approx10^{-34}$, below double precision; at the operating $\gridh=0.04$ it
+is zero for every practical purpose. The worked example of \cref{sec:gq-example}
+checks the $\gridh=1$ figure on a finite domain.
+
+This is why the quadrature is not the binding error in the paper's numerics for smooth
+families, and why the paper writes that ``the domain, not the spacing, is what a
+heavy-tailed family tests''. Two situations degrade the picture. If the integrand is
+narrow compared with $\gridh$, which happens to the unary factor
+$\like(x_i\mid\cdot)$ at small $t$ (its standard deviation as a function of $a$ is
+$\sqrt{\Dt}/e^{-t}$, about $0.32$ at $t=0.05$, eight cells at $\gridh=0.04$), the
+Fourier transform decays slowly and the terms of \cref{eq:gq-poisson} are no longer
+negligible; the code exposes \code{likelihood\_resolution\_ok} in
+\code{src/\allowbreak markov\_score/noising.py} for this check, and the paper's E04 refines the
+grid on the reported cells to show the effect is small. And if $g$ is not smooth the
+expansion \cref{eq:gq-em} fails at the first derivative that does not exist: the
+Laplace kernel has a kink at $a'=\corr a$ (its first derivative jumps), which costs
+the Bernoulli terms beyond $j=1$ but still leaves an $O(\gridh^2)$ error; the uniform
+kernel is discontinuous, and that is the case of the next subsection.
+
+\subsection{A discontinuous kernel is first order}
+\label{sec:gq-discontinuous}
+
+The uniform innovation has kernel $\kernel(a'\mid a)=1/(2h_u)$ for
+$|a'-\corr a|\le h_u$ and zero otherwise, with $h_u=\sqrt{3\ivar}$ so that the variance
+is $\ivar$. As a function of the integration variable it is a step, and the trapezoidal
+rule on a step is only \term{first order}. The mechanism is elementary. If a jump of
+height $J$ falls at a distance $\delta\in[0,\gridh)$ from the nearest grid point, the
+piecewise linear interpolant misplaces the jump by up to $\gridh$ and the integral by
+an amount between $-J\gridh/2$ and $+J\gridh/2$, depending on $\delta$; the error
+oscillates with the position of the jump and its envelope shrinks only like $\gridh$,
+not $\gridh^2$. \Cref{sec:gq-example} exhibits the error exactly in the aligned case.
+In the chain the jumps sit at $a'=\corr a\pm h_u$ and move with $a$, so every column of
+$\hat\kernel$ has its own misplacement, and the paper's Appendix B records the
+signature: for the uniform family the worst drift is largest on the \emph{coarsest}
+spacing rather than on the narrowest domain, the opposite of the heavy-tailed families.
+The column-mass defect of the uniform kernel is likewise the largest among the
+families at moderate correlation, and it does fall with $\ngrid$.
+
+\section{Truncation}
+
+\subsection{A site beyond the domain}
+
+The second error is the one the paper's sweep found to be binding. The grid represents
+only $[-\halfwidth,\halfwidth]$, so every message is implicitly zero outside. For a
+family whose marginal has light tails (Gaussian, Laplace, the bimodal mixture, the
+generalised Gaussian) the probability that any site of any sequence lies beyond
+$\halfwidth=8$ is negligible: for a standard Gaussian site it is about $10^{-15}$, and
+for the Laplace innovation at the frozen correlation the probability that a single
+innovation exceeds $8$ in absolute value is of order $10^{-10}$. For a Student-$t$
+innovation the tail is polynomial and the probability is not negligible, which is the
+case treated next.
+
+Suppose a clean site has $|a_i|>\halfwidth$. Its observation is
+$x_i=e^{-t}a_i+\sqrt{\Dt}z_i$, and the unary factor $\like(x_i\mid a)$, as a function of
+the latent $a$, is a Gaussian centred at $x_i/e^{-t}\approx a_i$, outside the grid.
+Restricted to the grid the factor is a monotone ramp, largest at the boundary point
+nearest to $a_i$; the transition factors from the neighbouring sites add little
+against it. The belief at site $i$ is therefore concentrated in the last few cells at
+the edge: the paper's phrase is that the posterior is \term{pinned to the boundary}.
+The posterior mean is then close to $\pm\halfwidth$ instead of close to $a_i$, and by
+Tweedie's identity the score error at that site is about
+$(e^{-t}/\Dt)\,(|a_i|-\halfwidth)$, which at the lowest level of the schedule is a
+factor $e^{-t}/\Dt\approx10$ times the excess. One such site in a bundle of thousands
+can dominate a pooled relative error, and, crucially, it is pinned on \emph{every}
+grid with the same half-width, so refining $\ngrid$ at fixed $\halfwidth$ does not
+move it. That is the signature the paper's Appendix B reports for the binding cell:
+drift flat in $\ngrid$, falling only when the domain widens.
+
+\subsection{The exceedance count and its Poisson law}
+
+The right summary of truncation for a polynomial tail is not a maximum over sites but
+a count. Let $N_{\halfwidth}$ be the number of sites among the $\nseq\nsites$ of a
+bundle with $|a_i|>\halfwidth$. Its expectation is
+\begin{equation}
+  \E N_{\halfwidth}=\nseq\nsites\,\Prob(|a|>\halfwidth)
+  \label{eq:gq-exceed}
+\end{equation}
+when every site has the same marginal law (at $\corr=0$ every site after the first is
+an independent draw of the innovation). Because the events are rare and, along a
+chain, only weakly dependent, the count is close to a Poisson variable with that mean:
+this is the law of rare events (Poisson's limit theorem, or Le Cam's inequality for
+dependent indicators with small total variation). No finite $\halfwidth$ makes
+\cref{eq:gq-exceed} zero for a polynomial tail; widening the domain only lowers the
+mean, and a Poisson variable with mean $\lambda$ is zero with probability $e^{-\lambda}$
+and at least one with probability $1-e^{-\lambda}$. For the Student-$t$ innovation with
+$\nu$ degrees of freedom, variance-matched so that $a=s\,T_\nu$ with
+$s^2=\ivar(\nu-2)/\nu$, the tail probability is
+$\Prob(|a|>\halfwidth)=2\,\bar F_\nu(\halfwidth/s)$ with $\bar F_\nu$ the survival
+function of $T_\nu$; it decays like $\halfwidth^{-\nu}$. \Cref{sec:gq-example}
+computes the mean count for the paper's grids. The paper's Appendix B states this law
+and gives the expected counts at $\halfwidth=12$ and $16$; the point is that the
+Student-$t$ cell of the family ladder is affected by a handful of sites, whose number
+is predicted, and not by ``the family'' in some diffuse sense.
+
+\section{The diagnostics}
+\label{sec:gq-diagnostics}
+
+The paper measures four quantities, all produced by \code{experiments/\allowbreak e11\_grid\_validation.py}
+and the diagnostic branch of \code{grid\_bp\_batch}. For each the definition,
+what it detects, and what it does not.
+
+\paragraph{Column-mass defect.}
+$\max_l\bigl|\sum_k\kernel(\gridpt{k}\mid\gridpt{l})w_k-1\bigr|$: the worst deviation of a
+column of $\hat\kernel$ from unit mass. It combines two effects. In the interior of the
+grid it is the quadrature error of a one-dimensional integral of the kernel, spectrally
+small for a smooth kernel (machine precision for the Gaussian and mixture families at
+the operating grid) and $O(\gridh)$ for the uniform one. In the columns near the
+boundary it is a \emph{truncation} effect: the column with parent $\gridpt{l}=\pm\halfwidth$
+is a density centred at $\pm\corr\halfwidth$, and the part of it beyond $\pm\halfwidth$
+is cut off. As $\corr$ rises, $\corr\halfwidth$ moves towards the edge and the cut-off
+mass grows, from nothing at $\corr=0$ to a sizeable fraction of a column at
+$\corr=0.95$; this part is flat in $\ngrid$ and falls only with $\halfwidth$. A reader
+checking the paper's Appendix B should therefore read the growth of the defect with
+correlation as a statement about the outermost columns, not about resolution in the
+interior, where the smooth families are resolved to machine precision at every
+correlation. In either case the defect is not an error bar for the posterior: the
+recursion renormalises every message, so a defect that is the same across a column's
+neighbours cancels in the normalised beliefs, and the paper reports it as a diagnostic
+only.
+
+\paragraph{Boundary belief mass.}
+For each site of each chain, the mass of the normalised belief (or of the forward
+message) in the outermost $2\%$ of the grid on each side,
+$\sum_{k\le e}b_i(\gridpt{k})w_k+\sum_{k>\ngrid-e}b_i(\gridpt{k})w_k$ with
+$e=\lfloor0.02\,\ngrid\rfloor$, maximised over sites and chains. It is computed inside the
+recursion, on the very objects the recursion propagates, which is the reason the
+diagnostic lives in \code{grid\_bp\_batch} rather than in a separate tool: an earlier
+version computed a ``boundary mass'' from the likelihood table alone, which involved
+no message and measured nothing the algorithm used. A value near one means that some
+site's posterior is pinned to the boundary, and the count of such sites is the
+exceedance count above. A value of a few per cent at $\corr=0.85$ with no site beyond
+the domain is a different, benign situation: a site near $|a|\approx6$ whose posterior
+at the lowest level has a tail reaching the edge. The paper quotes the frozen
+configuration's value and the binding cell's value in Appendix B.
+
+\paragraph{Drift.}
+The relative root-mean-square difference between the posterior-mean field computed on
+a candidate grid and on the finest grid of the ladder, on the same chains and noise
+draws, pooled over the twelve levels (and separately at the worst level and at the
+lowest level). Drift is what a reported number would move by under refinement, and it
+is the quantity a claim is judged against; the other diagnostics say why it is small.
+Its reference is the finest grid, not the truth, so it is a self-convergence
+diagnostic: a site pinned on both grids contributes no drift, which is why the
+binding cell's reference grid in E11 could itself miss the largest site and why E18
+and the wide-domain reruns E07b and E07c widen the reference further.
+
+\paragraph{Exceedance count.}
+Not computed by the sweep but by \cref{eq:gq-exceed} from the family's tail; it is the
+interpretation of the previous three for heavy tails, and it was the audit's re-reading
+of the E11 cell that turned ``all the belief mass outside the domain'' into ``one or two
+sites of eight thousand''.
+
+\subsection{How the experiments use them}
+
+\emph{E11 (the envelope).} Five families, four correlations, twelve levels, four seeds,
+seven candidate grids against a reference at a finer and wider grid. Its findings are
+the paper's Appendix B: at the frozen configuration the drift is far below every
+reported effect; across the sweep the worst drift is flat in $\ngrid$ at fixed
+$\halfwidth$ and falls only when $\halfwidth$ grows (truncation, in the Student-$t$
+cell at $\corr=0$); the column-mass defect grows with correlation but does not
+predict the drift; the uniform family is the one case whose worst drift sits on the
+coarsest spacing. \emph{E11b} repeats the sweep at chain lengths $64$ and $128$ to
+show that the envelope measured at $\nsites=32$ covers the longer chains of the length
+study; its prediction is that per-site errors compound at most linearly in $\nsites$.
+\emph{E07b and E07c} recompute the family ladder of the paper's Appendix F on wider
+domains ($\halfwidth=12$ and $16$), which by \cref{eq:gq-exceed} lowers the expected
+exceedance count by an order of magnitude and then by another. \emph{E18} recomputes
+the closure-gap panel of the paper's Figure 2 at $(\ngrid,\halfwidth)=(1601,16)$ and
+$(3201,32)$ and shows that the Student-$t$ departure from the $e^{-8t}$ law on the
+operating grid is the truncated prior's tail in the reference, not the moment
+condition; on the wide domain the family reaches the predicted constant. \emph{E04}
+re-scores the validation-selected fitted kernels of the capacity experiment at
+$\ngrid=801$, $1601$ and at $\halfwidth=10$, with the reference recomputed at each
+resolution, to bound the movement of the reported estimands under refinement; the
+paper's Appendix B quotes the bound and notes it is orders of magnitude below the
+effects.
+
+\section{Normalisation and the evidence on the grid}
+\label{sec:gq-normalisation}
+
+The implementation in \code{src/\allowbreak markov\_score/bp\_grid.py} keeps messages in the
+linear domain and rescales them after every step, accumulating the logarithms of the
+scale factors. The details matter for reading the code and for trusting the returned
+log-evidence.
+
+\paragraph{The likelihood table.}
+The unary factors are tabulated with the row maximum removed,
+\[
+  \log\like(x_i\mid\gridpt{k})\ \text{is stored as}\ -\frac{(x_i-e^{-t}\gridpt{k})^2}{2\Dt}+c_i,\qquad
+  c_i=\max_k\frac{(x_i-e^{-t}\gridpt{k})^2}{2\Dt},
+\]
+so that the largest entry of every row is exactly $1$ after exponentiation and no row can
+underflow to zero (\code{log\_likelihood\_matrix} in \code{src/\allowbreak markov\_score/noising.py};
+\code{grid\_bp\_batch} recomputes the same table internally). The Gaussian constant
+$-\tfrac12\log(2\pi\Dt)$ is dropped at the same time. Both removals are harmless for
+the beliefs, which are normalised, and both are recorded: the sum of the row shifts
+and $\nsites$ copies of the constant are added back to the evidence at the end.
+
+\paragraph{The sweeps.}
+With $\hat\kernel$ the matrix $\kernel(\gridpt{k}\mid\gridpt{l})$ (weights applied on the
+incoming side) the forward step is
+$\lmsg_{i+1}=\hat\kernel\,(\lmsg_i\circ\ell_i\circ w)/c_{i+1}$, where
+$c_{i+1}=\sum_k w_k[\hat\kernel(\lmsg_i\circ\ell_i\circ w)]_k$ is the trapezoidal mass of
+the unnormalised result; the backward step is the same with $\hat\kernel^{\!\top}$ and
+its own constants, which are not needed for the evidence. Each step is a
+matrix--vector product, or, for a batch of $B$ chains, a matrix--matrix product; the
+batch is processed in chunks of at most $256$ chains so that the
+$(\nsites\times B\times\ngrid)$ temporaries fit in memory, with results identical to
+round-off across chunk sizes (\code{tests/\allowbreak test\_bp\_grid\_chunk.py}). A guard raises
+an error if any normaliser is non-finite or non-positive: a message that has lost all
+its mass is a failure to report, not to hide.
+
+\paragraph{The evidence.}
+Putting the pieces together,
+\begin{equation}
+  \log\hat Z(\vx)=\sum_{i=2}^{\nsites}\log c_i
+  +\log\sum_k w_k\,\lmsg_\nsites(\gridpt{k})\,\ell_\nsites(\gridpt{k})
+  +\sum_{i=1}^{\nsites}\bigl(-c_i^{\mathrm{shift}}\bigr)-\frac{\nsites}{2}\log(2\pi\Dt),
+  \label{eq:gq-evidence}
+\end{equation}
+which is the log-normaliser of \cref{eq:gq-discretised} to floating point. Its
+correctness is checked in three independent ways: against the closed-form Gaussian
+marginal likelihood; against an enumeration of the discretised posterior; and against
+a Monte Carlo estimate on the Laplace chain, where no closed form exists. The first
+and the third are tests in \code{tests/test\_em\_bp.py}; the second is the file
+\code{tests/test\_fisher\_bruteforce.py}. Its role in the paper is twofold: it is the
+objective that expectation--maximisation increases (\cref{ch:em-through-noise}), and,
+summed over a held-out one-view bundle and divided by the number of transitions, it
+is the oracle-free selection rule of E20.
+
+\paragraph{Diagnostic outputs.}
+When called with \code{boundary\_frac}, \code{grid\_bp\_batch} also returns a dictionary
+with the maximum and mean boundary mass of the forward messages and of the beliefs,
+and the number of edge cells used. These are the numbers behind the paper's Appendix B
+and behind the frozen configuration's docstring in \code{experiments/frozen\_config.py},
+which is careful to say that a maximum over sampled sites is a statistic and not a
+bound.
+
+\section{Worked examples}
+\label{sec:gq-example}
+
+\paragraph{The Gaussian, spectral accuracy.}
+Integrate the standard Gaussian density on $[-\halfwidth,\halfwidth]$ with the
+trapezoidal rule. At $\halfwidth=8$ and $\ngrid=17$, so $\gridh=1$, the nine
+non-negligible grid values are $\phi(0)=0.398942$, $\phi(\pm1)=0.241971$,
+$\phi(\pm2)=0.053991$, $\phi(\pm3)=0.004432$, $\phi(\pm4)=0.000134$, and the sum
+$\gridh\sum_k\phi(k)$ (the end weights are irrelevant at this precision) is
+$1.0000000054$: an error of $5\times10^{-9}$, which is $2e^{-2\pi^2}$ to two digits,
+as \cref{eq:gq-poisson} predicts. Halving the spacing to $\gridh=0.5$ gives an error
+below $10^{-15}$. By contrast, at $\gridh=2$ the sum is $1.0144$: the Poisson term
+$2e^{-2\pi^2/4}=0.0144$ again. The convergence is not $\gridh^2$; it is exponential in
+$1/\gridh^2$.
+
+\paragraph{The step, first order.}
+Integrate the uniform density $\tfrac12\mathbf 1\{|a|\le1\}$ on $[-2,2]$ with
+$\ngrid=9$ points, $\gridh=0.5$. The grid values at $a=\pm1$ are $\tfrac12$ (the jumps
+sit on grid points), at $|a|<1$ they are $\tfrac12$, elsewhere zero; the trapezoidal
+sum is $\gridh\cdot\tfrac12\cdot5=1.25$, an error of $0.25=\gridh/2$. At $\gridh=0.25$
+the error is $0.125=\gridh/2$; at $\gridh=0.125$ it is $0.0625$. The error halves when
+$\gridh$ halves: first order, with constant $J/2$ per jump, exactly as
+\cref{sec:gq-discontinuous} says. Shifting the grid so that the jumps fall between
+grid points changes the sign and the size of the error but not its order.
+
+\paragraph{The column-mass defect on a coarse grid.}
+Take the Gaussian kernel $\kernel(a'\mid a)=\normal{\corr a}{\ivar}$ with $\corr=0.5$,
+$\ivar=0.75$ on the five-point grid $\{-2,-1,0,1,2\}$, $\gridh=1$. The column with parent
+$\gridpt{l}=0$ is the density $\normal{0}{0.75}$ sampled at the five points,
+$(0.0320,\,0.2365,\,0.4607,\,0.2365,\,0.0320)$, and its trapezoidal mass with end weights
+$\tfrac12$ is $0.9657$: a defect of $0.034$, almost all of it the tail of a
+$\normal{0}{0.75}$ beyond $\pm2$, which is $0.021$, plus the quadrature error of
+$\gridh=1$ on a Gaussian of standard deviation $0.87$. The column with parent $\gridpt{l}=2$
+is centred at $1$ and loses the whole of its tail beyond $2$; its mass is $0.848$, a
+defect of $0.152$ that no refinement of $\gridh$ removes and that a wider domain does.
+Widening to $[-4,4]$ at the same spacing brings the worst column to $0.983$. This is
+the mechanism behind the growth of the paper's defect with correlation: the extreme
+column's centre $\corr\halfwidth$ approaches the edge.
+
+\paragraph{The exceedance count.}
+For the variance-matched Student-$t_5$ innovation, $s^2=0.6$ and
+$\Prob(|a|>\halfwidth)=2\bar F_5(\halfwidth/\sqrt{0.6})$. At $\halfwidth=8$ the argument is
+$10.33$ and the two-sided tail is $1.46\times10^{-4}$; over $\nseq\nsites=256\times32=8192$
+sites the expected count is $1.2$, so the probability of no exceedance in a bundle is
+$e^{-1.2}\approx0.30$ and of two or more is $0.34$. At $\halfwidth=12$ the expected
+count is $0.17$ and at $\halfwidth=16$ it is $0.04$. These are the analytic figures the
+paper's Appendix B quotes next to the observed counts of the E11 cell; a reader can
+reproduce them from the $t$ survival function alone.
+
+\where{The paper, Section 2 (``messages are functions on $\Reals$; we carry them on
+a grid \dots exact for the discretised factor model and controlled for the continuous
+one'') and Appendix B (the three levels of exactness, the validation at the frozen
+configuration, the envelope, the refinement, the floors); Appendix F (the Student-$t$
+cell excluded pending a wider domain); Appendix E (E18, the wide-domain closure
+panel). Experiments E11, E11b, E07b, E07c, E18 and E04. Code: the grid and the two
+sweeps live in \code{src/\allowbreak markov\_score/bp\_grid.py} (\code{make\_grid}, \code{grid\_bp},
+and \code{grid\_bp\_batch} with its \code{chunk} and \code{boundary\_frac} arguments);
+the row-shifted likelihood table and \code{likelihood\_resolution\_ok} in
+\code{src/\allowbreak markov\_score/noising.py}; the drivers are
+\code{experiments/\allowbreak e11\_grid\_validation.py}, \code{experiments/\allowbreak e18\_closure\_wide.py},
+\code{experiments/\allowbreak e04\_refinement.py} and \code{experiments/\allowbreak e07\_phase\_diagram.py},
+with the macros emitted by \code{tools/\allowbreak make\_grid\_envelope.py}. Tests: for the grid
+itself \code{tests/\allowbreak test\_grid\_convergence.py} and \code{tests/\allowbreak test\_bp\_grid\_chunk.py};
+for the evidence, \code{tests/test\_em\_bp.py} and \code{tests/\allowbreak test\_fisher\_bruteforce.py}.}
+
+\paragraph{References.}
+P.~J.~Davis and P.~Rabinowitz (1984), \emph{Methods of Numerical Integration}, 2nd ed.,
+Academic Press, Chapters 2 and 4.
+L.~N.~Trefethen and J.~A.~C.~Weideman (2014), ``The exponentially convergent trapezoidal
+rule'', \emph{SIAM Review} 56(3).
+G.~Kitagawa (1987), ``Non-Gaussian state-space modeling of nonstationary time series'',
+\emph{Journal of the American Statistical Association} 82(400).
+L.~Le~Cam (1960), ``An approximation theorem for the Poisson binomial distribution'',
+\emph{Pacific Journal of Mathematics} 10(4).
+N.~J.~Higham (2002), \emph{Accuracy and Stability of Numerical Algorithms}, 2nd ed., SIAM,
+Chapter 2 (floating-point arithmetic and rescaling).

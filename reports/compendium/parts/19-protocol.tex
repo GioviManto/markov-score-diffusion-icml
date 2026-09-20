@@ -1,0 +1,472 @@
+\chapter{The experimental protocol and the provenance pipeline}
+\label{ch:protocol}
+
+A number in the paper is a macro. The macro was written by a generator script that read
+a CSV file. The CSV file was written by an experiment script under a frozen
+configuration, on a machine whose identity and code revision it recorded, and it was
+then pinned by a cryptographic hash in a registry entry that had been written before the
+experiment ran. Two independent checks stand between the CSV and the PDF: the manuscript
+check regenerates every generated fragment and refuses any typed decimal, and an audit
+script recomputes every headline number from the CSVs with independent code. This
+chapter walks that chain link by link, defines every object in it, and explains the
+rules the project follows when something has to change. It is the chapter that lets a
+reader who is not the author decide how much to trust a number.
+
+\section{Two frozen objects}
+\label{sec:frozen}
+
+The protocol separates two things that earlier versions of this work had mixed: the
+\emph{world} the experiments are run in, and the \emph{comparison} the experiments make.
+Each is one Python dataclass whose fields cannot be mutated after construction; an
+experiment that needs a different value must say so at the call site, and the
+difference is then recorded in its provenance.
+
+\subsection{The world: \code{FrozenConfig}}
+
+\code{experiments/frozen\_config.py} defines \code{FROZEN}, an instance of
+\code{FrozenConfig}. Field by field:
+\begin{description}[leftmargin=2em,itemsep=0.2em]
+\item[\code{rho}] the correlation of the chain, $\corr=0.85$; one value everywhere.
+\item[\code{n\_sites}] the chain length $\nsites=32$, which is also the ambient dimension.
+\item[\code{innovation}] the default innovation family, Laplace (excess kurtosis $3$; its
+  third cumulant vanishes, so the fourth is the leading non-Gaussian coordinate).
+\item[grid] the fields \code{n\_grid} and \code{half\_width}: the quadrature grid, $\ngrid=401$ points on
+  $[-\halfwidth,\halfwidth]=[-8,8]$ (\Cref{ch:grid-quadrature}); the field's docstring
+  records the boundary-mass statistics that justified it and a warning about quoting a
+  quantile as if it were a bound.
+\item[\code{t\_grid}] the twelve-level schedule, $\log$-spaced on $[0.05,3]$ and rounded to
+  four decimals (\Cref{ex:schedule} below).
+\item[\code{n\_seeds}] sixteen replicate seeds, with the reason (three seeds once read a
+  falling curve as flat).
+\item[archival sizes] the fields \code{sizes} and \code{efficiency\_sizes}: the archival size lists of the earlier
+  comparison; the registered experiments take their sizes from the protocol instead.
+\item[archival held-out] the fields \code{n\_heldout} and \code{heldout\_seed\_offset}: the archival held-out design.
+\item[EM stopping] the fields \code{em\_max\_iters}, \code{em\_loglik\_tol} and \code{em\_shape\_tol}: EM's archival
+  cap, its likelihood tolerance of $10^{-9}$ nats per transition (the one the registered
+  experiments still pass to \code{fit\_em}), and the shape tolerance, with a docstring
+  explaining why convergence is judged on the shape and never on $\corr$ alone.
+\item[\code{n\_components}] the default mixture size $\ncomp=8$.
+\item[\code{ring\_*}] the fields of an exploratory model (a ring of frames) that the
+  paper does not use.
+\item[\code{base\_seed}] the seed from which \code{seeds()} derives the replicate seeds.
+\end{description}
+Three methods matter: \code{innovation\_variance} returns $\ivar=1-\corr^2$, the
+variance-matching choice that makes every family share $\Sig_0$; \code{narrowed(**kw)}
+returns a copy with some fields changed, for a deliberate and reported deviation;
+\code{as\_dict()} is what every provenance record stores. The module also defines
+\code{config\_hash}, a twelve-character prefix of the SHA-256 digest of the sorted
+\code{key=value} lines of the configuration, and \code{provenance(config)}, which records
+the configuration, its hash, the frozen hash, a flag \code{is\_frozen} and the dictionary
+of deviations from \code{FROZEN}.
+
+\begin{example}[The twelve-level schedule, by hand]
+\label{ex:schedule}
+\code{\_log\_grid(0.05, 3.0, 12)} returns
+$t_k=0.05\cdot60^{(k-1)/11}$ for $k=1,\dots,12$, since $3/0.05=60$. The ratio between
+consecutive levels is $60^{1/11}=e^{(\log60)/11}=e^{4.0943/11}=e^{0.3722}\approx1.4509$.
+Multiplying out: $0.0500$, $0.0725$, $0.1053$, $0.1527$, $0.2216$, $0.3215$, $0.4665$,
+$0.6768$, $0.9819$, $1.4247$, $2.0671$, $3.0000$. These are the levels every table and
+figure of the paper is pooled over, and the reason the network's time features take
+$\log t$ as their argument (\Cref{ch:neural-baselines}). The crossover
+$\tstar=\tfrac12\log\lmax(\Sig_0)$ at $\corr=0.85$ falls between the ninth and tenth level.
+\end{example}
+
+\subsection{The comparison: \code{Protocol}}
+
+\code{experiments/protocol.py} defines \code{PROTOCOL}, version 2, the registered
+protocol of the cluster runs. Field by field:
+\begin{description}[leftmargin=2em,itemsep=0.2em]
+\item[\code{sizes}] the training-set sizes $\nseq\in\{32,128,512,2048\}$.
+\item[seeds] the fields \code{seeds} and \code{dev\_seeds}: the confirmatory seeds $0$--$15$ and the
+  development seeds $10000$--$10003$ (\Cref{ch:model-selection}).
+\item[bundle sizes] the fields \code{n\_val} and \code{n\_test}: $1024$ validation and $2048$ test chains.
+\item[\code{bundle\_tags}] the stream tags \code{exp31-train}, \code{exp31-val},
+  \code{exp31-test}; the training stream is keyed by \code{(tag, seed, M)} and the other
+  two by \code{(tag, seed)}, so that every experiment at the same key sees identical
+  chains (\Cref{sec:streams}).
+\item[\code{estimand}] the schedule-pooled relative score error, written out as a
+  formula in the field's value so that it is part of the hash.
+\item[regions] the fields \code{headline\_region}, \code{selection\_region} and
+  \code{bulk\_margin}: all sites for the headline, the bulk for selection, four sites
+  trimmed at each end.
+\item[\code{capacities}] $\ncomp\in\{1,2,4,8,16\}$.
+\item[EM arm] the fields \code{em\_checkpoints}, \code{em\_init\_rho},
+  \code{em\_init\_var} and \code{one\_view}: the EM ladder to $1200$, the initialisation
+  $\corr=0.3$ and innovation variance $0.8$, and the one-view flag.
+\item[network arms] the fields \code{net\_steps}, \code{net\_checkpoints},
+  \code{batch\_size}, \code{lrs}, \code{parameterizations} and \code{grad\_clip}: the
+  network recipe of \Cref{ch:neural-baselines}.
+\item[screen] the fields \code{screen\_sizes}, \code{screen\_restarts} and
+  \code{screen\_steps}: the screen budget as registered; E03's amendment narrowed it
+  before the screen ran.
+\item[\code{factors}] the table of which experiment varies which single factor, with
+  everything else held at the protocol: the \term{ceteris paribus} design.
+\end{description}
+\code{V1} is the laptop protocol of the first runs (ladder to $400$, capacities to $8$,
+two development seeds, one restart of $16{,}000$ steps), kept so that a version-1 output
+can be described exactly and so that \code{v1\_overrides()} can reproduce it;
+\code{protocol\_hash()} digests the protocol together with the world. A params file that
+records the protocol version and the resolved settings lets a reader tell which protocol
+produced a file without remembering anything.
+
+\subsection{Keyed random streams}
+\label{sec:streams}
+
+\begingroup\sloppy
+Every random draw in the registered experiments comes from
+\code{rng\_for(*keys)} (\code{src/markov\_score/utils.py}): the keys, prefixed by a
+project constant, are hashed by a stable function into a NumPy \code{SeedSequence}, from
+which a generator is created. The same keys give the same stream in every process and on
+every machine. This is the \term{common random numbers} device of simulation: two arms
+that call \code{rng\_for("exp31-train", seed, M)} see the same training chains, and a
+difference between them cannot be Monte Carlo noise. The chapter on model selection
+explains how the tags separate training, validation and test data; the negative-results
+record explains how a driver that re-created its generator inside a loop defeated the
+device (\Cref{sec:amendments}).\par\endgroup
+
+\section{The registry}
+\label{sec:registry}
+
+\subsection{One JSON entry per experiment}
+
+Every registered experiment has a file \code{experiments/registry/<id>.json}. Its fields:
+\begin{description}[leftmargin=2em,itemsep=0.2em]
+\item[identity] the fields \code{id}, \code{script} and \code{script\_sha256}: the experiment's identifier, its
+  driver under \code{experiments/}, and the driver's SHA-256 at registration, so a later
+  edit of the script is detectable.
+\item[\code{hypothesis}] the statement the experiment tests, written before it runs, with
+  its prediction.
+\item[\code{design}] (or \code{parts} and \code{settings}) the factor varied, what is
+  held, the sizes, the arms, the estimator, the grid.
+\item[\code{predeclared\_analysis}] the generator that will read the output and the
+  statistic it will compute, named before the data exist, including what will be
+  reported as censored or bracketed rather than fitted.
+\item[\code{seeds}] the development and confirmatory seed blocks.
+\item[\code{status}] a string from the vocabulary \textsc{pre-registered},
+  \textsc{exploratory}, \textsc{confirmatory}, \textsc{done}, \textsc{withdrawn}, with a
+  \textsc{frozen} prefix added by the freezing tool and the cluster job identifiers
+  appended as the run progresses.
+\item[history] the fields \code{registered} and \code{amendments}: the registration date and a list of dated
+  amendments, each with what changed and why (\Cref{sec:amendments}).
+\item[\code{hpc\_runs}] the cluster jobs, their deployments and their fates.
+\item[free text] the fields \code{motivation}, \code{limitations} and \code{outcome}, present where the
+  experiment was registered during the audit or where it returned a result against its
+  hypothesis.
+\item[freeze record] the fields \code{frozen\_outputs}, \code{frozen\_at},
+  \code{frozen\_commit} and \code{frozen\_run\_commits}, written by the freezing tool
+  (\Cref{sec:freeze}).
+\end{description}
+\code{docs/EXPERIMENT\_REGISTRY.md} is the human-readable table of the same entries;
+\code{tools/registry.py --sync} writes each output's commit back into it, and
+\code{--check} fails if any experiment with rows lacks a clean provenance record or if a
+frozen file changed.
+
+\subsection{Pre-registration}
+
+\term{Pre-registration} means that the hypothesis, the design, the seeds and the analysis
+are written down and committed before the confirmatory data exist. Its purpose is to
+make the analysis independent of the outcome: a choice made after seeing the data (which
+levels to fit a slope on, which arm to call ``matched'', which seeds to report) can be
+tuned to the result, and a choice made before cannot. The paper's contract states the
+rule in four lines: confirmatory settings live in the protocol and the registry entry,
+frozen before the first confirmatory cell runs; development seeds never enter a
+reported number; confirmatory seeds never enter a selection; a running confirmatory
+experiment is never changed.
+
+\subsection{Pre-data amendments}
+\label{sec:amendments}
+
+A registration can be wrong before it runs, and the instrument for correcting it is the
+\term{pre-data amendment}: a dated entry in the registry's \code{amendments} list, made
+before any confirmatory cell has produced a number, stating what changed and why. The
+registry holds several, and they are worth reading as specimens of the rule:
+\begin{itemize}
+\item E03's screen budget was cut from four development seeds, three restarts and
+  $32{,}000$ steps to two seeds, one run and $16{,}000$ steps after the single-thread cost
+  was measured, with the confirmatory protocol untouched;
+\item E04's held-out bundle was reduced from $2048$ to $512$ chains after the finest grid
+  produced no completed cell in nineteen hours, with the estimand (a paired movement
+  between resolutions) unchanged;
+\item E08's site-varying strength $0.2$ was replaced by $0.14$ when the construction was
+  found invalid at $\corr=0.85$ (a site coefficient exceeds one), with the invalid cells
+  recorded as never having existed;
+\item E12b's analysis plan was changed from ``compare the fitted slopes with $4$ and $8$''
+  to ``compare $M^\ast(t)$ with the exact information curve'' after E21 showed that the
+  asymptotic exponents are not the prediction on the swept levels, while the job was
+  still pending in the queue;
+\item E14 was amended twice pre-data: to record the whole held-out implicit objective
+  curve so that a diverged fit can be called a divergence, and, on 20 September, to fix
+  and guard its data generator.
+\end{itemize}
+
+The last case is the most instructive and is recorded as entry N-22 of
+\code{docs/NEGATIVE\_RESULTS.md}. E14's first screen gave the window head, at the frozen
+point and with E03's own configuration, a test risk several times the value the same
+network had reached in E03's matched arm, with every held-out objective curve rising
+from the first checkpoint. The first diagnosis blamed the divergence estimator (the
+screen had used Hutchinson's one probe where E03 used the exact trace); the driver was
+changed to E03's per-arm estimators and learning rates, and a re-run failed the same
+way. What settled it was running E03's training function and E14's on the same data:
+both gave the bad number on E14's data and the good number on E03's, so the cause was
+the data. In the driver's \code{\_common} the training chains had been drawn by a
+comprehension that re-created the generator \emph{inside} the loop,
+\begin{center}
+\code{prior.sample(rng\_for("e14-train", seed, L, rho), L) for \_ in range(n)},
+\end{center}
+so all $2048$ training chains were one and the same draw, and both arms had fitted two thousand
+copies of a single chain. The fix creates one generator per set and asserts that the
+chains are distinct (\code{assert len(np.unique(A[:, 0])) > 1}); with it E14's pipeline
+reproduces E03's value at the frozen point. The void screens and confirmations are kept
+under \code{outputs/E14\_screen\_invalid/}, and a search of the current drivers found no
+other instance of the pattern.
+
+Why is a pre-data amendment the right instrument for such a fix, rather than a silent
+edit or a fresh registration? Four reasons, in the order the contract gives them.
+First, the guarantee that pre-registration buys is that the confirmatory design and
+analysis were not chosen in the light of a confirmatory result. A runs whose data were
+degenerate produced no confirmatory result about the registered question at all, so
+amending before any valid cell exists preserves the guarantee exactly; the amendment's
+timestamp, placed against the job log, is the evidence. Second, the alternative of
+editing the driver silently would leave the registry describing a run that never
+happened as registered, and the alternative of a new registration would suggest that the
+scientific design had changed, when only its implementation had; the amendment says
+precisely which. Third, the rule that a frozen or running output is never overwritten
+still applies: the void runs are named, kept and excluded, so a reader can see what was
+measured, why it is void, and that nothing was quietly replaced. Fourth, the amendment
+converts the lesson into code, an assertion that a training set has as many distinct
+chains as it claims, in the same spirit as the typed-literal gate and the
+dirty-tree refusal: a defect that was caught once by a person is caught next time by the
+machine. The audit's own summary of the lesson is the sentence to remember: a fitted
+parameter that contradicts the generating law is a data check, not an estimator result.
+
+\section{What a run records: the provenance record}
+\label{sec:provenance}
+
+Every part of every experiment writes \code{params\_<part>.json} beside its CSVs
+(\code{provenance()} in \code{experiments/common.py}). Its fields:
+\begin{description}[leftmargin=2em,itemsep=0.2em]
+\item[machine] the fields \code{timestamp}, \code{hostname}, \code{platform},
+  \code{python}, \code{numpy}, \code{cpu\_count}, \code{blas\_threads},
+  \code{slurm\_job\_id} and \code{slurm\_array\_task\_id}: where and when the run happened
+  and with what.
+\item[revision] the fields \code{git\_commit}, \code{git\_branch} and \code{git\_dirty}:
+  the revision, read from \code{git} when a repository is present; \code{git\_dirty} is
+  the porcelain status, so a non-empty value means the commit alone does not reproduce
+  the run.
+\item[archive] the fields \code{source\_archive\_sha256}, \code{revision\_source} and
+  \code{source\_is\_clean}:
+  on a cluster node without \code{.git}, the commit and the digest of the exact source
+  archive that was shipped are read from a \code{REVISION} file written at deployment
+  (\Cref{sec:hpc}); \code{revision\_source} says which of \code{git}, the file or the
+  environment supplied them. The archive digest exists because a stamp and a separately
+  synchronised tree once disagreed and an output named a commit at which its own command
+  could not have run.
+\item[configuration] the field \code{resolved\_config\_hash}, a digest of the settings the run actually used,
+  overrides included, so two runs of the same commit under different \code{--set} values
+  are distinguishable.
+\item[settings] the fields \code{settings}, \code{quick}, \code{workers} and
+  \code{frozen}: the resolved settings dictionary, whether the run was a smoke test, the
+  worker count, and the world.
+\end{description}
+With \code{NGBP\_REQUIRE\_CLEAN=1} in the environment a run refuses to start unless it can
+name a commit, carries an archive digest and reports a clean tree. \term{Dirty} is
+judged on the \emph{code path} only: \code{tools/provenance\_gate.py} computes the static
+import closure of the driver and counts an uncommitted file as contaminating only if it
+lies in that closure, so an edit to an unrelated script does not void a run and an edit
+to a module the run imported does.
+
+\section{Resumable cells}
+\label{sec:cells}
+
+Every multi-cell driver runs through \code{run\_cells} in \code{experiments/common.py}.
+A \term{cell} is one unit of work (one seed at one size, say), identified by a key made
+from its arguments. The worker that computes a cell writes that cell's rows to
+\code{<output-dir>/cells/<csv stem>/<key>.json} by an atomic rename, and the driver
+rebuilds the CSV from the cell files after every completion. Cells whose file exists are
+skipped, so an interrupted run resumes by reissuing the same command; a cell that raised
+leaves \code{<key>.failed} with its traceback and stops the run; duplicate keys are
+refused. Nothing but a short key travels through the process pool, because a pool that
+returned multi-kilobyte results once stopped delivering them after fifteen cells while
+its workers computed on for five hours; the driver detects completion from the files.
+The design is what allows a cluster job that hit its time limit to be resubmitted into
+the same output directory.
+
+\section{Freezing}
+\label{sec:freeze}
+
+\begin{definition}[Frozen output]
+\label{def:frozen}
+A registered output is \term{frozen} when every file of it that the manuscript may read
+(\code{*.csv}, \code{params\_*.json}, \code{winners.json}, \code{floor\_fits.json}) has
+been hashed with SHA-256 into its registry entry's \code{frozen\_outputs}, together with
+the time, the repository commit at freezing and the commits recorded in the run's params
+files.
+\end{definition}
+
+\code{tools/freeze.py <id>} does this and refuses a directory whose params record a
+dirty code path or no commit. \code{tools/freeze.py --check} recomputes every digest and
+fails on any byte change; it runs inside the registry check and inside the manuscript
+check. \term{SHA-256} is a cryptographic hash: a fixed function from a file's bytes to
+a $256$-bit digest (sixty-four hexadecimal characters) such that no feasible computation
+produces two files with the same digest; a single changed byte changes the digest
+unpredictably. Freezing therefore turns ``the file the paper cites'' into a value that
+can be checked rather than a name that can be reassigned. The rules that follow from it:
+a frozen file is immutable; a re-run is a new artefact under a new registry key or a
+versioned directory, never over the old one; and a generator's source must be frozen
+before its numbers may enter the manuscript.
+
+\section{From a CSV to a macro: the generators}
+\label{sec:generators}
+
+\begingroup\sloppy
+Every number, table and figure in the paper is produced by a script under
+\code{tools/} that reads frozen outputs and writes either a fragment
+\code{paper/sections/<name>.tex} or a figure \code{paper/figures/<name>.pdf}. A number
+fragment is a list of \code{\textbackslash newcommand} definitions, one per quantity,
+with a header line saying it was generated. The macro names are built by a fixed
+encoding: a prefix for the experiment (\code{cap}, \code{base}, \code{learn},
+\code{mis}, \code{aud}, \ldots), a quantity, and the digits of any level or strength
+spelt out with \code{.} written as \code{p}, so that the name is a legal LaTeX command;
+sizes are lettered $32\to$ A, $128\to$ B, $512\to$ C, $2048\to$ D. For instance the
+root-mean-square error of $\hat\corr$ at level $t=0.4$ from E06 is the macro
+\code{\textbackslash learnRmseRhoTzeropfour}, and the level itself is emitted as
+\code{\textbackslash learnLevelTzeropfour}, so that the prose never types a level next to
+a number computed at it. \code{paper/main.tex} inputs every fragment, and the body files
+use only the macros.\par\endgroup
+
+Generators refuse rather than warn: on a missing input, on a params file with a dirty
+code path, on an incomplete design (a confirmatory seed missing a capacity), on an
+unfrozen source, and in one case on a wrong constant (the theory generator refuses to
+emit if the measured closure ratio for the Laplace chain lies outside a declared window
+around one). A cell whose narrowest fitted mixture component is under two grid cells is
+flagged with a dagger and reported, not dropped; the paper's protocol appendix now says
+so, after the audit found an earlier sentence that said ``refused''.
+
+\section{The manuscript check and the independent audit}
+\label{sec:checks}
+
+\subsection{\code{tools/check\_manuscript.py}}
+
+The manuscript check runs five gates and exits non-zero on any failure:
+\begin{enumerate}
+\item \emph{Regenerate and diff.} Every generator (a fixed list plus an optional list of
+  generators keyed by the CSV they need, skipped if that CSV is absent) is run into a
+  temporary tree that links to everything except \code{paper/sections}, and each emitted
+  fragment is compared line by line with the committed one. A difference means an input
+  or a generator changed without the fragment being rebuilt, or that a fragment was
+  hand-edited; this gate exists because a generated table once shipped with numbers from
+  a superseded run beside a paragraph that carried the frozen ones.
+\item \emph{Typed literals.} Every decimal number, every number in exponent notation and
+  every $\times10^{k}$ in \code{main.tex}, the body files and the non-generated sections
+  is matched by a regular expression, skipping lines that define commands, labels,
+  references, citations or inputs; a match must appear in \code{paper/LITERALS\_ALLOWED.txt}
+  with a justification (an analytic constant, a definition of the protocol, a quoted
+  prior-literature value), or the check fails and names the line. This is what makes
+  ``every number is a macro'' a property of the build rather than a promise.
+\item \emph{Unresolved references.} The build log is scanned for undefined references
+  and citations and for multiply defined labels.
+\item \emph{Frozen sources.} \code{freeze.py --check} runs, and any CSV that exists,
+  feeds a generator and is not frozen fails the check.
+\item \emph{Overfull boxes.} The paper is built with \code{tectonic}; any overfull
+  horizontal box in a generated table or a figure file fails, and any box more than ten
+  points too wide anywhere fails (\code{docs/FIGURE\_TABLE\_STANDARDS.md}, rules T1 and F4).
+\end{enumerate}
+
+\subsection{\code{tools/audit\_claims.py}}
+
+The generators are the only path by which a number reaches the manuscript, which is a
+strength for provenance and a weakness for auditing: a bug in a generator is invisible to
+the manuscript check, which only asks whether the macros match what the generator emits.
+The audit script recomputes the headline quantities a second way, in short explicit
+blocks of plain \code{pandas} on the frozen CSVs with no shared helpers, reads the
+macros directly from \code{paper/sections/*-numbers.tex}, and compares. A comparison
+passes when the recomputed value is within a tolerance of $0.0015$, or within half a unit
+of the macro's last printed decimal, whichever is larger; a block that cannot run is
+itself a finding. Blocks exist for the capacity table, the baselines and the matched
+arm (with its own percentile bootstrap), the length study, generation, the
+misspecification brackets, the regime sweep, the grid envelope, the learning
+experiment's at-cap rates, the phase ladder (including a re-pooling of the per-level rows
+against the pooled macro) and the sample-complexity slopes with an exactly enumerated
+bootstrap. The audit of 18 September found no arithmetic disagreement anywhere; every
+problem it found was in what a number was said to mean, which is what a second
+computation cannot catch and a second reader can.
+
+\section{The cluster runs}
+\label{sec:hpc}
+
+\paragraph{Deploy.} \code{hpc/icml\_deploy.sh} ships a \emph{committed revision}, never
+the working tree. It refuses a dirty tree (untracked outputs excepted), writes
+\code{git archive HEAD} to a tarball, computes its SHA-256, copies it to the login node,
+verifies the digest on the other side, extracts it under a directory named by the short
+commit and a timestamp, and writes a \code{REVISION} file (commit, archive digest,
+deployment time, dirty list) at the package root, which \code{provenance()} reads on
+nodes without \code{.git}. It creates the shared virtual environment once, runs an import
+check, and writes \code{hpc/.last\_deploy.env} with the host, root, source and output
+paths and the tag, which the submission script sources.
+
+\paragraph{Submit.} \code{hpc/icml\_submit.sh <experiment>} maps a name to the driver
+command with its \code{--set} overrides (the same strings that appear in the registry
+entries, so that the amended designs of E06c, E07b, E07c, E11b, E12b and E14 are
+reproducible from the script), and submits one SLURM job per experiment: one node, one
+task, the requested CPUs, memory and time; \code{--propagate=NONE} and an unlimited CPU
+time limit, because the login shell's limit had once been inherited and had killed the
+workers of two jobs; single-threaded BLAS so that the workers do not oversubscribe the
+node; \code{PYTHONPATH} pointing at the deployment; the \code{REVISION} file printed into
+the log; \code{--workers} set to the job's CPU count for drivers that declare the flag.
+Dependencies are wired with \code{afterok}, so that \code{e03-confirm} waits for
+\code{e03-screen} and \code{e05} for both E02a and E03's confirmation; \code{all} submits
+the whole registered set with those dependencies.
+
+\paragraph{Fetch.} \code{hpc/icml\_fetch.sh <E> \ldots} copies the CSV and JSON files
+(cell files and checkpoints stay on the cluster) into \code{outputs/<E>/} and prints the
+next step: \code{registry.py --check} and \code{freeze.py <id>}.
+
+\section{The chain, end to end}
+\label{sec:chain}
+
+For a reader who wants to verify one number, the path from the PDF back to the data is:
+\begingroup\sloppy
+\begin{enumerate}
+\item find the macro in the body file (every quantitative statement is one);
+\item find its definition in \code{paper/sections/<x>-numbers.tex}, whose header names
+  the generator;
+\item read the generator under \code{tools/} to see which CSV columns it reads and what
+  it computes; the registry entry's \code{predeclared\_analysis} says the same in words
+  and was written before the data;
+\item confirm the CSV is frozen: its path and digest are in
+  \code{experiments/registry/<id>.json}, and \code{python tools/freeze.py --check} agrees;
+\item open the CSV's \code{params\_<part>.json} for the commit, the clean-tree flag, the
+  archive digest, the host and the resolved settings, and check that the settings agree
+  with the registry's design and the protocol;
+\item run \code{python tools/check\_manuscript.py} to regenerate the fragment and
+  \code{python tools/audit\_claims.py} to recompute the headline from the CSV
+  independently;
+\item if the number is a comparison between arms, confirm the rows were joined on the
+  seed, the size and the bundle hash, which is what makes it paired.
+\end{enumerate}
+\endgroup
+None of these steps requires trusting the author; each is a file, a digest or a script
+that a reader can run. That is the sense in which the paper's numbers are checkable
+rather than reported.
+
+\where{\begingroup\sloppy The paper, Appendix A3 (frozen configuration, estimand, arms
+and interfaces, provenance) and every generated table and macro. Documents:
+\code{docs/EXPERIMENTAL\_CONTRACT.md}, \code{docs/REPRODUCIBILITY.md},
+\code{docs/EXPERIMENT\_REGISTRY.md}, \code{docs/NEGATIVE\_RESULTS.md} (N-22),
+\code{docs/FIGURE\_TABLE\_STANDARDS.md}. Code: \code{experiments/frozen\_config.py},
+\code{experiments/protocol.py}, \code{experiments/common.py} (\code{provenance},
+\code{run\_cells}), \code{experiments/registry/*.json}, \code{src/markov\_score/utils.py}
+(\code{rng\_for}), \code{tools/freeze.py}, \code{tools/registry.py},
+\code{tools/provenance\_gate.py}, \code{tools/check\_manuscript.py},
+\code{tools/audit\_claims.py}, \code{paper/LITERALS\_ALLOWED.txt},
+\code{hpc/icml\_deploy.sh}, \code{hpc/icml\_submit.sh}, \code{hpc/icml\_fetch.sh},
+\code{experiments/e14\_regime\_baselines.py} (the guarded generator).\par\endgroup}
+
+\paragraph{References.}
+\begingroup\sloppy
+B.~A.~Nosek, C.~R.~Ebersole, A.~C.~DeHaven and D.~T.~Mellor, 2018, The preregistration revolution, \emph{Proceedings of the National Academy of Sciences} 115, 2600--2606.
+R.~D.~Peng, 2011, Reproducible research in computational science, \emph{Science} 334, 1226--1227.
+G.~K.~Sandve, A.~Nekrutenko, J.~Taylor and E.~Hovig, 2013, Ten simple rules for reproducible computational research, \emph{PLoS Computational Biology} 9, e1003285.
+National Institute of Standards and Technology, 2015, \emph{Secure Hash Standard (SHS)}, FIPS PUB 180-4.
+A.~B.~Yoo, M.~A.~Jette and M.~Grondona, 2003, SLURM: Simple Linux Utility for Resource Management, in \emph{Job Scheduling Strategies for Parallel Processing}, Springer, 44--60.
+P.~Glasserman, 2004, \emph{Monte Carlo Methods in Financial Engineering}, Springer (common random numbers, chapter 4).\par\endgroup

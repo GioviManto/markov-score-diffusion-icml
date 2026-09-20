@@ -1,0 +1,474 @@
+\chapter{Score matching}
+\label{ch:score-matching}
+
+The paper's networks are trained to approximate the score of the noised law, and its
+structured estimator is compared with them through the score. This chapter explains
+what ``learning a score'' means, derives the two objectives that make it possible
+without ever knowing the score (Hyv\"arinen's implicit and Vincent's denoising score
+matching), works out what each becomes under the Ornstein--Uhlenbeck channel of
+\cref{ch:ou-channel-tweedie}, and then follows the code: the two output
+parameterisations, the three ways the divergence term is computed, the minibatch
+estimate of the loss, the estimand the paper reports, and the three information
+interfaces at which the comparison is run.
+
+\section{What learning a score means}
+\label{sec:sm:meaning}
+
+A \term{score model} is a family of vector fields $s_\params(\vx,t)\colon\Reals^{\nsites}\times(0,\infty)\to\Reals^{\nsites}$
+indexed by parameters $\params$ (the weights of a network). The target is the score
+$\score(\vx,t)=\nabla_{\vx}\log\Pt(\vx)$ of the noised law, and the natural measure of
+success is the \term{explicit score-matching} loss at one level,
+\begin{equation}
+  J_{\mathrm{ESM}}(s)=\E_{\Pt}\bigl|s(\vx_t)-\nabla\log\Pt(\vx_t)\bigr|^2 .
+  \label{eq:sm:esm}
+\end{equation}
+The difficulty is that $\nabla\log\Pt$ is unknown: for real data one has samples of
+$\Pt$ (or of $\Pz$, which one can noise) and nothing else. In the paper's laboratory
+$\score$ is known exactly (Section 2), which is what allows $J_{\mathrm{ESM}}$ to be
+measured; but the networks are still trained as they would be in practice, by one of
+the two surrogates below, which have the same minimiser as \cref{eq:sm:esm} and can be
+estimated from samples. In both, $t$ is fixed for the moment; the paper's schedule
+enters in \cref{sec:sm:batch}.
+
+\section{Hyv\"arinen's implicit score matching}
+\label{sec:sm:ism}
+
+\begin{theorem}[Implicit score matching]
+\label{thm:sm:ism}
+Let $p$ be a continuously differentiable density on $\Reals^{\nsites}$ and let
+$s\colon\Reals^{\nsites}\to\Reals^{\nsites}$ be continuously differentiable, with
+$\E_p|s|^2<\infty$, $\E_p|\nabla\log p|^2<\infty$, $\E_p|\operatorname{div}s|<\infty$,
+and $p(\vx)\,|s(\vx)|\to0$ as $|\vx|\to\infty$. Then
+\begin{equation}
+  \E_p\bigl|s-\nabla\log p\bigr|^2
+  =2\,\E_p\Bigl[\tfrac12|s|^2+\operatorname{div}s\Bigr]+\E_p|\nabla\log p|^2 .
+  \label{eq:sm:ism}
+\end{equation}
+The last term does not depend on $s$, so the \term{implicit score-matching} objective
+$J_{\mathrm{ISM}}(s)=\E_p[\tfrac12|s|^2+\operatorname{div}s]$ has the same minimiser as
+$J_{\mathrm{ESM}}$, and $J_{\mathrm{ISM}}$ involves only $s$ and samples of $p$.
+\end{theorem}
+
+\begin{proof}
+Scalar case first. Expand the square:
+\[
+  \int p\,(s-(\log p)')^2\dd x=\int p\,s^2\dd x-2\int p\,s\,\frac{p'}{p}\dd x+\int p\,((\log p)')^2\dd x .
+\]
+In the middle term $p\cdot p'/p=p'$, so it is $-2\int s\,p'\dd x$, and integration by
+parts on $[-R,R]$ gives
+\[
+  \int_{-R}^{R}s\,p'\dd x=\bigl[s\,p\bigr]_{-R}^{R}-\int_{-R}^{R}s'\,p\,\dd x .
+\]
+The boundary term tends to zero as $R\to\infty$ by the decay hypothesis, and the
+remaining integral converges by the integrability of $s'$ against $p$. Hence
+$\int p\,(s-(\log p)')^2=\int p\,s^2+2\int p\,s'+\int p\,((\log p)')^2$, which is
+\cref{eq:sm:ism} with $\operatorname{div}s=s'$. In $\nsites$ dimensions the middle term is
+$-2\int\langle s,\nabla p\rangle\dd\vx$, and the divergence theorem on the ball $B_R$
+gives $\int_{B_R}\langle s,\nabla p\rangle=\oint_{\partial B_R}p\,\langle s,\vect{n}\rangle\dd\sigma-\int_{B_R}p\operatorname{div}s$;
+the surface term is bounded by the area of the sphere times $\sup_{|\vx|=R}p|s|$, which
+tends to zero by hypothesis (the hypothesis is to be read as decay fast enough for
+this product to vanish).
+\end{proof}
+
+Two remarks. First, at the true score $J_{\mathrm{ISM}}(\score)=-\tfrac12\E|\score|^2$,
+i.e.\ $\E_p[\operatorname{div}\nabla\log p]=-\E_p|\nabla\log p|^2$; combined with
+\cref{prop:ou:tweedie2} this reproduces \cref{prop:ou:energy}. Second, the price of
+avoiding $\nabla\log p$ is the divergence, a sum of $\nsites$ diagonal entries of the
+Jacobian of $s$, which is what \cref{sec:sm:divergence} is about.
+
+\section{Vincent's denoising score matching}
+\label{sec:sm:dsm}
+
+Suppose the samples of $p$ arise by corrupting clean samples: $\va\sim\Pz$ and then
+$\vx\sim p(\cdot\mid\va)$, so that $p(\vx)=\int\Pz(\dd\va)\,p(\vx\mid\va)$. The
+conditional score $\nabla_{\vx}\log p(\vx\mid\va)$ is known in closed form whenever the
+corruption is.
+
+\begin{theorem}[Denoising score matching]
+\label{thm:sm:dsm}
+Let $p(\vx\mid\va)$ be differentiable in $\vx$ with $\E|\nabla_{\vx}\log p(\vx\mid\va)|^2<\infty$
+under the joint law, and let $\E_p|s|^2<\infty$. Then
+\begin{equation}
+  J_{\mathrm{DSM}}(s):=\E_{(\va,\vx)}\bigl|s(\vx)-\nabla_{\vx}\log p(\vx\mid\va)\bigr|^2
+  =J_{\mathrm{ESM}}(s)+\E_{(\va,\vx)}\bigl|\nabla_{\vx}\log p(\vx\mid\va)-\nabla_{\vx}\log p(\vx)\bigr|^2 .
+  \label{eq:sm:dsm}
+\end{equation}
+The second term does not depend on $s$, so $J_{\mathrm{DSM}}$ and $J_{\mathrm{ESM}}$
+have the same minimiser, and $J_{\mathrm{DSM}}$ needs only pairs $(\va,\vx)$.
+\end{theorem}
+
+\begin{proof}
+The key identity is that the marginal score is the conditional expectation of the
+conditional score,
+\begin{equation}
+  \E\bigl[\nabla_{\vx}\log p(\vx\mid\va)\;\big|\;\vx\bigr]=\nabla_{\vx}\log p(\vx),
+  \label{eq:sm:tower}
+\end{equation}
+because, with the posterior $p(\va\mid\vx)=\Pz(\va)p(\vx\mid\va)/p(\vx)$,
+\[
+  \int p(\va\mid\vx)\,\nabla_{\vx}\log p(\vx\mid\va)\dd\va
+  =\frac{1}{p(\vx)}\int\Pz(\va)\,\nabla_{\vx}p(\vx\mid\va)\dd\va
+  =\frac{\nabla_{\vx}p(\vx)}{p(\vx)} .
+\]
+Now write $Y=\nabla_{\vx}\log p(\vx\mid\va)$ and $S=\nabla\log p(\vx)=\E[Y\mid\vx]$. For
+any function $s$ of $\vx$, the orthogonality argument of \cref{prop:ou:mmse} applied
+to $Y$ gives $\E|s(\vx)-Y|^2=\E|s(\vx)-S|^2+\E|S-Y|^2$, which is \cref{eq:sm:dsm}.
+\end{proof}
+
+The regression reading of the proof is worth stating on its own: $J_{\mathrm{DSM}}$ is
+a least-squares regression of the random target $Y$ on the input $\vx$, and the
+least-squares regression function is the conditional expectation, which by
+\cref{eq:sm:tower} is the score. The irreducible part of the loss is the conditional
+variance of the target.
+
+\begin{corollary}[The channel]
+\label{cor:sm:channel}
+Under $\vx_t=e^{-t}\va+\sqrt{\Dt}\vz$, the conditional law is
+$\normal{e^{-t}\va}{\Dt\Id}$ and the target is
+\begin{equation}
+  \nabla_{\vx}\log p(\vx_t\mid\va)=-\frac{\vx_t-e^{-t}\va}{\Dt}=-\frac{\vz}{\sqrt{\Dt}} .
+  \label{eq:sm:target}
+\end{equation}
+Identity \cref{eq:sm:tower} is Tweedie's identity \cref{eq:ou:tweedie} in another
+guise, and the irreducible loss is
+$\E|{-\vz/\sqrt{\Dt}}-\score|^2=(e^{-2t}/\Dt^2)\,\mathrm{MMSE}_t$ by
+\cref{prop:ou:energy}.
+\end{corollary}
+
+The target's variance is $\nsites/\Dt$ per example, which diverges as $t\to0$; a network
+asked to output the score directly would have to produce values of size $1/\sqrt{\Dt}$
+at the lowest levels. The parameterisations of the next section are the standard way to
+avoid that.
+
+\section{The two output parameterisations}
+\label{sec:sm:param}
+
+Every network of the paper maps a noised sequence and a level to an output
+$f_\params(\vx,t)\in\Reals^{\nsites}$, and the output is converted to a posterior mean
+and then to a score by \cref{thm:ou:tweedie}. The code supports two conventions;
+they are implemented by \code{Denoiser.posterior\_mean}, \code{\_score\_from\_out}
+and \code{dsm\_loss} in \code{src/\allowbreak markov\_score/\allowbreak nn\_torch.py}.
+
+\begin{definition}[\code{eps} and \code{x0}]
+\label{def:sm:param}
+With $\alpha=e^{-t}$:
+\begin{itemize}
+\item \code{eps}: the output predicts the noise, target $\vz$; the posterior mean is
+  $\widehat m=(\vx-\sqrt{\Dt}\,f)/\alpha$ and the score is
+  $\widehat s=-(\vx-\alpha\widehat m)/\Dt=-f/\sqrt{\Dt}$.
+\item \code{x0}: the output predicts the clean sequence, target $\va$; the posterior
+  mean is $\widehat m=f$ and the score is $\widehat s=-(\vx-\alpha f)/\Dt$.
+\end{itemize}
+The training loss in both cases is the mean squared distance between output and
+target over the batch, $\E|f-\vz|^2$ or $\E|f-\va|^2$.
+\end{definition}
+
+\begin{proposition}[Both losses are weighted denoising score matching]
+\label{prop:sm:weights}
+With $s^\ast=-(\vx-\alpha\va)/\Dt$ the target of \cref{eq:sm:target},
+\[
+  |f-\vz|^2=\Dt\,|\widehat s-s^\ast|^2\ \ (\code{eps}),\qquad
+  |f-\va|^2=\frac{\Dt^2}{\alpha^2}\,|\widehat s-s^\ast|^2\ \ (\code{x0}).
+\]
+Hence the \code{eps} loss is $J_{\mathrm{DSM}}$ weighted by $\Dt$, and the \code{x0} loss
+is $J_{\mathrm{DSM}}$ weighted by $\Dt^2/\alpha^2=\Dt/\mathrm{SNR}_t$. Both have the
+score as their minimiser at every fixed $t$.
+\end{proposition}
+
+\begin{proof}
+From $\widehat s=-(\vx-\alpha\widehat m)/\Dt$ and $s^\ast=-(\vx-\alpha\va)/\Dt$,
+$\widehat s-s^\ast=\alpha(\widehat m-\va)/\Dt$, so $|\widehat m-\va|^2=(\Dt^2/\alpha^2)|\widehat s-s^\ast|^2$;
+this is the \code{x0} case since $\widehat m=f$. In the \code{eps} case
+$\widehat m-\va=(\vx-\sqrt{\Dt}f)/\alpha-(\vx-\sqrt{\Dt}\vz)/\alpha=-\sqrt{\Dt}(f-\vz)/\alpha$,
+so $|f-\vz|^2=(\alpha^2/\Dt)|\widehat m-\va|^2=\Dt|\widehat s-s^\ast|^2$.
+\end{proof}
+
+The weights matter once levels are mixed (\cref{sec:sm:batch}): \code{eps} weights the
+levels almost equally in score units at high noise ($\Dt\approx1$) and suppresses the
+lowest levels ($\Dt\approx2t$); \code{x0} suppresses them more strongly. The paper
+trains both and lets the screen choose (Appendix C, ``both output
+parameterisations''). The conversion $\widehat s=-f/\sqrt{\Dt}$ for \code{eps} is the
+reason a network output of order one corresponds to a score of order $1/\sqrt{\Dt}$,
+as the target requires.
+
+\section{Computing the divergence}
+\label{sec:sm:divergence}
+
+Implicit score matching needs $\operatorname{div}\widehat s=\sum_i\partial\widehat s_i/\partial x_i=\tr J$
+for every example in a batch, where $J=\partial\widehat s/\partial\vx$ is the
+$\nsites\times\nsites$ Jacobian of the network's score. Automatic differentiation
+gives Jacobian-transpose-vector products cheaply: for any $\vect{v}$, one backward pass
+through $\langle\widehat s,\vect{v}\rangle$ returns $J^{\!\top}\vect{v}$, since
+$\partial_j\sum_i\widehat s_i v_i=\sum_i v_iJ_{ij}$. The function \code{divergence} in
+\code{src/markov\_score/nn\_torch.py} offers three ways to turn such products into a
+trace.
+
+\subsection{The exact trace by $\nsites$ backward passes}
+Taking $\vect{v}=\vect{e}_i$ returns the $i$-th row of $J$, whose $i$-th entry is
+$J_{ii}$. Summing over $i$ costs $\nsites$ backward passes per batch (the
+\code{"exact"} branch: for each $i$, the gradient of $\sum_{\text{batch}}\widehat s_i$
+with respect to $\vx$, read at coordinate $i$). At $\nsites=32$ this is thirty-two
+passes for every training step, and it is what the frozen matched arm used for the
+window head (Appendix C: ``computed exactly for the window head'').
+
+\subsection{Hutchinson's estimator}
+\begin{proposition}[Hutchinson]
+\label{prop:sm:hutchinson}
+Let $\vect{v}$ be a random vector with $\E[\vect{v}\vect{v}^{\!\top}]=\Id$, independent
+of $J$. Then $\E[\vect{v}^{\!\top}J\vect{v}]=\tr J$. If $\vect{v}\sim\normal{0}{\Id}$,
+\[
+  \Var(\vect{v}^{\!\top}J\vect{v})=\Frob{J}^2+\tr(J^2)=\Frob{J}^2+\langle J,J^{\!\top}\rangle,
+\]
+which equals $2\Frob{J}^2$ when $J$ is symmetric.
+\end{proposition}
+
+\begin{proof}
+$\E[\vect{v}^{\!\top}J\vect{v}]=\sum_{ij}J_{ij}\E[v_iv_j]=\sum_iJ_{ii}$. For the variance
+with Gaussian $\vect{v}$, use $\E[v_iv_jv_kv_l]=\delta_{ij}\delta_{kl}+\delta_{ik}\delta_{jl}+\delta_{il}\delta_{jk}$:
+\[
+  \E\bigl[(\vect{v}^{\!\top}J\vect{v})^2\bigr]=\sum_{ijkl}J_{ij}J_{kl}\E[v_iv_jv_kv_l]
+  =(\tr J)^2+\sum_{ij}J_{ij}^2+\sum_{ij}J_{ij}J_{ji},
+\]
+and subtract $(\tr J)^2$.
+\end{proof}
+
+The score of a density has a symmetric Jacobian (\cref{prop:ou:tweedie2}); a
+network's need not, but is close to symmetric when it is close to a score. With one
+standard-normal probe per example per step (the \code{"hutchinson"} branch, used by the
+frozen matched arm for the transformer), the loss estimate is unbiased but its variance
+adds to the minibatch noise of \cref{sec:sm:batch}. Hutchinson (1990) used Rademacher
+probes ($v_i=\pm1$), for which the diagonal contributes no variance and
+$\Var=2\sum_{i\ne j}J_{ij}J_{ji}$, at most the Gaussian value; the code uses Gaussian
+probes. For scale: if $J=\Id_{32}$ a Gaussian probe estimates the trace $32$ with
+standard deviation $\sqrt{2\cdot32}=8$.
+
+\subsection{Coloured probes for a banded Jacobian}
+\label{sec:sm:coloured}
+
+The window head of the paper computes its output at site $i$ from the inputs at sites
+$|j-i|\le r$ only (radius $r$; \code{receptive\_radius} in the code). Its Jacobian is
+therefore \term{banded}: $J_{ij}=0$ for $|i-j|>r$. For such a map the exact trace
+costs $2r+1$ backward passes rather than $\nsites$.
+
+\begin{proposition}[Coloured probes]
+\label{prop:sm:coloured}
+Let $J_{ij}=0$ whenever $|i-j|>r$, put $p=2r+1$, and for $k=0,\dots,p-1$ let
+$\vect{v}_k\in\{0,1\}^{\nsites}$ have entries $(\vect{v}_k)_j=\mathbf 1\{j\equiv k\pmod p\}$.
+Then $\sum_{k=0}^{p-1}\vect{v}_k^{\!\top}J\vect{v}_k=\tr J$ exactly.
+\end{proposition}
+
+\begin{proof}
+$\vect{v}_k^{\!\top}J\vect{v}_k=\sum_{i\equiv k}\sum_{j\equiv k}J_{ij}$. If $i\equiv j\pmod p$
+and $i\ne j$ then $|i-j|\ge p=2r+1>r$, so $J_{ij}=0$. Only $i=j$ survives:
+$\vect{v}_k^{\!\top}J\vect{v}_k=\sum_{i\equiv k}J_{ii}$. Every $i$ has exactly one
+residue class, so the sum over $k$ is $\sum_iJ_{ii}$.
+\end{proof}
+
+This is the colouring of a banded Jacobian of Curtis, Powell and Reid (1974): two
+columns may share a probe when no row has a nonzero in both, and the residue classes
+modulo $2r+1$ are such a partition. The code (\code{"coloured"} branch) computes, for
+each $k$, one backward pass $J^{\!\top}\vect{v}_k$ and then the inner product with
+$\vect{v}_k$, exactly as for Hutchinson but with $p$ deterministic probes and no
+variance. Zero padding at the ends of the chain only removes dependencies, so the
+boundary sites are covered. The branch refuses a model that declares no receptive
+radius, since for a dense Jacobian the cross terms would not vanish. The identity is
+checked against the $\nsites$-pass trace by the test
+\code{test\_coloured\_trace\_\allowbreak equals\_exact\_trace\_\allowbreak for\_the\_window\_head}
+in \code{tests/test\_nn\_torch.py}. For the radius-2 head this is five passes in place
+of thirty-two.
+
+\begin{example}[Seven sites, radius one]
+\label{ex:sm:coloured}
+With $\nsites=7$, $r=1$ and $p=3$ the probes are $\vect{v}_0=\vect{e}_1+\vect{e}_4+\vect{e}_7$,
+$\vect{v}_1=\vect{e}_2+\vect{e}_5$ and $\vect{v}_2=\vect{e}_3+\vect{e}_6$. For a
+tridiagonal $J$,
+$\vect{v}_0^{\!\top}J\vect{v}_0=J_{11}+J_{44}+J_{77}+(J_{14}+J_{41}+J_{47}+J_{74}+J_{17}+J_{71})$
+and every bracketed entry is zero because its indices differ by at least three. Adding
+the three probes gives $J_{11}+\dots+J_{77}$.
+\end{example}
+
+\section{Why the loss is estimated per batch}
+\label{sec:sm:batch}
+
+The population objective is an expectation; training minimises it by stochastic
+gradient descent on unbiased minibatch estimates. Under the paper's recipe
+(\code{TrainConfig} and \code{train} in \code{src/markov\_score/nn\_torch.py}) one step
+draws a batch of $64$ examples, and for each example a level $t$ uniformly from the
+twelve of \cref{tab:ou:levels} and a fresh corruption $\vz$; the loss is the mean of the
+per-example losses; the gradient is taken; its norm is clipped at $1$; and Adam takes a
+step at learning rate $10^{-3}$ or $3\times10^{-3}$. Because $t$ and $\vz$ are drawn
+independently of $\params$, the batch mean is an unbiased estimate of
+\begin{equation}
+  \bar J(\params)=\frac1{12}\sum_{k=1}^{12}w(t_k)\,J^{(t_k)}_{\mathrm{DSM}}(s_\params(\cdot,t_k))
+  \label{eq:sm:pooled-objective}
+\end{equation}
+with the weights $w$ of \cref{prop:sm:weights}, and its gradient is an unbiased estimate
+of $\nabla\bar J$. The minimiser of \cref{eq:sm:pooled-objective} over all vector
+fields is the score at every level simultaneously, since the levels do not compete
+(the field may depend on $t$); with a finite network they do compete, and the weights
+decide the compromise. Checkpoints are saved on a ladder up to $32{,}000$ steps and one
+is selected afterwards on a validation bundle; the selection rule is part of the
+interface (\cref{sec:sm:interfaces}). For implicit score matching the same loop draws
+$64$ examples from the fixed set of noised views, computes $\tfrac12|\widehat s|^2+\operatorname{div}\widehat s$
+per example with one of the three divergence branches, and averages; with a Hutchinson
+probe the estimate is still unbiased, since the probe is drawn independently of
+$\params$, at the cost of extra variance.
+
+\section{The estimand: schedule-pooled relative score error}
+\label{sec:sm:estimand}
+
+\begin{definition}[The estimand]
+\label{def:sm:estimand}
+The paper's headline number for any estimator $\widehat s$ is the
+\term{schedule-pooled relative score error} (\code{experiments/protocol.py},
+\code{estimand}; Appendix C, ``Estimand''),
+\begin{equation}
+  \mathrm{err}(\widehat s)=\Biggl(\frac{\sum_{t}\sum_{j}\sum_{i}\bigl(\widehat s_t(\vx_j)_i-s_t(\vx_j)_i\bigr)^2}
+                                   {\sum_{t}\sum_{j}\sum_{i}s_t(\vx_j)_i^2}\Biggr)^{1/2},
+  \label{eq:sm:estimand}
+\end{equation}
+where $t$ runs over the twelve levels, $j$ over the sequences of a test bundle noised
+at that level, $i$ over the sites of a region, and $s_t$ is the tree-exact reference
+score. Both sums are formed before the square root.
+\end{definition}
+
+Three features of \cref{eq:sm:estimand} matter for reading the paper. It is
+\emph{relative}: an estimator that outputs zero scores $1$, and the isotropic score
+$-\vx$ and the LMMSE twin give the two reference values of the paper's oracle ladder.
+It is \emph{pooled} rather than averaged over levels: the numerator and the denominator
+are energies summed over the schedule, so a level contributes in proportion to its
+score energy, which by \cref{prop:ou:energy} is close to $\nsites/\Dt$ per sequence at
+low noise. Taking $1/\Dt$ as a proxy for the per-site energy, the twelve levels of
+\cref{tab:ou:levels} carry the weights $10.5, 7.4, 5.3, 3.8, 2.8, 2.1, 1.65, 1.35,
+1.16, 1.06, 1.02, 1.00$, whose sum is $39.1$; the lowest four levels carry about
+$69\%$ of the pooled denominator and the highest four about $11\%$. A pooled error is
+therefore a low-noise-dominated summary, which the paper says in words (Section 3,
+``What this says about score learning'') and which explains why the fourth-order
+Edgeworth correction, exact at high noise, is worse than the twin when pooled
+(\cref{ch:attenuation-theorems}). Finally it is computed on \emph{regions}: all
+$32$ sites (the headline), the bulk, sites $5$ to $28$ (four trimmed at each end, used
+for every selection so that boundary effects do not drive the choice of checkpoint),
+and the centre site (a diagnostic). Ratios between arms are formed within seed and
+averaged, and intervals are percentile bootstraps over seeds (Appendix C).
+
+\section{The three information interfaces}
+\label{sec:sm:interfaces}
+
+The paper's Section 5 declares three interfaces and reports the structured
+estimator against the networks at each. The definitions below follow
+\code{experiments/e03\_baselines.py} line by line.
+
+\begin{definition}[Interface A: the standard denoising recipe]
+\label{def:sm:A}
+The network sees the $\nseq$ clean training sequences. At every step it draws a batch,
+a level per example from the twelve, and a fresh corruption per example, and minimises
+the \code{eps} or \code{x0} denoising loss (\code{\_train\_select} with
+\code{loss="dsm"}; \code{\_draw\_batch} in \code{nn\_torch.py}). The checkpoint is
+selected on a validation bundle of $1024$ sequences, scored by
+\cref{eq:sm:estimand} on the bulk sites against the tree-exact reference under the
+true kernel.
+\end{definition}
+
+\begin{definition}[Interface B: clean targets, one fixed corruption]
+\label{def:sm:B}
+Each training sequence is corrupted once, at one level, with the sequences split
+evenly across the twelve levels, by the same function \code{\_one\_\allowbreak view\_\allowbreak groups}
+that builds the structured estimator's data. The pair $(\va,\vx)$ is kept and never
+redrawn, and the target $\vz=(\vx-e^{-t}\va)/\sqrt{\Dt}$ (or $\va$) is regressed by the
+same denoising loss on batches drawn from the fixed pairs; the training loop is
+\code{\_train\_\allowbreak select\_\allowbreak fixed\_\allowbreak corruption}. The
+checkpoint is selected as in interface A, on the validation bundle against the true
+score.
+\end{definition}
+
+\begin{definition}[Interface C: one noised view per sequence, no oracle]
+\label{def:sm:C}
+The network sees only the noised views $(\vx^{\mu},t_\mu)$ of interface B, without the
+clean sequences: the same one-view bundle the structured estimator sees. It is trained
+by implicit score matching (\code{loss="ism"}), with the divergence computed exactly
+for the window head and by Hutchinson's estimator for the transformer. In E03 the
+exact trace of the window head is the $\nsites$-pass branch
+(\code{hutchinson=(arch != "window")} with no \code{trace} override); in E14, whose
+network arms train exactly as E03's, it is the coloured-probe branch of
+\cref{prop:sm:coloured} (\code{trace\_by\_arch}), which returns the same number at a
+fifth of the cost. The checkpoint is selected on the implicit
+objective $\E[\tfrac12|\widehat s|^2+\operatorname{div}\widehat s]$ of a held-out
+noisy bundle, one view per validation sequence, with the exact trace
+(\code{\_ism\_objective}, \code{select\_on="ism"}); the true score enters only in the
+final scoring on the test bundle.
+\end{definition}
+
+In the paper's words (Section 5): (A) is ``clean sequences with a fresh corruption at
+every step''; (B) is ``clean sequences with one fixed corruption each''; (C) is ``one
+noised view per sequence and nothing else, which is what EM--BP sees'', and the
+matched comparison adds that ``since the true score is not available for selection in
+that setting, the checkpoint [is] selected on the implicit score-matching objective of
+a held-out noisy bundle''. The sigma-algebras are nested: C sees strictly less than B,
+which sees strictly less than A (A sees unboundedly many corruptions of each sequence
+as training proceeds). The audit of 18--19 September 2026 (\code{docs/SCIENCE\_AUDIT.md})
+is the reason the paper now names the interface of every number: an earlier draft
+called the interface-B arm ``information-matched'', which it is not, because its
+regression target is the clean sequence.
+
+\why{The paper's headline factor at ``matched information'' is the ratio of the
+interface-C network's error to the structured estimator's on the same bundles; it is a
+statement about what the factorisation and the exact E-step are worth at equal
+information, and \cref{def:sm:C} is what ``equal information'' means. Interface B
+isolates the value of fresh corruptions, and the difference between A and B is that
+value.}
+
+\section{Worked example}
+\label{sec:sm:example}
+
+\begin{example}[The three objectives on a Gaussian]
+\label{ex:sm:gaussian}
+Let $\nsites=1$, $\Pz=\normal01$, so that $\Pt=\normal01$ at every $t$ and the score is
+$\score(x)=-x$. Consider the linear family $s_c(x)=-cx$.
+\begin{itemize}
+\item Explicit: $J_{\mathrm{ESM}}(c)=\E(-cx+x)^2=(1-c)^2$.
+\item Implicit: $J_{\mathrm{ISM}}(c)=\E[\tfrac12c^2x^2+(-c)]=\tfrac12c^2-c=\tfrac12(c-1)^2-\tfrac12$.
+  The offset $-\tfrac12$ is $-\tfrac12\E|\nabla\log p|^2$, as \cref{eq:sm:ism} says,
+  and the minimiser is $c=1$ in both.
+\item Denoising: with $x=\alpha a+\sqrt{\Dt}z$ and target $-z/\sqrt{\Dt}$,
+  $J_{\mathrm{DSM}}(c)=\E(-cx+z/\sqrt{\Dt})^2=c^2\E x^2-2c\,\E[xz]/\sqrt{\Dt}+\E z^2/\Dt
+  =c^2-2c+1/\Dt=(c-1)^2+e^{-2t}/\Dt$, since $\E[xz]=\sqrt{\Dt}$ and $1/\Dt-1=e^{-2t}/\Dt$.
+  The offset is the irreducible term $(e^{-2t}/\Dt^2)\mathrm{MMSE}_t$ of
+  \cref{cor:sm:channel} with $\mathrm{MMSE}_t=\Var(a\mid x)=1-\alpha^2/(\alpha^2+\Dt)=\Dt$.
+  At $t=\log2$ it equals $(1/4)/(3/4)=\tfrac13$, the SNR.
+\end{itemize}
+The \code{eps} loss for the same family is $\Dt J_{\mathrm{DSM}}$ and the \code{x0}
+loss is $(\Dt^2/\alpha^2)J_{\mathrm{DSM}}$: at $t=\log2$ these are $\tfrac34J_{\mathrm{DSM}}$
+and $\tfrac94J_{\mathrm{DSM}}$, and at level 1 of \cref{tab:ou:levels} they are
+$0.095\,J_{\mathrm{DSM}}$ and $0.010\,J_{\mathrm{DSM}}$.
+\end{example}
+
+\where{Score matching is the training principle of every network in the paper's
+Section 5 and Appendix C; the interfaces are defined in Section 5 and used in the
+baselines and matched-comparison paragraphs; the estimand is Appendix C. Experiments:
+E03 (screen, confirmatory table, matched arm, length extrapolation), E08
+(misspecification network arm), E14 (regime baselines, whose network arms train
+exactly as E03's: window head with the exact trace by coloured probes, transformer
+with Hutchinson's estimator), and E05 for the network samplers. Code: \code{src/\allowbreak markov\_score/\allowbreak nn\_torch.py} (\code{TrainConfig},
+\code{train}, \code{dsm\_\allowbreak loss}, \code{ism\_\allowbreak loss}, \code{divergence},
+\code{ism\_\allowbreak objective}, \code{Denoiser}), \code{experiments/\allowbreak e03\_baselines.py}
+(\code{\_\allowbreak train\_\allowbreak select}, \code{\_\allowbreak one\_\allowbreak view\_\allowbreak groups},
+\code{\_\allowbreak train\_\allowbreak select\_\allowbreak fixed\_\allowbreak corruption}, \code{\_\allowbreak ism\_\allowbreak objective}, \code{\_\allowbreak risk},
+\code{\_\allowbreak sq}), \code{experiments/\allowbreak protocol.py} (\code{estimand}, \code{bulk\_\allowbreak margin},
+\code{net\_\allowbreak steps}), \code{tests/\allowbreak test\_nn\_torch.py}.}
+
+\paragraph{References.}
+A.~Hyv\"arinen, 2005, ``Estimation of non-normalized statistical models by score
+matching'', Journal of Machine Learning Research 6, 695--709.
+P.~Vincent, 2011, ``A connection between score matching and denoising autoencoders'',
+Neural Computation 23, 1661--1674.
+M.~F.~Hutchinson, 1990, ``A stochastic estimator of the trace of the influence matrix
+for Laplacian smoothing splines'', Communications in Statistics: Simulation and
+Computation 19, 433--450.
+A.~R.~Curtis, M.~J.~D.~Powell and J.~K.~Reid, 1974, ``On the estimation of sparse
+Jacobian matrices'', Journal of the Institute of Mathematics and its Applications 13,
+117--119.
+Y.~Song, S.~Garg, J.~Shi and S.~Ermon, 2019, ``Sliced score matching: a scalable
+approach to density and score estimation'', Uncertainty in Artificial Intelligence.
+Y.~Song, J.~Sohl-Dickstein, D.~P.~Kingma, A.~Kumar, S.~Ermon and B.~Poole, 2021,
+``Score-based generative modeling through stochastic differential equations'',
+International Conference on Learning Representations.

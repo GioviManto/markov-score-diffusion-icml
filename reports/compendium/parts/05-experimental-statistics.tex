@@ -1,0 +1,340 @@
+\chapter{The statistics of the experiments}
+\label{ch:experimental-statistics}
+
+Every number in the paper's tables and figures is a statistic of a small number of
+replicates, sixteen at the frozen configuration and eight in the sweeps, and every
+comparison between two arms is paired on identical data. This chapter defines the
+quantities the paper reports (RMSE, bias, dispersion, standard errors, bootstrap
+intervals, paired differences and ratios, log-slopes), explains why a local slope
+over a finite window is not an asymptotic exponent, describes the bundle structure
+(training, validation, test), the two kinds of seeds (development and confirmatory),
+and what ``pre-registered'' and ``pre-data amendment'' mean in this project. The
+numbers themselves are in the paper; here are the definitions of what they are
+numbers \emph{of}.
+
+\section{Replicates, seeds and the inferential unit}
+
+A \term{replicate} of an experiment is one complete run with one value of the random
+\term{seed}: the seed determines the clean sequences of the training, validation and
+test bundles, the noise draws that corrupt them, the initialisation of the estimator,
+and any Monte Carlo inside the fit. Two arms run at the same seed see the same data,
+which is what makes their comparison paired (\cref{sec:paired}). The \term{inferential
+unit} is the replicate: every standard error, interval and sign count below is over
+seeds, never over sequences or sites within a seed, because sequences within a seed
+share the bundle and sites within a sequence are dependent.
+
+Let $e_1,\dots,e_n$ be the values of a statistic (an error, a fitted coordinate) over
+$n$ seeds. The \term{mean over seeds} is $\bar e=\tfrac1n\sum_se_s$, the \term{sample
+standard deviation} is $\hat\sigma=\bigl(\tfrac1{n-1}\sum_s(e_s-\bar e)^2\bigr)^{1/2}$,
+and the \term{standard error of the mean} is $\hat\sigma/\sqrt n$. With $n=16$ the
+standard error is a quarter of the standard deviation; with $n=8$ it is $0.35$ of it.
+
+\section{RMSE, bias and dispersion}
+
+Let $\hat\theta_1,\dots,\hat\theta_n$ be estimates of a known truth $\theta$ over $n$
+seeds (the paper's fitted correlation and fitted excess kurtosis at each level of
+E06 are of this kind). The \term{root mean squared error} over replicates is
+\begin{equation}
+  \mathrm{RMSE}=\Bigl(\frac1n\sum_{s=1}^n(\hat\theta_s-\theta)^2\Bigr)^{1/2},
+\end{equation}
+and it decomposes into a \term{bias} and a \term{dispersion}:
+\begin{equation}
+  \frac1n\sum_s(\hat\theta_s-\theta)^2=\underbrace{(\bar\theta-\theta)^2}_{\text{bias}^2}
+  +\underbrace{\frac1n\sum_s(\hat\theta_s-\bar\theta)^2}_{\text{dispersion}^2},
+  \qquad \bar\theta=\frac1n\sum_s\hat\theta_s ,
+  \label{eq:rmse-decomp}
+\end{equation}
+because the cross term $\tfrac2n\sum_s(\hat\theta_s-\bar\theta)(\bar\theta-\theta)$
+vanishes. The dispersion is the population-form standard deviation (divisor $n$);
+the sample form (divisor $n-1$) differs by the factor $\sqrt{n/(n-1)}$, which is
+$1.03$ at $n=16$. The paper reports RMSE, bias and dispersion separately at each level
+because they answer different questions: the Cram\'er--Rao reference of the chapter on
+Fisher information bounds the dispersion of an unbiased estimator, so an estimator
+whose bias is not zero can have a dispersion below the reference, and only the
+decomposition says which is happening.
+
+\paragraph{The sampling error of a standard deviation.}
+A dispersion estimated from $n$ replicates is itself random. If the replicates were
+normal, $(n-1)\hat\sigma^2/\sigma^2$ would be $\chi^2_{n-1}$, whose relative standard
+deviation is $\sqrt{2/(n-1)}$, so the relative standard error of $\hat\sigma$ is about
+$1/\sqrt{2(n-1)}$: $1/\sqrt{30}\approx18\%$ at $n=16$ and $1/\sqrt{14}\approx27\%$ at
+$n=8$. This is what the paper means by ``within the sampling error of a
+sixteen-replicate standard deviation'': two dispersions that differ by less than about
+a fifth are not distinguishable at this replicate count.
+
+\section{Confidence intervals by the bootstrap}
+\label{sec:bootstrap}
+
+The paper's intervals are \term{percentile bootstrap} intervals over seeds. The
+principle is the plug-in principle: the unknown law of the statistic under
+resampling of the true population is approximated by its law under resampling of the
+observed replicates.
+
+\begin{definition}[Percentile bootstrap over seeds]
+Given per-seed values $e_1,\dots,e_n$ and a statistic $T(e_1,\dots,e_n)$ (a mean, a
+mean of paired differences, a slope), draw $B$ \term{resamples}
+$(e_{s_1^*},\dots,e_{s_n^*})$ with the indices $s_j^*$ drawn independently and uniformly
+from $\{1,\dots,n\}$ with replacement, compute $T^*_b$ for each, and report the
+interval $[T^*_{(0.025)},T^*_{(0.975)}]$ of the $2.5$th and $97.5$th percentiles of
+$\{T^*_b\}_{b=1}^B$.
+\end{definition}
+
+The code uses $B=20{,}000$ resamples with a fixed bootstrap seed; the function is
+\code{boot\_ci} in \code{tools/make\_capacity\_numbers.py}, and the other number
+generators carry copies of it. Two things must be said
+about such an interval. It carries \emph{Monte Carlo error} from the finite $B$, which
+is largest in the tails: the $97.5$th percentile of $20{,}000$ draws rides on the
+$500$ largest values, and with $n=8$ seeds the bootstrap distribution is discrete with
+large atoms, so the percentile can jump between neighbouring atoms from one stream
+to another. And it is not an exact confidence interval: with $n=8$ or $16$ the
+percentile interval tends to under-cover, and it inherits any skewness of the
+statistic. The paper therefore reports the interval as the outcome of a declared
+procedure and reads it as such, never as a $p$-value.
+
+\paragraph{The exact enumerated bootstrap.}
+A resample is a multiset of $n$ draws from $n$ seeds, and the statistic depends only
+on the multiset (the counts $c_1,\dots,c_n$ with $\sum_sc_s=n$) when it is symmetric in
+the replicates. The number of distinct multisets is the number of weak compositions
+of $n$ into $n$ parts,
+\begin{equation}
+  \binom{2n-1}{n},\qquad\text{which is }6435\text{ at }n=8,\quad 92{,}378\text{ at }n=10,\quad 300{,}540{,}195\text{ at }n=16,
+\end{equation}
+and the multiset with counts $(c_s)$ has probability $\dfrac{n!}{\prod_sc_s!}\,n^{-n}$
+under resampling with replacement (the multinomial law). When the count is small
+enough, the bootstrap distribution is therefore \emph{enumerable}: compute $T$ on every
+multiset, weight it by its multinomial probability, and read the weighted percentiles.
+The interval then has no Monte Carlo error at all. The tool
+\code{tools/make\_sample\_complexity.py} does this whenever $\binom{2n-1}{n}\le200{,}000$
+(that is, $n\le10$) and falls back to Monte Carlo with a reported $B$ above that limit.
+This is the \term{exact enumerated bootstrap} the paper's provenance appendix refers to,
+and it entered the project because a Monte Carlo interval for a fitted slope was found
+to have its upper limit on one side or the other of the value being tested depending
+on the bootstrap stream (\code{docs/SCIENCE\_AUDIT.md}, finding 3 of 18 September);
+enumeration settled it. At $n=16$ the enumeration is out of reach and $B=20{,}000$
+Monte Carlo draws are used, which is adequate for a mean over sixteen seeds.
+
+\section{Paired differences and paired ratios}
+\label{sec:paired}
+
+Two arms $A$ and $B$ run at the same seed are fitted on the same training bundle,
+selected on the same validation bundle and scored on the same test bundle. Their
+errors $e^A_s$ and $e^B_s$ are then \term{paired}, and the comparison is made on the
+per-seed differences or ratios, not on the two means.
+
+\paragraph{Paired differences.}
+With $d_s=e^A_s-e^B_s$, the mean paired difference is $\bar d=\bar e^A-\bar e^B$, the
+same number as the difference of means; what changes is its uncertainty:
+\begin{equation}
+  \Var(\bar d)=\frac1n\bigl(\Var(e^A)+\Var(e^B)-2\Cov(e^A,e^B)\bigr),
+\end{equation}
+and the covariance is large and positive when both arms suffer from the same hard
+seeds (a bundle with an unusual chain, a heavy-tailed draw). Pairing removes that
+shared variation. The paper reports $\bar d$ with a percentile bootstrap of the $d_s$
+over seeds, and beside it the \term{sign count}, ``in favour of $A$ in $k$ of $n$
+seeds'', a distribution-free summary that needs no scale.
+
+\paragraph{Paired ratios.}
+When the question is a factor (``the best network is a factor $r$ behind''), the paper
+forms the per-seed ratio $r_s=e^A_s/e^B_s$ and reports the \term{mean of ratios}
+$\bar r=\tfrac1n\sum_sr_s$ with a percentile bootstrap. This is not the same as the
+\term{ratio of means} $\bar e^A/\bar e^B$: for positive quantities the mean of ratios
+exceeds the ratio of means when the denominator varies across seeds (Jensen's
+inequality applied to $1/e^B$), and the two can differ by a few per cent at $n=16$.
+The paper states which it uses (``ratios are formed within seed and averaged'') and,
+for the headline factor, reports both, so that a reader can see the size of the
+difference. A paired ratio is only meaningful when both arms are scored on the same
+test bundle; the generator that joins rows from different experiments checks the
+SHA-256 of the bundles and raises if they differ (\code{docs/EXPERIMENTAL\_CONTRACT.md},
+Section 3).
+
+\section{Log-slopes and why a local slope is not an asymptotic exponent}
+\label{sec:slopes}
+
+Many of the paper's theoretical statements are power laws in $e^{-t}$: an information
+decays as $e^{-4t}$ or $e^{-8t}$, an RMSE grows as $e^{2t}$ or $e^{4t}$. A measured curve
+$y(t)$ is compared with such a law through its \term{log-slope}, the derivative of
+$\log y$ with respect to $t$, so that $y\propto e^{-8t}$ has log-slope $-8$.
+
+\paragraph{The OLS log-slope over a window.}
+Given values $y_1,\dots,y_K$ at levels $t_1<\dots<t_K$ in a declared window, the
+ordinary least-squares slope of $\log y$ on $t$ is
+\begin{equation}
+  \hat b=\frac{\sum_k(t_k-\bar t)(\log y_k-\overline{\log y})}{\sum_k(t_k-\bar t)^2},
+  \label{eq:ols-slope}
+\end{equation}
+which for $K=2$ reduces to the two-point slope $(\log y_2-\log y_1)/(t_2-t_1)$. The
+window and the estimator are declared in the registry entry before the data are seen
+(\cref{sec:prereg}); the two-point and the OLS estimators differ, and the audit of 18
+September replaced a two-point estimate by the pre-declared OLS one for exactly this
+reason. Its uncertainty is a bootstrap over seeds of the whole fit
+(\cref{sec:bootstrap}), because the levels within a seed share the seed's chains.
+
+\paragraph{Local versus asymptotic.}
+An asymptotic law $y(t)=Ce^{-\beta t}(1+\epsilon_t)$ with $\epsilon_t\to0$ has log-slope
+\begin{equation}
+  \frac{\dd\log y}{\dd t}=-\beta+\frac{\dd}{\dd t}\log(1+\epsilon_t),
+\end{equation}
+and the second term is not small until $\epsilon_t$ is. For the paper's Gaussian chain
+$\epsilon_t=O(e^{-2t}\lmax(\Sig_0))$, and the scalar example of the chapter on Fisher
+information makes the effect explicit: for a noised Gaussian coordinate of variance
+$\theta$, $I_t=\tfrac12e^{-4t}(1+(\theta-1)e^{-2t})^{-2}$ has local log-slope
+\begin{equation}
+  -4+\frac{4(\theta-1)e^{-2t}}{1+(\theta-1)e^{-2t}},
+\end{equation}
+which for $\theta=5$ is about $-1.6$ at $t=0.5$, $-3.3$ at $t=1.5$ and $-4.0$ at $t=3$.
+A window that ends near the crossover $\tfrac12\log(\theta-1)\approx0.7$ measures a
+slope of $-2$ or so and says nothing against the asymptotic $-4$; a window well above it
+measures $-4$. The OLS slope over a window is a weighted average of the local slopes
+in it, so it lies between the shallowest and the steepest local values. This is the
+whole content of the paper's remark that slopes of about $-3$ and $-6$ measured over
+$t\le1.6$ at $\corr=0.85$ are pre-asymptotic values below $\tstar$, and of the
+pre-data amendment of E12b, which replaced ``compare the fitted slope with $4$ and
+$8$'' by ``compare $M^*(t)$ with the exact information curve, whose local slope on the
+swept levels is what the corollary predicts there''.
+
+\section{Bundles: training, validation and test}
+\label{sec:bundles}
+
+Each seed owns three \term{bundles} of sequences drawn from three disjoint random
+streams keyed by a tag, the seed and, for training, the size $\nseq$
+(\code{rng\_for} in \code{src/markov\_score/utils.py}; the tags are in
+\code{experiments/protocol.py}):
+\begin{itemize}
+\item the \term{training bundle}, $\nseq\in\{32,128,512,2048\}$ sequences, the only
+  data the estimator's fit sees; under the one-view protocol each sequence
+  contributes one noised view at one level, the sequences being split evenly across
+  the twelve levels;
+\item the \term{validation bundle}, $1024$ sequences, used only to \emph{select}: the
+  EM iteration count on its checkpoint ladder, the network checkpoint, and, for the
+  architecture screens, nothing (those use development seeds, \cref{sec:seeds});
+\item the \term{test bundle}, $2048$ sequences, used only to \emph{report}.
+\end{itemize}
+Selection on validation and reporting on test are separated so that the reported
+number is not optimistically biased by the choice it depended on. The regions differ
+too: selection uses the \term{bulk} (sites $5$ to $\nsites-4$), reporting the headline
+uses all sites, and the centre site is a diagnostic. The SHA-256 of every bundle is
+stored with every row, so that pairing across arms and across experiments is
+checkable after the fact.
+
+\paragraph{The estimand.}
+The headline quantity is the \term{schedule-pooled relative score error},
+\begin{equation}
+  \Bigl(\frac{\sum_t\sum_{j,i}\bigl(\hat s_t(\vx_j)_i-s_t(\vx_j)_i\bigr)^2}{\sum_t\sum_{j,i}s_t(\vx_j)_i^2}\Bigr)^{1/2},
+  \label{eq:estimand}
+\end{equation}
+the sum over the twelve levels $t$ of the schedule, the test sequences $j$ and the
+sites $i$ of the squared error between an estimator's score $\hat s$ and the tree-exact
+reference $s$, divided by the same sum of the reference's squared norm, and then
+rooted. ``Pooled'' means that the sums are formed before the ratio and the root: the
+low levels, where the score is large, dominate the pooled energy, and a per-level
+statement (such as the Edgeworth correction of E16 or the LMMSE floor per level of
+E07) must not be confused with a pooled one. A relative error of $x$ means the
+estimator's squared error is $x^2$ of the reference's energy over the schedule.
+
+\section{Development and confirmatory seeds}
+\label{sec:seeds}
+
+Two kinds of seed never mix. \term{Development seeds} ($10000$ to $10003$) are used for
+every choice that a human or a script makes among alternatives: architectures,
+learning rates, output parameterisations, the mixture capacity ladder's shape. Numbers
+computed on them appear in no reported table. \term{Confirmatory seeds} ($0$ to $15$,
+or $0$ to $7$ in the sweeps) are used for every reported number and for no choice.
+The reason is selection bias: a configuration chosen because it did best on a set of
+seeds has an error on those seeds that is biased downward (the winner's curse), and
+only seeds that played no part in the choice give an unbiased reading. The
+architecture screen of the paper's Appendix C is therefore a table on development
+seeds whose winners are then run once on the confirmatory seeds. The per-seed
+validation bundle is a third thing: it belongs to a confirmatory seed but is used only
+to pick the checkpoint within an arm, which is part of the arm's definition rather
+than a choice among arms.
+
+\section{Pre-registration and pre-data amendments}
+\label{sec:prereg}
+
+A \term{registered experiment} is an entry of \code{experiments/registry/} (one JSON
+file per identifier, E01 to E21) that records, before the experiment runs, the
+hypothesis it tests with a stated prediction, the design (the one factor varied and
+everything held fixed), the pre-declared analysis (which script computes which
+statistic from which file, with which estimator and window), the seeds, and the
+status. When the run is complete, its output files are \term{frozen}: their SHA-256
+digests are written into the entry (\code{tools/freeze.py}), any later byte change
+fails the build (\code{tools/freeze.py --check}, run by \code{tools/check\_manuscript.py}),
+and a generator refuses to emit a number from an output that is not frozen or whose
+provenance records a dirty code tree. Every number in the paper is a macro emitted by
+such a generator from a frozen file, and an independent tool
+(\code{tools/audit\_claims.py}) recomputes the headline numbers from the same frozen
+files by a different code path. The contract is written out in
+\code{docs/EXPERIMENTAL\_CONTRACT.md}.
+
+A \term{pre-data amendment} is a change to a registered entry made \emph{before any
+cell of the experiment has run}, recorded in the entry's \code{amendments} list with a
+timestamp, what changed, why, and what did not change. It is the one kind of change
+the contract allows to an entry; once a confirmatory cell has run, the entry is never
+changed, and a fix is a new experiment with a new identifier or a versioned directory,
+with the old run kept and reported for what it is. Two examples fix the idea.
+\begin{itemize}
+\item E14 (\code{experiments/registry/E14.json}) was pre-registered on 18 September
+  and submitted to the cluster; while its jobs were still pending and no cell had run,
+  the entry was amended so that each network row records the whole held-out objective
+  curve rather than only its minimum, so that a diverged fit can be reported as a
+  divergence and not as the network's error. The amendment states that nothing in the
+  design, the arms, the seeds or the analysis changed, and the jobs were resubmitted.
+\item E12b (\code{experiments/registry/E12b.json}) was amended, before any cell ran,
+  to compare the measured sample-complexity curve with the exact information curve
+  computed by Fisher's identity (E21) rather than with the asymptotic exponents $4$
+  and $8$, because a computation made before the data showed that the local slope of
+  the information curve on the swept levels is between $6$ and $7$ for the shape
+  coordinate; the original plan would have recorded a confirmation as a refutation.
+\end{itemize}
+The value of the discipline is that a reader can tell, for every number, whether it
+was predicted or observed, and whether the analysis that produced it was chosen before
+or after the data existed. Where the paper reports something it did not pre-register
+(the audit computations E15 to E21 were registered on the day they were run), it says so.
+
+\section{Worked example: eight seeds}
+
+Take $n=8$ confirmatory seeds, as in the regime sweeps. The exact bootstrap
+enumerates $\binom{15}{8}=6435$ multisets. The multiset in which every seed appears
+once has probability $8!/8^8=40320/16777216\approx0.0024$; a given seed is absent from
+a resample with probability $(7/8)^8\approx0.344$, so a typical resample contains
+about $8(1-0.344)\approx5.2$ distinct seeds, which is why bootstrap intervals at $n=8$
+are wide and discrete. The relative standard error of an eight-replicate standard
+deviation is about $1/\sqrt{14}\approx27\%$.
+
+For a paired comparison, suppose four seeds gave errors $e^A=(0.10,0.12,0.11,0.13)$
+and $e^B=(0.08,0.10,0.09,0.11)$. The unpaired means are $0.115$ and $0.095$, each with
+a sample standard deviation of about $0.013$, and the unpaired standard error of their
+difference is about $0.009$, so the two arms look barely distinguishable; the paired
+differences are all exactly $0.02$, with zero dispersion, and $A$ is behind in $4$ of
+$4$ seeds. The per-seed ratios are $1.25$, $1.20$, $1.22$ and $1.18$, with mean of ratios
+$1.214$; the ratio of means is $0.115/0.095\approx1.211$, a little smaller, as
+\cref{sec:paired} predicts. All of these are properties of the four invented numbers,
+not of any experiment.
+
+\where{{\sloppy The paper's Section 5 (paired seeds as the inferential unit, ratios formed
+within seed, sixteen and eight seeds), Section 4 (RMSE, dispersion and bias per level,
+the sixteen-replicate standard deviation, fitted log-slopes on declared windows),
+Appendix C (bundles, seeds, the estimand, the checkpoint ladders, percentile bootstraps
+over seeds, provenance) and Appendix E. Experiments: every one of E01 to E21; the
+examples above are E06, E12, E12b, E14 and E19. Code: \code{experiments/protocol.py}
+(sizes, seeds, bundle tags, the estimand and regions), \code{experiments/frozen\_config.py},
+\code{src/markov\_score/utils.py} (\code{rng\_for}), \code{tools/make\_capacity\_numbers.py}
+(\code{boot\_ci}), \code{tools/make\_sample\_complexity.py} (the enumerated bootstrap and
+the OLS slope), \code{tools/make\_learning\_numbers.py}, \code{tools/freeze.py},
+\code{tools/registry.py}, \code{tools/check\_manuscript.py}, \code{tools/audit\_claims.py},
+\code{docs/EXPERIMENTAL\_CONTRACT.md}, \code{docs/SCIENCE\_AUDIT.md},
+\code{experiments/registry/E14.json}, \code{experiments/registry/E12b.json}.\par}}
+
+\paragraph{References.}
+B. Efron and R. J. Tibshirani (1993), \emph{An Introduction to the Bootstrap}, Chapman
+and Hall (Chapters 6 and 13: the bootstrap standard error and the percentile interval).
+A. C. Davison and D. V. Hinkley (1997), \emph{Bootstrap Methods and Their Application},
+Cambridge University Press (Chapter 2: the enumeration of resamples and the
+multinomial weights; Chapter 5: percentile intervals and their coverage).
+P. Hall (1992), \emph{The Bootstrap and Edgeworth Expansion}, Springer (Chapter 3: the
+accuracy of percentile intervals).
+L. Wasserman (2004), \emph{All of Statistics}, Springer (Chapters 6 to 9: bias,
+variance, mean squared error, standard errors and the bootstrap).
+B. A. Nosek, C. R. Ebersole, A. C. DeHaven and D. T. Mellor (2018), ``The
+preregistration revolution'', Proceedings of the National Academy of Sciences 115,
+2600--2606.
