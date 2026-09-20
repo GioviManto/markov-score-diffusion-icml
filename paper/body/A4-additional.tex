@@ -25,11 +25,15 @@ The frozen configuration fixes $\corr=0.85$. The price of second-order closure i
 of $\corr$ as well as of the innovation law, and this appendix reports it over
 $\corr\in\{0,0.3,0.6,0.85,0.95\}$ for five families on the twelve-level schedule, computed
 from the exact score with no estimation involved.
-The heavy-tailed member at $\corr=0$ is excluded from every statement below: the
-quadrature sweep of \cref{app:numerics} places it outside the validated envelope of the
-operating grid---one to two sites per bundle lie beyond the domain and are pinned to its
-boundary---and a recomputation at a wider domain is pending. The ordering by $\kfour$ is
-read off the remaining cells.
+The heavy-tailed family is quoted from a recomputation on the
+$(\phaseWideN,\phaseWideA)$ domain (\textsc{e07c}): on the operating grid the quadrature
+sweep of \cref{app:numerics} places its $\corr=0$ cell outside the validated envelope, one
+to two sites per bundle lying beyond the domain and pinned to its boundary. Widening the
+domain moves its pooled floor by at most $\phaseStudentMoveOperating$ from $(801,8)$ to
+$(801,12)$ and by at most $\phaseStudentMoveWide$ from $(801,12)$ to
+$(\phaseWideN,\phaseWideA)$ (\textsc{e07b}, \textsc{e07c}), and every other family by at
+most $\phaseOtherMoveWide$ between the operating and the widest grid; the other families
+are quoted from the operating grid, where they are converged.
 \IfFileExists{sections/phase-numbers.tex}{\input{body/05f-phase}}{}
 
 \section{Capacity: the previous reading and the stopping-rule artefact}

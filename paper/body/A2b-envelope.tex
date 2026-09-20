@@ -27,9 +27,14 @@ $\gridWorstBoundary$ in the outer $2\%$'' of the diagnostic, and at the lowest l
 score error alone is the drift of $\gridWorstDrift$. For a polynomial tail the
 expected exceedance count is Poisson with mean $\nseq\nsites\,P(|a|>\halfwidth)$, which no
 finite domain makes zero: $\audExceedExpectedTwelve$ per $8192$ sites at
-$\halfwidth=12$, $\audExceedExpectedSixteen$ at $\halfwidth=16$. That cell lies in the
-family ladder of \cref{app:phase}, and its entries are flagged there pending a
-recomputation at a wider domain; no claim in the body rests on it. The same
+$\halfwidth=12$, $\audExceedExpectedSixteen$ at $\halfwidth=16$. Per replicate of the
+family ladder of \cref{app:phase} ($\excChains$ chains of $\excSites$ sites) the same
+expectation is $\excStudentRhozeroAeight$ sites at $\halfwidth=8$,
+$\excStudentRhozeroAtwelve$ at $12$ and $\excStudentRhozeroAsixteen$ at $16$ for the
+Student-$t_5$ chain at $\corr=0$, and below $\excLaplaceRhozeroAeight$ for every other
+family and correlation; that ladder therefore quotes the heavy-tailed family from a
+recomputation on the $(\phaseWideN,\phaseWideA)$ domain, where its pooled floor has
+stopped moving (\textsc{e07b}, \textsc{e07c}); no claim in the body rests on it. The same
 consideration governs the closure panel of \cref{fig:theory}: beyond $t\approx3$ the
 reference on the $(801,8)$ grid carries the tail of the \emph{truncated} prior, and the
 heavy-tailed families depart from the constant for that reason alone; on

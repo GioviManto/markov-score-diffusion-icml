@@ -23,11 +23,19 @@ which the information runs out is the level at which the estimator stops estimat
 The correlation is recovered to $\learnRmseRhoTone$ at $t=1$ with dispersion
 $\audSdRhoTone$ against a reference of $\learnCrlbRhoTone$, and is lost only past the
 crossover $\tstar=\learnTstar$: $\learnRmseRhoTonepfour$ at $t=\learnLevelTonepfour$
-and $\learnRmseRhoTtwo$ at $t=2$. Whether the excess over the reference at those two
-levels is information or budget the run cannot say: there the validation-selected
-checkpoint is the last rung of the \textsc{em} ladder in $\learnAtCapHighMin$ of cells
-or more, against at most $\learnAtCapLowMax$ at every informative level, and a control
-with the ladder extended sixfold is registered (\textsc{e06c}). The same coordinates
+and $\learnRmseRhoTtwo$ at $t=2$. Part of the excess at those two levels was budget, not information: there the
+validation-selected checkpoint is the last rung of the \textsc{em} ladder in
+$\learnAtCapHighMin$ of cells or more, against at most $\learnAtCapLowMax$ at every
+informative level, and rerunning the same seeds and data with the ladder extended to
+$\learnBudgetLadderMax$ iterations (\textsc{e06c}; hollow markers in \cref{fig:learning})
+brings the correlation error to $\learnBudgetRmseRhoTonepfour$ at $t=\learnLevelTonepfour$
+and $\learnBudgetRmseRhoTtwo$ at $t=2$ ($\learnBudgetEffRhoTonepfour$ and
+$\learnBudgetEffRhoTtwo$ times the reference), while the last rung is still selected in
+$\learnBudgetAtCapTtwo$ of cells at $t=2$; at the levels up to $t=\learnBudgetLowHi$ nothing
+moves by more than $\learnBudgetMaxAbsDiffRhoLow$ in $\corr$. Past the crossover the
+estimator is limited by the optimiser as much as by the information: \textsc{em}'s contraction
+rate falls with the information it has, so the levels where the reference is loosest are
+also the levels where the ladder binds. The same coordinates
 estimated from the same data by the method of moments---the lag-one product for
 $\corr$ and the per-site fourth cumulant divided by $e^{-4t}$ for $\kfour$, both
 unbiased by \cref{thm:hermite}---are $\audMomOverEmRhoMin$--$\audMomOverEmRhoMax$

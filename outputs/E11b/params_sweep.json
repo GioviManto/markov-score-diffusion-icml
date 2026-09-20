@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-09-20 12:29:54",
+  "git_commit": "92da540e6414a3d921b837595c5ef9eb20516b8e",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "c4e0404f9a2fbae5226526f5f37c18f8624a49a2918ec8ee92da4e54bce3e67d",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode06",
+  "slurm_job_id": "664041",
+  "slurm_array_task_id": "",
+  "cpu_count": "40",
+  "blas_threads": "1",
+  "settings": {
+    "families": [
+      "gaussian",
+      "laplace",
+      "student",
+      "uniform",
+      "bimodal"
+    ],
+    "rhos": [
+      0.0,
+      0.5,
+      0.85,
+      0.95
+    ],
+    "lengths": [
+      64,
+      128
+    ],
+    "levels": [
+      0.05,
+      0.0725,
+      0.1053,
+      0.1527,
+      0.2216,
+      0.3215,
+      0.4665,
+      0.6769,
+      0.9821,
+      1.425,
+      2.0676,
+      3.0
+    ],
+    "grids": [
+      [
+        201,
+        8.0
+      ],
+      [
+        401,
+        6.0
+      ],
+      [
+        401,
+        8.0
+      ],
+      [
+        401,
+        10.0
+      ],
+      [
+        801,
+        8.0
+      ],
+      [
+        801,
+        12.0
+      ],
+      [
+        1601,
+        8.0
+      ]
+    ],
+    "reference_grid": [
+      3201,
+      12.0
+    ],
+    "n_chains": 256,
+    "seeds": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "boundary_frac": 0.02
+  },
+  "quick": false,
+  "workers": 16
+}

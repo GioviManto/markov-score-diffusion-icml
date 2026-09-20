@@ -259,20 +259,25 @@ radius-4 floor at ρ = 0.85: 0.030 pooled (peak 0.065 at t ≈ 0.7–1.0), again
 "a radius-4 window cannot represent a message that has travelled the length of the chain" is
 replaced by the floor.
 
-**N-22. A one-probe divergence does not train the window head (E14's first screen).** The
-first E14 screen (job 663143, 108 cells, 19–20 Sep) trained every architecture by implicit
-score matching with Hutchinson's one-probe divergence, "so the estimator is uniform across
-arms". At the frozen point (ρ = 0.85, L = 32, M = 2048, radius 4, width 64, lr 1e-3, eps) the
-window head reached test risks of 0.883 and 1.648 on the two development seeds, against 0.166
-for the same network trained with the exact trace in E03's matched arm; every held-out ISM
-curve rises from the first checkpoint (selected step 500 in 11 of 12 window cells). The
-transformer, which E03 also trained with Hutchinson, sat at 0.79–1.29 at L = 32 against
-E03's 0.42. The estimator, not the regime, is the cause: with L = 32 outputs and one Gaussian
-probe the per-sample trace estimate has variance 2‖J‖²_F, and the score's Jacobian carries
-1/Δ_t ≈ 10 at the lowest level. The screen is kept under `outputs/E14_screen_hutchinson/`
-and superseded (registry amendment of 20 Sep): the window head now trains with the exact
-trace computed by 2r+1 coloured probes (`markov_score.nn_torch.divergence`, exact to
-round-off, `tests/test_nn_torch.py`), the transformer with Hutchinson at E03's learning
-rate 3e-3, and the confirm carries E03's clean-target arm and the evidence-selected EM arm
-as brackets. The lesson generalises: an ISM baseline trained with a one-probe trace is not a
-measurement of the architecture, and a paper that compares against one has built a straw man.
+**N-22. E14's first screen measured one chain, not a regime.** The first E14 screen (job
+663143, 108 cells, 19–20 Sep) gave the window head test risks of 0.883 and 1.648 at the
+frozen point (ρ = 0.85, L = 32, M = 2048, radius 4, width 64) against 0.166 for the same
+network in E03's matched arm, with every held-out ISM curve rising from the first checkpoint.
+The first diagnosis blamed the divergence estimator (E14 trained the window head with
+Hutchinson's one probe where E03 used the exact trace), and the driver was changed to E03's
+per-arm estimators and learning rates; a screen re-run with the exact trace (job 664056)
+failed the same way. Running E03's own training function and E14's on the same data settled
+it: both give 1.1–1.3 on E14's data and 0.166–0.169 on E03's. The cause was the data. In
+`_common` the training chains and the validation chains were drawn as
+`prior.sample(rng_for("e14-train", seed, L, rho), L) for _ in range(n)`, the generator
+re-created inside the comprehension, so all 2048 training chains were one draw and both arms
+fitted 2048 copies of a single chain (the quick run showed it: ρ̂ = 0.67, κ̂₄ = 0.46 on
+"Laplace data at ρ = 0.85", and should have been read as a data defect). Fixed on 20 Sep:
+one generator per set and an assertion that the chains are distinct; with the fix E14's
+pipeline reproduces E03's 0.169 at the frozen point (2000 steps). `grep "sample(rng_for("`
+finds no other current experiment with the pattern (E13 creates its generator once). The
+screens 663143 and 664056 and the confirms 663144 and 664065 are void and are kept under
+`outputs/E14_screen_invalid/`; the estimator change stays because it is E03's, not because
+it was the cause. Two lessons for the protocol: a fitted parameter that contradicts the
+generating law is a data check, not an estimator result; and every driver should assert
+that its training set has as many distinct chains as it claims.

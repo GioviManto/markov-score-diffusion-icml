@@ -22,12 +22,14 @@ computed with 2r+1 coloured probes (markov_score.nn_torch.divergence), which is 
 round-off at the cost of Hutchinson, so it is affordable at L = 128. The screen trains to 8k steps
 where the confirmatory run trains to 32k; checkpoint selection uses the exact divergence throughout.
 
-Amendment of 20 September 2026, before any confirmatory cell ran. The first screen (job 663143)
-trained the window head with Hutchinson's estimator; at the frozen point (rho = 0.85, L = 32,
-M = 2048, the E03 winner's radius and width) that gave test risks of 0.88 and 1.65 on the two
-development seeds against 0.166 for the same network trained with the exact trace in E03. The
-one-probe divergence, not the regime, was the cause, and the arm would have been a straw man.
-That screen is kept as a negative result (docs/NEGATIVE_RESULTS.md) and re-run here.
+Amendments of 20 September 2026, before any valid confirmatory cell ran. The first screen (job
+663143) gave the window head 0.88 and 1.65 at the frozen point (rho = 0.85, L = 32, M = 2048,
+E03's radius and width) against 0.166 for the same network in E03's matched arm. The cause was
+not the estimator but the data: _common() re-created the random generator inside its sampling
+comprehension, so every training chain was the same draw and both arms fitted 2048 copies of
+one chain (docs/NEGATIVE_RESULTS.md, N-22). It is fixed below, with an assertion. The per-arm
+estimators above are E03's and were adopted in the same pass; they stay because they are what
+E03 used, so that the two experiments' network arms are the same estimator.
 
 Two arms were added at the same time, both cheap and both there to bracket the comparison rather
 than to change it: (i) the network-favourable interface of E03, denoising score matching on CLEAN
@@ -278,8 +280,15 @@ def _common(cfg, rho, L, seed, n):
     log_k = prior.log_transition_matrix(grid)
     _, val = _bundle(prior, log_k, grid, w, "e14-val", seed, cfg["n_val"], L)
     _, test = _bundle(prior, log_k, grid, w, "e14-test", seed, cfg["n_test"], L)
-    A = np.stack([prior.sample(rng_for("e14-train", seed, L, rho), L) for _ in range(n)])
-    Av = np.stack([prior.sample(rng_for("e14-valchains", seed, L, rho), L) for _ in range(cfg["n_val"])])
+    # ONE generator per set, created outside the comprehension. The first version of this line
+    # re-created the generator inside it, so every chain of the training set was the same draw
+    # (and every validation chain likewise); both arms then fitted 2048 copies of one chain, which
+    # is what the superseded screen of 19 Sep measured (registry amendment of 20 Sep, N-22).
+    rng_tr = rng_for("e14-train", seed, L, rho)
+    A = np.stack([prior.sample(rng_tr, L) for _ in range(n)])
+    rng_va = rng_for("e14-valchains", seed, L, rho)
+    Av = np.stack([prior.sample(rng_va, L) for _ in range(cfg["n_val"])])
+    assert len(np.unique(A[:, 0])) > 1 and len(np.unique(Av[:, 0])) > 1, "degenerate training set"
     base = dict(rho=rho, n_sites=L, seed=seed, n_chains=n,
                 t_star=float(theory.crossover_time(rho, L=L)),
                 val_bundle=_bundle_hash(val), test_bundle=_bundle_hash(test))

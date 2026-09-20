@@ -38,9 +38,29 @@ def main() -> int:
     sec = ROOT / ("outputs/scratch/sections_dev" if dev else "paper/sections"); figdir = ROOT / ("outputs/scratch/figures_dev" if dev else "paper/figures")
     sec.mkdir(parents=True, exist_ok=True); figdir.mkdir(parents=True, exist_ok=True)
     df = pd.read_csv(src / "ladder.csv")
+    # The heavy-tailed family is quoted from its recomputation on the widest domain (E07c) when
+    # that run is frozen: E11 places its rho = 0 cell outside the validated envelope of the
+    # operating grid (truncation, flat in N_g), and E07b/E07c measure how far widening the
+    # domain moves it. The other families stay on the operating grid, where they are converged;
+    # the macros record the largest movement of every pooled row between the grids.
+    extra, excluded = {}, EXCLUDED
+    wide, mid = ROOT / "outputs/E07c/ladder.csv", ROOT / "outputs/E07b/ladder.csv"
+    if wide.exists() and mid.exists() and not dev:
+        import json
+        dw, dm = pd.read_csv(wide), pd.read_csv(mid)
+        pw = json.loads((wide.parent / "params_ladder.json").read_text())["settings"]
+        extra["phaseWideN"] = str(int(pw["grid_size"])); extra["phaseWideA"] = f"{float(pw['half_width']):g}"
+        pool = lambda d: d[d.pooled.astype(bool)].groupby(["family", "rho"]).rel_lmmse.mean()
+        p0, pm, pwide = pool(df), pool(dm), pool(dw)
+        stu = [k for k in p0.index if k[0] in EXCLUDED]; oth = [k for k in p0.index if k[0] not in EXCLUDED]
+        extra["phaseStudentMoveOperating"] = f"{float((pm[stu] - p0[stu]).abs().max()):.3f}"
+        extra["phaseStudentMoveWide"] = f"{float((pwide[stu] - pm[stu]).abs().max()):.4f}"
+        extra["phaseOtherMoveWide"] = f"{float((pwide[oth] - p0[oth]).abs().max()):.4f}"
+        df = pd.concat([df[~df.family.isin(EXCLUDED)], dw[dw.family.isin(EXCLUDED)]], ignore_index=True)
+        excluded = ()
     per = df[~df.pooled.astype(bool)].groupby(["rho", "family", "t"], as_index=False)[["rel_lmmse", "rel_iso"]].mean()
     pooled = df[df.pooled.astype(bool)].groupby(["rho", "family"], as_index=False)[["rel_lmmse", "rel_iso", "t_star", "C4", "excess_kurtosis"]].mean()
-    macros = {}
+    macros = dict(extra)
     for _, r in pooled.iterrows():
         macros[f"phaseLmmse{r.family.capitalize()}Rho{_mac(f'{r.rho:g}')}"] = f"{r.rel_lmmse:.3f}"
         macros[f"phaseIso{r.family.capitalize()}Rho{_mac(f'{r.rho:g}')}"] = f"{r.rel_iso:.3f}"
@@ -81,7 +101,7 @@ def main() -> int:
     # E11 places the heavy-tailed family at zero correlation outside the validated quadrature
     # envelope; the point is ringed so it cannot be read as a peer of the others, and the
     # caption says why (FIGURE_TABLE_STANDARDS F6).
-    for key in EXCLUDED:
+    for key in excluded:
         e = pooled[(pooled.family == key) & (pooled.rho.abs() < 1e-9)]
         for _, r in e.iterrows():
             ax.plot([r.rho], [r.rel_lmmse], marker="o", ms=8.5, mfc="none", mec=fs.INK2, mew=0.8, zorder=5)

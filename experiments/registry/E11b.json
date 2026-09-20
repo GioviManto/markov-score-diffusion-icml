@@ -5,7 +5,7 @@
  "design": "E11 exactly, with lengths = (64, 128) instead of (32,).",
  "predeclared_analysis": "Drift, boundary mass and column-mass defect per (family, rho, grid, L), and the ratio of the drift at L to the drift at L = 32 in the same cell, which is the quantity the prediction is about.",
  "motivation": "E11 validated one chain length. E03's length study evaluates at L up to 256, E13 sweeps L to 64 and E14 will run at L = 128, all against tree-exact references computed on the same grid. The envelope has to cover them.",
- "status": "PRE-REGISTERED 2026-09-18; SUBMITTED 2026-09-18 (job 662793: TIMEOUT after 23 h with 119/160 cells, 41 workers OOM-killed); RESUBMITTED 2026-09-20 (job 664041, resumes the same output directory)",
+ "status": "FROZEN E11b 2026-09-20T14:07:21Z; PRE-REGISTERED 2026-09-18; SUBMITTED 2026-09-18 (job 662793: TIMEOUT after 23 h with 119/160 cells, 41 workers OOM-killed); RESUBMITTED 2026-09-20 (job 664041, resumes the same output directory)",
  "registered": "2026-09-18",
  "hpc_runs": [
   {
@@ -28,5 +28,20 @@
    "resources": "compute/16cpu/200G/2-23:00 (workers = 16)",
    "note": "Resumption of 662793 in the same deployment and output directory (experiments/common.py run_cells skips the 119 cells on disk). 662793 ran 24 workers under 64 GB: the L = 128 cells against the (3201, 12) reference need several GB each, 41 workers were OOM-killed and the pool waited for their cells until the 23 h limit. Submitted with MSD_DEPLOY_ENV=hpc/.deploy_92da540.env (hpc/icml_submit.sh now honours it) so the cells land where the finished ones are."
   }
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E11b/grid.csv": "d1eae65aafe8f9b10c88b8027cf2c62933dd47a03a2abef65f4ce0e550e6ffa8",
+  "outputs/E11b/params_sweep.json": "bb0e3661e7b9d87ecca8278e741a3dbf001afe5f96dac83fcfd8d09c9fd3832c"
+ },
+ "frozen_at": {
+  "E11b": "2026-09-20T14:07:21Z"
+ },
+ "frozen_commit": {
+  "E11b": "c6cec32d474a65390e5760b66312d8724caf9e67"
+ },
+ "frozen_run_commits": {
+  "E11b": [
+   "92da540"
+  ]
+ }
 }
