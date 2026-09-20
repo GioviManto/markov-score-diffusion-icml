@@ -40,6 +40,15 @@ reference on the $(801,8)$ grid carries the tail of the \emph{truncated} prior, 
 heavy-tailed families depart from the constant for that reason alone; on
 $(3201,32)$ they reach it (\cref{app:audit}).
 
+The envelope also has to cover the longer chains of the length study and of the regime
+comparison, and it does (\textsc{e11b}: the same sweep at $\nsites\in\{\gridLenList\}$,
+$\gridLenSeeds$ seeds). On the operating grid the worst pooled drift over the sweep is
+$\gridLenWorstDriftThirtytwo$ at $\nsites=32$, $\gridLenWorstDriftSixtyfour$ at $64$ and
+$\gridLenWorstDriftOnetwentyeight$ at $128$, a factor of at most $\gridLenWorstRatioMax$,
+and at the frozen configuration $\gridLenFrozenDriftThirtytwo$, $\gridLenFrozenDriftSixtyfour$
+and $\gridLenFrozenDriftOnetwentyeight$: the per-site quadrature error does not compound along
+the chain, because the messages are renormalised at every site.
+
 A second observation from the same sweep cuts the other way. The column-mass defect of
 the discretised kernel, $\max_j|\sum_i \kernel(g_i\mid g_j)w_i-1|$, grows with
 correlation, from $\gridColMassLo$ at $\corr=\gridColMassLoRho$ to $\gridColMassHi$ at

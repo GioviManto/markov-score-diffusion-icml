@@ -73,6 +73,9 @@
 \input{sections/structured-aggregation-numbers}
 \input{sections/grid-convergence-numbers}
 \providecommand{\provenanceappendix}{\cref{app:protocol}}
+% Figures drawn for one column (tools/figstyle.COL_W = 3.25 in) keep that width in the one-column
+% appendix, where \columnwidth is the full text width and would double them.
+\newlength{\figcolw}\setlength{\figcolw}{3.25in}
 \providecommand{\headlinetable}{the archival comparison (\cref{app:additional})}
 \providecommand{\structuredtable}{the archival structured comparison (\cref{app:additional})}
 
