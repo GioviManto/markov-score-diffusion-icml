@@ -14,9 +14,16 @@
 # resubmitted job skips the cells whose files exist (experiments/common.py: run_cells).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-[[ -f hpc/.last_deploy.env ]] || { echo "run hpc/icml_deploy.sh first" >&2; exit 2; }
-source hpc/.last_deploy.env
+# MSD_DEPLOY_ENV=hpc/.deploy_<shortsha>.env resubmits into an OLDER deployment (a resumed run
+# must land in the output directory its finished cells already live in); default = newest.
+DEPLOY_ENV=${MSD_DEPLOY_ENV:-hpc/.last_deploy.env}
+[[ -f "$DEPLOY_ENV" ]] || { echo "run hpc/icml_deploy.sh first (no $DEPLOY_ENV)" >&2; exit 2; }
+source "$DEPLOY_ENV"
 CPUS=${MSD_HPC_CPUS:-32}; MEM=${MSD_HPC_MEM:-64G}; TIME=${MSD_HPC_TIME:-12:00:00}
+# Optional: MSD_HPC_WORKERS caps --workers below the cpu count (memory-bound cells; GPU jobs),
+# MSD_HPC_GRES adds a --gres line (e.g. gpu:4g.40gb:1), MSD_HPC_VENV picks another venv under
+# $MSD_HPC_ROOT (default venv; venv-cuda carries the CUDA torch build for the GPU partitions).
+WORKERS_CAP=${MSD_HPC_WORKERS:-}; GRES=${MSD_HPC_GRES:-}; VENV=${MSD_HPC_VENV:-venv}
 AFTER=""; WHAT=${1:-}; shift || true
 while [[ $# -gt 0 ]]; do case "$1" in --after) AFTER="$2"; shift 2;; *) echo "unknown arg $1" >&2; exit 2;; esac; done
 [[ -n "$WHAT" ]] || { echo "usage: $0 <e06c|e07b|e07c|e11b|e12b|e14|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
@@ -67,7 +74,8 @@ submit_one() {
   # do not, and passing it to them failed E07b at launch on 18 Sep (argparse: unrecognized
   # arguments). Decided here, at submission, from the driver's own source.
   local driver=${cmd%% *} workers_flag='' cpus=$CPUS
-  if grep -q -- '"--workers"' "experiments/$driver"; then workers_flag='--workers $SLURM_CPUS_PER_TASK'; else cpus=4; fi
+  if grep -q -- '"--workers"' "experiments/$driver"; then workers_flag="--workers ${WORKERS_CAP:-\$SLURM_CPUS_PER_TASK}"; else cpus=4; fi
+  local gres_line=''; [[ -n "$GRES" ]] && gres_line="#SBATCH --gres=$GRES"
   local jid
   jid=$(ssh -o BatchMode=yes "$MSD_HPC_HOST" "sbatch --parsable $depflag" <<SB
 #!/bin/bash
@@ -75,6 +83,7 @@ submit_one() {
 #SBATCH --partition=$PART
 #SBATCH --nodes=1 --ntasks=1 --cpus-per-task=$cpus --mem=$MEM --time=$TIME
 #SBATCH --propagate=NONE
+$gres_line
 #SBATCH --output=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.out --error=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.err
 set -euo pipefail
 # The login shell carries RLIMIT_CPU = 600 s. Without --propagate=NONE SLURM hands that
@@ -85,7 +94,7 @@ export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM
 export PYTHONPATH=\$HOME/$MSD_SRC/src
 cd \$HOME/$MSD_SRC/experiments
 echo "start=\$(date -Is) host=\$(hostname) job=\$SLURM_JOB_ID cpus=\$SLURM_CPUS_PER_TASK"; cat ../REVISION
-\$HOME/$MSD_HPC_ROOT/venv/bin/python $cmd $workers_flag
+\$HOME/$MSD_HPC_ROOT/$VENV/bin/python $cmd $workers_flag
 echo "done=\$(date -Is)"
 SB
 )

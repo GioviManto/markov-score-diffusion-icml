@@ -18,7 +18,9 @@ HOST=${MSD_HPC_HOST:-lnode01-da.hpc.unibocconi.it}
 REMOTE_ROOT=${MSD_HPC_ROOT:-msd-icml}
 cd "$(dirname "$0")/.."
 ALLOW_DIRTY=0; [[ "${1:-}" == "--allow-dirty" ]] && ALLOW_DIRTY=1
-dirty=$(git status --porcelain | grep -v "^?? outputs/" || true)
+# Untracked files under outputs/ and reports/ do not enter the archive (git archive packs HEAD)
+# and do not change the code path, so they do not make the tree dirty for a deployment.
+dirty=$(git status --porcelain | grep -v "^?? \(outputs\|reports\)/" || true)
 if [[ -n "$dirty" && $ALLOW_DIRTY -eq 0 ]]; then
   echo "FATAL: working tree is dirty; commit first (or --allow-dirty for a scratch deployment)." >&2
   echo "$dirty" | sed 's/^/    /' >&2; exit 1
