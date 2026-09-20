@@ -14,8 +14,9 @@ $\Cov(a_i,a_j)=\corr^{|i-j|}$ exactly for \emph{every} innovation law, so the fa
 use---Gaussian, Laplace, Student-$t$, uniform, a symmetric two-component mixture, and the
 generalised Gaussian $\innov_\beta(\varepsilon)\propto\exp(-|\varepsilon/s_\beta|^\beta)$
 whose exponent $\beta$ moves the excess kurtosis from $+3$ (Laplace) through $0$
-(Gaussian) to $-1.1$ at fixed variance---share one covariance $\Sig_0$ and differ only
-through cumulants of order four and higher.
+(Gaussian) to $-1$ at $\beta=6$, at fixed variance---share one covariance $\Sig_0$ and,
+every innovation law being symmetric, differ only through cumulants of order four and
+higher.
 The forward process is the coordinatewise Ornstein--Uhlenbeck channel
 \begin{equation}
   \vx_t = e^{-t}\va + \sqrt{\Dt}\,\vz,\qquad \Dt=1-e^{-2t},\quad \vz\sim\normal{0}{\Id},
@@ -50,9 +51,10 @@ a')\lmsg_{i-1}(a')\dd a'$ and its mirror image $\rmsg_i$ (\cref{app:numerics},
 score of a correlated, non-Gaussian, $\nsites$-dimensional law. Messages are functions on
 $\Reals$; we carry them on a grid of $\ngrid$ points on $[-\halfwidth,\halfwidth]$ with
 trapezoidal quadrature, exact for the discretised factor model and controlled for the
-continuous one (at $\ngrid=401$, $\halfwidth=8$ the reference is accurate to $10^{-5}$
-relative on ordinary draws for every family used; the domain, not the spacing, is what a
-heavy-tailed family tests, \cref{app:numerics}). Throughout, ``the score'' means this
+continuous one (at $\ngrid=401$, $\halfwidth=8$ and the frozen correlation the reference is accurate
+to $10^{-5}$ relative on ordinary draws for every family used; the domain, not the spacing,
+is what a heavy-tailed family tests, and at $\corr=0$ the Student-$t$ family needs a wider
+one, \cref{app:numerics}). Throughout, ``the score'' means this
 tree-exact inference, evaluated by validated quadrature.
 
 \paragraph{The covariance twin and the price of second-order closure.}
@@ -73,8 +75,8 @@ projected message equals the Gaussian chain's message. Two consequences are used
 checks below. Sum-product with \emph{any} Gaussian kernel is a linear map of $\vx$, and
 the LMMSE of the true covariance minimises the posterior-mean error over linear maps,
 so the LMMSE floor bounds every linear estimator; and the Gaussian quasi-likelihood of
-noised data depends on the data only through their covariance
-$e^{-2t}\Sig_0+\Dt\Id$, so a Gaussian-innovation kernel fitted by maximum likelihood is
+noised data depends on the data only through their sample covariance, whose expectation
+is $e^{-2t}\Sig_0+\Dt\Id$, so a Gaussian-innovation kernel fitted by maximum likelihood is
 consistent for $(\corr,\ivar)$ and lands on that floor. \Cref{prop:lmmse} thus turns the
 gap between $\score$ and $\Sgauss$ into an interpretable object: it is precisely what
 any estimator that carries only second-order structure---a Gaussian innovation kernel, a

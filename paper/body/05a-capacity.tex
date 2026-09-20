@@ -13,15 +13,9 @@ $\ncomp=8$ arm still selects the top of its $1200$-iteration ladder in $\capAtCa
 $\capSeeds$ seeds, so its error there is an upper bound on what a longer ladder would give. The fitted innovation
 excess kurtosis is $\capKurteightD$ at $\nseq=2048$ against the true $3$; $\capUnresolved$
 of $\capCells$ fitted cells fail the two-grid-cell resolution gate and are reported, not
-dropped. The last row of
-\cref{tab:capacity} is the family's infinite-data reference: the $\ncomp$-component mixture
-closest in Kullback--Leibler divergence to the Laplace innovation, scored on the same
-bundles. Its $\ncomp=1$ member is the covariance twin and scores $\capPopone$, the LMMSE
-floor to three decimals, as \cref{prop:lmmse} requires; at $\ncomp=8$ it scores
-$\capPopeight$ (a fit whose narrowest component is under two grid cells, as it is for every
-$\ncomp\ge\capPopUnresolvedFirst$), so the fitted kernel at $\nseq=2048$ sits
-$\capPopRatioeightD\times$ above what its own family can express: a data limit, not a
-capacity limit. The reference is not a bound---a Kullback--Leibler-optimal innovation need
-not minimise the score error---and the best capacity at each size, $\ncomp=\capBestCapA$ at
-$\nseq=32$ rising to $\ncomp=\capBestCapD$ at $\nseq=2048$, is the usual
-variance-to-bias trade.
+dropped. The last row of \cref{tab:capacity} is the family's infinite-data reference, the
+$\ncomp$-component mixture closest in Kullback--Leibler divergence to the Laplace
+innovation: its $\ncomp=1$ member scores $\capPopone$, the LMMSE floor to three decimals,
+and at $\ncomp=8$ it scores $\capPopeight$, so the fitted kernel at $\nseq=2048$ sits
+$\capPopRatioeightD\times$ above what its own family can express, a data limit and not a
+capacity limit (\cref{app:capacity}).

@@ -18,11 +18,14 @@ Because only the transition factors depend on $\params$, Fisher's identity
 \end{equation}
 where the expected transition mass $\Xis$ is read off the pairwise marginals that the
 same forward--backward pass returns. No differentiation through the recursion is needed,
-and the identity is verified against finite differences to $10^{-9}$
-(\cref{app:protocol}). $\Xis$ is also all the M-step of EM needs: for a Gaussian kernel
+and the identity is verified against finite differences and against brute-force
+enumeration of the evidence on short chains (\codefile{tests/test\_em\_bp.py},
+\codefile{tests/test\_fisher\_bruteforce.py}). $\Xis$ is also all the M-step of EM needs: for a Gaussian kernel
 the maximiser is the belief-weighted Yule--Walker pair
 $\corr=S_{01}/S_{00}$, $\ivar=(S_{11}-\corr S_{01})/W$ with
-$S_{ab}=\sum_{kl}\Xis_{kl}\gridpt{k}^a\gridpt{l}^b$; for the mixture-innovation kernel
+$S_{00}=\sum_{kl}\Xis_{kl}\gridpt{l}^2$, $S_{01}=\sum_{kl}\Xis_{kl}\gridpt{k}\gridpt{l}$,
+$S_{11}=\sum_{kl}\Xis_{kl}\gridpt{k}^2$ and $W=\sum_{kl}\Xis_{kl}$ ($k$ indexes the child
+site, $l$ the parent); for the mixture-innovation kernel
 $\kernelth(a'\mid a)=\sum_{c=1}^{\ncomp}\pi_c\,\normal{a'-\corr a-\nu_c}{s_c^2}$ used below,
 the complete-data problem carries a second latent label and we take conditional-maximisation
 sweeps, a generalised EM whose ascent is monotone \citep{dempster1977maximum,meng1993maximum}. The
@@ -36,11 +39,8 @@ need: fitting from $\nseq$ sequences all observed at level $t$, the shape of the
 innovation law stops being identifiable at the level where its Cram\'er--Rao reference
 crosses the coordinate's range, while the correlation survives to the crossover.
 \IfFileExists{sections/learning-numbers.tex}{\input{body/04a-learning-results}}{\needsdata{E06 queued: the estimator against the information reference}}
-This is the mechanism behind the
-convergence asymmetry reported for this model---correlation settles in tens of EM
-updates, shape in hundreds---and behind the one-view protocol's arithmetic: of twelve
-levels spread over $t\in[0.05,3]$, only the lowest four carry appreciable information
-about shape.
+This is also the arithmetic behind the one-view protocol: of twelve levels spread over
+$t\in[0.05,3]$, only the lowest four carry appreciable information about shape.
 
 \begin{figure}[t]
   \centering

@@ -18,7 +18,7 @@ capacity  Laplace chain at the frozen configuration. For each (seed, M) the SAME
           same test bundle: LMMSE with the true covariance, the isotropic score.
 
 family    the one-parameter generalised-Gaussian family at fixed rho and variance:
-          beta in `betas` (excess kurtosis +3 ... -1.1). M = `family_size`,
+          beta in `betas` (excess kurtosis +3 ... -1 at beta = 6). M = `family_size`,
           C in `family_components`; same ladder and selection; scored against
           true-kernel BP of that family; oracle ladder; Hellinger distance of the
           fitted kernel to the true one.

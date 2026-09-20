@@ -115,7 +115,7 @@ moments, so such a direction is null.
 Fix $t$ and let $\theta$ be a coordinate of lowest degree $m$ with efficient information
 $I_t^{\mathrm{eff}}(\theta)$. For $\nseq$ i.i.d.\ sequences observed at level $t$ and any
 estimator sequence, the local asymptotic minimax risk satisfies
-$\liminf_{\nseq}\sup_{|\theta'-\theta|\le c/\sqrt{\nseq}}\nseq\,\E_{\theta'}(\hat\theta-\theta')^2\ge1/I_t^{\mathrm{eff}}(\theta)=\Theta(e^{2mt})$,
+$\lim_{c\to\infty}\liminf_{\nseq}\sup_{|\theta'-\theta|\le c/\sqrt{\nseq}}\nseq\,\E_{\theta'}(\hat\theta-\theta')^2\ge1/I_t^{\mathrm{eff}}(\theta)=\Theta(e^{2mt})$,
 and maximum likelihood attains it. A covariance coordinate therefore needs
 $\nseq\propto e^{4t}$ sequences for a fixed local precision, a shape coordinate
 $\nseq\propto e^{8t}$; the ratio of the two informations is $\propto e^{-4t}$.
@@ -127,8 +127,9 @@ at a finite budget. All three caveats are visible in \cref{sec:learning}.
 
 \paragraph{Where the asymptote begins.}
 For the Gaussian chain the expansion parameter is $e^{-2t}\lmax(\Sig_0)$, with
-$\lmax\le(1+\corr)/(1-\corr)$, and $\tstar=\tfrac12\log\lmax(\Sig_0)$ is an exact scale:
-$\Pt/\gamma\in L^2(\gamma)$ iff $e^{2t}>\lmax-1$, and below $\tstar$ the long-wavelength
+$\lmax\le(1+\corr)/(1-\corr)$, and $\tstar=\tfrac12\log\lmax(\Sig_0)$ is its scale, exact
+for the Gaussian chain in the sense that $\Pt/\gamma\in L^2(\gamma)$ iff $e^{2t}>\lmax-1$,
+that is for $t>\tfrac12\log(\lmax-1)$, just below $\tstar$; below $\tstar$ the long-wavelength
 covariance modes are still of order one and the rates are shallower. For non-Gaussian
 laws the same scale is a heuristic that the measurements below support. At $\corr=0.85$,
 $\tstar=\gaussTstareightfive$: a strongly correlated chain keeps its correlation
@@ -138,7 +139,7 @@ $-4$ and $-8$.
 \paragraph{Heavy tails.}
 Student-$t_\nu$ innovations violate \cref{ass:exp}. For a regularly varying tail of index
 $\nu$ the expected squared gap acquires a term of order $e^{-\nu t}$ carried by
-sequences with $|\va|\gtrsim e^{2t}$, whose probability is itself of order $e^{-\nu t}$:
+sequences with $|\va|\gtrsim e^{t}$, whose probability is itself of order $e^{-\nu t}$:
 in expectation the tail term leads once it exceeds $\tfrac16\Frob{\kfour}^2e^{-8t}$, and
 on any sample of practical size the Hermite law is all that is seen, because the events
 that carry the tail term are never drawn. Both halves are visible in the numbers
@@ -180,39 +181,30 @@ technical.
 \paragraph{Verification with the exact score.}
 \Cref{fig:theory} tests \cref{thm:decay} where nothing has to be approximated. For the
 Gaussian chain the closed form gives slope $\gaussSlopeRhoeightfive$ above $\tstar$ at
-$\corr=0.85$ and the scaled information $\gaussScaledRhoeightfivetone$, $\gaussScaledRhoeightfivettwo$,
-$\gaussScaledRhoeightfivetthree$ at $t=1,2,3$. For the non-Gaussian chain the shape information,
-estimated from per-sequence scores obtained by Fisher's identity through the tree-exact
-recursion, falls with slope $\shapeSlopeBetatwo$ ($\beta=2$) and $\shapeSlopeBetathree$
-($\beta=3$) above $\tstar$, against the predicted $-8$, while the correlation
-information falls with slope $\shapeSlopeRhotwo$ against $-4$; the kinked Laplace density
-($\beta=1$) reaches the quadrature floor of the outer-product estimate near $t=2.5$. The
-constants are verified at two levels of precision: in the scalar case an untruncated
-quadrature reproduces the shape constant of \cref{eq:info4} to within
-$\audScalarConstWorst\%$ for $\beta\in\{\audScalarBetaList\}$ at
-$t\ge\audScalarFromLevel$ and the covariance constant of \cref{eq:info2} to five digits
-(\cref{app:audit}); on the chain the outer-product estimate reaches the shape constant
-only to within twenty per cent before its floor. The closure gap on the Laplace chain
-decays with slope $\closureSlopeSqlaplace$ and reproduces the constant
-$\tfrac16\Frob{\kfour}^2$ ($\closureCfourlaplace$ for $\nsites=32$) to
-$\audConstRatioLaplaceTfour$ $[\audConstRatioLoLaplaceTfour,\audConstRatioHiLaplaceTfour]$
-at $t=4$ from $\audConstChains$ sequences; the per-sequence gap is heavy-tailed
-(maximum $\audConstMaxOverMedianLaplaceTfour$ times the median), which is why so many are
-needed. The theorem also explains a measurement the previous literature on this model
-reported as a discrepancy: information slopes of about $-3$ and $-6$ obtained over
-$t\le1.6$ are the pre-asymptotic values below $\tstar=\gaussTstareightfive$, not a failure
-of the $e^{-4t}$, $e^{-8t}$ law.
-
-\paragraph{The gap is the fourth-order term.}
-\Cref{eq:scoregap} says what the covariance twin lacks to leading order: the degree-4
-Hermite term carried by $\kfour$. Adding it back exactly---the first Edgeworth correction
-around the twin, with the true $\Sig_0$ and $\kfour$ (\cref{app:audit})---closes
-$\audEdgeClosedLaplaceTzeropsixeight$ of the squared gap at
-$t=\audEdgeLevelTzeropsixeight$, $\audEdgeClosedLaplaceTonepfourthree$ at
-$t=\audEdgeLevelTonepfourthree$ and all of it from $t=2$ on the Laplace chain, and the
-same on the bimodal and uniform chains; below $t=\audEdgeDivergesBelowLaplace$ the
-expansion diverges and the correction hurts. This is the moment-method reading of the
-theorem: above the crossover a score built from the first four moments is the score.
+$\corr=0.85$; for the non-Gaussian chain the shape information, estimated from
+per-sequence scores through the tree-exact recursion, falls with slope
+$\shapeSlopeBetatwo$ ($\beta=2$) and $\shapeSlopeBetathree$ ($\beta=3$) above $\tstar$
+against the predicted $-8$, and the correlation information with slope
+$\shapeSlopeRhotwo$ against $-4$. The constants are verified at two levels of precision:
+in the scalar case an untruncated quadrature reproduces the shape constant of
+\cref{eq:info4} to within $\audScalarConstWorst\%$ and the covariance constant of
+\cref{eq:info2} to five digits (\cref{app:audit}), while on the chain the outer-product
+estimate of the shape constant reaches it only to within twenty per cent before its
+quadrature floor; the closure gap of the Laplace chain decays with slope
+$\closureSlopeSqlaplace$ and reproduces $\tfrac16\Frob{\kfour}^2$ to
+$\audConstRatioLaplaceTfour$
+$[\audConstRatioLoLaplaceTfour,\audConstRatioHiLaplaceTfour]$ at $t=4$ from
+$\audConstChains$ sequences (the per-sequence gap is heavy-tailed, which is why so many
+are needed). The theorem also explains a measurement the previous literature on this
+model reported as a discrepancy: slopes of about $-3$ and $-6$ obtained over $t\le1.6$
+are the pre-asymptotic values below $\tstar=\gaussTstareightfive$, not a failure of the
+law. Finally, \cref{eq:scoregap} says what the covariance twin lacks: adding the degree-4
+Hermite term back, the first Edgeworth correction with the true $\Sig_0$ and $\kfour$,
+closes $\audEdgeClosedLaplaceTzeropsixeight$ of the squared gap at
+$t=\audEdgeLevelTzeropsixeight$ and all of it from $t=2$ on every family with an
+exponential moment, and diverges below $t=\audEdgeDivergesBelowLaplace$
+(\cref{app:audit}); above the crossover a score built from the first four moments is the
+score.
 
 \paragraph{What this says about score learning.}
 An estimator that carries only second-order structure cannot go below the LMMSE floor

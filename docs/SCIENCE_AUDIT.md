@@ -51,9 +51,10 @@ any conclusion was drawn from them:** the E07 block read a boolean weight column
 floor; the E03 matched block compared the ISM arm where the paper's headline is the
 one-corruption arm. Both are corrected in the tool; neither touched the paper.
 
-**Still open, not auditable from data yet:** whether the estimator "leaves the bound" at
-t ≥ 1.4 in E06 (budget-confounded, E06c queued); whether the E07 Student-t ρ=0 cell moves
-under a wider domain (E07b/E07c queued); the sample-complexity exponents (E12b queued).
+**Still open, not auditable from data yet (as of 19 Sep):** whether the estimator "leaves
+the bound" at t ≥ 1.4 in E06 (E06c); whether the E07 Student-t ρ=0 cell moves under a
+wider domain (E07b/E07c); the sample-complexity exponents (E12b). The first two landed on
+20 September (section below); E12b is running.
 
 ## How to run
 
@@ -95,3 +96,70 @@ oracle-free selection control (E20); the information curve at ρ = 0.5 (E21).
 (`paper/sections/audit-numbers.tex`); `tools/make_baseline_numbers.py` now emits the ISM
 arm as the matched headline and the fixed-corruption arm separately, and the networks'
 at-cap rates.
+
+## 20 September 2026 — the cluster harvest, the E14 void, and a second read of the paper
+
+**Landed and frozen:** E06c (the E06 ladder extended to 8000: the ρ̂ departure at t ≥ 1.4
+was partly budget — RMSE 0.0325 → 0.0215 at t = 1.4, 0.343 → 0.244 at t = 2, at-cap
+0.88 → 0.19 and 0.75 → 0.56; nothing below t = 1 moves by more than 0.0001); E07b/E07c
+(the Student-t pooled floor moves by 0.005 from (801, 8) to (801, 12) and by 0.0002 from
+(801, 12) to (1601, 16); every other family by ≤ 0.001; the paper quotes Student-t from
+E07c); E11b (the envelope at L = 64 and 128: worst drift on the operating grid
+5.4e-2 → 5.8e-2 → 6.6e-2, a factor 1.22; frozen-configuration drift 9.2e-6, 7.2e-6,
+4.5e-6). Macros learnBudget*, phaseWide*/phaseStudentMove*/phaseOtherMoveWide, gridLen*.
+
+**E14 is void before 20 Sep 15:10 (N-22).** The driver re-created the random generator
+inside its sampling comprehension, so every training chain was one draw. Found by running
+E03's and E14's training functions on the same data (both ≈ 1.2 on E14's data, both
+0.166–0.169 on E03's). The first diagnosis (Hutchinson's one-probe divergence) was wrong
+and is recorded as wrong; the estimator change it prompted stays because it is E03's.
+Fixed with an assertion; the corrected run (jobs 664280/664281, revision 81cf7ae) is
+queued. The lesson is in N-22: a fitted parameter that contradicts the generating law is a
+data check, and a driver should assert the size of its training set.
+
+**Findings in what was said, from the compendium's line-by-line read (fixed in the
+manuscript on 20 Sep):** the column-mass defect's mechanism (it is a boundary-column
+truncation effect, flat in N_g, not a resolution effect; App. B); the M-step statistics
+S_ab written as powers where the code uses S_00 = Σ Ξ u_l², S_01 = Σ Ξ u_k u_l,
+S_11 = Σ Ξ u_k² (§4); "verified against finite differences to 1e-9 (App. C)" — the
+verification lives in the tests at 1e-6 relative and against enumerated evidence, and
+the text now says so; the initial law μ missing from the recursion (App. B, now
+m⃗₁ ≡ μ); the "convergence asymmetry reported for this model" invoked without evidence
+(removed); "depends on the data only through their covariance" (through the sample
+covariance, whose expectation is that matrix; §2); "accurate to 1e-5 for every family"
+qualified to the frozen correlation (§2); the M-step cost sentence in the conclusion made
+precise. **Open from the same read:** E06's clean-data arm is the channel at t = 1e-3,
+where the likelihood is about one grid cell wide, below the code's own three-points-per-
+s.d. resolution rule; a comparison with the exact clean MLE (fit_clean) is run below.
+
+**Second read, continued (20 Sep, from the compendium's diffusion and foundations
+chapters; fixed in the manuscript):** the (3,1) and (2,2) terms of Λ₄ in App. A were
+written with cumulants of a_i where the expansion of log E exp(s·a − b|a|²/2) has
+cumulants of a_i² (the difference is a function of Σ₀ alone, so "Λ₄ − Λ₄ᴳ is linear in
+κ₄" survives; the display is corrected and the identity stated); the "zero γ-mean"
+sentence in the second-moment paragraph (false as a statement about the mean, since
+He₃² contains He₂; replaced by the explicit α² factor); the heavy-tails sentence said the
+e^{-νt} term is carried by |a| ≳ e^{2t} (the bulk boundary of the proof) where the
+events of probability e^{-νt} have |a| of order e^{t}; "t* is an exact scale: L²(γ) iff
+e^{2t} > λ_max − 1" conflated t* with ½ log(λ_max − 1) (rephrased); the corollary's local
+minimax statement now carries the lim c → ∞; interface B's checkpoint rule (oracle
+validation, as A) is stated; the generation paragraph no longer calls the exact arm's
+cross-entropy difference a "floor" and says the residual kurtosis is measured at t_min;
+the generalised-Gaussian range ends at excess kurtosis −1 (β = 6), not −1.1; "differ only
+through cumulants of order four and higher" now says the families are symmetric; the
+moment estimators' "unbiased" restricted to the marginal statistics; the regime
+paragraph's kurtosis formula attributed to the stationary marginal.
+
+**Clean-data arm of E06 (the channel at t = 1e-3, one grid cell of likelihood width):**
+compared with the exact clean maximum-likelihood fit (`fit_clean`, the same seeds, data,
+initialisation and iteration count) on seeds 0–3: |Δρ̂| ≤ 0.0012 and |Δκ̂₄| ≤ 0.034
+(values 0.8543/0.8548, 0.8516/0.8526, 0.8478/0.8477, 0.8512/0.8524 for ρ̂; 2.689/2.704,
+2.746/2.780, 2.855/2.860, 3.122/3.135 for κ̂₄). The "optimiser's own floor" sentence
+stands; the check is not frozen and is recorded here only.
+
+**Open, code-level (not in the paper's text):** `gen_metrics.covariance_error` compares
+the t_min sample's covariance with Σ₀ rather than Σ_{t_min}, a relative floor of about
+0.035 that even the exact arm cannot go below (the generation table's covariance column
+must be read against the exact arm's own value, which it is); the `gen_metrics.py`
+docstring's claim that the lag fourth cumulant has "a known nonzero value" is wrong (it is
+zero for the true law at every t_min; the column is a check for spurious dependence).

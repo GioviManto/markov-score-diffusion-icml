@@ -1,0 +1,194 @@
+\documentclass[11pt,a4paper]{article}
+
+% ---------------------------------------------------------------------------
+% The short version for the meeting with Jerome and Marc. Every number is a macro
+% from the paper's generated fragments (paper/sections/*.tex), so the brief cannot
+% drift from the manuscript; the detail behind each line is in the compendium
+% (reports/compendium/compendium.pdf) and the audit report (reports/audit-2026-09-18.pdf).
+% Build: cd reports && tectonic -X compile meeting-brief-2026-09-20.tex
+% ---------------------------------------------------------------------------
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\titleformat{\section}{\large\bfseries}{\thesection}{0.7em}{}
+\titlespacing*{\section}{0pt}{1.4em}{0.5em}
+\setlist[itemize]{leftmargin=1.2em,itemsep=0.3em,topsep=0.3em}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=0.4em,topsep=0.4em}
+\newcommand{\hi}[1]{\textbf{#1}}
+\newcommand{\comp}[1]{{\small\textit{Compendium, #1.}}}
+
+% the paper's numbers, as macros
+\input{../paper/sections/capacity-numbers}
+\input{../paper/sections/baseline-numbers}
+\input{../paper/sections/learning-numbers}
+\input{../paper/sections/audit-numbers}
+\input{../paper/sections/regime-numbers}
+\input{../paper/sections/misspec-numbers}
+\input{../paper/sections/generation-numbers}
+\input{../paper/sections/phase-numbers}
+\input{../paper/sections/oracle-numbers}
+\input{../paper/sections/family-numbers}
+\input{../paper/sections/grid-envelope}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries What survives diffusion noise}\\[0.4em]
+{\large The EM chapters after the audit: the short version}\\[0.8em]
+{\small Brief for the meeting with Jerome and Marc \quad$\cdot$\quad 20 September 2026}\\[0.2em]
+{\footnotesize Six pages. Every number is a macro from the frozen runs; the derivations and definitions are in the compendium, the audit trail in the audit report.}
+\end{center}
+\vspace{0.3em}\hrule height 0.8pt\vspace{1em}
+
+\section{The question and the laboratory}
+
+A diffusion model learns the score of a noised data law, $\nabla_x\log P_t(x)$, and for real data
+nobody knows the target. We built a family where it is known exactly and is not trivial: a
+first-order Markov chain of length $L$ with non-Gaussian innovations (Laplace, Student-$t$,
+uniform, bimodal, a one-parameter family in between), noised coordinate by coordinate. Because
+the noise attaches one factor per site, the posterior stays a chain and two sweeps of exact
+message passing return the score. The covariance of every innovation family is the same by
+construction, so the laboratory separates second-order structure (correlation $\rho$) from
+higher-order structure (the shape of the innovation law) cleanly. \comp{Chapters 3, 6, 10}
+
+Three questions were asked of it. What information survives the noise, order by order? Can the
+dynamics be learned from noised sequences alone, and how efficiently? And what does an
+estimator that knows the structure buy against a neural denoiser that does not, and where does
+that stop?
+
+\section{What stands, in one line each}
+
+\begin{enumerate}
+\item \hi{Noise is a low-pass filter on statistical order.} The Hermite moment of degree $m$ is
+attenuated exactly by $e^{-mt}$; the Fisher information about a feature first visible at degree
+$m$ decays as $e^{-2mt}$; the number of sequences needed for a fixed local precision grows as
+$e^{2mt}$. Correlation lives at degree two, shape at degree four. Verified on the exact score,
+with the constants. \comp{Chapters 2, 4, 9}
+
+\item \hi{Second-order closure has an exact price.} Gaussian message closure computes the LMMSE of
+the covariance twin (Proposition~1), and the gap to the true score is
+$\tfrac16\|\kappa_4\|_F^2e^{-8t}$ to leading order. Adding the fourth-order term back closes
+$\audEdgeClosedLaplaceTzeropsixeight$ of the gap at $t=\audEdgeLevelTzeropsixeight$ and all of it
+from $t=2$. \comp{Chapters 9, 12}
+
+\item \hi{The dynamics are learnable through the noise, and the information curve says where
+learning stops.} From $\learnSize$ sequences the shape is recovered at the reference up to
+$t=\learnLevelTzeropfour$; fits split at $t=\learnLevelTzeropseven$
+($\audCollapsedTzeropseven$ of $\audCollapsedNTzeropseven$ collapse to a Gaussian innovation) and
+collapse at $t=1$, one level below the point $t=\learnKurtBoundCross$ where the Cram\'er--Rao
+reference crosses the coordinate's range. The correlation survives to the crossover.
+\comp{Chapters 4, 14}
+
+\item \hi{Capacity buys exactly the fourth-order structure.} A Gaussian-innovation kernel lands on
+the LMMSE floor ($\capEmoneD$ against $\lmmseFloorLaplace$); an eight-component mixture reaches
+$\capEmeightD$ at $M=2048$. Across the generalised-Gaussian family the gain is ordered by
+$\kappa_4$ and reverses at the Gaussian member. The contrast holds in all $\regCells$
+$(\rho,L)$ cells of a regime sweep, and in every cell the $C=1$ arm lands on the LMMSE floor to
+$\regIdentMax$, which checks the whole apparatus. \comp{Chapters 12, 14, 16}
+
+\item \hi{Against networks, the advantage is largest at equal information.} Under the standard
+recipe (clean sequences, fresh corruption every step) the best of six architectures reaches
+$\baseBestD$ at $M=2048$, a paired factor $\baseRatioBestD$ behind EM--BP. At EM--BP's own
+interface (one noised view per sequence, no clean chain, no true score for model selection) the
+best network reaches $\matchedBestD$, a paired factor $\matchedRatioBestD$
+$[\matchedRatioBestDlo,\matchedRatioBestDhi]$; given the clean sequence as a target but still one
+corruption, $\matchedFixedD$, a factor $\matchedFixedRatioD$. \comp{Chapters 7, 16, 18}
+
+\item \hi{The advantage ends where the structure is wrong, at a strength we can compute.} Under an
+AR(2) coefficient or a site-dependent $\rho$ the ordering reverses inside the swept range; a
+rank-one global latent or a long-range coupling never reverses it. The large-sample error of the
+misspecified EM--BP is a closed-form Kullback--Leibler projection bias $b(\varepsilon)$ that
+reproduces the measured errors to within $\audBiasMaxAbsDevLagoneD$. \comp{Chapter 17}
+\end{enumerate}
+
+\section{What the audit changed}
+
+These are corrections to what the 18 September report and the manuscript \emph{said}; no frozen
+number was wrong.
+
+\begin{itemize}
+\item \hi{``Information-matched, $7.3\times$'' was the wrong arm.} That network saw the clean
+chain as a regression target. The matched arm is $\matchedRatioBestD\times$; the $7.3\times$ arm
+is now reported as ``even given the clean sequence''.
+\item \hi{``Attains the Cram\'er--Rao bound at $1.02\times$'' is withdrawn.} The average mixed
+levels where the fit is at the reference with levels where it is collapsed; the bound is for a
+one-parameter family and the estimator is a mixture selected on validation. The paper now reports
+the per-level picture of item~3 above.
+\item \hi{``Locality is a ceiling'' is withdrawn.} The exact best radius-4 estimator has error
+$\audLocFloorrfourRhozeropeightfive$ at $\rho=0.85$ against the window head's $\baseWindowD$: the
+radius costs little, the architecture costs the rest.
+\item \hi{Theorem~3 needs an exponential moment}, which its proof used and its statement lacked.
+Restated; every family in the paper satisfies it except Student-$t$, whose heavy-tailed regime
+is now a separate proposition. On a wide enough domain the sampled Student-$t_5$ chain reaches
+the Hermite constant ($\audConstRatioStudentfiveTfour$ at $t=4$); its earlier ``departure'' was
+grid truncation.
+\item \hi{``All belief mass outside the domain'' was one or two sites in $8192$.} The
+Student-$t$ row of the family ladder is now computed on a $(\phaseWideN,\phaseWideA)$ domain,
+where it has stopped moving (by $\phaseStudentMoveWide$ between the two widest grids).
+\item \hi{The departure of $\hat\rho$ from the reference at $t\ge1.4$ was partly budget.}
+With the EM ladder extended to $\learnBudgetLadderMax$ iterations the error at $t=1.4$ falls
+from $\learnRmseRhoTonepfour$ to $\learnBudgetRmseRhoTonepfour$; at $t=2$ from
+$\learnRmseRhoTtwo$ to $\learnBudgetRmseRhoTtwo$ with the ladder still binding in
+$\learnBudgetAtCapTtwo$ of cells. Past the crossover EM is as limited by its convergence as by
+the information.
+\item \hi{Model selection without the truth works.} Selecting EM--BP's iteration count on the
+held-out one-view log-evidence instead of on validation risk against the true kernel gives
+$\audSelEvidenceA$ against $\audSelOracleA$ at $M=32$ (the last rung: $\audSelLastA$).
+\end{itemize}
+
+\section{What is still running, and one thing that went wrong}
+
+\begin{itemize}
+\item \hi{E12b} (sample complexity by order, sixteen seeds, five levels) is two thirds through on
+the cluster. Its analysis was amended before any data: the target is the exact information
+curve, whose local slopes on the swept levels are $6$--$7$ for shape and $3.8$--$3.9$ for
+correlation, not the asymptotic $8$ and $4$.
+\item \hi{E14} (the matched comparison across three correlations and two chain lengths) is the
+claim a referee will press on hardest. Its first runs were void: the driver re-created the
+random generator inside its sampling loop, so every training chain was the same draw, and both
+arms fitted $2048$ copies of one chain. Found by running two independent training functions on
+the same data; fixed with an assertion; the corrected run is queued on the GPU partition and
+takes about a day. Recorded as negative result N-22.
+\item \hi{The quadrature envelope} now covers the longer chains: the worst drift on the
+operating grid moves by a factor $\gridLenWorstRatioMax$ from $L=32$ to $L=128$.
+\end{itemize}
+
+\section{Decisions for the meeting}
+
+\begin{enumerate}
+\item \hi{Headline.} ``Structure beats networks at equal information by $\matchedRatioBestD\times$,
+and the standard comparison understates it'' (recommended), or the standard-recipe factor of
+$\baseRatioBestD\times$ with the matched one as a robustness check.
+\item \hi{Efficiency.} Present learning through noise as ``at the reference while identifiable,
+collapse where the reference says'' (recommended) rather than as a Cram\'er--Rao efficiency
+statement.
+\item \hi{Framing before or after E14.} Wait for the corrected E14 (about a day) before fixing
+the regime sentence (recommended), or state the headline at one point and add the sweep as it
+lands.
+\item \hi{Page budget.} The ICML body is four pages over. The recorded cut order moves the
+family figure, the generation table, the length table and the regime paragraph to the appendix;
+the theory verification is compressed. Agreement needed on what must stay in the body.
+\item \hi{Compendium.} A self-contained compendium (twenty chapters: from cumulants and Hermite
+polynomials to belief propagation, quadrature, EM, quasi-likelihood, score matching and the
+protocol) is being written so that every line of the paper can be checked without the
+literature. Its scope and level are for you to set.
+\end{enumerate}
+
+\vspace{1em}\hrule height 0.4pt\vspace{0.5em}
+\noindent{\footnotesize Sources: \texttt{paper/main.pdf} (manuscript), \texttt{reports/audit-2026-09-18.pdf}
+(the audit: what was found, what was run, what was changed), \texttt{reports/compendium/compendium.pdf}
+(definitions and derivations), \texttt{docs/NEGATIVE\_RESULTS.md} (N-14 to N-22),
+\texttt{experiments/registry/} (pre-registrations and amendments). Every macro in this brief is
+regenerated from the frozen outputs by \texttt{make check}.}
+
+\end{document}

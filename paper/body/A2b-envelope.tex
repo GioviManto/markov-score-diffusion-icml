@@ -50,13 +50,16 @@ and $\gridLenFrozenDriftOnetwentyeight$: the per-site quadrature error does not 
 the chain, because the messages are renormalised at every site.
 
 A second observation from the same sweep cuts the other way. The column-mass defect of
-the discretised kernel, $\max_j|\sum_i \kernel(g_i\mid g_j)w_i-1|$, grows with
-correlation, from $\gridColMassLo$ at $\corr=\gridColMassLoRho$ to $\gridColMassHi$ at
-$\corr=\gridColMassHiRho$, because a narrow transition kernel is poorly resolved by a
-fixed grid. It is nonetheless not predictive of the error: at
-$\corr=\gridColMassHiRho$ the drift is $\gridColMassDriftHiRho$. The defect is nearly
-uniform across the grid and the recursion renormalises it away. We report it as a
-diagnostic and not as an error bar. The uniform family is the one exception to the
+the discretised kernel, $\max_j|\sum_k \kernel(\gridpt{k}\mid \gridpt{j})w_k-1|$, grows
+with correlation, from $\gridColMassLo$ at $\corr=\gridColMassLoRho$ to $\gridColMassHi$
+at $\corr=\gridColMassHiRho$, and the reason is again the domain and not the spacing: the
+maximum sits in the outermost columns, where a kernel centred at $\corr\gridpt{j}$ with
+$|\gridpt{j}|$ near $\halfwidth$ loses the part of its mass beyond the domain, so the
+defect is flat in $\ngrid$, falls as the domain widens, and is at machine precision in the
+interior columns at every $\corr$. It is not predictive of the error: at
+$\corr=\gridColMassHiRho$ the drift is $\gridColMassDriftHiRho$, because the recursion
+renormalises every message and the affected columns carry almost no belief. We report it
+as a diagnostic and not as an error bar. The uniform family is the one exception to the
 quadrature picture: its kernel is discontinuous, the trapezoidal rule is first-order on
 it, and its worst-level drift is largest on the coarsest spacing rather than the
 narrowest domain.

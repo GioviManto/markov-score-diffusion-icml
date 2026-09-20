@@ -30,22 +30,16 @@ the paired log-ratio is resolved to a few thousandths and the crossing sits betw
 points either way.
 
 The two sizes separate the statistical gain of the structure at small $\nseq$ from its
-asymptotic bias at large $\nseq$, and the bias has a closed form. Since every truth is
-Gaussian and the fitted innovation is Gaussian to three decimals, the $\nseq\to\infty$
-limit of EM--BP is the Kullback--Leibler projection of the noised truth onto the
-Gaussian AR(1) family under the one-view protocol, and its relative score error
-$b(\varepsilon)$ is a trace formula (\cref{app:audit}). It reproduces the measured
-EM--BP error at $\nseq=2048$ to within $\audBiasMaxAbsDevLagoneD$ across every
-mechanism and strength, and $\sqrt{b(\varepsilon)^2+v/\nseq}$ with $v$ read from the
-well-specified cells predicts both sizes: at zero strength the EM--BP error falls from
-$\misArtwoEmbpEzeropzeroC$ to $\misArtwoEmbpEzeropzeroD$ between $\nseq=512$ and $2048$,
-which is estimation; at the largest AR(2) strength it moves from
-$\misArtwoEmbpEzeropfourC$ to $\misArtwoEmbpEzeropfourD$, which is bias. The order of the
-bias in the strength explains which mechanisms bite: $b\propto\varepsilon$ for the
-AR(2) coefficient, the site-dependent $\corr$ and the long-range coupling (local
-exponents $\audBiasOrderArtwo$, $\audBiasOrderSitevar$, $\audBiasOrderLongrange$), which
-perturb of order $\nsites$ directions of the covariance, and $b\propto\beta^2$ for the
-rank-one latent ($\audBiasOrderGlobal$), which is even in the latent and perturbs one
-direction of $\nsites$. Past the break-even the chain estimator has converged to a wrong
-law and more data no longer buys anything back---exactly the behaviour \cref{sec:theory}
-attributes to a model whose bias, not whose variance, is binding.
+asymptotic bias at large $\nseq$, and the bias has a closed form: every truth is Gaussian
+and the fitted innovation is Gaussian to three decimals, so the $\nseq\to\infty$ limit of
+EM--BP is the Kullback--Leibler projection of the noised truth onto the Gaussian AR(1)
+family, whose relative score error $b(\varepsilon)$ is a trace formula
+(\cref{app:audit}). It reproduces the measured EM--BP error at $\nseq=2048$ to within
+$\audBiasMaxAbsDevLagoneD$ across every mechanism and strength,
+$\sqrt{b(\varepsilon)^2+v/\nseq}$ predicts both sizes (\cref{fig:misspec}, bottom row),
+and its order in the strength says which mechanisms bite: $b\propto\varepsilon$ for the
+three mechanisms that perturb of order $\nsites$ directions of the covariance and
+$b\propto\beta^2$ for the rank-one latent, which perturbs one. Past the break-even the
+chain estimator has converged to a wrong law and more data buys nothing back, exactly the
+behaviour \cref{sec:theory} attributes to a model whose bias, not whose variance, is
+binding.

@@ -12,7 +12,7 @@ mkdir -p build
 stem=$(basename "$part" .tex)
 # the preamble is everything of compendium.tex before \begin{document}; the body is one \input
 { sed -n '1,/^\\begin{document}/p' compendium.tex; echo "\\input{$part}"; echo "\\end{document}"; } > "build/$stem.tex"
-if tectonic -X compile --outdir build "build/$stem.tex" >"build/$stem.log" 2>&1; then
+if tectonic -X compile -Z search-path=. --outdir build "build/$stem.tex" >"build/$stem.log" 2>&1; then
   pages=$(pdfinfo "build/$stem.pdf" 2>/dev/null | awk '/^Pages/ {print $2}')
   echo "OK  $part -> build/$stem.pdf (${pages:-?} pages)"
   grep -n "Overfull \\\\hbox\|undefined\|Undefined" "build/$stem.log" | head -20 || true

@@ -1,76 +1,52 @@
 %% Included by 05-experiments.tex only when sections/baseline-numbers.tex exists (E03 done).
 \input{sections/tab-baselines}
-\Cref{tab:baselines} compares six architectures trained under one recipe (interface~A:
-per-example noise level, batch $64$, Adam with clipping, both output parameterisations,
-checkpoint selected on validation), each with the configuration that won its family's
-screen on the development seeds (\cref{tab:screen}, \cref{app:protocol}), on the test
-bundles of the capacity experiment. Three things separate them. Weight sharing separates
-the fully connected network from the rest at every size ($\baseWorstA$ against
-$\baseBestA$ at $\nseq=32$). Locality is the better prior when sequences are scarce---the
-\baseBestArchA{} is the best network at $\nseq=32$---and stops paying once they are not:
-the window head moves only from $\baseWindowC$ to $\baseWindowD$ between $\nseq=512$ and
-$\nseq=2048$, while the global architectures keep improving, the best reaching
-$\baseBestD$. Whether that plateau is the radius's or the architecture's is a question
-the laboratory can answer exactly: the best estimator of any kind that sees only a
-window of radius $r$ is $\E[a_i\mid x_{i-r},\dots,x_{i+r}]$, computed by sum-product on
-the sub-chain (\cref{app:audit}, \cref{fig:locality}). Pooled over the schedule its error at radius $4$ is
-$\audLocFloorrfourRhozeropeightfive$ (peaking at $\audLocPeakFloorRfour$ at
-$t=\audLocPeakLevel$), at radius $8$ it is $\audLocFloorreightRhozeropeightfive$, and
-the Gaussian twin's own windowed estimator reaches the full LMMSE by radius
-$4$ ($\audLocGaussrfourRhozeropeightfive$ against $\audLocLmmseRhozeropeightfive$): what a
-window beyond a few sites carries is non-Gaussian information. The window head sits at
-$\baseWindowD$ against a radius-$4$ floor of $\audLocFloorrfourRhozeropeightfive$; the
-radius is a ceiling only to the extent the two coincide, and the remainder is the
-architecture and its training.
-
-Given enough clean sequences the networks pass the second-order floor: $\baseBelowFloorND$
-of the six sit below $\baseLmmseD$ at $\nseq=2048$ (\cref{prop:lmmse}). Nothing intrinsic
-holds them at second order; they need data. The structured estimator is ahead at every size
-nonetheless---$\capEmeightD$ at $\nseq=2048$, a paired factor $\baseRatioBestD$
-($[\baseRatioBestDlo,\baseRatioBestDhi]$, favouring EM--BP in $\baseWinsBestD$ of
-$\baseSeeds$ seeds) below the best network. That factor is an upper bound on the
-advantage under interface~A: the fully connected network and the transformer select the
-last rung of their $32{,}000$-step ladder in $\baseAtCapMlpD\%$ and
-$\baseAtCapTransformerD\%$ of the cells at $\nseq=2048$ and the bi-GRU in
-$\baseAtCapBigruD\%$, so the largest networks were still improving when training stopped.
-And the comparison is not information-matched: the networks see clean sequences and a
-fresh corruption at every gradient step, EM--BP one noised view per sequence and no clean
-chain at all.
+\Cref{tab:baselines} compares six architectures trained under one recipe (interface~A)
+with the configuration that won each family's screen on the development seeds
+(\cref{app:protocol}). Weight sharing separates the fully connected network from the rest
+at every size ($\baseWorstA$ against $\baseBestA$ at $\nseq=32$); locality is the better
+prior when sequences are scarce, the \baseBestArchA{} being the best network at
+$\nseq=32$, and stops paying once they are not: the window head moves only from
+$\baseWindowC$ to $\baseWindowD$ between $\nseq=512$ and $2048$ while the global
+architectures keep improving, the best reaching $\baseBestD$. That plateau is the
+architecture's and not the radius's: the best estimator of any kind that sees only a
+window of radius $r$ is $\E[a_i\mid x_{i-r},\dots,x_{i+r}]$, computable by sum-product on
+the sub-chain, and at radius $4$ its pooled error is $\audLocFloorrfourRhozeropeightfive$
+against the head's $\baseWindowD$ (\cref{app:audit}, \cref{fig:locality}). Given enough
+clean sequences the networks pass the second-order floor, $\baseBelowFloorND$ of six
+sitting below $\baseLmmseD$ at $\nseq=2048$ (\cref{prop:lmmse}); nothing intrinsic holds
+them at second order. The structured estimator is ahead at every size nonetheless,
+$\capEmeightD$ against $\baseBestD$ at $\nseq=2048$, a paired factor $\baseRatioBestD$
+($[\baseRatioBestDlo,\baseRatioBestDhi]$, $\baseWinsBestD$ of $\baseSeeds$ seeds). That
+factor is an upper bound on the advantage at this interface, since the largest networks
+were still improving when their ladder ended ($\baseAtCapTransformerD\%$ of the
+transformer cells at the last rung), and it is not information-matched: the networks see
+clean sequences and a fresh corruption at every step, EM--BP one noised view per sequence
+and no clean chain at all.
 
 \paragraph{The comparison at matched information.}
-Interface~C is EM--BP's own: one noised view per sequence, split across the twelve levels,
-no clean chain, and---since the true score is not available for selection in that
-setting---the checkpoint selected on the implicit score-matching objective of a held-out
-noisy bundle. Trained by implicit score matching on exactly that bundle, the
-\matchedBestArchD{} reaches $\matchedBestD$ at $\nseq=2048$ against EM--BP's
-$\capEmeightD$ on the same bundles, a paired factor $\matchedRatioBestD$
-($[\matchedRatioBestDlo,\matchedRatioBestDhi]$, in $\matchedWinsD$ of $\baseSeeds$ seeds;
-$\matchedRatioOfMeansD$ as a ratio of means); the transformer reaches
-$\matchedIsmoneviewTransformerD$. Under interface~B---the clean sequence supplied as a
-regression target, but with one fixed corruption per sequence---the same head reaches
-$\matchedFixedD$, a paired factor $\matchedFixedRatioD$
-($[\matchedFixedRatioDlo,\matchedFixedRatioDhi]$): even given strictly more than EM--BP
-sees, one corruption per sequence is not enough. The gap between the interface-A rows
-and these is the value of clean data with fresh corruptions; the factor of
-$\matchedRatioBestD$ that remains at equal information is what the factorisation and the
-exact E-step are worth, and it is larger than the factor at the standard interface, not
-smaller. EM--BP's own selection rule does not need the true score either: selecting its
-iteration count by held-out one-view log-evidence instead of by validation risk against
-the true kernel gives a test error of $\audSelEvidenceA$ against $\audSelOracleA$ at
-$\nseq=32$, the size at which the choice of rung matters most: $\audSelSameA$ of
-$\audSelNA$ seeds select the same rung and the largest per-seed difference is
-$\audSelMaxAbsDiffA$, while the last rung of the ladder gives $\audSelLastA$
-(\cref{app:audit}).
+Interface~C is EM--BP's own: one noised view per sequence split across the twelve levels,
+no clean chain, and, since the true score is unavailable for selection there, the
+checkpoint chosen on the implicit score-matching objective of a held-out noisy bundle.
+Trained by implicit score matching on exactly that bundle, the \matchedBestArchD{} reaches
+$\matchedBestD$ at $\nseq=2048$ against EM--BP's $\capEmeightD$, a paired factor
+$\matchedRatioBestD$ ($[\matchedRatioBestDlo,\matchedRatioBestDhi]$, $\matchedWinsD$ of
+$\baseSeeds$ seeds); the transformer reaches $\matchedIsmoneviewTransformerD$. Under
+interface~B, the clean sequence supplied as a regression target but with one fixed
+corruption per sequence, the same head reaches $\matchedFixedD$, a factor
+$\matchedFixedRatioD$: even given strictly more than EM--BP sees, one corruption per
+sequence is not enough. The factor that remains at equal information is what the
+factorisation and the exact E-step are worth, and it is larger than the factor at the
+standard interface, not smaller. EM--BP's own selection needs no true score either:
+choosing its iteration count by held-out one-view log-evidence gives $\audSelEvidenceA$
+against $\audSelOracleA$ with oracle validation at $\nseq=32$, where the rung matters
+most, the two rules agreeing in $\audSelSameA$ of $\audSelNA$ seeds (\cref{app:audit}).
 
 \paragraph{Length extrapolation.}
-\input{sections/tab-length}
 Fitted at $\nsites=32$ and evaluated against the exact score of longer chains
 (\cref{tab:length}), the EM--BP kernel holds $\lenEmbpDLthreetwo$ at $\nsites=32$ and
-$\lenEmbpDLtwofivesix$ at $\nsites=256$: the law is local, so inference at any length is the
-same exact recursion. The convolutional and recurrent networks improve slightly, as they
-should---longer chains have proportionally fewer boundary sites---and the window head
-improves most, since a sizeable part of its error at $\nsites=32$ is at the zero-padded
-boundary. The transformer with learned relative positions does not: it degrades from
-$\lenTransformerDLthreetwo$ to $\lenTransformerDLtwofivesix$, a failure of the positional
-encoding beyond its training length rather than of the score it learned
+$\lenEmbpDLtwofivesix$ at $256$: the law is local, so inference at any length is the same
+recursion. The convolutional and recurrent networks improve slightly, as longer chains
+have proportionally fewer boundary sites; the transformer with learned relative positions
+degrades from $\lenTransformerDLthreetwo$ to $\lenTransformerDLtwofivesix$, a failure of
+the positional encoding beyond its training length rather than of the score it learned
 \citep{press2022alibi,kazemnejad2023positional}.

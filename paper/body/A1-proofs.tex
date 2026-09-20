@@ -70,13 +70,17 @@ $\Lambda=\Lambda_2+\Lambda_4+R_6$, with
 $\Lambda_2=\tfrac12s^{\!\top}\Sig_0s-\tfrac b2\operatorname{tr}\Sig_0$ and
 \[
   \Lambda_4=\tfrac1{24}\kfour[s,s,s,s]
-   -\tfrac b4\sum_i\operatorname{cum}(s\!\cdot\!\va,s\!\cdot\!\va,a_i,a_i)
-   +\tfrac{b^2}8\sum_{ij}\operatorname{cum}(a_i,a_i,a_j,a_j),
+   -\tfrac b4\sum_i\operatorname{cum}(s\!\cdot\!\va,s\!\cdot\!\va,a_i^2)
+   +\tfrac{b^2}8\sum_{ij}\operatorname{cum}(a_i^2,a_j^2),
 \]
-where $\operatorname{cum}$ is the joint cumulant under $\Pz$. Every fourth-order joint
-cumulant of linear forms in $\va$ equals its value under the covariance twin plus a
-linear contraction of $\kfour$, so $\Lambda_4-\Lambda_4^{\mathrm{G}}$ is linear in
-$\kfour$ and $\Lambda_2=\Lambda_2^{\mathrm{G}}$. The remainder $R_6$ is the Lagrange
+where $\operatorname{cum}$ is the joint cumulant under $\Pz$ and the squares enter because
+$b$ multiplies $|\va|^2/2$: $\operatorname{cum}(s\!\cdot\!\va,s\!\cdot\!\va,a_i^2)
+=\operatorname{cum}(s\!\cdot\!\va,s\!\cdot\!\va,a_i,a_i)+2(\Sig_0s)_i^2$ and
+$\operatorname{cum}(a_i^2,a_j^2)=\kfour[i,i,j,j]+2(\Sig_0)_{ij}^2$, the added terms being
+functions of $\Sig_0$ alone. Every fourth-order joint cumulant of linear forms in $\va$
+equals its value under the covariance twin plus a linear contraction of $\kfour$, so
+$\Lambda_4-\Lambda_4^{\mathrm{G}}$ is linear in $\kfour$ and
+$\Lambda_2=\Lambda_2^{\mathrm{G}}$. The remainder $R_6$ is the Lagrange
 remainder of grade six, a combination of sixth-order derivatives of $\Lambda$ at an
 intermediate point of the segment to the origin, i.e.\ of tilted joint cumulants of
 order six; on the bulk $B=\{|s|\le\lambda/2\}=\{|\vx|\le\lambda\Dt/2\alpha\}$ it is
@@ -104,8 +108,7 @@ $\E_\gamma\bigl[(\tfrac16\sum_{jkl}\kfour[mjkl]{:}x_jx_kx_l{:})^2\bigr]
 $\E_\gamma\lVert\text{leading term}\rVert^2=\tfrac16\Frob{\kfour}^2\alpha^8$. Replacing
 $\E_\gamma$ by $\E_{\Pt}$ on the bulk costs a factor $1+O(\alpha^2)$:
 $\Pt/\gamma=1+\alpha^2\tfrac12\langle\Sig_0-\Id,{:}\vx\vx^{\!\top}{:}\rangle+O(\alpha^4(1+|\vx|)^4)$
-there, and the degree-2 correction has zero $\gamma$-mean against the square of a
-degree-3 polynomial up to terms of relative size $\alpha^2$. The cross term between the
+there, and the degree-2 correction has carries an explicit factor $\alpha^2$, so its contribution to the second moment is of relative size $\alpha^2$. The cross term between the
 leading term and the grade-six remainder is $O(\alpha^{10})$ by Cauchy--Schwarz and the
 moment bound. The constant in $O(\alpha^2)$ depends on $\Pz$ and $\nsites$; for the
 Gaussian chain it is $\lmax(\Sig_0)$ (last paragraph).

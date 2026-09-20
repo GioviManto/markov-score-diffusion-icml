@@ -32,7 +32,8 @@ within seed noise (\cref{app:audit}). Networks under interface~A: trained by den
 score matching on the clean sequences with the level and the corruption redrawn at every
 step, batch $64$, Adam, gradient clipping at $1$, both output parameterisations,
 checkpoint ladder to $32{,}000$ steps selected on the validation bundle. Interface~B: the
-same objective on one fixed corruption per clean sequence. Interface~C: implicit score
+same objective on one fixed corruption per clean sequence, the checkpoint selected as
+under interface~A on the validation bundle scored against the true kernel. Interface~C: implicit score
 matching on the same one-view noisy bundle as EM--BP, with the divergence computed
 exactly for the window head and by Hutchinson's estimator otherwise, and the checkpoint
 selected on the implicit objective of a held-out noisy bundle; the true score enters
