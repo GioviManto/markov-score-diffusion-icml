@@ -4,7 +4,7 @@
     window x_{i-r..i+r} (posterior mean on the sub-chain, E15) at every level of the
     schedule for r in RADII, with the Gaussian twin's full LMMSE for scale.
 (b) The pooled floor against the radius for the three sweeps of E15, with the frozen
-    all-site errors of the radius-2 window head, the TCN and EM-BP at M = 2048 (E03,
+    all-site errors of the radius-4 window head (E03's screened winner), the TCN and EM-BP at M = 2048 (E03,
     E02a) as horizontal marks, so locality is read against its floor.
 
 Reads outputs/E15/locality.csv (required), outputs/E03/confirm.csv and
@@ -64,7 +64,7 @@ def main() -> int:
     conf = ROOT / "outputs/E03/confirm.csv"
     if conf.exists():
         c = pd.read_csv(conf); c = c[(c.region == "all") & (c.n_chains == M_MARK)]
-        for arch, name, r in (("window", "window", 2), ("tcn", "TCN", 15)):
+        for arch, name, r in (("window", "window", 4), ("tcn", "TCN", 15)):
             sub = c[c.arch == arch]
             if len(sub):
                 marks.append((name, float(sub.risk.mean()), r))

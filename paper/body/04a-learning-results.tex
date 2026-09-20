@@ -24,14 +24,16 @@ $\learnBudgetRmseRhoTtwo$ while nothing below $t=1$ moves by more than
 $\learnBudgetMaxAbsDiffRhoLow$; past the crossover \textsc{em}'s contraction slows with
 the information it has. The same coordinates estimated by the method of moments---the
 lag-one product for $\corr$ and the per-site fourth cumulant divided by $e^{-4t}$ for
-$\kfour$, whose marginal statistics are unbiased by \cref{thm:hermite}---are
+$\kfour$, whose marginal statistics are unbiased by \cref{thm:hermite} up to the
+$O(e^{4t}/\nseq)$ plug-in bias of a sample cumulant---are
 $\audMomOverEmRhoMin$--$\audMomOverEmRhoMax$ times worse for $\corr$ and
 $\audMomOverEmKurtMin$--$\audMomOverEmKurtMax$ times worse for $\kfour$ at the informative
 levels, never collapse, and show the asymptotic growth where the estimate is already
 useless (log-slopes $\audMomSlopeRho$ and $\audMomSlopeKurt$ on $t\ge1$ against $2$ and
 $4$; \cref{app:audit}): exact inference buys the efficiency below the crossover, and at
-high noise the two estimators coincide, since the likelihood score of a degree-$m$
-coordinate is itself the degree-$m$ Hermite statistic. Below the crossover both errors
+high noise the two estimators share the rate, since the likelihood score of a degree-$m$
+coordinate is itself a degree-$m$ Hermite statistic, of which the lag-one and per-site
+statistics used here keep only a part. Below the crossover both errors
 grow more slowly than the asymptotic rates (fitted log-slopes $\learnPreSlopeRho$ and
 $\learnPreSlopeKurt$ on $[\learnPreLo,\learnPreHi]$ against $2$ and $4$), as
 \cref{sec:theory} predicts; the asymptotic window lies beyond the reach of

@@ -7,9 +7,9 @@ $\nsites=32$; grid $\ngrid=401$, $\halfwidth=8$; twelve log-spaced levels
 $t\in[0.05,3.0]$; other families Gaussian, Student-$t$ ($\nu=5$), uniform, symmetric
 two-component mixture ($\kappa=0.6$), generalised Gaussian ($\beta\in[1,6]$), all
 variance-matched. Sixteen confirmatory seeds $0$--$15$ for every comparison at the frozen
-configuration; eight for the regime sweeps; development seeds $10000$--$10001$ for every
-architecture and hyperparameter choice (one $16{,}000$-step run per configuration at
-$\nseq\in\{32,2048\}$, ranked by pooled bulk risk). Validation and test bundles are drawn
+configuration; eight for the regime sweeps; development seeds $10000$--$10003$ for every
+architecture and hyperparameter choice (three restarts of $32{,}000$ steps per
+configuration at $\nseq\in\{32,2048\}$, ranked by pooled bulk risk; \cref{tab:screen}). Validation and test bundles are drawn
 per seed ($1024$ and $2048$ sequences) from streams disjoint from every training stream;
 their hashes are stored with every row so pairing across arms is checkable.
 
