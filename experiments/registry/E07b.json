@@ -5,7 +5,7 @@
  "design": "E07 exactly -- four families (Laplace, Student-t(5), uniform, bimodal), five correlations (0, 0.3, 0.6, 0.85, 0.95), 512 chains, 2 reps, deterministic oracle ladder -- recomputed at (801, 12.0) [E07b] and (1601, 16.0) [E07c].",
  "predeclared_analysis": "Cell-by-cell difference of rel_lmmse and rel_iso against the frozen E07, reported as an absolute and a relative movement, with the two refinements used to show convergence or its absence. If a cell moves by more than its replicate spread, the widest converged grid becomes the reported number and the E07 value is recorded as superseded with the reason.",
  "motivation": "E11 (frozen 2026-09-18) validated the quadrature across families and correlations rather than at the frozen point alone, and found that at the operating grid the drift is NOT limited by the number of grid points but by the half-width: at A = 8 the drift is flat in N_g from 201 to 1601 (5.41e-2 to 5.43e-2), while widening to A = 12 at 801 points brings it to 3.0e-3. The offending cell is Student-t at rho = 0, which E07 reports.",
- "status": "PRE-REGISTERED 2026-09-18; RESUBMITTED 2026-09-19 (job 663138; first attempt died at launch, see hpc_runs)",
+ "status": "FROZEN E07b 2026-09-20T09:25:44Z; PRE-REGISTERED 2026-09-18; RESUBMITTED 2026-09-19 (job 663138; first attempt died at launch, see hpc_runs)",
  "registered": "2026-09-18",
  "hpc_runs": [
   {
@@ -17,7 +17,22 @@
    },
    "failed_at_launch": 662792,
    "resources": "defq/4cpu/32G/23:00",
-   "note": "First submission (18 Sep 18:02, deployment 92da540) died at launch: hpc/icml_submit.sh appended --workers to a driver that has no such flag (e07_phase_diagram.py is serial). The flag is now gated on the driver's source. Code path against frozen E07 (8003dfc) differs only by grid_bp_batch's chunk=256, exact to round-off (tests/test_bp_grid_chunk.py). Outputs under ~/msd-icml/outputs/7be143b-20260919T001003Z/; fetch with MSD_DEPLOY_ENV=hpc/.deploy_7be143b-20260919T001003Z.env."
+   "note": "First submission (18 Sep 18:02, deployment 92da540) died at launch: hpc/icml_submit.sh appended --workers to a driver that has no such flag (e07_phase_diagram.py is serial). The flag is now gated on the driver's source. Code path against frozen E07 (8003dfc) differs only by grid_bp_batch's chunk=256, exact to round-off (tests/test_bp_grid_chunk.py). Outputs under ~/msd-icml/outputs/7be143b-20260919T001003Z/; fetch with MSD_DEPLOY_ENV=hpc/.deploy_7be143b.env."
   }
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E07b/ladder.csv": "a68a879127c002f4ce4efe5c8caa3d5b6c4f73ab689d3bbb1066fdc786ff599f",
+  "outputs/E07b/params_ladder.json": "c19359869809d983c24f36033c4444d1185c4079fc8fe66ed388b7405d2a2848"
+ },
+ "frozen_at": {
+  "E07b": "2026-09-20T09:25:44Z"
+ },
+ "frozen_commit": {
+  "E07b": "9f79ad5ad45ca391661a5fa5351260cdb41186be"
+ },
+ "frozen_run_commits": {
+  "E07b": [
+   "7be143b"
+  ]
+ }
 }

@@ -5,7 +5,7 @@
  "design": "E06 exactly -- Laplace chain, rho = 0.85, M = 512, one level per run, C = 8, 16 seeds, nine levels -- with em_checkpoints extended to (..., 1200, 1600, 2200, 3000, 4000, 6000, 8000). Nothing else changes.",
  "predeclared_analysis": "The E06 analysis rerun on E06c: per-level RMSE of rho and of the excess kurtosis, the ratio to the Cramer-Rao bound from the frozen E01 efficient information, and the at_cap rate per level reported alongside. The comparison to E06 is per level and paired by seed.",
  "motivation": "Found on 2026-09-18 while auditing the harvested runs: in E06 the fraction of cells whose validation-selected checkpoint is the LAST rung of the ladder is 0.12-0.38 at t <= 1.0 but 0.88 at t = 1.4 and 0.75 at t = 2.0, with median selected checkpoint 1200 = the cap. At exactly the two levels where the paper reports the estimator leaving the bound, the estimator is budget-limited. That is an alternative explanation for a reported claim and has to be excluded before the claim stands.",
- "status": "PRE-REGISTERED 2026-09-18; SUBMITTED 2026-09-18 (job 662795)",
+ "status": "FROZEN E06c 2026-09-20T09:25:44Z; PRE-REGISTERED 2026-09-18; SUBMITTED 2026-09-18 (job 662795)",
  "registered": "2026-09-18",
  "hpc_runs": [
   {
@@ -18,5 +18,20 @@
    "resources": "compute/40cpu/2-23:00",
    "note": "Submitted from the clean deployment 92da540 (hpc/.last_deploy.env); outputs land in ~/msd-icml/outputs/92da540-20260918T180147Z/E06c/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. Pre-registered before submission; nothing in this entry's hypothesis or analysis may change after the result is seen."
   }
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E06c/levels.csv": "73d9d9827ae883366fb4452fb8d421e8449e8c82f920e1424ad1033afc958e57",
+  "outputs/E06c/params_levels.json": "431fb011dd4f4393a550162f04093471108a0c19613d9585885ec7f94ee8520b"
+ },
+ "frozen_at": {
+  "E06c": "2026-09-20T09:25:44Z"
+ },
+ "frozen_commit": {
+  "E06c": "9f79ad5ad45ca391661a5fa5351260cdb41186be"
+ },
+ "frozen_run_commits": {
+  "E06c": [
+   "92da540"
+  ]
+ }
 }
