@@ -15,11 +15,26 @@ posterior is longer-ranged. The length moves the receptive-field argument direct
 is given the same radius it won with at L = 32, which is the point -- a bounded window is a
 bounded window whatever the chain does around it.
 
-Two deliberate departures from E03, both in the direction of affordability and both applied to
-every arm alike: the divergence in the training objective is estimated by Hutchinson for all
-architectures (E03 used the exact trace for the window head, which costs L backward passes per
-step and is prohibitive at L = 128), and the screen trains to 8k steps where the confirmatory run
-trains to 32k. Checkpoint selection uses the exact divergence throughout.
+Each network arm trains exactly as its E03 winner did (outputs/E03/winners.json): the window
+head with the EXACT divergence and learning rate 1e-3, the transformer with Hutchinson's estimator
+and learning rate 3e-3, parameterisation eps for both. The exact divergence of the window head is
+computed with 2r+1 coloured probes (markov_score.nn_torch.divergence), which is the exact trace to
+round-off at the cost of Hutchinson, so it is affordable at L = 128. The screen trains to 8k steps
+where the confirmatory run trains to 32k; checkpoint selection uses the exact divergence throughout.
+
+Amendment of 20 September 2026, before any confirmatory cell ran. The first screen (job 663143)
+trained the window head with Hutchinson's estimator; at the frozen point (rho = 0.85, L = 32,
+M = 2048, the E03 winner's radius and width) that gave test risks of 0.88 and 1.65 on the two
+development seeds against 0.166 for the same network trained with the exact trace in E03. The
+one-probe divergence, not the regime, was the cause, and the arm would have been a straw man.
+That screen is kept as a negative result (docs/NEGATIVE_RESULTS.md) and re-run here.
+
+Two arms were added at the same time, both cheap and both there to bracket the comparison rather
+than to change it: (i) the network-favourable interface of E03, denoising score matching on CLEAN
+targets with one fixed corruption per chain (dsm_one_corruption), so the factor is reported under
+the interface that helps the network most as well as under the matched one; (ii) EM-BP with its
+checkpoint chosen on the held-out one-view log-evidence (em_bp_evidence), the oracle-free rule of
+E20, so the matched comparison can be read with no true score anywhere in either arm.
 
 Fairness. The networks are re-screened inside each regime, on development seeds disjoint from the
 confirmatory ones, over the same architecture grid E03 used; the winner per family is then run on
@@ -27,8 +42,9 @@ the confirmatory seeds. So nothing is transferred from the frozen point except t
 candidates itself. Both sides see exactly one corruption of each training sequence, drawn once:
 the networks train by implicit score matching on those views and select on the implicit objective
 of a held-out noisy bundle, never on the true score; EM-BP fits the mixture kernel on the same
-views and selects on the same held-out bundle's BP risk. The LMMSE of the true covariance and the
-isotropic map are computed on the test bundle as the two references.
+views and selects on the same held-out bundle's BP risk (and, in a second row, on the held-out
+evidence). The LMMSE of the true covariance and the isotropic map are computed on the test bundle
+as the two references.
 
 Reported per cell: the pooled relative score error of every arm on a common test bundle, and the
 paired ratio best-network / EM-BP over seeds.
@@ -47,7 +63,7 @@ from common import apply_overrides, experiment_parser, provenance, run_cells, se
 from frozen_config import FROZEN  # noqa: E402
 from markov_score import theory  # noqa: E402
 from markov_score.bp_grid import grid_bp_batch, make_grid  # noqa: E402
-from markov_score.em import fit_em  # noqa: E402
+from markov_score.em import e_step_multi, fit_em  # noqa: E402
 from markov_score.kernels import MixtureInnovationKernel  # noqa: E402
 from markov_score.noising import alpha_delta  # noqa: E402
 from markov_score.priors import LaplaceAR1  # noqa: E402
@@ -75,10 +91,15 @@ SETTINGS = dict(
     em_init_rho=PROTOCOL.em_init_rho, em_init_var=PROTOCOL.em_init_var,
     archs=tuple(GRIDS),
     net_steps=PROTOCOL.net_steps, net_checkpoints=PROTOCOL.net_checkpoints,
-    screen_steps=8_000, lr=PROTOCOL.lrs[0], mode=PROTOCOL.parameterizations[0],
+    screen_steps=8_000, mode=PROTOCOL.parameterizations[0],
+    # per-arm training as E03's matched winners (outputs/E03/winners.json): learning rate and
+    # divergence estimator by architecture; "coloured" is the exact trace of a windowed map
+    lrs_by_arch={"window": 1e-3, "transformer": 3e-3},
+    trace_by_arch={"window": "coloured", "transformer": "hutchinson"},
     batch_size=PROTOCOL.batch_size, grad_clip=PROTOCOL.grad_clip,
     winners=None,                       # confirm: "auto:<screening.csv>", or a dict
     torch_threads=1,
+    device="auto",                      # nn_torch.pick_device: CUDA when the node has it, else CPU
 )
 QUICK = dict(rhos=(0.85,), lengths=(32,), n_chains=64, n_val=32, n_test=32, seeds=(10_000,),
              dev_seeds=(10_000,), grid_size=201, em_checkpoints=(5, 10),
@@ -122,8 +143,10 @@ def _pooled(mean_fn, bundle):
     return float(np.sqrt(num / den))
 
 
-def _one_view_groups(A, tag, seed, L):
-    """The shared information interface: one corruption per chain, chains split over the levels."""
+def _one_view_groups(A, tag, seed, L, return_index=False):
+    """The shared information interface: one corruption per chain, chains split over the levels.
+    With `return_index` the per-level index arrays come back too, so an arm that pairs each view
+    with its clean chain (the dsm_one_corruption bracket) uses the very same views."""
     idx = np.array_split(rng_for(tag + "-split", seed, L).permutation(len(A)), len(T_SCHEDULE))
     noise = rng_for(tag + "-noise", seed, L)
     out = []
@@ -131,58 +154,37 @@ def _one_view_groups(A, tag, seed, L):
         al, de = alpha_delta(t)
         sub = A[ii]
         out.append((al * sub + np.sqrt(de) * noise.standard_normal(sub.shape), t))
-    return out
+    return (out, idx) if return_index else out
 
 
 # ------------------------------------------------------------------ arms
 
 
-def _ism_objective(den, groups):
-    """Mean implicit-score-matching objective on held-out noisy views, exact divergence."""
-    import torch
-    tot, n = 0.0, 0
-    for X, t in groups:
-        x = torch.as_tensor(X, dtype=torch.float32).requires_grad_(True)
-        tt = torch.full((x.shape[0],), float(t))
-        al, de = float(np.exp(-t)), float(1 - np.exp(-2 * t))
-        out = den.model(x, tt)
-        m = out if den.parameterization == "x0" else (x - np.sqrt(de) * out) / al
-        s = -(x - al * m) / de
-        div = torch.zeros(x.shape[0])
-        for i in range(x.shape[1]):
-            g = torch.autograd.grad(s[:, i].sum(), x, retain_graph=True)[0]
-            div = div + g[:, i]
-        tot += float((0.5 * (s ** 2).sum(dim=1) + div).detach().sum()); n += x.shape[0]
-    return tot / n
-
-
 def _train_ism(cfg, arch, hp, L, groups, val_groups, seed, steps):
-    """Train by ISM on the one-view groups; select the checkpoint on the held-out ISM objective."""
+    """Train by ISM on the one-view groups; select the checkpoint on the held-out ISM objective
+    (exact divergence). Learning rate and divergence estimator per architecture, as E03's winners."""
     import torch
     from markov_score import nn_torch as nt
     torch.set_num_threads(cfg["torch_threads"])
     ck = tuple(int(c) for c in cfg["net_checkpoints"] if c <= steps) or (steps,)
     model = nt.build(arch, L, **hp)
-    tcfg = nt.TrainConfig(steps=max(ck), batch_size=cfg["batch_size"], lr=cfg["lr"],
+    tcfg = nt.TrainConfig(steps=max(ck), batch_size=cfg["batch_size"], lr=cfg["lrs_by_arch"][arch],
                           grad_clip=cfg["grad_clip"], parameterization=cfg["mode"], loss="ism",
                           checkpoints=ck, t_levels=T_SCHEDULE,
                           seed=int(rng_for("e14-net", arch, str(hp), L, seed).integers(0, 2**31 - 1)),
-                          # Hutchinson for EVERY family here, the window head included. E03 could
-                          # afford the exact Jacobian trace for the window at L = 32; at L = 128 it
-                          # is L backward passes per step and dominates the run. Using one estimator
-                          # for all arms also makes the comparison internally uniform, which is what
-                          # this experiment is about. Checkpoint selection below stays exact.
-                          hutchinson=True)
+                          trace=cfg["trace_by_arch"][arch], device=nt.pick_device(cfg["device"]))
     t0 = time.time()
     saved = nt.train(model, None, tcfg, X_noisy_groups=groups)
-    # The whole held-out ISM curve is recorded, not only its minimum: a fit that diverged
-    # (E03 saw ISM risks near 1.2 at M = 32) shows a curve that never turns over, and the
-    # reader of the CSV must be able to call that divergence rather than "the network's
-    # error". Same "step:value;..." encoding as E03's val_curve.
+    # Selection on the held-out ISM objective with the EXACT divergence for every arm: the coloured
+    # probes are exact for the window head, the L-pass loop is used for the dense transformer.
+    sel_trace = "coloured" if nt.receptive_radius(model) is not None else "exact"
+    # The whole held-out curve is recorded, not only its minimum: a fit that diverged (E03 saw ISM
+    # risks near 1.2 at M = 32) shows a curve that never turns over, and the reader of the CSV must
+    # be able to call that divergence rather than "the network's error".
     best, best_v, curve = None, np.inf, {}
     for step in sorted(saved):
         den = nt.Denoiser(nt.load_checkpoint(model, saved[step]), cfg["mode"])
-        v = _ism_objective(den, val_groups)
+        v = nt.ism_objective(den, val_groups, sel_trace)
         curve[step] = v
         if v < best_v:
             best, best_v = step, v
@@ -192,23 +194,79 @@ def _train_ism(cfg, arch, hp, L, groups, val_groups, seed, steps):
                      val_curve=";".join(f"{k}:{v:.5f}" for k, v in sorted(curve.items())))
 
 
-def _em_arm(cfg, grid, w, groups, val, seed, rho, L):
-    """EM-BP on the same one-view groups, checkpoint selected on the held-out BP risk."""
+def _train_dsm_one_corruption(cfg, arch, hp, L, A, groups, idx, val, seed, steps):
+    """E03's network-favourable interface: denoising score matching on CLEAN targets, each chain
+    paired with its one fixed noised view (the same views the matched arms see), checkpoint on the
+    validation BP risk as in E03. Same recipe otherwise (batch, Adam, clip, ladder)."""
+    import torch
+    from markov_score import nn_torch as nt
+    torch.set_num_threads(cfg["torch_threads"])
+    ck = tuple(int(c) for c in cfg["net_checkpoints"] if c <= steps) or (steps,)
+    dev = torch.device(nt.pick_device(cfg["device"]))
+    model = nt.build(arch, L, **hp).to(dev)
+    Xs = np.concatenate([X for X, _ in groups]); Ts = np.concatenate([np.full(len(X), t) for X, t in groups])
+    As = np.concatenate([A[ix] for ix in idx])
+    seed_net = int(rng_for("e14-dsm", arch, str(hp), L, seed).integers(0, 2**31 - 1))
+    torch.manual_seed(seed_net); rng = np.random.default_rng(seed_net)
+    opt = torch.optim.Adam(model.parameters(), lr=cfg["lrs_by_arch"][arch])
+    saved, t0 = {}, time.time()
+    model.train()
+    for step in range(1, max(ck) + 1):
+        b = rng.integers(0, len(Xs), size=min(cfg["batch_size"], len(Xs)))
+        x = torch.as_tensor(Xs[b], dtype=torch.float32, device=dev); a = torch.as_tensor(As[b], dtype=torch.float32, device=dev)
+        t = torch.as_tensor(Ts[b], dtype=torch.float32, device=dev)
+        al = torch.exp(-t)[:, None]; de = 1 - torch.exp(-2 * t)[:, None]
+        z = (x - al * a) / torch.sqrt(de)
+        out = model(x, t)
+        target = z if cfg["mode"] == "eps" else a
+        loss = ((out - target) ** 2).mean()
+        opt.zero_grad(set_to_none=True); loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), cfg["grad_clip"]); opt.step()
+        if step in ck:
+            saved[step] = {k: v.detach().clone().cpu() for k, v in model.state_dict().items()}
+    best, best_v, curve = None, np.inf, {}
+    for step in sorted(saved):
+        den = nt.Denoiser(nt.load_checkpoint(model, saved[step]), cfg["mode"])
+        v = _pooled(lambda X, t: den.posterior_mean(X, t), val)
+        curve[step] = v
+        if v < best_v:
+            best, best_v = step, v
+    den = nt.Denoiser(nt.load_checkpoint(model, saved[best]), cfg["mode"])
+    return den, dict(checkpoint=best, at_cap=best == max(saved), val_selected=best_v,
+                     wall=time.time() - t0, n_params=nt.n_params(model),
+                     val_curve=";".join(f"{k}:{v:.5f}" for k, v in sorted(curve.items())))
+
+
+def _em_arm(cfg, grid, w, groups, val, val_groups, seed, rho, L):
+    """EM-BP on the same one-view groups. One ladder, two selection rules: the held-out BP risk
+    (the registered rule, which uses the true kernel's posterior means on the validation bundle)
+    and the held-out one-view log-evidence per edge (E20's oracle-free rule, computed on the
+    noised views of the validation chains, the same views the network arm selects on)."""
     gs = [(X, *alpha_delta(t)) for X, t in groups]
+    held = [(X, *alpha_delta(t)) for X, t in val_groups]
+    n_edges = sum(len(X) for X, _ in val_groups) * (L - 1)
     k0 = MixtureInnovationKernel.init(cfg["components"], rho=cfg["em_init_rho"], var=cfg["em_init_var"],
                                       rng=rng_for("e14-init", seed, L, rho))
     ck = set(int(c) for c in cfg["em_checkpoints"])
-    _, _, saved = fit_em(k0, grid, w, gs, n_iters=max(ck), tol=FROZEN.em_loglik_tol, checkpoints=ck)
-    best, best_v = None, np.inf
+    _, trace, saved = fit_em(k0, grid, w, gs, n_iters=max(ck), tol=FROZEN.em_loglik_tol, checkpoints=ck)
+    best, best_v, best_e, best_ev, curve = None, np.inf, None, -np.inf, {}
     for it in sorted(saved):
         lk = saved[it].log_transition_matrix(grid)
         v = _pooled(lambda X, t, lk=lk: grid_bp_batch(grid, w, lk, X, *alpha_delta(t))[0], val)
+        ev = float(e_step_multi(grid, w, lk, held).log_evidence) / n_edges
+        curve[it] = (v, ev)
         if v < best_v:
             best, best_v = it, v
-    kb = saved[best]
-    return kb, dict(checkpoint=best, at_cap=best == max(saved), val_selected=best_v,
-                    fit_kurt=float(kb.innovation_moments["innovation_excess_kurtosis"]),
-                    fit_rho=float(kb.rho))
+        if ev > best_ev:
+            best_e, best_ev = it, ev
+    out = []
+    for it, sel in ((best, best_v), (best_e, best_ev)):
+        kb = saved[it]
+        out.append((kb, dict(checkpoint=it, at_cap=it == max(saved), val_selected=sel,
+                             fit_kurt=float(kb.innovation_moments["innovation_excess_kurtosis"]),
+                             fit_rho=float(kb.rho),
+                             val_curve=";".join(f"{i}:{a:.5f}/{b:.5f}" for i, (a, b) in sorted(curve.items())))))
+    return out
 
 
 # ------------------------------------------------------------------ cells
@@ -256,23 +314,24 @@ def _confirm_cell(args):
                     ("isotropic", lambda X, t: (X - (1 - np.exp(-2 * t)) * X) / np.exp(-t))):
         rows.append({**base, **ROW_DEFAULTS, "arm": arm, "risk": _pooled(fn, test)})
 
-    groups = _one_view_groups(A, "e14-em", seed, L)
+    groups, idx = _one_view_groups(A, "e14-em", seed, L, return_index=True)
     val_groups = _one_view_groups(Av, "e14-emval", seed, L)
 
-    kb, info = _em_arm(cfg, grid, w, groups, val, seed, rho, L)
-    lk = kb.log_transition_matrix(grid)
-    rows.append({**base, **ROW_DEFAULTS, "arm": "em_bp",
-                 "risk": _pooled(lambda X, t: grid_bp_batch(grid, w, lk, X, *alpha_delta(t))[0], test),
-                 **info})
+    for arm, (kb, info) in zip(("em_bp", "em_bp_evidence"), _em_arm(cfg, grid, w, groups, val, val_groups, seed, rho, L)):
+        lk = kb.log_transition_matrix(grid)
+        rows.append({**base, **ROW_DEFAULTS, "arm": arm,
+                     "risk": _pooled(lambda X, t, lk=lk: grid_bp_batch(grid, w, lk, X, *alpha_delta(t))[0], test),
+                     **info})
 
     for arch, ww in winners.items():
         den, ninfo = _train_ism(cfg, arch, ww["hp"], L, groups, val_groups, seed, cfg["net_steps"])
-        rows.append({**base, **ROW_DEFAULTS, "arm": "ism_one_view", "arch": arch,
-                     "hp": str(ww["hp"]),
+        rows.append({**base, **ROW_DEFAULTS, "arm": "ism_one_view", "arch": arch, "hp": str(ww["hp"]),
                      "risk": _pooled(lambda X, t: den.posterior_mean(X, t), test), **ninfo})
-    print(f"  [E14] rho={rho} L={L} seed={seed}: em={rows[2]['risk']:.4f} "
-          + " ".join(f"{r['arch']}={r['risk']:.4f}" for r in rows[3:])
-          + f"  lmmse={rows[0]['risk']:.4f}", flush=True)
+        den, ninfo = _train_dsm_one_corruption(cfg, arch, ww["hp"], L, A, groups, idx, val, seed, cfg["net_steps"])
+        rows.append({**base, **ROW_DEFAULTS, "arm": "dsm_one_corruption", "arch": arch, "hp": str(ww["hp"]),
+                     "risk": _pooled(lambda X, t: den.posterior_mean(X, t), test), **ninfo})
+    print(f"  [E14] rho={rho} L={L} seed={seed}: "
+          + " ".join(f"{r['arm']}{('/' + r['arch']) if r['arch'] else ''}={r['risk']:.4f}" for r in rows), flush=True)
     return rows
 
 

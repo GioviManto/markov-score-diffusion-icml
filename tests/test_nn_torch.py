@@ -75,3 +75,50 @@ def test_fastconv1d_matches_native_conv1d():
         g1 = x.grad.clone(); x.grad = None
         (F.conv1d(x, m.weight, m.bias, padding=pad, dilation=dil) ** 2).sum().backward()
         assert torch.allclose(g1, x.grad, atol=1e-4, rtol=1e-4)
+
+
+@pytest.mark.parametrize("radius,L", [(1, 16), (2, 16), (4, 32), (8, 37)])
+def test_coloured_trace_equals_exact_trace_for_the_window_head(radius, L):
+    """2r+1 coloured probes give the exact divergence of a radius-r window map, at every site
+    including the zero-padded ends, and the exact loop is what E03 trained the window with."""
+    torch.manual_seed(1)
+    m = nt.build("window", L, radius=radius, width=8)
+    x = torch.randn(5, L, requires_grad=True); t = torch.full((5,), 0.7)
+    s = m(x, t)
+    ex = nt.divergence(s, x, "exact", create_graph=False)
+    co = nt.divergence(s, x, "coloured", radius=nt.receptive_radius(m), create_graph=False)
+    assert torch.allclose(ex, co, atol=1e-5, rtol=1e-5)
+    hut = np.mean([float(nt.divergence(s, x, "hutchinson", rng=np.random.default_rng(k), create_graph=False).mean()) for k in range(400)])
+    assert abs(hut - float(ex.mean())) < 0.1 * max(1.0, abs(float(ex.mean())))
+
+
+def test_coloured_trace_refuses_a_dense_map():
+    m = nt.build("transformer", L, d=16, heads=2, layers=1)
+    x = torch.randn(3, L, requires_grad=True); s = m(x, torch.full((3,), 0.5))
+    with pytest.raises(ValueError):
+        nt.divergence(s, x, "coloured", radius=nt.receptive_radius(m))
+
+
+def test_ism_objective_helper_matches_the_exact_loop_and_train_config_trace():
+    torch.manual_seed(2)
+    m = nt.build("window", L, radius=2, width=8)
+    den = nt.Denoiser(m, "eps")
+    X = np.random.default_rng(0).standard_normal((12, L)); groups = [(X[:6], 0.3), (X[6:], 1.0)]
+    a = nt.ism_objective(den, groups, "exact"); b = nt.ism_objective(den, groups, "coloured")
+    assert abs(a - b) < 1e-4 * max(1.0, abs(a))
+    cfg = nt.TrainConfig(t_levels=T, loss="ism", trace="coloured")
+    assert nt.trace_mode(cfg) == "coloured"
+    assert nt.trace_mode(nt.TrainConfig(loss="ism", hutchinson=True)) == "hutchinson"
+    assert nt.trace_mode(nt.TrainConfig(loss="ism")) == "exact"
+    assert nt.pick_device("cpu") == "cpu"
+
+
+def test_ism_training_on_a_declared_device_runs_and_returns_cpu_states():
+    torch.set_num_threads(1)
+    m = nt.build("window", L, radius=1, width=8)
+    X = np.random.default_rng(3).standard_normal((40, L))
+    cfg = nt.TrainConfig(steps=20, batch_size=8, lr=1e-3, loss="ism", trace="coloured", checkpoints=(10, 20), t_levels=T, seed=0, device="cpu")
+    saved = nt.train(m, None, cfg, X_noisy_groups=[(X[:20], 0.3), (X[20:], 1.0)])
+    assert set(saved) == {10, 20} and all(v.device.type == "cpu" for v in saved[20].values())
+    den = nt.Denoiser(nt.load_checkpoint(m, saved[20]), "eps")
+    assert den.posterior_mean(X[:4], 0.3).shape == (4, L)

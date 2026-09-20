@@ -258,3 +258,21 @@ radius-4 floor at ρ = 0.85: 0.030 pooled (peak 0.065 at t ≈ 0.7–1.0), again
 0.030 of information; the plateau is the one-layer architecture's. The manuscript's sentence
 "a radius-4 window cannot represent a message that has travelled the length of the chain" is
 replaced by the floor.
+
+**N-22. A one-probe divergence does not train the window head (E14's first screen).** The
+first E14 screen (job 663143, 108 cells, 19–20 Sep) trained every architecture by implicit
+score matching with Hutchinson's one-probe divergence, "so the estimator is uniform across
+arms". At the frozen point (ρ = 0.85, L = 32, M = 2048, radius 4, width 64, lr 1e-3, eps) the
+window head reached test risks of 0.883 and 1.648 on the two development seeds, against 0.166
+for the same network trained with the exact trace in E03's matched arm; every held-out ISM
+curve rises from the first checkpoint (selected step 500 in 11 of 12 window cells). The
+transformer, which E03 also trained with Hutchinson, sat at 0.79–1.29 at L = 32 against
+E03's 0.42. The estimator, not the regime, is the cause: with L = 32 outputs and one Gaussian
+probe the per-sample trace estimate has variance 2‖J‖²_F, and the score's Jacobian carries
+1/Δ_t ≈ 10 at the lowest level. The screen is kept under `outputs/E14_screen_hutchinson/`
+and superseded (registry amendment of 20 Sep): the window head now trains with the exact
+trace computed by 2r+1 coloured probes (`markov_score.nn_torch.divergence`, exact to
+round-off, `tests/test_nn_torch.py`), the transformer with Hutchinson at E03's learning
+rate 3e-3, and the confirm carries E03's clean-target arm and the evidence-selected EM arm
+as brackets. The lesson generalises: an ISM baseline trained with a one-probe trace is not a
+measurement of the architecture, and a paper that compares against one has built a straw man.

@@ -1,0 +1,128 @@
+\documentclass[11pt,a4paper]{report}
+
+% ---------------------------------------------------------------------------
+% A compendium for "What Survives Diffusion Noise?": every concept the paper and
+% the meeting report rely on, built from scratch, in one place.
+%
+% Build:  cd reports/compendium && tectonic -X compile compendium.tex
+% Parts live in parts/NN-*.tex; each is self-contained at the level of a chapter
+% and uses only the macros of paper/notation.tex (copied below) plus those here.
+% ---------------------------------------------------------------------------
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage{makeidx}
+\makeindex
+
+\graphicspath{{../../paper/figures/}}
+
+\setlist[itemize]{leftmargin=1.2em,itemsep=0.25em,topsep=0.3em}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=0.35em,topsep=0.4em}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% --- the paper's notation, verbatim ---------------------------------------
+\input{../../paper/notation}
+% --- macros the paper defines in main.tex ---------------------------------
+\newcommand{\Frob}[1]{\lVert #1 \rVert_{F}}
+\newcommand{\Hen}[1]{\mathrm{He}_{#1}}
+\newcommand{\kfour}{\bm{\kappa}_4}
+\newcommand{\Sgauss}{\score_{\mathrm{G}}}
+\newcommand{\tstar}{t_{*}}
+\newcommand{\lmax}{\lambda_{\max}}
+\newcommand{\Pgaussl}{P_{\mathrm{G}}}
+% --- compendium-only macros -----------------------------------------------
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\argmax}{\operatorname*{arg\,max}}
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+\newcommand{\where}[1]{\par\noindent\textit{Where it is used.}\ #1\par}
+\newcommand{\why}[1]{\par\noindent\textit{Why it matters here.}\ #1\par}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\term}[1]{\textbf{#1}\index{#1}}
+
+\title{\textbf{What Survives Diffusion Noise?}\\[0.4em]
+  \Large A compendium: every concept, from scratch}
+\author{Giovanni Mantovani\\ \small Bocconi University}
+\date{Draft of 20 September 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent This compendium accompanies the manuscript \emph{What Survives Diffusion Noise?}
+and the meeting report on the EM chapters. It defines and derives, from first principles,
+every mathematical and statistical object those documents use: Hermite polynomials and
+cumulants, the Ornstein--Uhlenbeck channel and Tweedie's identity, Fisher information and
+the Cram\'er--Rao bound, belief propagation on a chain and its quadrature on a grid,
+expectation--maximisation and Fisher's identity, quasi-likelihood and moment estimators,
+score matching in its denoising and implicit forms, and the statistics of the experimental
+protocol. Each chapter states where the object appears in the paper and in the code, and
+works one small example by hand. Nothing here is new; everything here is what the reader
+needs in order to check the paper line by line.
+\end{abstract}
+
+\tableofcontents
+
+\input{parts/00-conventions}
+
+\part{Probability and statistics}
+\input{parts/01-moments-cumulants}
+\input{parts/02-gaussian-hermite}
+\input{parts/03-markov-chains}
+\input{parts/04-fisher-cramer-rao}
+\input{parts/05-experimental-statistics}
+
+\part{Diffusion}
+\input{parts/06-ou-channel-tweedie}
+\input{parts/07-score-matching}
+\input{parts/08-reverse-sde-generation}
+\input{parts/09-attenuation-theorems}
+
+\part{Exact inference}
+\input{parts/10-factor-graphs-bp}
+\input{parts/11-grid-quadrature}
+\input{parts/12-gaussian-closure-lmmse}
+
+\part{Learning}
+\input{parts/13-maximum-likelihood-em}
+\input{parts/14-em-through-noise}
+\input{parts/15-quasi-likelihood-moments}
+\input{parts/16-model-selection}
+\input{parts/17-misspecification-edgeworth}
+
+\part{The experiments}
+\input{parts/18-neural-baselines}
+\input{parts/19-protocol}
+\input{parts/20-reading-the-figures}
+
+\appendix
+\input{parts/A-glossary}
+
+\printindex
+\end{document}

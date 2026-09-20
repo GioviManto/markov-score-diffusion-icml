@@ -26,8 +26,16 @@ Losses
              E ||f(x_t, t) - target||^2 with target = z (eps) or a (x0).
     ism      implicit (Hyvärinen) score matching from noisy samples ONLY:
              E [ 1/2 ||s(x)||^2 + div s(x) ], s = -(x - alpha m(x))/Delta,
-             divergence by exact Jacobian trace (window head, cheap) or Hutchinson.
+             divergence by exact Jacobian trace (L backward passes), by Hutchinson's
+             one-probe estimator, or---for a map whose output at site i depends on the
+             inputs within a radius r only (the window head)---by 2r+1 coloured probes,
+             which is the exact trace at the cost of Hutchinson (`divergence`).
              This is the information-matched arm: it never sees a clean chain.
+
+Device. `TrainConfig.device` ("cpu", "cuda", "cuda:k", or "auto" through `pick_device`)
+places the model and every batch; state dicts are saved on the CPU, and `Denoiser`
+moves its inputs to the model's device, so a caller never sees a device tensor. On the
+CPU the code path is the one every frozen run used, operation for operation.
 
 Recipe (`TrainConfig`): batch 64, Adam, grad-clip 1.0, per-example t drawn uniformly
 from the twelve frozen levels, fresh corruption each step, checkpoint ladder, both
@@ -38,6 +46,7 @@ the validation bundle with the true-kernel BP reference, exactly as the legacy a
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -122,6 +131,7 @@ class WindowHead(nn.Module):
         super().__init__()
         self.tf = TimeFeatures(n_freq)
         self.radius = radius
+        self.receptive_radius = radius      # output i depends on inputs |j - i| <= radius only
         self.conv = FastConv1d(1, width, 2 * radius + 1, padding=radius)
         self.tproj = nn.Linear(self.tf.dim, width)
         self.mlp = nn.Sequential(nn.Tanh(), FastConv1d(width, width, 1), nn.Tanh(), FastConv1d(width, 1, 1))
@@ -189,7 +199,7 @@ class RelPosAttention(nn.Module):
         q = q.view(B, L, self.h, d // self.h).transpose(1, 2)
         k = k.view(B, L, self.h, d // self.h).transpose(1, 2)
         v = v.view(B, L, self.h, d // self.h).transpose(1, 2)
-        rel = torch.arange(L)[:, None] - torch.arange(L)[None, :]
+        rel = torch.arange(L, device=h.device)[:, None] - torch.arange(L, device=h.device)[None, :]
         rel = rel.clamp(-self.max_dist, self.max_dist) + self.max_dist
         att = (q @ k.transpose(-1, -2)) / math.sqrt(d // self.h) + self.bias[:, rel][None]
         att = att.softmax(dim=-1)
@@ -270,15 +280,19 @@ class Denoiser:
         self.model = model
         self.parameterization = parameterization
 
+    @property
+    def device(self) -> torch.device:
+        return next(self.model.parameters()).device
+
     @torch.no_grad()
     def posterior_mean(self, X: np.ndarray, t: float) -> np.ndarray:
         self.model.eval()
-        x = torch.as_tensor(X, dtype=torch.float32)
-        tt = torch.full((x.shape[0],), float(t))
+        x = torch.as_tensor(X, dtype=torch.float32, device=self.device)
+        tt = torch.full((x.shape[0],), float(t), device=self.device)
         out = self.model(x, tt)
         alpha, delta = math.exp(-t), 1.0 - math.exp(-2.0 * t)
         m = out if self.parameterization == "x0" else (x - math.sqrt(delta) * out) / alpha
-        return m.numpy().astype(np.float64)
+        return m.cpu().numpy().astype(np.float64)
 
 
 # --------------------------------------------------------------------------- training
@@ -294,17 +308,78 @@ class TrainConfig:
     loss: str = "dsm"                  # "dsm" | "ism"
     checkpoints: tuple = (500, 1000, 2000, 4000, 8000, 16000, 32000, 64000)
     hutchinson: bool = False           # ism only: Hutchinson trace instead of exact
+    trace: str | None = None           # ism only: "exact" | "hutchinson" | "coloured"; None -> from `hutchinson`
     seed: int = 0
     t_levels: tuple = field(default_factory=tuple)
+    device: str = "cpu"                # "cpu" | "cuda" | "cuda:k" | "auto" (see pick_device)
+
+
+def pick_device(spec: str = "auto") -> str:
+    """Resolve a device spec. "auto" is CUDA when available---spread over the visible devices by
+    process id, so a worker pool on a multi-GPU node shares them evenly---and the CPU otherwise."""
+    if spec != "auto":
+        return spec
+    if torch.cuda.is_available():
+        return f"cuda:{os.getpid() % torch.cuda.device_count()}"
+    return "cpu"
+
+
+def trace_mode(cfg: TrainConfig) -> str:
+    return cfg.trace or ("hutchinson" if cfg.hutchinson else "exact")
+
+
+def receptive_radius(model: nn.Module):
+    """The radius r such that output i depends on inputs i-r..i+r only, when the module declares
+    it (the window head); None for a map with a dense Jacobian."""
+    return getattr(model, "receptive_radius", None)
+
+
+def divergence(s: torch.Tensor, x: torch.Tensor, mode: str, rng: np.random.Generator | None = None,
+               radius: int | None = None, create_graph: bool = True) -> torch.Tensor:
+    """sum_i ds_i/dx_i for every row of `s` (B, L), computed from the leaf `x` that `s` came from.
+
+    exact       L backward passes, one per output coordinate.
+    hutchinson  one standard-normal probe v: E[v^T J v] = tr J (unbiased, high variance).
+    coloured    for a map whose output i depends only on inputs |j - i| <= radius, the p = 2r+1
+                probes v_k = 1{j = k mod p} give the exact trace at Hutchinson's cost per probe:
+                (J^T v_k)_j = sum_i v_k[i] J_ij picks out the ONE i in [j-r, j+r] with i = k mod p,
+                and that i is j itself exactly when j = k mod p, so sum_k v_k . (J^T v_k) = tr J.
+                (Curtis, Powell and Reid, 1974: colouring of a banded Jacobian.) Zero padding at
+                the ends only removes dependencies, so the argument covers the boundary sites.
+    """
+    B, L = x.shape
+    if mode == "hutchinson":
+        v = torch.as_tensor(rng.standard_normal(x.shape), dtype=x.dtype, device=x.device)
+        jv = torch.autograd.grad((s * v).sum(), x, create_graph=create_graph, retain_graph=True)[0]
+        return (jv * v).sum(dim=1)
+    if mode == "coloured":
+        if radius is None:
+            raise ValueError("coloured trace: the model declares no receptive radius (dense Jacobian)")
+        p = 2 * int(radius) + 1
+        idx = torch.arange(L, device=x.device)
+        div = torch.zeros(B, dtype=x.dtype, device=x.device)
+        for k in range(p):
+            v = (idx % p == k).to(x.dtype)[None, :].expand(B, L)
+            jv = torch.autograd.grad((s * v).sum(), x, create_graph=create_graph, retain_graph=True)[0]
+            div = div + (jv * v).sum(dim=1)
+        return div
+    if mode == "exact":
+        div = torch.zeros(B, dtype=x.dtype, device=x.device)
+        for i in range(L):
+            g = torch.autograd.grad(s[:, i].sum(), x, create_graph=create_graph, retain_graph=True)[0]
+            div = div + g[:, i]
+        return div
+    raise ValueError(f"unknown divergence estimator {mode!r}")
 
 
 def _draw_batch(A: np.ndarray, cfg: TrainConfig, rng: np.random.Generator):
+    dev = torch.device(cfg.device)
     idx = rng.integers(0, len(A), size=min(cfg.batch_size, len(A)))
-    a = torch.as_tensor(A[idx], dtype=torch.float32)
-    t = torch.as_tensor(rng.choice(cfg.t_levels, size=len(idx)), dtype=torch.float32)
+    a = torch.as_tensor(A[idx], dtype=torch.float32, device=dev)
+    t = torch.as_tensor(rng.choice(cfg.t_levels, size=len(idx)), dtype=torch.float32, device=dev)
     alpha = torch.exp(-t)[:, None]
     delta = 1.0 - torch.exp(-2.0 * t)[:, None]
-    z = torch.as_tensor(rng.standard_normal(a.shape), dtype=torch.float32)
+    z = torch.as_tensor(rng.standard_normal(a.shape), dtype=torch.float32, device=dev)
     x = alpha * a + torch.sqrt(delta) * z
     return a, x, z, t, alpha, delta
 
@@ -325,16 +400,27 @@ def ism_loss(model, x, t, alpha, delta, cfg: TrainConfig, rng: np.random.Generat
     x = x.detach().requires_grad_(True)
     out = model(x, t)
     s = _score_from_out(out, x, alpha, delta, cfg)
-    if cfg.hutchinson:
-        v = torch.as_tensor(rng.standard_normal(x.shape), dtype=torch.float32)
-        jv = torch.autograd.grad((s * v).sum(), x, create_graph=True)[0]
-        div = (jv * v).sum(dim=1)
-    else:
-        div = torch.zeros(x.shape[0])
-        for i in range(x.shape[1]):
-            g = torch.autograd.grad(s[:, i].sum(), x, create_graph=True, retain_graph=True)[0]
-            div = div + g[:, i]
+    div = divergence(s, x, trace_mode(cfg), rng=rng, radius=receptive_radius(model), create_graph=True)
     return (0.5 * (s**2).sum(dim=1) + div).mean()
+
+
+def ism_objective(den: "Denoiser", groups, trace: str = "exact") -> float:
+    """Mean implicit-score-matching objective E[1/2 |s|^2 + div s] over held-out noisy (X, t)
+    groups---the model-selection criterion of the information-matched arm, which needs no clean
+    chain and no true score. `trace` names the divergence estimator: "exact" (L passes) for any
+    map, "coloured" (exact, 2r+1 passes) for a map that declares its receptive radius."""
+    dev = den.device
+    tot, n = 0.0, 0
+    for X, t in groups:
+        x = torch.as_tensor(X, dtype=torch.float32, device=dev).requires_grad_(True)
+        tt = torch.full((x.shape[0],), float(t), device=dev)
+        al, de = math.exp(-t), 1.0 - math.exp(-2.0 * t)
+        out = den.model(x, tt)
+        m = out if den.parameterization == "x0" else (x - math.sqrt(de) * out) / al
+        s = -(x - al * m) / de
+        div = divergence(s, x, trace, radius=receptive_radius(den.model), create_graph=False)
+        tot += float((0.5 * (s ** 2).sum(dim=1) + div).detach().sum()); n += x.shape[0]
+    return tot / n
 
 
 def train(model: nn.Module, A_train: np.ndarray, cfg: TrainConfig, X_noisy_groups=None) -> dict:
@@ -345,6 +431,8 @@ def train(model: nn.Module, A_train: np.ndarray, cfg: TrainConfig, X_noisy_group
     """
     torch.manual_seed(cfg.seed)
     rng = np.random.default_rng(cfg.seed)
+    dev = torch.device(cfg.device)
+    model.to(dev)
     opt = torch.optim.Adam(model.parameters(), lr=cfg.lr)
     saved = {}
     model.train()
@@ -357,8 +445,8 @@ def train(model: nn.Module, A_train: np.ndarray, cfg: TrainConfig, X_noisy_group
             loss = dsm_loss(model, a, x, z, t, alpha, delta, cfg)
         else:
             idx = rng.integers(0, len(Xs), size=min(cfg.batch_size, len(Xs)))
-            x = torch.as_tensor(Xs[idx], dtype=torch.float32)
-            t = torch.as_tensor(Ts[idx], dtype=torch.float32)
+            x = torch.as_tensor(Xs[idx], dtype=torch.float32, device=dev)
+            t = torch.as_tensor(Ts[idx], dtype=torch.float32, device=dev)
             alpha = torch.exp(-t)[:, None]; delta = 1.0 - torch.exp(-2.0 * t)[:, None]
             loss = ism_loss(model, x, t, alpha, delta, cfg, rng)
         opt.zero_grad(set_to_none=True)
@@ -367,7 +455,7 @@ def train(model: nn.Module, A_train: np.ndarray, cfg: TrainConfig, X_noisy_group
             nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
         opt.step()
         if step in cfg.checkpoints:
-            saved[step] = {k: v.detach().clone() for k, v in model.state_dict().items()}
+            saved[step] = {k: v.detach().clone().cpu() for k, v in model.state_dict().items()}
     return saved
 
 
