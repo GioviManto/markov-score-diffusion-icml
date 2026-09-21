@@ -1,0 +1,12 @@
+{
+ "id": "E14b",
+ "script": "experiments/e14_regime_baselines.py --set family='bimodal' --set rhos=(0.85,) --set lengths=(32,)",
+ "hypothesis": "H14b: the information-matched advantage of the structured estimator is fourth-order structure of either sign, not heavy tails. With the symmetric two-component mixture innovation (excess kurtosis -0.72 at the same covariance) at the frozen (rho, L) = (0.85, 32) and M = 2048, EM-BP beats the best re-screened network at interface C; the paired factor is larger than one and smaller than the Laplace cell's of E14, in proportion to the smaller price of second-order closure (LMMSE floor 0.082 against 0.168 on the twelve-level schedule, E07).",
+ "design": "E14's amended design (2026-09-20) restricted to one cell: family bimodal, rho = 0.85, L = 32, M = 2048, sixteen confirmatory seeds 0-15; networks re-screened on the two development seeds over E14's architecture grid with the same per-arm estimators and learning rates; arms lmmse_true, isotropic, em_bp, em_bp_evidence, ism_one_view (x2), dsm_one_corruption (x2); GPU training for the networks.",
+ "predeclared_analysis": "E14's analysis for the single cell (tools/make_regime_baselines.py): mean pooled relative score error per arm, paired ratios of each network arm to em_bp and to em_bp_evidence with a percentile bootstrap over seeds, the divergence rule of 2026-09-21 (isotropic-objective threshold for the ISM arm; shape flag for the DSM arm). Comparison with E14's (0.85, 32) Laplace cell: the two paired factors and their ratio with a bootstrap over seeds; read as a direction against the two families' LMMSE floors, no exponent.",
+ "motivation": "Every matched comparison in the paper is on Laplace innovations (positive excess kurtosis). A referee can ask whether the advantage is about heavy tails. The bimodal member has negative excess kurtosis at the same covariance; if the advantage is the fourth-order structure the covariance twin leaves behind, it should survive with the smaller size that the smaller floor predicts. The audit's plan listed this as P2.1.",
+ "limitations": "One cell; one negative-kurtosis family; the screen winners are re-selected for this family but the architecture grid is E03's.",
+ "status": "PRE-REGISTERED 2026-09-21 before running; SUBMITTED 2026-09-21",
+ "registered": "2026-09-21",
+ "hpc_runs": []
+}

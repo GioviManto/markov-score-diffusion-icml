@@ -68,11 +68,14 @@ from markov_score.bp_grid import grid_bp_batch, make_grid  # noqa: E402
 from markov_score.em import e_step_multi, fit_em  # noqa: E402
 from markov_score.kernels import MixtureInnovationKernel  # noqa: E402
 from markov_score.noising import alpha_delta  # noqa: E402
-from markov_score.priors import LaplaceAR1  # noqa: E402
+from markov_score.priors import GaussianMixtureAR1, LaplaceAR1, StudentTAR1, UniformAR1  # noqa: E402
 from markov_score.utils import ensure_dir, rng_for, write_csv, write_json  # noqa: E402
 from protocol import PROTOCOL  # noqa: E402
 
 T_SCHEDULE = tuple(FROZEN.t_grid)
+# innovation families the regime comparison can be run on; every one has unit marginal variance,
+# so the LMMSE reference and the crossover are the same functions of rho for all of them
+FAMILIES = {"laplace": LaplaceAR1, "bimodal": GaussianMixtureAR1, "uniform": UniformAR1, "student": StudentTAR1}
 
 # the same candidate grid E03 screened, restricted to the two families that carried the matched
 # comparison there: the local head and the global attention model.
@@ -101,6 +104,7 @@ SETTINGS = dict(
     batch_size=PROTOCOL.batch_size, grad_clip=PROTOCOL.grad_clip,
     winners=None,                       # confirm: "auto:<screening.csv>", or a dict
     torch_threads=1,
+    family="laplace",                   # E14b runs the bimodal member at one (rho, L)
     device="auto",                      # nn_torch.pick_device: CUDA when the node has it, else CPU
 )
 QUICK = dict(rhos=(0.85,), lengths=(32,), n_chains=64, n_val=32, n_test=32, seeds=(10_000,),
@@ -276,7 +280,7 @@ def _em_arm(cfg, grid, w, groups, val, val_groups, seed, rho, L):
 
 def _common(cfg, rho, L, seed, n):
     grid, w = make_grid(cfg["half_width"], cfg["grid_size"])
-    prior = LaplaceAR1(rho)
+    prior = FAMILIES[cfg["family"]](rho)
     log_k = prior.log_transition_matrix(grid)
     _, val = _bundle(prior, log_k, grid, w, "e14-val", seed, cfg["n_val"], L)
     _, test = _bundle(prior, log_k, grid, w, "e14-test", seed, cfg["n_test"], L)
@@ -289,7 +293,7 @@ def _common(cfg, rho, L, seed, n):
     rng_va = rng_for("e14-valchains", seed, L, rho)
     Av = np.stack([prior.sample(rng_va, L) for _ in range(cfg["n_val"])])
     assert len(np.unique(A[:, 0])) > 1 and len(np.unique(Av[:, 0])) > 1, "degenerate training set"
-    base = dict(rho=rho, n_sites=L, seed=seed, n_chains=n,
+    base = dict(family=cfg["family"], rho=rho, n_sites=L, seed=seed, n_chains=n,
                 t_star=float(theory.crossover_time(rho, L=L)),
                 val_bundle=_bundle_hash(val), test_bundle=_bundle_hash(test))
     return grid, w, A, Av, val, test, base

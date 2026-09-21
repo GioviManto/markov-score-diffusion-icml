@@ -26,7 +26,7 @@ CPUS=${MSD_HPC_CPUS:-32}; MEM=${MSD_HPC_MEM:-64G}; TIME=${MSD_HPC_TIME:-12:00:00
 WORKERS_CAP=${MSD_HPC_WORKERS:-}; GRES=${MSD_HPC_GRES:-}; VENV=${MSD_HPC_VENV:-venv}
 AFTER=""; WHAT=${1:-}; shift || true
 while [[ $# -gt 0 ]]; do case "$1" in --after) AFTER="$2"; shift 2;; *) echo "unknown arg $1" >&2; exit 2;; esac; done
-[[ -n "$WHAT" ]] || { echo "usage: $0 <e06c|e07b|e07c|e11b|e12b|e14|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
+[[ -n "$WHAT" ]] || { echo "usage: $0 <e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
 
 partition() {
   if [[ -n "${MSD_HPC_PARTITION:-}" ]]; then echo "$MSD_HPC_PARTITION"; return; fi
@@ -60,6 +60,11 @@ cmd_for() {
     e12b)        echo "e12_sample_complexity.py --set levels=\"(0.6, 0.7, 0.8, 0.9, 1.0)\" --set seeds=\"(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)\" --set em_checkpoints=\"(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1600, 2200, 3000, 4000, 6000, 8000)\" --output-dir {OUT}/E12b";;
     e14-screen)  echo "e14_regime_baselines.py --only screen --output-dir {OUT}/E14";;
     e14-confirm) echo "e14_regime_baselines.py --only confirm --set winners=\"'auto:{OUT}/E14/screening.csv'\" --output-dir {OUT}/E14";;
+    # --- 21 Sep: the protocol's sixteen seeds for the regime comparisons, and the bimodal member ---
+    e14-seeds)   echo "e14_regime_baselines.py --only confirm --set seeds=\"(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)\" --set winners=\"'auto:{OUT}/E14/screening.csv'\" --output-dir {OUT}/E14";;
+    e14b-screen) echo "e14_regime_baselines.py --only screen --set family=\"'bimodal'\" --set rhos=\"(0.85,)\" --set lengths=\"(32,)\" --output-dir {OUT}/E14b";;
+    e14b-confirm) echo "e14_regime_baselines.py --only confirm --set family=\"'bimodal'\" --set rhos=\"(0.85,)\" --set lengths=\"(32,)\" --set seeds=\"(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)\" --set winners=\"'auto:{OUT}/E14b/screening.csv'\" --output-dir {OUT}/E14b";;
+    e13x)        echo "e13_regime_sweep.py --set seeds=\"(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)\" --output-dir {OUT}/E13x";;
     e10)         echo "e10_capacity_evidence.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E10";;
     e04)         echo "e04_refinement.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E04";;
     e05)         echo "e05_generation.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --set net_dir=\"'{OUT}/E03/ckpts'\" --output-dir {OUT}/E05";;

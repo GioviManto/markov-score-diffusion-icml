@@ -24,5 +24,8 @@
   "E13": [
    "3bb741e"
   ]
- }
+ },
+ "amendments": [
+  "2026-09-21 13:00 BST: rerun with the protocol's sixteen confirmatory seeds (0-15) as E13x from the current revision into its own output directory, to replace the eight-seed numbers in the paper once frozen as a new version; the eight-seed run stays frozen. Same design, same predeclared analysis; the paper's protocol names sixteen seeds and the regime sweeps had eight, which the audit listed as an inconsistency. The eight-seed result was known when this was decided (every cell in the predicted direction); the sixteen-seed analysis is reported whatever it shows."
+ ]
 }
