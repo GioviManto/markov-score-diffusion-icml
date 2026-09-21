@@ -53,8 +53,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 import sys  # noqa: E402
 sys.path.insert(0, str(ROOT / "src")); sys.path.insert(0, str(ROOT / "experiments"))
-from e14_regime_baselines import _one_view_groups  # noqa: E402  (numpy only)
-from markov_score.priors import LaplaceAR1  # noqa: E402
+from e14_regime_baselines import FAMILIES, _one_view_groups  # noqa: E402  (numpy only)
 from markov_score.utils import rng_for  # noqa: E402
 
 RHO_TAG = {0.5: "five", 0.85: "eightfive", 0.95: "ninefive"}
@@ -75,11 +74,13 @@ def boot_ci(x):
     return float(np.percentile(m, 2.5)), float(np.percentile(m, 97.5))
 
 
-def iso_ism_objective(rho: float, L: int, seed: int, n_val: int) -> float:
+def iso_ism_objective(family: str, rho: float, L: int, seed: int, n_val: int) -> float:
     """Mean over the run's held-out one-view samples of 1/2|x|^2 - L: the implicit
     score-matching objective of s(x) = -x, on exactly the views the network arm selected on
-    (same generators, same tags, same split as the driver's _common and _one_view_groups)."""
-    prior = LaplaceAR1(rho)
+    (same innovation family, same generators, same tags, same split as the driver's _common
+    and _one_view_groups). The family is read from the run's params, never assumed: E14b runs
+    the bimodal member, and the threshold on Laplace views would be the wrong threshold."""
+    prior = FAMILIES[family](rho)
     rng_va = rng_for("e14-valchains", seed, L, rho)
     Av = np.stack([prior.sample(rng_va, L) for _ in range(n_val)])
     tot, n = 0.0, 0
@@ -105,6 +106,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", type=Path, default=ROOT / "outputs" / "E14")
     ap.add_argument("--dest", type=Path, default=ROOT / "paper" / "sections")
+    ap.add_argument("--prefix", default=None, help="macro prefix; default rb for Laplace, rb<Family> otherwise")
+    ap.add_argument("--stem", default=None, help="fragment stem; default regime-baselines, or regime-baselines-<family>")
     a = ap.parse_args()
     dest = a.dest if "dev" not in a.src.name and "smoke" not in a.src.name else ROOT / "outputs" / "scratch"
     dest.mkdir(parents=True, exist_ok=True)
@@ -112,6 +115,8 @@ def main() -> int:
     import json
     settings = json.load(open(a.src / "params_confirm.json"))["settings"]
     n_val = int(settings["n_val"])
+    family = str(settings.get("family", "laplace"))       # drivers before eddf372 had no setting
+    prefix = a.prefix or ("rb" if family == "laplace" else "rb" + family.capitalize())
     df = pd.read_csv(a.src / "regimes.csv")
     df["arch"] = df["arch"].fillna("")
     key = ["rho", "n_sites", "seed", "test_bundle"]
@@ -137,40 +142,40 @@ def main() -> int:
         rec["lmmse"] = means[("lmmse_true", "")]; rec["iso"] = means[("isotropic", "")]
         for arm, sfx in EM_ARMS.items():
             rec[arm] = means[(arm, "")]
-            macros[f"rbEm{sfx}{tag}"] = f"{rec[arm]:.3f}"
-        macros[f"rbLmmse{tag}"] = f"{rec['lmmse']:.3f}"; macros[f"rbIso{tag}"] = f"{rec['iso']:.3f}"
-        macros[f"rbTstar{tag}"] = f"{rec['t_star']:.2f}"; macros[f"rbKurt{tag}"] = f"{rec['kurt']:.2f}"
+            macros[f"{prefix}Em{sfx}{tag}"] = f"{rec[arm]:.3f}"
+        macros[f"{prefix}Lmmse{tag}"] = f"{rec['lmmse']:.3f}"; macros[f"{prefix}Iso{tag}"] = f"{rec['iso']:.3f}"
+        macros[f"{prefix}Tstar{tag}"] = f"{rec['t_star']:.2f}"; macros[f"{prefix}Kurt{tag}"] = f"{rec['kurt']:.2f}"
 
         em = g[g.arm == "em_bp"][key + ["risk", "checkpoint"]].rename(columns={"risk": "risk_em", "checkpoint": "ck_em"})
         emv = g[g.arm == "em_bp_evidence"][key + ["risk", "checkpoint"]].rename(columns={"risk": "risk_emv", "checkpoint": "ck_emv"})
         ee = em.merge(emv, on=key)
         rec["em_same_rung"] = int((ee.ck_em == ee.ck_emv).sum()); rec["em_maxdiff"] = float((ee.risk_em - ee.risk_emv).abs().max())
-        macros[f"rbEmAgreeRung{tag}"] = f"{rec['em_same_rung']} of {len(ee)}"
-        macros[f"rbEmAgreeMaxDiff{tag}"] = f"{rec['em_maxdiff']:.3f}"
+        macros[f"{prefix}EmAgreeRung{tag}"] = f"{rec['em_same_rung']} of {len(ee)}"
+        macros[f"{prefix}EmAgreeMaxDiff{tag}"] = f"{rec['em_maxdiff']:.3f}"
         # the isotropic score's ISM objective on this cell's own held-out views, per seed
-        iso = {sd: iso_ism_objective(rho, L, int(sd), n_val) for sd in g.seed.unique()}
+        iso = {sd: iso_ism_objective(family, rho, L, int(sd), n_val) for sd in g.seed.unique()}
         rec["iso_obj"] = float(np.mean(list(iso.values())))
-        macros[f"rbIsoObj{tag}"] = f"{rec['iso_obj']:.1f}"
+        macros[f"{prefix}IsoObj{tag}"] = f"{rec['iso_obj']:.1f}"
         for arm, pfx in NET_ARMS.items():
             sub = g[g.arm == arm]
             per = sub.groupby("arch").risk.mean().sort_values()
             best = per.index[0]
             rec[f"{arm}_arch"] = best; rec[f"{arm}_best"] = per.iloc[0]
-            macros[f"rb{pfx}Best{tag}"] = f"{per.iloc[0]:.3f}"
-            macros[f"rb{pfx}BestArch{tag}"] = ARCH_NAME.get(best, best)
+            macros[f"{prefix}{pfx}Best{tag}"] = f"{per.iloc[0]:.3f}"
+            macros[f"{prefix}{pfx}BestArch{tag}"] = ARCH_NAME.get(best, best)
             for arch in archs:
-                macros[f"rb{pfx}{arch.capitalize()}{tag}"] = f"{per.get(arch, np.nan):.3f}"
+                macros[f"{prefix}{pfx}{arch.capitalize()}{tag}"] = f"{per.get(arch, np.nan):.3f}"
             sb = sub[sub.arch == best].copy()
             sb["flag"] = sb.val_curve.map(shape_flag)
             if arm == "ism_one_view":
                 # exclusion: selected ISM objective not below the trivial score's, same views
                 sb["excluded"] = sb.apply(lambda r: r.val_selected >= iso[r.seed], axis=1)
-                macros[f"rbIsmObjBest{tag}"] = f"{sb.val_selected.mean():.1f}"
+                macros[f"{prefix}IsmObjBest{tag}"] = f"{sb.val_selected.mean():.1f}"
             else:
                 sb["excluded"] = False
             n_flag, n_exc = int(sb.flag.sum()), int(sb.excluded.sum())
             rec[f"{arm}_flag"] = n_flag; rec[f"{arm}_excluded"] = n_exc
-            macros[f"rb{pfx}Flag{tag}"] = str(n_flag); macros[f"rb{pfx}Diverged{tag}"] = str(n_exc)
+            macros[f"{prefix}{pfx}Flag{tag}"] = str(n_flag); macros[f"{prefix}{pfx}Diverged{tag}"] = str(n_exc)
             j = sb.merge(em, on=key).merge(emv, on=key)
             if len(j) != rec["n_seeds"]:
                 raise SystemExit(f"E14: pairing lost seeds at rho={rho} L={L} arm={arm}")
@@ -180,10 +185,10 @@ def main() -> int:
                         continue
                     ratio = subset.risk / subset[emcol]
                     lo, hi = boot_ci(ratio.values)
-                    m = f"rb{pfx}Ratio{esfx}{ssfx}{tag}"
+                    m = f"{prefix}{pfx}Ratio{esfx}{ssfx}{tag}"
                     macros[m] = f"{ratio.mean():.1f}"; macros[m + "lo"] = f"{lo:.1f}"; macros[m + "hi"] = f"{hi:.1f}"
-                    macros[f"rb{pfx}Wins{esfx}{ssfx}{tag}"] = str(int((ratio > 1).sum()))
-                    macros[f"rb{pfx}N{esfx}{ssfx}{tag}"] = str(len(subset))
+                    macros[f"{prefix}{pfx}Wins{esfx}{ssfx}{tag}"] = str(int((ratio > 1).sum()))
+                    macros[f"{prefix}{pfx}N{esfx}{ssfx}{tag}"] = str(len(subset))
                     if emcol == "risk_emv" and ssfx == "":
                         rec[f"{arm}_ratio"] = ratio.mean(); rec[f"{arm}_lo"] = lo; rec[f"{arm}_hi"] = hi
                         rec[f"{arm}_wins"] = int((ratio > 1).sum())
@@ -192,22 +197,24 @@ def main() -> int:
         rows.append(rec)
 
     t = pd.DataFrame(rows).sort_values(["rho", "L"])
-    macros["rbCells"] = str(len(t)); macros["rbSeeds"] = str(int(t.n_seeds.min()))
-    macros["rbRhoLo"] = f"{t.rho.min():g}"; macros["rbRhoHi"] = f"{t.rho.max():g}"
-    macros["rbLenLo"] = str(int(t.L.min())); macros["rbLenHi"] = str(int(t.L.max()))
-    macros["rbIsmRatioMin"] = f"{t.ism_one_view_ratio.min():.1f}"; macros["rbIsmRatioMax"] = f"{t.ism_one_view_ratio.max():.1f}"
-    macros["rbIsmAllAboveOne"] = "all" if (t.ism_one_view_lo > 1).all() else f"{int((t.ism_one_view_lo > 1).sum())} of {len(t)}"
-    macros["rbIsmDivergedTotal"] = str(int(t.ism_one_view_excluded.sum()))
-    macros["rbIsmFlagTotal"] = str(int(t.ism_one_view_flag.sum()))
-    macros["rbEmAgreeRungTotal"] = f"{int(t.em_same_rung.sum())} of {int((t.n_seeds).sum())}"
-    macros["rbEmAgreeMaxDiffAll"] = f"{t.em_maxdiff.max():.3f}"
+    macros[f"{prefix}Cells"] = str(len(t)); macros[f"{prefix}Seeds"] = str(int(t.n_seeds.min()))
+    macros[f"{prefix}RhoLo"] = f"{t.rho.min():g}"; macros[f"{prefix}RhoHi"] = f"{t.rho.max():g}"
+    macros[f"{prefix}LenLo"] = str(int(t.L.min())); macros[f"{prefix}LenHi"] = str(int(t.L.max()))
+    macros[f"{prefix}IsmRatioMin"] = f"{t.ism_one_view_ratio.min():.1f}"; macros[f"{prefix}IsmRatioMax"] = f"{t.ism_one_view_ratio.max():.1f}"
+    macros[f"{prefix}IsmAllAboveOne"] = "all" if (t.ism_one_view_lo > 1).all() else f"{int((t.ism_one_view_lo > 1).sum())} of {len(t)}"
+    macros[f"{prefix}IsmDivergedTotal"] = str(int(t.ism_one_view_excluded.sum()))
+    macros[f"{prefix}IsmFlagTotal"] = str(int(t.ism_one_view_flag.sum()))
+    macros[f"{prefix}EmAgreeRungTotal"] = f"{int(t.em_same_rung.sum())} of {int((t.n_seeds).sum())}"
+    macros[f"{prefix}EmAgreeMaxDiffAll"] = f"{t.em_maxdiff.max():.3f}"
     # the same cell E03 measured, so the two experiments can be read against each other
     fp = t[(t.rho == 0.85) & (t.L == 32)]
     if len(fp):
-        macros["rbFrozenIsmRatio"] = f"{float(fp.ism_one_view_ratio.iloc[0]):.1f}"
-        macros["rbFrozenEm"] = f"{float(fp.em_bp.iloc[0]):.3f}"
+        macros[f"{prefix}FrozenIsmRatio"] = f"{float(fp.ism_one_view_ratio.iloc[0]):.1f}"
+        macros[f"{prefix}FrozenEm"] = f"{float(fp.em_bp.iloc[0]):.3f}"
 
-    (dest / "regime-baselines-numbers.tex").write_text(
+    stem = a.stem or ("regime-baselines" if family == "laplace" else f"regime-baselines-{family}")
+    macros[f"{prefix}Family"] = family
+    (dest / f"{stem}-numbers.tex").write_text(
         "%% GENERATED by tools/make_regime_baselines.py -- do not hand-edit.\n"
         + "\n".join(f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in macros.items()) + "\n")
 
@@ -227,7 +234,7 @@ def main() -> int:
     lines += [r"\bottomrule", r"\end{tabular}",
               r"%% * n: n ISM cells excluded from the Conv factors (selected ISM objective not below the trivial score's on the same views);",
               r"%% dagger n: n cells whose held-out curve never improved on its first checkpoint (reported, not excluded)."]
-    (dest / "regime-baselines-table.tex").write_text("\n".join(lines) + "\n")
+    (dest / f"{stem}-table.tex").write_text("\n".join(lines) + "\n")
 
     cols = ["rho", "L", "kurt", "lmmse", "em_bp", "em_bp_evidence", "em_same_rung", "em_maxdiff", "iso_obj",
             "ism_one_view_arch", "ism_one_view_best", "ism_one_view_ratio", "ism_one_view_lo", "ism_one_view_hi",
@@ -238,7 +245,7 @@ def main() -> int:
     if t.ism_one_view_flag.sum():
         print(f"NOTE: {int(t.ism_one_view_flag.sum())} ISM cell(s) carry the curve-shape flag (reported, not excluded).")
     print("ratios in the table and rec fields are against em_bp_evidence; *Ev*-less macros are against em_bp")
-    print(f"wrote {dest/'regime-baselines-numbers.tex'} ({len(macros)} macros) and {dest/'regime-baselines-table.tex'}")
+    print(f"family={family} prefix={prefix}; wrote {dest/(stem+'-numbers.tex')} ({len(macros)} macros) and {dest/(stem+'-table.tex')}")
     return 0
 
 

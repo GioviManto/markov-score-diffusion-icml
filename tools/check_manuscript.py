@@ -44,7 +44,9 @@ OPTIONAL = {"make_capacity_numbers.py": "outputs/E02a/capacity.csv", "make_learn
             "make_audit_numbers.py": "outputs/E16/edgeworth.csv", "make_fig_theory.py": "outputs/E18/closure_wide.csv",
             "make_fig_locality.py": "outputs/E15/locality.csv", "make_exceedance.py": "outputs/E07/ladder.csv",
             "make_grid_envelope.py": "outputs/E11/grid.csv", "make_regime_numbers.py": "outputs/E13/regimes.csv",
-            "make_sample_complexity.py": "outputs/E12/ladder.csv", "make_regime_baselines.py": "outputs/E14/regimes.csv"}
+            "make_sample_complexity.py": "outputs/E12/ladder.csv", "make_regime_baselines.py": "outputs/E14/regimes.csv",
+            "make_regime_baselines.py --src outputs/E14b": "outputs/E14b/regimes.csv",
+            "make_regime_numbers.py --src outputs/E13x": "outputs/E13x/regimes.csv"}
 # Fragments the legacy generators emit that the manuscript may or may not input.
 FRAGMENT_GLOB = "sections/*.tex"
 NUMBER = re.compile(r"(?<![\w\\{])(?:\d+\.\d+|\d+e-?\d+|\d+\s*\\times\s*10\^\{-?\d+\})(?![\w}])")
@@ -75,7 +77,10 @@ def regenerate_and_diff() -> int:
         (tmp / "paper" / "figures").symlink_to(PAPER / "figures")
         gens = list(GENERATORS) + [g for g, src in OPTIONAL.items() if (ROOT / src).exists()]
         for g in gens:
-            r = subprocess.run([sys.executable, str(tmp / "tools" / g)], cwd=tmp, capture_output=True, text=True)
+            # a key may carry arguments ("make_x.py --src outputs/E14b"): one generator, several
+            # registered outputs, each fragment gated on its own source
+            name, *argv = g.split()
+            r = subprocess.run([sys.executable, str(tmp / "tools" / name), *argv], cwd=tmp, capture_output=True, text=True)
             if r.returncode != 0:
                 print(f"[FAIL] {g} exited {r.returncode}\n{r.stdout[-800:]}\n{r.stderr[-800:]}")
                 failures += 1

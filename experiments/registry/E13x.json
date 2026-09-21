@@ -1,0 +1,23 @@
+{
+ "id": "E13x",
+ "script": "experiments/e13_regime_sweep.py",
+ "hypothesis": "As E13 (H13): the capacity contrast C = 8 against C = 1 holds at every (rho, L) of the sweep and the C = 1 arm coincides with the LMMSE of the true covariance (Proposition 1) at every cell -- now at the protocol's sixteen confirmatory seeds instead of eight.",
+ "design": "Identical to E13 except --set seeds=(0, ..., 15); same rhos, lengths, capacities, bundle sizes, grid, ladder and initialisation; run from deployment eddf372 into its own output directory outputs/E13x, so the frozen eight-seed E13 is untouched and the two can be read against each other. Cells for seeds 0-7 are recomputed, not reused, because the output directory is new.",
+ "predeclared_analysis": "tools/make_regime_numbers.py --src outputs/E13x: unchanged from E13. All sixteen seeds are reported whatever they show.",
+ "provenance_note": "NOT a pre-data registration in the strict sense: E13's eight-seed result was frozen on 18 Sep and is in the manuscript, so the decision to extend to sixteen seeds was taken knowing it. It is an extension to the protocol's seed count, not a change of design, arms, estimand or analysis; registered here before any E13x cell was seen (job 664806 was pending on resources at registration).",
+ "registered": "2026-09-21",
+ "registered_by": "the audit session at the user's request (submission and E13.json amendment, commit 55638e7); this entry and the registry mapping added by the cluster-ops session so the landing freezes under its own key",
+ "hpc_runs": [
+  {
+   "protocol_version": "2",
+   "deployment": "eddf372-20260921T094638Z",
+   "submitted": "2026-09-21 10:50 BST",
+   "slurm_jobs": {
+    "run": 664806
+   },
+   "resources": "compute, pending resources at registration (cnode06 held by the void 663144)",
+   "note": "Outputs in ~/msd-icml/outputs/eddf372-20260921T094638Z/E13x/; fetch with MSD_DEPLOY_ENV=hpc/.deploy_eddf372.env hpc/icml_fetch.sh E13x; freeze with tools/freeze.py E13x."
+  }
+ ],
+ "status": "REGISTERED 2026-09-21 (extension of E13 to sixteen seeds, see provenance_note); SUBMITTED (job 664806)"
+}
