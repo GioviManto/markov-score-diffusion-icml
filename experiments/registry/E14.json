@@ -6,7 +6,7 @@
  "predeclared_analysis": "Per (rho, L): mean pooled relative score error of each arm, and the paired ratio best-network / EM-BP over the confirmatory seeds with a percentile bootstrap. The trend in rho is reported against the marginal excess kurtosis 3(1-rho^2)/(1+rho^2), as a direction, not a fitted law -- the risk pools a schedule whose informative window moves with rho, so no exponent is claimed from it.",
  "motivation": "The headline comparison (claim E16: 0.023 against 0.155 at M = 2048, a paired factor 7.3) is stated at one point of the parameter space. E13 established that the capacity contrast survives a sweep of rho and L; the comparison against networks has not been tested that way, and it is the claim a reviewer will press on.",
  "limitations": "One innovation family (Laplace) and one sample size (M = 2048); two architecture families, the two that carried E03's matched comparison; eight seeds rather than the protocol's sixteen, for cost. The screen re-selects the architecture configuration per regime but not the learning rate or the parameterisation, which are held at E03's winners.",
- "status": "PRE-REGISTERED 2026-09-18; runs before 2026-09-20 15:10 void (N-22); corrected screen 664280 done, confirm 664281 running; seeds 8-15 submitted 2026-09-21 (amendment)",
+ "status": "PRE-REGISTERED 2026-09-18; runs before 2026-09-20 15:10 void (N-22); corrected screen 664280 done, confirm 664281 COMPLETED 48/48 (orientation only, unfrozen); seeds 8-15 submitted 2026-09-21 (amendment)",
  "registered": "2026-09-18",
  "hpc_runs": [
   {
@@ -34,7 +34,8 @@
     "confirm_seeds_8_15": 664803
    },
    "resources": "gpua100/32cpu/24 workers/240G/23:30 x3, gres gpu:4g.40gb:4, venv-cuda (torch 2.6.0+cu124); 664803 afterok:664281",
-   "note": "The corrected driver (N-22 fixed). Screen 664280 done 20 Sep 12:28 (108 cells); confirm 664281 running from 21 Sep 03:00; 664803 adds seeds 8-15 into the same output directory (run_cells skips the 48 finished cells). Outputs ~/msd-icml/outputs/81cf7ae-20260920T141052Z/E14/; fetch with MSD_DEPLOY_ENV=hpc/.deploy_81cf7ae.env hpc/icml_fetch.sh E14."
+   "note": "The corrected driver (N-22 fixed). Screen 664280 done 20 Sep 12:28 (108 cells); confirm 664281 running from 21 Sep 03:00; 664803 adds seeds 8-15 into the same output directory (run_cells skips the 48 finished cells). Outputs ~/msd-icml/outputs/81cf7ae-20260920T141052Z/E14/; fetch with MSD_DEPLOY_ENV=hpc/.deploy_81cf7ae.env hpc/icml_fetch.sh E14.",
+   "outcome_664281": "COMPLETED 2026-09-21 12:44 CEST, exit 0, 08:45:40 on gnode03, 48/48 cells (3 rho x 2 L x 8 seeds), params_confirm.json: commit 81cf7ae, source clean. Fetched to the cluster-ops session's scratchpad for an orientation table (tools/make_regime_baselines.py); NOT fetched to outputs/E14 and NOT frozen: the freeze waits for the sixteen-seed extension 664803 (afterok:664281, pending), after which the table goes to the audit session and the reading is agreed before tools/freeze.py runs. Orientation reading, 8 seeds: paired factor best ISM network / EM-BP(evidence-selected) above 1 in all six (rho, L) cells with the lower 95% bound >= 3.8 and 8/8 seed-wise wins; 0 cells excluded by the pre-data divergence rule, 2 curve-shape flags at (0.95, 32)."
   }
  ],
  "amendments": [
