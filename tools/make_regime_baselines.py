@@ -143,6 +143,13 @@ def main() -> int:
         for arm, sfx in EM_ARMS.items():
             rec[arm] = means[(arm, "")]
             macros[f"{prefix}Em{sfx}{tag}"] = f"{rec[arm]:.3f}"
+            # the ladder limit: seeds whose selected checkpoint is the last rung. Where it binds
+            # the EM error is an upper bound on what a longer ladder would give, and every
+            # factor against it is conservative.
+            cap = g[g.arm == arm].at_cap.astype(bool)
+            rec[f"{arm}_atcap"] = int(cap.sum())
+            macros[f"{prefix}Em{sfx}AtCap{tag}"] = f"{int(cap.sum())} of {len(cap)}"
+            macros[f"{prefix}Em{sfx}AtCapFrac{tag}"] = f"{cap.mean():.2f}"
         macros[f"{prefix}Lmmse{tag}"] = f"{rec['lmmse']:.3f}"; macros[f"{prefix}Iso{tag}"] = f"{rec['iso']:.3f}"
         macros[f"{prefix}Tstar{tag}"] = f"{rec['t_star']:.2f}"; macros[f"{prefix}Kurt{tag}"] = f"{rec['kurt']:.2f}"
 
@@ -187,6 +194,9 @@ def main() -> int:
                     lo, hi = boot_ci(ratio.values)
                     m = f"{prefix}{pfx}Ratio{esfx}{ssfx}{tag}"
                     macros[m] = f"{ratio.mean():.1f}"; macros[m + "lo"] = f"{lo:.1f}"; macros[m + "hi"] = f"{hi:.1f}"
+                    if ssfx == "":     # the per-seed range, so the appendix can place a cell against E03's seeds
+                        macros[f"{prefix}{pfx}Ratio{esfx}Min{tag}"] = f"{ratio.min():.1f}"
+                        macros[f"{prefix}{pfx}Ratio{esfx}Max{tag}"] = f"{ratio.max():.1f}"
                     macros[f"{prefix}{pfx}Wins{esfx}{ssfx}{tag}"] = str(int((ratio > 1).sum()))
                     macros[f"{prefix}{pfx}N{esfx}{ssfx}{tag}"] = str(len(subset))
                     if emcol == "risk_emv" and ssfx == "":
@@ -194,6 +204,19 @@ def main() -> int:
                         rec[f"{arm}_wins"] = int((ratio > 1).sum())
                     if emcol == "risk_emv" and ssfx == "Conv":
                         rec[f"{arm}_ratio_conv"] = ratio.mean(); rec[f"{arm}_lo_conv"] = lo; rec[f"{arm}_hi_conv"] = hi
+            # the best network against the LMMSE floor, paired per seed on the same test bundle:
+            # "below" / "above" when the bootstrap interval of the paired difference clears zero,
+            # "at" otherwise. A network above the floor at rho = 0.95 is a finding, not noise.
+            fl = g[g.arm == "lmmse_true"][key + ["risk"]].rename(columns={"risk": "risk_floor"})
+            jf = sb.merge(fl, on=key)
+            d = (jf.risk - jf.risk_floor).values
+            dlo, dhi = boot_ci(d)
+            word = "below" if dhi < 0 else ("above" if dlo > 0 else "at")
+            rec[f"{arm}_vs_floor"] = word
+            macros[f"{prefix}{pfx}VsFloor{tag}"] = word
+            macros[f"{prefix}{pfx}OverLmmse{tag}"] = f"{jf.risk.mean() / jf.risk_floor.mean():.2f}"
+            macros[f"{prefix}{pfx}MinusFloor{tag}"] = f"{d.mean():+.3f}"
+            macros[f"{prefix}{pfx}MinusFloor{tag}lo"] = f"{dlo:+.3f}"; macros[f"{prefix}{pfx}MinusFloor{tag}hi"] = f"{dhi:+.3f}"
         rows.append(rec)
 
     t = pd.DataFrame(rows).sort_values(["rho", "L"])
@@ -206,6 +229,10 @@ def main() -> int:
     macros[f"{prefix}IsmFlagTotal"] = str(int(t.ism_one_view_flag.sum()))
     macros[f"{prefix}EmAgreeRungTotal"] = f"{int(t.em_same_rung.sum())} of {int((t.n_seeds).sum())}"
     macros[f"{prefix}EmAgreeMaxDiffAll"] = f"{t.em_maxdiff.max():.3f}"
+    macros[f"{prefix}EmAtCapTotal"] = f"{int(t.em_bp_atcap.sum())} of {int(t.n_seeds.sum())}"
+    macros[f"{prefix}EmEvAtCapTotal"] = f"{int(t.em_bp_evidence_atcap.sum())} of {int(t.n_seeds.sum())}"
+    macros[f"{prefix}IsmAboveFloorCells"] = ", ".join(f"({r.rho:g}, {int(r.L)})" for _, r in t.iterrows() if r.ism_one_view_vs_floor == "above") or "none"
+    macros[f"{prefix}IsmBelowFloorCells"] = ", ".join(f"({r.rho:g}, {int(r.L)})" for _, r in t.iterrows() if r.ism_one_view_vs_floor == "below") or "none"
     # the same cell E03 measured, so the two experiments can be read against each other
     fp = t[(t.rho == 0.85) & (t.L == 32)]
     if len(fp):
@@ -238,7 +265,8 @@ def main() -> int:
 
     cols = ["rho", "L", "kurt", "lmmse", "em_bp", "em_bp_evidence", "em_same_rung", "em_maxdiff", "iso_obj",
             "ism_one_view_arch", "ism_one_view_best", "ism_one_view_ratio", "ism_one_view_lo", "ism_one_view_hi",
-            "ism_one_view_wins", "ism_one_view_excluded", "ism_one_view_flag", "dsm_one_corruption_best", "dsm_one_corruption_ratio"]
+            "ism_one_view_wins", "ism_one_view_excluded", "ism_one_view_flag", "ism_one_view_vs_floor",
+            "em_bp_atcap", "em_bp_evidence_atcap", "dsm_one_corruption_best", "dsm_one_corruption_ratio"]
     print(t[cols].to_string(index=False, float_format=lambda x: f"{x:.3f}"))
     if t.ism_one_view_excluded.sum():
         print(f"\nNOTE: {int(t.ism_one_view_excluded.sum())} ISM cell(s) excluded from the Conv factors (objective not below the trivial score's).")
