@@ -299,4 +299,10 @@ EM's behaviour on one chain and says nothing about capacity. The paper's capacit
 now says the sweep is void and why; the retirement of the thesis's capacity claim (N-A1)
 stands with a prior and stronger cause. The paper's own capacity evidence (E02a, E02a_v1,
 E10, E13) draws chains correctly and passes the new test. The thesis text that cites exp_32
-is the author's to correct; the cluster-ops session has told them where.
+is the author's to correct; the cluster-ops session has told them where. Reproduction (21 Sep
+11:35, cluster-ops session, laptop): the icml copy of exp_32 run as it stands for seed 0,
+M = 512, C = 1 at the frozen configuration reproduces the frozen row to six decimals
+(val log-evidence per edge −1.313205, test −1.308242, schedule score risk 0.202893, 61 EM
+iterations), with one distinct chain among the 512 drawn. The frozen exp_32 numbers are
+therefore the output of a one-chain training set with certainty, not by inference; the
+rerun stays in that session's scratchpad and is not frozen.
