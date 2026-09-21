@@ -6,7 +6,19 @@
  "predeclared_analysis": "E14's analysis for the single cell (tools/make_regime_baselines.py): mean pooled relative score error per arm, paired ratios of each network arm to em_bp and to em_bp_evidence with a percentile bootstrap over seeds, the divergence rule of 2026-09-21 (isotropic-objective threshold for the ISM arm; shape flag for the DSM arm). Comparison with E14's (0.85, 32) Laplace cell: the two paired factors and their ratio with a bootstrap over seeds; read as a direction against the two families' LMMSE floors, no exponent.",
  "motivation": "Every matched comparison in the paper is on Laplace innovations (positive excess kurtosis). A referee can ask whether the advantage is about heavy tails. The bimodal member has negative excess kurtosis at the same covariance; if the advantage is the fourth-order structure the covariance twin leaves behind, it should survive with the smaller size that the smaller floor predicts. The audit's plan listed this as P2.1.",
  "limitations": "One cell; one negative-kurtosis family; the screen winners are re-selected for this family but the architecture grid is E03's.",
- "status": "PRE-REGISTERED 2026-09-21 before running; SUBMITTED 2026-09-21",
+ "status": "PRE-REGISTERED 2026-09-21 before running; SUBMITTED 2026-09-21 (jobs 664804 screen -> 664805 confirm)",
  "registered": "2026-09-21",
- "hpc_runs": []
+ "hpc_runs": [
+  {
+   "protocol_version": "2",
+   "deployment": "eddf372-20260921T094638Z",
+   "submitted": "2026-09-21T10:50 BST",
+   "slurm_jobs": {
+    "screen": 664804,
+    "confirm": 664805
+   },
+   "resources": "gpua100/32cpu/24 workers/240G/23:30 x2, gres gpu:4g.40gb:4, venv-cuda; screen afterok:664803, confirm afterok:screen",
+   "note": "Outputs ~/msd-icml/outputs/eddf372-20260921T094638Z/E14b/; fetch with MSD_DEPLOY_ENV=hpc/.deploy_eddf372.env hpc/icml_fetch.sh E14b. Pre-registered before submission; nothing in this entry's hypothesis or analysis may change after the result is seen."
+  }
+ ]
 }

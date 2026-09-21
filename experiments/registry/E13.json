@@ -26,6 +26,18 @@
   ]
  },
  "amendments": [
-  "2026-09-21 13:00 BST: rerun with the protocol's sixteen confirmatory seeds (0-15) as E13x from the current revision into its own output directory, to replace the eight-seed numbers in the paper once frozen as a new version; the eight-seed run stays frozen. Same design, same predeclared analysis; the paper's protocol names sixteen seeds and the regime sweeps had eight, which the audit listed as an inconsistency. The eight-seed result was known when this was decided (every cell in the predicted direction); the sixteen-seed analysis is reported whatever it shows."
+  "2026-09-21 13:00 BST: rerun with the protocol's sixteen confirmatory seeds (0-15) as E13x from the current revision into its own output directory, to replace the eight-seed numbers in the paper once frozen as a new version; the eight-seed run stays frozen. Same design, same predeclared analysis; the paper's protocol names sixteen seeds and the regime sweeps had eight, which the audit listed as an inconsistency. The eight-seed result was known when this was decided (every cell in the predicted direction); the sixteen-seed analysis is reported whatever it shows. Job 664806."
+ ],
+ "hpc_runs": [
+  {
+   "protocol_version": "2",
+   "deployment": "eddf372-20260921T094638Z",
+   "submitted": "2026-09-21T10:50 BST",
+   "slurm_jobs": {
+    "run_sixteen_seeds": 664806
+   },
+   "resources": "compute/40cpu/120G/23:00",
+   "note": "E13x: the sweep with seeds 0-15 from the current revision into ~/msd-icml/outputs/eddf372-20260921T094638Z/E13x/; fetch with MSD_DEPLOY_ENV=hpc/.deploy_eddf372.env hpc/icml_fetch.sh E13x; to be frozen as a new version (outputs/E13x/), the eight-seed E13 untouched."
+  }
  ]
 }
