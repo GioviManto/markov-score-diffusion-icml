@@ -80,7 +80,7 @@ def main() -> int:
         # the TCN line sits just under the window head's: label it underneath; EM-BP's label
         # goes to the left of the TCN mark, where every curve has already dropped below it
         if name == "TCN":
-            bx.text(16.6, y * 0.94, name, fontsize=5.8, color=fs.INK2, ha="right", va="top")
+            bx.text(9.4, y * 0.94, name, fontsize=5.8, color=fs.INK2, ha="left", va="top")   # left of its cross at r = 15
         elif r is None:
             bx.text(9.4, y * 1.06, name, fontsize=5.8, color=fs.INK2, ha="left", va="bottom")
         else:
