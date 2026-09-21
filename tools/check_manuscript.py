@@ -42,7 +42,9 @@ OPTIONAL = {"make_capacity_numbers.py": "outputs/E02a/capacity.csv", "make_learn
             "make_fig_phase.py": "outputs/E07/ladder.csv", "make_misspec_numbers.py": "outputs/E08/misspecification.csv",
             "make_baseline_numbers.py": "outputs/E03/confirm.csv", "make_family_numbers.py": "outputs/E02b/family.csv",
             "make_audit_numbers.py": "outputs/E16/edgeworth.csv", "make_fig_theory.py": "outputs/E18/closure_wide.csv",
-            "make_fig_locality.py": "outputs/E15/locality.csv", "make_exceedance.py": "outputs/E07/ladder.csv"}
+            "make_fig_locality.py": "outputs/E15/locality.csv", "make_exceedance.py": "outputs/E07/ladder.csv",
+            "make_grid_envelope.py": "outputs/E11/grid.csv", "make_regime_numbers.py": "outputs/E13/regimes.csv",
+            "make_sample_complexity.py": "outputs/E12/ladder.csv", "make_regime_baselines.py": "outputs/E14/regimes.csv"}
 # Fragments the legacy generators emit that the manuscript may or may not input.
 FRAGMENT_GLOB = "sections/*.tex"
 NUMBER = re.compile(r"(?<![\w\\{])(?:\d+\.\d+|\d+e-?\d+|\d+\s*\\times\s*10\^\{-?\d+\})(?![\w}])")
@@ -54,16 +56,26 @@ def regenerate_and_diff() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         (tmp / "paper" / "sections").mkdir(parents=True)
-        # generators write to paper/sections relative to the cwd; run them from a
-        # scratch tree that symlinks everything except paper/sections
+        # Run the generators from a scratch tree that symlinks everything except paper/sections,
+        # so what they emit can be diffed against the committed fragments. The legacy generators
+        # write to paper/sections relative to the cwd; every later one resolves its repository
+        # root from its own __file__ (ROOT = Path(__file__).resolve().parents[1]). For those the
+        # symlinked tools/ defeated the scratch tree: __file__ resolved to the real path, ROOT to
+        # the real repository, and the fragment was rewritten IN PLACE while the scratch tree
+        # stayed empty and the diff passed vacuously (found 21 Sep 2026 -- a gated generator run
+        # this way wrote 0 fragments to the scratch tree and touched the real one). tools/ is
+        # therefore COPIED, so __file__ resolves inside the scratch tree and both conventions
+        # land in tmp/paper/sections. Figures stay a symlink: a generator that also draws a
+        # figure writes it in place, as before.
         for item in ROOT.iterdir():
-            if item.name in {"paper", ".git", ".venv"}:
+            if item.name in {"paper", ".git", ".venv", "tools"}:
                 continue
             (tmp / item.name).symlink_to(item)
+        shutil.copytree(ROOT / "tools", tmp / "tools", ignore=shutil.ignore_patterns("__pycache__"))
         (tmp / "paper" / "figures").symlink_to(PAPER / "figures")
         gens = list(GENERATORS) + [g for g, src in OPTIONAL.items() if (ROOT / src).exists()]
         for g in gens:
-            r = subprocess.run([sys.executable, str(ROOT / "tools" / g)], cwd=tmp, capture_output=True, text=True)
+            r = subprocess.run([sys.executable, str(tmp / "tools" / g)], cwd=tmp, capture_output=True, text=True)
             if r.returncode != 0:
                 print(f"[FAIL] {g} exited {r.returncode}\n{r.stdout[-800:]}\n{r.stderr[-800:]}")
                 failures += 1

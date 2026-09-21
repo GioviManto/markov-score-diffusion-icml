@@ -17,10 +17,24 @@ E14 re-runs the information-matched comparison across correlations and chain len
   seed-wise win count and the ratio of means -- the same rule, resamples and seed as
   tools/make_baseline_numbers.py, so E14's factor at (0.85, 32) and E03's are one convention;
 
-  the divergence count. A network row carries its whole held-out ISM curve; a fit whose
-  curve never improves on its first checkpoint is a fit that diverged, and it is reported as
-  divergence, not as the network's error. Factors are given with such cells included and
-  with them excluded, so the prose can say which it quotes.
+  divergence, by a rule fixed before the data (audit session, 21 Sep): an ISM cell is
+  EXCLUDED from the *Conv* factors when its selected held-out ISM objective is not below the
+  objective of the isotropic score s(x) = -x on the same held-out views, mean over the views
+  of 1/2|x|^2 - L (expectation -L/2). That is the criterion the arm selects on, so a fit that
+  cannot beat the trivial score on its own criterion is not a trained network; E03's healthy
+  window curves sit near -27.6 at L = 32, the void E14 curves sat at -10 to +53. The views
+  are regenerated here from the driver's own generators (deterministic in rho, L, seed), and
+  the objective is computed on them, not from its expectation. A second, weaker signal -- a
+  curve whose minimum is at its first checkpoint and whose last value exceeds its first --
+  is REPORTED as a flag (dagger) but does not exclude, because it also fires on a fit that
+  converged early and then overfitted, a legitimate optimum. The DSM arm selects on the
+  held-out BP risk, not on an ISM objective, so only the flag applies to it;
+
+  the agreement of the two EM selection rules per cell: the fraction of seeds where the
+  held-out BP risk and the held-out log-evidence chose the same rung, and the largest
+  difference in test risk between them. The regime statement is read on ism_one_view
+  against em_bp_evidence (both oracle-free), with dsm_one_corruption as the
+  network-favourable bracket.
 
 The trend in rho is reported beside the marginal's excess kurtosis 3(1-rho^2)/(1+rho^2) as a
 direction. No exponent is fitted from it.
@@ -37,6 +51,12 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys  # noqa: E402
+sys.path.insert(0, str(ROOT / "src")); sys.path.insert(0, str(ROOT / "experiments"))
+from e14_regime_baselines import _one_view_groups  # noqa: E402  (numpy only)
+from markov_score.priors import LaplaceAR1  # noqa: E402
+from markov_score.utils import rng_for  # noqa: E402
+
 RHO_TAG = {0.5: "five", 0.85: "eightfive", 0.95: "ninefive"}
 LEN_TAG = {32: "thirtytwo", 128: "onetwentyeight"}
 ARCH_NAME = {"window": "window head", "transformer": "transformer"}
@@ -55,11 +75,25 @@ def boot_ci(x):
     return float(np.percentile(m, 2.5)), float(np.percentile(m, 97.5))
 
 
-def diverged(curve: str) -> bool:
-    """A held-out ISM curve 'step:value;...' that never improves on its first checkpoint."""
+def iso_ism_objective(rho: float, L: int, seed: int, n_val: int) -> float:
+    """Mean over the run's held-out one-view samples of 1/2|x|^2 - L: the implicit
+    score-matching objective of s(x) = -x, on exactly the views the network arm selected on
+    (same generators, same tags, same split as the driver's _common and _one_view_groups)."""
+    prior = LaplaceAR1(rho)
+    rng_va = rng_for("e14-valchains", seed, L, rho)
+    Av = np.stack([prior.sample(rng_va, L) for _ in range(n_val)])
+    tot, n = 0.0, 0
+    for X, _t in _one_view_groups(Av, "e14-emval", seed, L):
+        tot += float((0.5 * (X**2).sum(axis=1) - L).sum()); n += X.shape[0]
+    return tot / n
+
+
+def shape_flag(curve: str) -> bool:
+    """A held-out curve 'step:value;...' whose minimum is its first checkpoint and whose last
+    value exceeds its first. Reported, never used to exclude."""
     if not isinstance(curve, str) or not curve:
         return False
-    vals = [float(p.split(":")[1]) for p in curve.split(";") if ":" in p]
+    vals = [float(p.split(":")[1].split("/")[0]) for p in curve.split(";") if ":" in p]
     return len(vals) > 1 and min(vals) >= vals[0] and vals[-1] > vals[0]
 
 
@@ -75,6 +109,9 @@ def main() -> int:
     dest = a.dest if "dev" not in a.src.name and "smoke" not in a.src.name else ROOT / "outputs" / "scratch"
     dest.mkdir(parents=True, exist_ok=True)
 
+    import json
+    settings = json.load(open(a.src / "params_confirm.json"))["settings"]
+    n_val = int(settings["n_val"])
     df = pd.read_csv(a.src / "regimes.csv")
     df["arch"] = df["arch"].fillna("")
     key = ["rho", "n_sites", "seed", "test_bundle"]
@@ -104,8 +141,16 @@ def main() -> int:
         macros[f"rbLmmse{tag}"] = f"{rec['lmmse']:.3f}"; macros[f"rbIso{tag}"] = f"{rec['iso']:.3f}"
         macros[f"rbTstar{tag}"] = f"{rec['t_star']:.2f}"; macros[f"rbKurt{tag}"] = f"{rec['kurt']:.2f}"
 
-        em = g[g.arm == "em_bp"][key + ["risk"]].rename(columns={"risk": "risk_em"})
-        emv = g[g.arm == "em_bp_evidence"][key + ["risk"]].rename(columns={"risk": "risk_emv"})
+        em = g[g.arm == "em_bp"][key + ["risk", "checkpoint"]].rename(columns={"risk": "risk_em", "checkpoint": "ck_em"})
+        emv = g[g.arm == "em_bp_evidence"][key + ["risk", "checkpoint"]].rename(columns={"risk": "risk_emv", "checkpoint": "ck_emv"})
+        ee = em.merge(emv, on=key)
+        rec["em_same_rung"] = int((ee.ck_em == ee.ck_emv).sum()); rec["em_maxdiff"] = float((ee.risk_em - ee.risk_emv).abs().max())
+        macros[f"rbEmAgreeRung{tag}"] = f"{rec['em_same_rung']} of {len(ee)}"
+        macros[f"rbEmAgreeMaxDiff{tag}"] = f"{rec['em_maxdiff']:.3f}"
+        # the isotropic score's ISM objective on this cell's own held-out views, per seed
+        iso = {sd: iso_ism_objective(rho, L, int(sd), n_val) for sd in g.seed.unique()}
+        rec["iso_obj"] = float(np.mean(list(iso.values())))
+        macros[f"rbIsoObj{tag}"] = f"{rec['iso_obj']:.1f}"
         for arm, pfx in NET_ARMS.items():
             sub = g[g.arm == arm]
             per = sub.groupby("arch").risk.mean().sort_values()
@@ -115,17 +160,22 @@ def main() -> int:
             macros[f"rb{pfx}BestArch{tag}"] = ARCH_NAME.get(best, best)
             for arch in archs:
                 macros[f"rb{pfx}{arch.capitalize()}{tag}"] = f"{per.get(arch, np.nan):.3f}"
-            # divergence, per architecture, from the held-out ISM curve (ISM arm only carries it)
             sb = sub[sub.arch == best].copy()
-            sb["diverged"] = sb.val_curve.map(diverged) if arm == "ism_one_view" else False
-            n_div = int(sb.diverged.sum())
-            rec[f"{arm}_diverged"] = n_div
-            macros[f"rb{pfx}Diverged{tag}"] = str(n_div)
+            sb["flag"] = sb.val_curve.map(shape_flag)
+            if arm == "ism_one_view":
+                # exclusion: selected ISM objective not below the trivial score's, same views
+                sb["excluded"] = sb.apply(lambda r: r.val_selected >= iso[r.seed], axis=1)
+                macros[f"rbIsmObjBest{tag}"] = f"{sb.val_selected.mean():.1f}"
+            else:
+                sb["excluded"] = False
+            n_flag, n_exc = int(sb.flag.sum()), int(sb.excluded.sum())
+            rec[f"{arm}_flag"] = n_flag; rec[f"{arm}_excluded"] = n_exc
+            macros[f"rb{pfx}Flag{tag}"] = str(n_flag); macros[f"rb{pfx}Diverged{tag}"] = str(n_exc)
             j = sb.merge(em, on=key).merge(emv, on=key)
             if len(j) != rec["n_seeds"]:
                 raise SystemExit(f"E14: pairing lost seeds at rho={rho} L={L} arm={arm}")
             for emcol, esfx in (("risk_em", ""), ("risk_emv", "Ev")):
-                for subset, ssfx in ((j, ""), (j[~j.diverged], "Conv")):
+                for subset, ssfx in ((j, ""), (j[~j.excluded], "Conv")):
                     if len(subset) == 0:
                         continue
                     ratio = subset.risk / subset[emcol]
@@ -134,9 +184,11 @@ def main() -> int:
                     macros[m] = f"{ratio.mean():.1f}"; macros[m + "lo"] = f"{lo:.1f}"; macros[m + "hi"] = f"{hi:.1f}"
                     macros[f"rb{pfx}Wins{esfx}{ssfx}{tag}"] = str(int((ratio > 1).sum()))
                     macros[f"rb{pfx}N{esfx}{ssfx}{tag}"] = str(len(subset))
-                    if emcol == "risk_em" and ssfx == "":
+                    if emcol == "risk_emv" and ssfx == "":
                         rec[f"{arm}_ratio"] = ratio.mean(); rec[f"{arm}_lo"] = lo; rec[f"{arm}_hi"] = hi
                         rec[f"{arm}_wins"] = int((ratio > 1).sum())
+                    if emcol == "risk_emv" and ssfx == "Conv":
+                        rec[f"{arm}_ratio_conv"] = ratio.mean(); rec[f"{arm}_lo_conv"] = lo; rec[f"{arm}_hi_conv"] = hi
         rows.append(rec)
 
     t = pd.DataFrame(rows).sort_values(["rho", "L"])
@@ -145,7 +197,10 @@ def main() -> int:
     macros["rbLenLo"] = str(int(t.L.min())); macros["rbLenHi"] = str(int(t.L.max()))
     macros["rbIsmRatioMin"] = f"{t.ism_one_view_ratio.min():.1f}"; macros["rbIsmRatioMax"] = f"{t.ism_one_view_ratio.max():.1f}"
     macros["rbIsmAllAboveOne"] = "all" if (t.ism_one_view_lo > 1).all() else f"{int((t.ism_one_view_lo > 1).sum())} of {len(t)}"
-    macros["rbIsmDivergedTotal"] = str(int(t.ism_one_view_diverged.sum()))
+    macros["rbIsmDivergedTotal"] = str(int(t.ism_one_view_excluded.sum()))
+    macros["rbIsmFlagTotal"] = str(int(t.ism_one_view_flag.sum()))
+    macros["rbEmAgreeRungTotal"] = f"{int(t.em_same_rung.sum())} of {int((t.n_seeds).sum())}"
+    macros["rbEmAgreeMaxDiffAll"] = f"{t.em_maxdiff.max():.3f}"
     # the same cell E03 measured, so the two experiments can be read against each other
     fp = t[(t.rho == 0.85) & (t.L == 32)]
     if len(fp):
@@ -158,22 +213,31 @@ def main() -> int:
 
     lines = [r"%% GENERATED by tools/make_regime_baselines.py -- do not hand-edit.",
              r"\begin{tabular}{llrrrrrl}", r"\toprule",
-             r"$\corr$ & $L$ & \textsc{lmmse} & EM--BP & EM--BP (ev.) & best net (C) & best net (B) & factor C / EM--BP \\",
+             r"$\corr$ & $L$ & \textsc{lmmse} & EM--BP (ev.) & EM--BP (bp) & best net (C) & best net (B) & factor C / EM--BP (ev.) \\",
              r"\midrule"]
     for _, r in t.iterrows():
-        lines.append(f"{r.rho:g} & {int(r.L)} & {r.lmmse:.3f} & {r.em_bp:.3f} & {r.em_bp_evidence:.3f} & "
+        marks = ""
+        if r.ism_one_view_excluded:
+            marks += f"$^{{*{int(r.ism_one_view_excluded)}}}$"
+        if r.ism_one_view_flag:
+            marks += f"$^{{\\dagger {int(r.ism_one_view_flag)}}}$"
+        lines.append(f"{r.rho:g} & {int(r.L)} & {r.lmmse:.3f} & {r.em_bp_evidence:.3f} & {r.em_bp:.3f} & "
                      f"{r.ism_one_view_best:.3f} & {r.dsm_one_corruption_best:.3f} & "
-                     f"${r.ism_one_view_ratio:.1f}$ [{r.ism_one_view_lo:.1f}, {r.ism_one_view_hi:.1f}]"
-                     + (f"$^{{\\dagger {int(r.ism_one_view_diverged)}}}$" if r.ism_one_view_diverged else "") + r" \\")
-    lines += [r"\bottomrule", r"\end{tabular}"]
+                     f"${r.ism_one_view_ratio:.1f}$ [{r.ism_one_view_lo:.1f}, {r.ism_one_view_hi:.1f}]{marks}" + r" \\")
+    lines += [r"\bottomrule", r"\end{tabular}",
+              r"%% * n: n ISM cells excluded from the Conv factors (selected ISM objective not below the trivial score's on the same views);",
+              r"%% dagger n: n cells whose held-out curve never improved on its first checkpoint (reported, not excluded)."]
     (dest / "regime-baselines-table.tex").write_text("\n".join(lines) + "\n")
 
-    cols = ["rho", "L", "t_star", "kurt", "lmmse", "iso", "em_bp", "em_bp_evidence",
+    cols = ["rho", "L", "kurt", "lmmse", "em_bp", "em_bp_evidence", "em_same_rung", "em_maxdiff", "iso_obj",
             "ism_one_view_arch", "ism_one_view_best", "ism_one_view_ratio", "ism_one_view_lo", "ism_one_view_hi",
-            "ism_one_view_wins", "ism_one_view_diverged", "dsm_one_corruption_best", "dsm_one_corruption_ratio"]
+            "ism_one_view_wins", "ism_one_view_excluded", "ism_one_view_flag", "dsm_one_corruption_best", "dsm_one_corruption_ratio"]
     print(t[cols].to_string(index=False, float_format=lambda x: f"{x:.3f}"))
-    if t.ism_one_view_diverged.sum():
-        print(f"\nNOTE: {int(t.ism_one_view_diverged.sum())} diverged ISM fit(s); *Conv* macros exclude them.")
+    if t.ism_one_view_excluded.sum():
+        print(f"\nNOTE: {int(t.ism_one_view_excluded.sum())} ISM cell(s) excluded from the Conv factors (objective not below the trivial score's).")
+    if t.ism_one_view_flag.sum():
+        print(f"NOTE: {int(t.ism_one_view_flag.sum())} ISM cell(s) carry the curve-shape flag (reported, not excluded).")
+    print("ratios in the table and rec fields are against em_bp_evidence; *Ev*-less macros are against em_bp")
     print(f"wrote {dest/'regime-baselines-numbers.tex'} ({len(macros)} macros) and {dest/'regime-baselines-table.tex'}")
     return 0
 
