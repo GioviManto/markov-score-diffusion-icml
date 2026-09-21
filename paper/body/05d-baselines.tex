@@ -61,11 +61,16 @@ structure ($\rbKurtfivethirtytwo$ against $\rbKurtninefivethirtytwo$ at $\corr=0
 not collapse at $\nsites=128$ ($\rbIsmRatioEvfiveonetwentyeight$ to
 $\rbIsmRatioEveightfiveonetwentyeight$); beyond $\corr=0.85$ it shows no monotone trend.
 Given the clean sequence as a regression target (interface~B) the best network is still a
-factor $\rbFixedRatioEveightfivethirtytwo$ behind at the frozen point. At $\corr=0.95$ the best
-network sits above the second-order floor itself ($\rbIsmBestninefivethirtytwo$ against
-$\rbLmmseninefivethirtytwo$ at $\nsites=32$): where the covariance carries most of the score
-energy, one noised view per sequence is not enough for a network to learn even the
-covariance, while the estimator that knows the factorisation recovers it.
+factor $\rbFixedRatioEveightfivethirtytwo$ behind at the frozen point. The factor is
+conservative: the evidence-selected EM--BP selects the last rung of its ladder in
+$\rbEmEvAtCapTotal$ of the cells, so its error there is an upper bound. At $\corr=0.95$
+the best network sits above the second-order floor itself, by
+$\rbIsmMinusFloorninefivethirtytwo$
+[$\rbIsmMinusFloorninefivethirtytwolo$, $\rbIsmMinusFloorninefivethirtytwohi$] at
+$\nsites=32$, against an exact radius-$8$ floor of $\audLocFloorreightRhozeropninefive$ at
+that correlation: where the covariance carries most of the score energy, one noised view
+per sequence is not enough for a network to learn even the covariance, while the estimator
+that knows the factorisation recovers it.
 }{}
 \paragraph{Length extrapolation.}
 Fitted at $\nsites=32$ and evaluated against the exact score of longer chains

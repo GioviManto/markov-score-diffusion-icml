@@ -177,6 +177,10 @@ def main() -> int:
                         macros[f"{prefix.replace('Best', 'RatioBest').replace('Fixed', 'FixedRatio')}{tag}lo"] = f"{lo:.1f}"
                         macros[f"{prefix.replace('Best', 'RatioBest').replace('Fixed', 'FixedRatio')}{tag}hi"] = f"{hi:.1f}"
                         macros[f"{prefix.replace('Best', 'Wins').replace('Fixed', 'FixedWins')}{tag}"] = str(int((ratio > 1).sum()))
+                        # the per-seed range of the paired factor, so the regime appendix can place E14's
+                        # frozen-point cell against the same population at sixteen seeds
+                        macros[f"{prefix.replace('Best', 'RatioMin').replace('Fixed', 'FixedRatioMin')}{tag}"] = f"{ratio.min():.1f}"
+                        macros[f"{prefix.replace('Best', 'RatioMax').replace('Fixed', 'FixedRatioMax')}{tag}"] = f"{ratio.max():.1f}"
                         macros[f"{prefix.replace('Best', 'RatioOfMeans').replace('Fixed', 'FixedRatioOfMeans')}{tag}"] = f"{j.risk.mean()/j.risk_em.mean():.1f}"
         macros["matchedBestArm"] = "implicit score matching on one noised view per sequence"
         macros["matchedFixedArm"] = "one fixed corruption of a clean sequence"
