@@ -70,3 +70,33 @@ our own drivers before any of its numbers reached a page (\cref{app:protocol}).
 \label{app:tables}
 \IfFileExists{sections/generation-numbers.tex}{\input{sections/tab-generation}}{}
 \IfFileExists{sections/baseline-numbers.tex}{\input{sections/tab-length}}{}
+
+\section{The matched comparison across regimes}
+\label{app:regime-baselines}
+\IfFileExists{sections/regime-baselines-numbers.tex}{%
+\begin{table}[h]
+\centering\small
+\caption{Interface~C across correlation and length (\textsc{e14}): pooled relative score error
+of the LMMSE oracle, of EM--BP with its iteration count chosen by held-out one-view
+log-evidence (ev.) and by validation risk against the true kernel (bp), of the best network
+trained by implicit score matching on the same one-view bundle (C) and of the best network
+given the clean sequence with one fixed corruption (B), each re-screened per regime on two
+development seeds; last column the paired factor of the C network over the evidence-selected
+EM--BP with a percentile bootstrap over $\rbSeeds$ seeds. $^{\dagger n}$: $n$ cells whose
+held-out objective never improved on its first checkpoint (reported, not excluded).}
+\label{tab:regime-baselines}
+\input{sections/regime-baselines-table}
+\end{table}
+The arms and selection rules are those of \cref{sec:experiments} with two additions: the
+evidence-selected EM--BP row, which needs no true score (\cref{app:audit}), and the
+network-favourable interface~B row. A network cell is excluded from the factor only if its
+selected held-out implicit objective is not below that of the trivial score $-\vx$ on the
+same views, which is what a fit that diverged looks like on its own criterion; no cell is
+excluded ($\rbIsmDivergedTotal$ of $\rbIsmN\ldots$), and $\rbIsmFlagTotal$ carry the
+curve-shape flag. The two EM--BP rows agree: the same rung is selected in
+$\rbEmAgreeRungTotal$ of the cells and the largest difference in test error is
+$\rbEmAgreeMaxDiffAll$. At the frozen point the factor is $\rbFrozenIsmRatio$ against
+$\matchedRatioBestD$ from the sixteen seeds of \cref{sec:experiments}, the same population
+at a different seed count. The networks' error falls with $\nsites$ because each noised
+view carries proportionally more sites; so does EM--BP's, and the factor survives.
+}{\needsdata{E14 pending: the matched comparison across correlations and chain lengths}}

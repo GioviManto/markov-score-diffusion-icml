@@ -41,6 +41,32 @@ choosing its iteration count by held-out one-view log-evidence gives $\audSelEvi
 against $\audSelOracleA$ with oracle validation at $\nseq=32$, where the rung matters
 most, the two rules agreeing in $\audSelSameA$ of $\audSelNA$ seeds (\cref{app:audit}).
 
+\IfFileExists{sections/regime-baselines-numbers.tex}{%
+%% E14 (drafted on the eight-seed orientation table of 21 Sep; every sentence below is to be
+%% re-read against the sixteen-seed fragment before it is committed: the "smallest at rho = 0.5"
+%% and "does not collapse at L = 128" clauses are readings of the numbers, not macros).
+\paragraph{The matched comparison away from the frozen point.}
+The factor is not a property of the frozen corner. Re-running the matched comparison across
+$\corr\in\{\rbRhoLo,0.85,\rbRhoHi\}$ and $\nsites\in\{\rbLenLo,\rbLenHi\}$, with the networks
+re-screened inside each regime and $\rbSeeds$ seeds per cell (\cref{app:regime-baselines}),
+EM--BP with its iteration count chosen by held-out evidence, so that no true score enters
+either arm, is ahead of the best implicit-score-matching network in all $\rbCells$ cells and
+in every seed: by a paired factor $\rbIsmRatioEvfivethirtytwo$
+[$\rbIsmRatioEvfivethirtytwolo$, $\rbIsmRatioEvfivethirtytwohi$] at $\corr=0.5$,
+$\nsites=32$, and $\rbIsmRatioEveightfivethirtytwo$
+[$\rbIsmRatioEveightfivethirtytwolo$, $\rbIsmRatioEveightfivethirtytwohi$] at the frozen point,
+consistent with the sixteen-seed $\matchedRatioBestD$ above. The factor is smallest at
+$\corr=0.5$ at both lengths, where the stationary marginal carries the most fourth-order
+structure ($\rbKurtfivethirtytwo$ against $\rbKurtninefivethirtytwo$ at $\corr=0.95$), and it does
+not collapse at $\nsites=128$ ($\rbIsmRatioEvfiveonetwentyeight$ to
+$\rbIsmRatioEveightfiveonetwentyeight$); beyond $\corr=0.85$ it shows no monotone trend.
+Given the clean sequence as a regression target (interface~B) the best network is still a
+factor $\rbFixedRatioEveightfivethirtytwo$ behind at the frozen point. At $\corr=0.95$ the best
+network sits above the second-order floor itself ($\rbIsmBestninefivethirtytwo$ against
+$\rbLmmseninefivethirtytwo$ at $\nsites=32$): where the covariance carries most of the score
+energy, one noised view per sequence is not enough for a network to learn even the
+covariance, while the estimator that knows the factorisation recovers it.
+}{}
 \paragraph{Length extrapolation.}
 Fitted at $\nsites=32$ and evaluated against the exact score of longer chains
 (\cref{tab:length}), the EM--BP kernel holds $\lenEmbpDLthreetwo$ at $\nsites=32$ and
