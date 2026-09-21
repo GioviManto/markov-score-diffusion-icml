@@ -169,3 +169,15 @@ chain (same defect as N-22, present at the frozen commit). The paper's App. F pa
 the Section 5 sentence that attributed the earlier conclusion to a stopping rule are
 rewritten: the sweep is void for a prior reason and the stopping asymmetry is EM on a
 single chain. No number in the paper comes from exp_32.
+
+**21 Sep: the manuscript gate had been vacuous for the E-series fragments (tool finding,
+cluster-ops session, fixed in d6596cc).** `check_manuscript.py` regenerated fragments in a
+scratch tree whose `tools/` was a symlink, so every generator that locates the repository
+through `Path(__file__).resolve()` (all E-series and audit generators) wrote into the real
+`paper/sections/` and the scratch diff compared nothing; only the legacy cwd-relative
+generators were ever diffed. `tools/` is now copied into the scratch tree; the gate fails on a
+hand-perturbed digit and passes on the tree as committed, so no drift had accumulated in any
+fragment shipped since 18 Sep. Every "make check green" statement before this date should be
+read as "typed literals, references, freeze and build green; regenerate-and-diff green for
+the legacy fragments only". Four more generators are registered with the gate
+(grid_envelope, regime_numbers, sample_complexity, regime_baselines).
