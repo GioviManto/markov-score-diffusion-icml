@@ -22,9 +22,9 @@ zero.
 \IfFileExists{sections/capacity-numbers.tex}{\input{body/05a-capacity}}{\needsdata{E02a running: capacity table and paired differences}}
 A Gaussian-innovation kernel ($\ncomp=1$) lands on the LMMSE floor, as \cref{prop:lmmse}
 requires; the mixture kernel goes far below it. An earlier study of this model concluded
-the opposite from a sweep whose single-Gaussian arm alone stopped at its validation
-optimum while richer arms ran to a fixed cap; with the checkpoint selected identically
-for every capacity the effect is unambiguous (\cref{app:capacity}).
+the opposite from a sweep that, it turned out, had fitted every arm to a single training
+chain (\cref{app:capacity}); with independent chains and the checkpoint selected
+identically for every capacity the effect is unambiguous.
 \IfFileExists{sections/family-numbers.tex}{Capacity buys exactly what the closure discards: across the generalised-Gaussian family at fixed
 covariance the paired gain of $\ncomp=8$ over $\ncomp=1$ is ordered by $\kfour$,
 $\famDiffBone$ at the Laplace member and a small loss, $\famDiffBtwo$, at the Gaussian

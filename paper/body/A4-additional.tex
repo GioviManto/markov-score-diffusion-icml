@@ -36,24 +36,27 @@ most $\phaseOtherMoveWide$ between the operating and the widest grid; the other 
 are quoted from the operating grid, where they are converged.
 \IfFileExists{sections/phase-numbers.tex}{\input{body/05f-phase}}{}
 
-\section{Capacity: the previous reading and the stopping-rule artefact}
+\section{Capacity: the previous reading, and why it is void}
 \label{app:capacity}
 An earlier study of this model compared innovation mixtures of $\ncomp\in\{1,2,4,8,16\}$
 at $\nseq\in\{128,512\}$ over sixteen seeds and concluded that no capacity improved on a
 single Gaussian innovation, attributing the estimator's margin over the networks to the
-Markov factorisation and its covariance alone. Two facts overturn that reading. First,
-\cref{prop:lmmse} bounds every Gaussian-innovation kernel by the LMMSE floor, which on
-the Laplace chain is $\lmmseFloorLaplace$ pooled over the schedule, whereas the same
-study's own headline estimator reported errors between two and nine times smaller.
-Second, its sweep selected only the initialisation on validation and ran every capacity
-to a fixed cap of $1200$ iterations unless a $10^{-9}$ likelihood tolerance stopped it
-first; the tolerance fired in $31$ of $32$ single-Gaussian cells, at a median of $71$
-iterations, close to the validation optimum that the headline protocol selects for these
-sizes, and in none of the $96$ cells with $\ncomp\ge4$, which therefore reported
-checkpoints an order of magnitude past their optimum. ``The single Gaussian is as good''
-was ``the single Gaussian is the only arm that stopped in the right place''. The
-capacity experiment of \cref{sec:experiments} selects the checkpoint identically for every
-capacity on a per-seed validation bundle and reports the untouched confirmatory seeds.
+Markov factorisation and its covariance alone. That sweep is void for a reason prior to
+any reading of it: its training draw re-created the random generator for every sequence,
+so every arm at every capacity and seed was fitted to a single chain of $\nsites$ sites
+(its validation and test bundles were drawn correctly). The signature is in its own
+numbers: \cref{prop:lmmse} places a correctly fitted $\ncomp=1$ kernel on the LMMSE floor,
+$\lmmseFloorLaplace$ on the Laplace chain, where \cref{sec:experiments} and all fifteen
+cells of the regime sweep land to $\regIdentMax$, and the earlier sweep's single-Gaussian
+arm scatters across a range several times wider. The stopping asymmetry that sweep also
+shows (its likelihood tolerance fired for almost every single-Gaussian cell and for no
+cell with $\ncomp\ge4$, so that the richer arms reported checkpoints far past their
+optimum) is the behaviour of \textsc{em} on one chain, not evidence about capacity in
+either direction; we had first read it as the explanation of the earlier conclusion, and
+withdraw that reading. The capacity experiment of \cref{sec:experiments} draws every
+chain independently, asserts it, and selects the checkpoint identically for every
+capacity on a per-seed validation bundle; the same defect was found and fixed in one of
+our own drivers before any of its numbers reached a page (\cref{app:protocol}).
 
 \section{Capacity across the innovation family}
 \label{app:family}

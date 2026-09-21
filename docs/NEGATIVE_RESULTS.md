@@ -281,3 +281,22 @@ screens 663143 and 664056 and the confirms 663144 and 664065 are void and are ke
 it was the cause. Two lessons for the protocol: a fitted parameter that contradicts the
 generating law is a data check, not an estimator result; and every driver should assert
 that its training set has as many distinct chains as it claims.
+
+**N-23. The archival capacity sweep (exp_32) was fitted to one chain; the stopping-rule
+diagnosis of N-A1 is withdrawn as the cause.** Found by the cluster-ops session on 21 Sep
+while turning N-22 into a test (`tests/test_no_regenerated_rng.py`): the archival
+`exp_32_capacity_equivalence.py` (and exp_33, exp_34, both uncited) draw their training set
+as `prior.sample(rng_for("exp32-train", seed, n_chains), N_SITES) for _ in range(n_chains)`,
+the generator re-created inside the comprehension, at the very commit (35578c99, 31 Aug)
+whose outputs are frozen as `outputs/frozen/exp_32_capacity_merged/`. Every arm, capacity
+and seed of the thesis's capacity conclusion was therefore fitted to a single chain of 32
+sites; validation and test bundles were drawn correctly. The frozen numbers carry the
+signature: the C = 1 arm's pooled risk ranges from 0.13 to 1.15 across seeds where
+Proposition 1 puts a correct C = 1 fit on the LMMSE floor (0.167), which E02a and all
+fifteen E13 cells reach to 0.01. The stopping asymmetry we had reported as the cause of the
+earlier conclusion (tolerance fired in 31/32 C = 1 cells, in none with C ≥ 4) is real but is
+EM's behaviour on one chain and says nothing about capacity. The paper's capacity appendix
+now says the sweep is void and why; the retirement of the thesis's capacity claim (N-A1)
+stands with a prior and stronger cause. The paper's own capacity evidence (E02a, E02a_v1,
+E10, E13) draws chains correctly and passes the new test. The thesis text that cites exp_32
+is the author's to correct; the cluster-ops session has told them where.

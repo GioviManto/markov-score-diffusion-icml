@@ -389,10 +389,12 @@ variance and excess kurtosis, the resolution flag and \code{at\_cap}. The $\ncom
 must land on the LMMSE floor by the corollaries of \cref{ch:gaussian-closure-lmmse};
 the paper's capacity table (Section 5) reports that it does, and that the mixture goes
 far below it. The
-earlier reading that ``capacity does not help'' came from a sweep in which only the
-single-Gaussian arm stopped at its optimum (the tolerance fired for it) while the richer
-arms ran to a fixed cap past theirs: the stopping rule, not the model, produced the
-verdict (the paper's Appendix F).
+earlier reading that ``capacity does not help'' came from a sweep that had fitted every
+arm, at every capacity and seed, to a single training chain (its generator was re-created
+for every sequence), so it is void before any question of stopping arises; the stopping
+asymmetry it also shows (the tolerance fired for the single-Gaussian arm and not for the
+richer ones) is EM's behaviour on one chain (the paper's Appendix F; negative result
+N-23).
 
 \paragraph{E06 (learning through noise).} The same estimator with $\ncomp=8$ and
 $\nseq=512$, but with every training sequence noised at \emph{one} level $t$, over a
@@ -491,8 +493,8 @@ algebra, not the statistics.)
 conditional-maximisation sweeps, the one-view protocol and validation selection, the
 convergence asymmetry and the twelve-level arithmetic), Appendix C (the ladder and its
 selection rule, the resolution flag), Appendix E (E19's moment estimators as the
-competitor, E20's oracle-free selection), Appendix F (the stopping-rule artefact of the
-earlier capacity reading). Code: the E-step, its multi-level sum, the clean-data
+competitor, E20's oracle-free selection), Appendix F (why the earlier capacity reading is
+void). Code: the E-step, its multi-level sum, the clean-data
 statistics, the two fitting loops and the Q-function helpers are all in
 \code{src/\allowbreak markov\_score/\allowbreak em.py}; the three kernels, with the mixture's
 \code{innovation\_moments} and \code{scale\_diagnostics}, are in

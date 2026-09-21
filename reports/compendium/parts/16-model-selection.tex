@@ -88,10 +88,11 @@ its rungs are spaced roughly geometrically, so the selection can tell a factor o
 in budget apart but not ten per cent. And the ladder is not a stopping rule: the fit is
 always run to the cap (unless EM's own likelihood tolerance ends it first,
 \Cref{ch:maximum-likelihood-em}), the kernel or network state at every rung is saved, and
-the choice is made afterwards, with every rung available. This is what fixed the
-stopping-rule artefact of the earlier capacity study, where one arm stopped at its
-tolerance near its optimum and the others ran to a fixed cap past theirs (see the paper,
-Appendix on the previous capacity reading).
+the choice is made afterwards, with every rung available. This is what removes the
+stopping asymmetry seen in the earlier capacity study, where one arm stopped at its
+tolerance and the others ran to a fixed cap past theirs; that study is void for a prior
+reason, a degenerate training draw (see the paper, Appendix on the previous capacity
+reading, and negative result N-23), but the selection rule is the right one regardless.
 
 The at-cap fraction of a set of cells is a diagnostic the paper reports whenever it
 bears on a claim: if the selected rung is the cap in most cells, validation was still

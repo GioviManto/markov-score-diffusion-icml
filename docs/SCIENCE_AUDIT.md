@@ -163,3 +163,9 @@ the t_min sample's covariance with Σ₀ rather than Σ_{t_min}, a relative floo
 must be read against the exact arm's own value, which it is); the `gen_metrics.py`
 docstring's claim that the lag fourth cumulant has "a known nonzero value" is wrong (it is
 zero for the true law at every t_min; the column is a check for spurious dependence).
+
+**21 Sep: the archival capacity sweep is void (N-23).** exp_32 trained every arm on one
+chain (same defect as N-22, present at the frozen commit). The paper's App. F paragraph and
+the Section 5 sentence that attributed the earlier conclusion to a stopping rule are
+rewritten: the sweep is void for a prior reason and the stopping asymmetry is EM on a
+single chain. No number in the paper comes from exp_32.
