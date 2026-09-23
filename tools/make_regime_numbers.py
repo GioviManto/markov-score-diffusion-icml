@@ -90,6 +90,10 @@ def main() -> int:
     if (t.hi >= 0).any():
         bad = t[t.hi >= 0][["rho", "L", "gain", "lo", "hi"]]
         print(f"NOTE: {len(bad)} cell(s) do not exclude zero:\n{bad.to_string(index=False)}")
+    # The directory this fragment was generated from, so a checker can assert it is recomputing
+    # from the same run. Without it audit_claims silently fell back to E13 while the fragment came
+    # from E13x and compared two datasets (21 Sep).
+    macros["regSource"] = a.src.name
     macros["regCells"] = str(len(t))
     macros["regSeeds"] = str(int(t.n_seeds.min()))
     macros["regGainStrongest"] = f"{t.gain.min():.3f}"

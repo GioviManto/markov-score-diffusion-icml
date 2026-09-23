@@ -176,6 +176,13 @@ def audit_regimes():
     # from E13 while the macros come from E13x compares two different datasets and disagrees by
     # the seed count (it did: weakest gain -0.0442 against -0.047).
     src = OUT / "E13x" if (OUT / "E13x" / "regimes.csv").exists() else OUT / "E13"
+    # and assert it: the fragment stamps the directory it was generated from, so a checkout
+    # missing E13x cannot silently recompute from E13 against an E13x-derived macro.
+    stamp = _MACROS.get("regSource")
+    if stamp and stamp != src.name:
+        print(f"!! E13   fragment was generated from {stamp} but this check reads {src.name}: "
+              f"outputs/{stamp} is missing, so the recomputation would compare two runs")
+        return 1
     df = pd.read_csv(src / "regimes.csv")
     piv = df.pivot_table(index=["rho", "n_sites", "seed"], columns=["arm", "components"], values="risk")
     piv.columns = ["_".join(str(c) for c in col) for col in piv.columns]; piv = piv.reset_index()
