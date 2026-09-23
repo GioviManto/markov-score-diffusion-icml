@@ -20,7 +20,7 @@ make install         # python3 -m venv .venv; pip install -e ".[dev]"
 
 ```bash
 make test-fast       # ~1 min, the CI subset
-make test            # ~5 min: 401 passed, 27 skipped (CuPy parity, no GPU) on an M1, 14 Sep 2026
+make test            # ~4 min: 443 passed, 29 skipped (CuPy parity, no GPU) on an M1, 23 Sep 2026
 ```
 
 The skips are GPU parity tests. The wavelet/video suites (exploratory branches not used

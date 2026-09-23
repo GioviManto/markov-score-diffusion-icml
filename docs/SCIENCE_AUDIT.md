@@ -194,3 +194,48 @@ re-derivation only check the manuscript while both read what the manuscript repo
 change of source has to be made in both places at once. Two of the OPTIONAL generator
 entries were also writing the same fragment (`make_regime_numbers.py` on E13 and on E13x);
 whichever ran second won silently, and the E13 entry was removed.
+
+## 23 September 2026 (later) — self-audit of the documents, and what E12b will require
+
+The parallel audit session was deleted on 23 Sep around 21:55; its work is committed
+(2ead2ca, 311f023, its SCIENCE_AUDIT entries) and nothing was lost, but the division of
+labour that had caught errors in both directions has ended. What follows was therefore done
+adversarially against my own work rather than against someone else's.
+
+**What was already current.** `EXPERIMENT_REGISTRY.md` as data (`experiments/registry/*.json`),
+`NEGATIVE_RESULTS.md`, `CLAIM_EVIDENCE_MATRIX.md`, both gates, and the freeze manifest (87
+files, `freeze.py --check` clean). Everything except E12b is frozen.
+
+**What had drifted.** The human-readable `EXPERIMENT_REGISTRY.md` table still showed E11b,
+E13x, E14 and E14b as RUNNING or SUBMITTED when all four are frozen, and gave E12b the job id
+of the run that timed out rather than of its resume. The registry JSON was right in every one
+of those cases; only the mirror was stale, which is the failure mode of keeping the same fact
+in two places. Corrected.
+
+**What is stale and deliberately left so.** `CURRENT_STATE_AUDIT.md`, `AUDIT_ORACLE_LADDER.md`,
+`INTERNAL_REVIEWS.md`, `RELATED_WORK_SWEEP.md` and the two `em-chapters` reports are dated
+snapshots of what was believed on their date; rewriting them would destroy the record of what
+changed. One consequence is worth stating plainly: `em-chapters-2026-09-18` attributes the
+archival capacity reversal to a stopping rule, a diagnosis **withdrawn** by N-23. It is
+superseded, not corrected, and anyone reading it should read N-23 with it.
+`FINAL_RESEARCH_REPORT.md` calls itself living and was last written on 15 September; it is
+eight days behind and should be rewritten or retitled rather than half-updated.
+
+**N-24 and N-25** record three defects on the E12b path and one in the gate itself, all found
+in this pass and all fixed before the data landed.
+
+### When E12b lands (job 667192), in order
+
+1. Fetch from the deployment directory; `run_cells` has the finished cells, so the resume
+   completes the 480 rather than repeating them.
+2. `python tools/freeze.py E12b` — and *only* then, because a fragment generated from an
+   unfrozen run cannot be reproduced.
+3. `python tools/make_sample_complexity.py --src outputs/E12b`. The Monte Carlo branch takes
+   over here (16 seeds); read `scMcErr` before reading the limits.
+4. `make check` **must fail at this point** if step 3 was skipped: the fragment's `scSource`
+   stamp will say E12 while the auditor reads E12b. That refusal is the point, not a nuisance.
+5. Write the M\*(t) paragraph. E12 alone cannot support the corollary — its shape slope is
+   7.54 [−3.15, 12.35] and its ratio 4.44 [−9.66, 11.88], both including zero — which is why
+   E12b exists. If E12b's intervals also include zero, that is the result and it is reported as
+   the result; the corollary is then unconfirmed at this budget, and says so.
+6. Update this file, `EXPERIMENT_REGISTRY.md`, `CLAIM_EVIDENCE_MATRIX.md` and the meeting brief.

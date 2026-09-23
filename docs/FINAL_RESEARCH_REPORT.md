@@ -1,4 +1,14 @@
-# Final research report (living document; last updated 15 September 2026, 08:10)
+# Final research report (last updated 15 September 2026, 08:10 — SUPERSEDED IN PART)
+
+> **Currency, 23 September 2026.** This file is eight days behind and is *not* a current
+> statement of the project. Everything below section 2 predates: the 18–19 September audit and
+> its corrections, N-22 (E14's void first screen), N-23 (the archival capacity sweep fitted to
+> one chain, which withdraws the stopping-rule diagnosis this file's ancestors relied on), the
+> freezing of E14/E14b/E13x, and the move of the paper's regime numbers to sixteen seeds. For
+> what is true now, read `SCIENCE_AUDIT.md`, `NEGATIVE_RESULTS.md` and
+> `CLAIM_EVIDENCE_MATRIX.md`, which are maintained. It is kept unrewritten because it records
+> what was believed on its date, which is evidence about the project's reasoning and would be
+> destroyed by a partial update.
 
 This file is rewritten at the end of the project. Until then it records, milestone by
 milestone, what changed scientifically, so that an interruption never loses the

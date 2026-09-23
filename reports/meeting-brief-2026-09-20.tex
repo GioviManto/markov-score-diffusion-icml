@@ -194,6 +194,21 @@ which tests the grid, the message passing, the EM and the scoring simultaneously
 independent configurations. The sixteen-seed run also reproduces its eight-seed predecessor
 exactly: $\regReproRows$ shared rows recomputed in a different directory, from a different
 deployment, on a different node, agree to $\regReproMaxDiff$.
+
+\smallskip
+\noindent
+One correction belongs with this result rather than in a footnote. The capacity sweep in the
+archival record --- the one Chapter~10 of the thesis rests on, $\ncomp\in\{1,2,4,8,16\}$ at
+$\nseq\in\{128,512\}$ over sixteen seeds --- is void, for a reason prior to any reading of it:
+its training draw re-created the random generator for every sequence, so every arm at every
+capacity and seed was fitted to a single chain of $\nsites$ sites, its validation and test
+bundles alone drawn correctly. Its own numbers carry the signature: a correctly fitted
+$\ncomp=1$ kernel must sit on the LMMSE floor $\lmmseFloorLaplace$, which every cell of the
+table above reaches to $\regIdentMax$, and the old sweep's single-Gaussian arm scatters across a
+range several times wider. The earlier diagnosis --- that a stopping rule explained the
+conclusion --- is withdrawn with it; the asymmetry is real but is \textsc{em}'s behaviour on one
+chain. Nothing in this section depends on that sweep: the runs behind it draw every chain
+independently and assert that they did.
 \comp{Chapters 12, 14, 16}
 
 \section{Structure against networks, at equal information}

@@ -47,9 +47,21 @@ OPTIONAL = {"make_capacity_numbers.py": "outputs/E02a/capacity.csv", "make_learn
             # regime-numbers.tex is generated from E13x, the sixteen-seed run, NOT from the frozen
             # eight-seed E13: both would write the same fragment and the later one would silently win.
             # E13 stays frozen as history and feeds nothing.
-            "make_sample_complexity.py": "outputs/E12/ladder.csv", "make_regime_baselines.py": "outputs/E14/regimes.csv",
+            # E12b supersedes E12 the moment its ladder exists (see SUPERSEDES): until then the
+            # fragment is generated from E12 and checked, rather than going unchecked.
+            "make_sample_complexity.py": "outputs/E12/ladder.csv",
+            "make_sample_complexity.py --src outputs/E12b": "outputs/E12b/ladder.csv",
+            "make_regime_baselines.py": "outputs/E14/regimes.csv",
             "make_regime_baselines.py --src outputs/E14b": "outputs/E14b/regimes.csv",
             "make_regime_numbers.py --src outputs/E13x": "outputs/E13x/regimes.csv"}
+# Two OPTIONAL entries that write the SAME fragment would both run, and the later one would win
+# silently -- the trap E13/E13x sprang on 23 Sep, where the checker compared a fragment made from
+# one run against numbers recomputed from another. Where a longer run supersedes a shorter one,
+# say so here: while the right-hand key's source is absent the left-hand one generates the
+# fragment and the gate checks it; once the new run lands the old key is dropped, so exactly one
+# generator ever writes it. The fragments also carry a source stamp that audit_claims asserts,
+# which catches the same mistake from the other side.
+SUPERSEDES = {"make_sample_complexity.py": "make_sample_complexity.py --src outputs/E12b"}
 # Fragments the legacy generators emit that the manuscript may or may not input.
 FRAGMENT_GLOB = "sections/*.tex"
 NUMBER = re.compile(r"(?<![\w\\{])(?:\d+\.\d+|\d+e-?\d+|\d+\s*\\times\s*10\^\{-?\d+\})(?![\w}])")
@@ -79,6 +91,9 @@ def regenerate_and_diff() -> int:
         shutil.copytree(ROOT / "tools", tmp / "tools", ignore=shutil.ignore_patterns("__pycache__"))
         (tmp / "paper" / "figures").symlink_to(PAPER / "figures")
         gens = list(GENERATORS) + [g for g, src in OPTIONAL.items() if (ROOT / src).exists()]
+        for old_gen, new_gen in SUPERSEDES.items():
+            if new_gen in gens and old_gen in gens:
+                gens.remove(old_gen)
         for g in gens:
             # a key may carry arguments ("make_x.py --src outputs/E14b"): one generator, several
             # registered outputs, each fragment gated on its own source

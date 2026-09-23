@@ -41,7 +41,11 @@ ROOT = Path(__file__).resolve().parents[1]
 KURT_THR = 0.5        # accuracy at which M* is read for the shape coordinate
 RHO_THR = 0.015       # and for the covariance coordinate
 CENSOR_MAX = 0.75     # above this at-cap fraction a level is a budget statement, not a sample one
-B = 4000
+B = 200_000       # Monte Carlo draws when the enumeration is infeasible; see the note at
+                  # the bootstrap. B = 4000 is NOT enough here and is what the 18 Sep audit
+                  # caught moving the upper limit across the prediction it tests.
+MC_STREAMS = 5    # blocks the draws are split into, to report the Monte Carlo error
+ENUM_MAX = 200_000  # enumerate the bootstrap up to this many multisets, else Monte Carlo
 
 
 def _mstar(sub: pd.DataFrame, col: str, thr: float, sizes: np.ndarray) -> float:
@@ -128,26 +132,36 @@ def main() -> int:
                 return float(np.exp(np.log(sizes[i]) + f * (np.log(sizes[i + 1]) - np.log(sizes[i]))))
         return np.nan
 
-    # With few seeds the bootstrap distribution is small enough to ENUMERATE: every multiset
-    # of n draws from n seeds, weighted by its multinomial probability. That removes the Monte
-    # Carlo error entirely, which matters here because the 97.5th percentile rides on a handful
-    # of extreme resamples -- at B = 4000 the upper limit of the covariance slope wandered
-    # between 7.7 and 8.2 across streams, i.e. across the prediction it was being tested
-    # against. Above the enumeration limit, Monte Carlo with a large B and a reported error.
+    # With few seeds the bootstrap distribution is small enough to ENUMERATE: every multiset of
+    # n draws from n seeds, weighted by its multinomial probability. That removes the Monte Carlo
+    # error entirely, which matters here because the 97.5th percentile rides on a handful of
+    # extreme resamples -- at B = 4000 the upper limit of the covariance slope wandered between
+    # 7.7 and 8.2 across streams, i.e. across the prediction it was being tested against.
+    #
+    # Enumeration is feasible at 8 seeds (6435 multisets) and not at 16 (C(31,16) = 300,540,195),
+    # so E12b takes the Monte Carlo branch by construction and that branch must not land on the
+    # B this comment condemns. It runs at B = 200,000 and reports its own error: the draws are
+    # split into MC_STREAMS blocks and the spread of the per-block limits gives a standard error
+    # for each reported limit (scMcErr), so the loss of exactness is visible in the fragment
+    # rather than assumed harmless. Checked against ground truth by forcing this branch on E12,
+    # where the enumerated answer is known: it agrees to 0.02 of each limit, inside the se it
+    # reports (docs/NEGATIVE_RESULTS.md N-24).
     n = len(seeds)
     from itertools import combinations_with_replacement
     from math import comb, factorial
     from collections import Counter
-    exact = comb(2 * n - 1, n) <= 200_000
+    exact = comb(2 * n - 1, n) <= ENUM_MAX
     if exact:
         draws = [np.array(ms) for ms in combinations_with_replacement(range(n), n)]
         weights = np.array([factorial(n) / np.prod([factorial(v) for v in Counter(ms).values()]) / n ** n
                             for ms in draws])
+        blocks = None
     else:
         draws = list(rng.integers(0, n, size=(B, n)))
         weights = np.full(len(draws), 1.0 / len(draws))
-    boots = {"shape": ([], []), "cov": ([], []), "ratio": ([], [])}
-    for d, w in zip(draws, weights):
+        blocks = np.repeat(np.arange(MC_STREAMS), int(np.ceil(len(draws) / MC_STREAMS)))[:len(draws)]
+    boots = {"shape": ([], [], []), "cov": ([], [], []), "ratio": ([], [], [])}
+    for i, (d, w) in enumerate(zip(draws, weights)):
         rk = np.sqrt(np.nanmean(sq["kurt_err"][d], axis=0))   # (levels, sizes)
         rr = np.sqrt(np.nanmean(sq["rho_err"][d], axis=0))
         mk = np.array([_cross(rk[j], a.kurt_threshold) for j in range(len(ut))])
@@ -156,6 +170,7 @@ def main() -> int:
             v = _slope(ut, vals)
             if np.isfinite(v):
                 boots[kind][0].append(v); boots[kind][1].append(w)
+                boots[kind][2].append(-1 if blocks is None else int(blocks[i]))
 
     def _wq(v, w, q):
         v, w = np.asarray(v, float), np.asarray(w, float)
@@ -164,16 +179,32 @@ def main() -> int:
         return float(v[min(np.searchsorted(cw, q), len(v) - 1)])
 
     def boot(kind):
-        """(lower, upper, resolved mass). Weighted percentiles; exact when enumerated."""
-        v, w = boots[kind]
-        if not v:
-            return np.nan, np.nan, 0.0
-        return _wq(v, w, 0.025), _wq(v, w, 0.975), float(np.sum(w))
+        """(lower, upper, resolved mass, mc_error). Weighted percentiles; exact when enumerated.
 
-    macros, report = {}, []
+        mc_error is the standard error of the reported limits from the Monte Carlo draw itself,
+        estimated by splitting the draws into MC_STREAMS blocks: sd(block limits)/sqrt(streams).
+        It is 0.0 on the enumerated branch, which has no Monte Carlo error by construction.
+        """
+        v, w, b = boots[kind]
+        if not v:
+            return np.nan, np.nan, 0.0, np.nan
+        lo, hi = _wq(v, w, 0.025), _wq(v, w, 0.975)
+        if blocks is None:
+            return lo, hi, float(np.sum(w)), 0.0
+        v, w, b = np.asarray(v), np.asarray(w), np.asarray(b)
+        per = [(_wq(v[b == s], w[b == s], 0.025), _wq(v[b == s], w[b == s], 0.975))
+               for s in range(MC_STREAMS) if (b == s).sum() > 1]
+        if len(per) < 2:
+            return lo, hi, float(np.sum(w)), np.nan
+        per = np.array(per)
+        se = per.std(axis=0, ddof=1) / np.sqrt(len(per))
+        return lo, hi, float(np.sum(w)), float(np.max(se))
+
+    macros, report, mcerrs = {}, [], []
     for name, val, pred, key in (("Shape", s_shape, 8, "shape"), ("Cov", s_cov, 4, "cov"),
                                  ("Ratio", s_ratio, 4, "ratio")):
-        lo, hi, mass = boot(key)
+        lo, hi, mass, mcerr = boot(key)
+        mcerrs.append(mcerr)
         excl = "excludes nothing"
         if np.isfinite(lo) and np.isfinite(hi):
             out = [p for p in (4, 8) if not (lo <= p <= hi)]
@@ -199,6 +230,14 @@ def main() -> int:
     macros["scKurtThr"] = f"{a.kurt_threshold:g}"; macros["scRhoThr"] = f"{a.rho_threshold:g}"
     macros["scSeeds"] = str(len(seeds)); macros["scLevels"] = str(len(levels))
     macros["scUsable"] = str(len(usable)); macros["scMaxM"] = str(int(sizes.max()))
+    # the run this fragment was generated from, so a checker reading a different one can refuse
+    # rather than silently compare two runs (the trap that E13/E13x sprang on 23 Sep)
+    macros["scSource"] = a.src.name
+    macros["scBootMode"] = "enumerated" if exact else "Monte Carlo"
+    macros["scBootDraws"] = f"{len(draws):,}".replace(",", "{,}")
+    if not exact:
+        macros["scMcErr"] = f"{max(m for m in mcerrs if np.isfinite(m)):.3f}" if any(
+            np.isfinite(m) for m in mcerrs) else "n/a"
     (dest / "sample-complexity-numbers.tex").write_text(
         "%% GENERATED by tools/make_sample_complexity.py -- do not hand-edit.\n"
         + "\n".join(f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in macros.items()) + "\n")
@@ -208,8 +247,13 @@ def main() -> int:
     if blocked:
         print(f"CONFOUNDED and excluded from the slopes: {blocked} -- these levels measured the "
               f"iteration budget, not the sample size (see docs/NEGATIVE_RESULTS.md N-12)")
-    print(f"\nlog-slopes d log M*/dt on the usable levels "
-          f"({'EXACT bootstrap, ' + str(len(draws)) + ' multisets' if exact else 'Monte Carlo, B = ' + str(B)}):")
+    if exact:
+        how = f"EXACT bootstrap, {len(draws)} multisets"
+    else:
+        se = [m for m in mcerrs if np.isfinite(m)]
+        how = (f"Monte Carlo, B = {B} in {MC_STREAMS} streams"
+               + (f", se of the reported limits <= {max(se):.3f}" if se else ""))
+    print(f"\nlog-slopes d log M*/dt on the usable levels ({how}):")
     print("\n".join(report))
     for t, lb in bounds:
         print(f"  one-sided: shape unresolved at t={t:g} up to M={sizes.max()}, so "

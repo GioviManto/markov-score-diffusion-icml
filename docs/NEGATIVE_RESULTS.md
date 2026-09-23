@@ -306,3 +306,36 @@ M = 512, C = 1 at the frozen configuration reproduces the frozen row to six deci
 iterations), with one distinct chain among the 512 drawn. The frozen exp_32 numbers are
 therefore the output of a one-chain training set with certainty, not by inference; the
 rerun stays in that session's scratchpad and is not frozen.
+
+**N-24. The E12b analysis path had three defects that fire only when the data lands; found
+and fixed before it did (23 Sep).** E12b moves from 8 seeds and 3 levels to 16 and 5. Nothing
+about that is visible until `outputs/E12b/ladder.csv` exists, so a self-audit went looking for
+what the arrival would break. (i) The bootstrap is enumerated exactly while that is feasible;
+sixteen seeds put the enumeration at C(31,16) = 300,540,195 multisets, so E12b takes the Monte
+Carlo branch by construction — and that branch stood at B = 4000, which is the very setting the
+18 September audit caught moving the covariance slope's upper limit between 7.7 and 8.2, i.e.
+across the prediction it tests. The generator's own comment promised "a large B and a reported
+error"; neither was implemented. B is now 200,000 and the branch reports its Monte Carlo error
+(`scMcErr`) from MC_STREAMS = 5 blocks. Validated against ground truth by forcing the Monte
+Carlo branch on E12, where the exact answer is known: limits [-3.15, 12.33], [2.27, 7.72],
+[-9.64, 11.84] against the enumerated [-3.15, 12.35], [2.28, 7.72], [-9.66, 11.88], with a
+self-reported se of 0.037 — the stated error covers the observed deviation. (ii)
+`audit_claims.audit_sample_complexity` enumerated unconditionally and read `outputs/E12`
+hard-coded: at sixteen seeds it would not have failed the gate, it would have hung it. It now
+takes the same limit, B and stream as the generator (imported, not copied — the bootstrap
+protocol is a declared parameter, not a result) and reads E12b when present. (iii) The gate's
+OPTIONAL registry mapped the bare generator to E12's ladder, so adding an E12b key would have
+left two generators writing one fragment and the later one winning silently — N-22's sibling and
+exactly the trap E13/E13x sprang. A `SUPERSEDES` rule now drops the superseded key, and the
+fragment carries a `scSource` stamp that the auditor asserts. None of this could be tuned to a
+result: the result does not exist yet.
+
+**N-25. A refusal that did not refuse: `audit_claims` discarded its own return codes.** The
+E13x source-stamp guard committed in 3386f21 ended `return 1`, and `main()` called `fn()`
+without looking at what came back — failure travels only through `FINDINGS`. The guard printed
+its warning and the gate exited 0. It was verified when written by confirming the message
+appeared, not by confirming the exit code changed, which is the whole of the mistake: a guard
+tested by its output rather than by its effect. Both stamp guards now append to `FINDINGS`, and
+`main()` records a non-zero return as a finding in its own right so that a future guard written
+the obvious way is not silent. Both were re-tested by exit code: moving `outputs/E13x` aside
+and planting an `outputs/E12b` against an E12-stamped fragment each exit 1.

@@ -17,15 +17,24 @@ disagree, one of them is wrong and the audit says which quantity, not which side
 
 from __future__ import annotations
 
+import importlib.util
 import re
 import sys
 from itertools import combinations_with_replacement
-from math import factorial
+from math import comb, factorial
 from collections import Counter
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+# The bootstrap PROTOCOL (enumeration limit, Monte Carlo B and stream) is shared with the
+# generator on purpose: it is a declared analysis parameter, not a result. What this file
+# recomputes independently is the numbers. If these drifted apart the two would disagree for a
+# reason that has nothing to do with the data, which is the opposite of what the gate is for.
+_sc = importlib.util.spec_from_file_location("_sc", Path(__file__).resolve().parent / "make_sample_complexity.py")
+_scm = importlib.util.module_from_spec(_sc); _sc.loader.exec_module(_scm)
+SC_ENUM_MAX, SC_B = _scm.ENUM_MAX, _scm.B
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "outputs"
@@ -180,8 +189,8 @@ def audit_regimes():
     # missing E13x cannot silently recompute from E13 against an E13x-derived macro.
     stamp = _MACROS.get("regSource")
     if stamp and stamp != src.name:
-        print(f"!! E13   fragment was generated from {stamp} but this check reads {src.name}: "
-              f"outputs/{stamp} is missing, so the recomputation would compare two runs")
+        FINDINGS.append(("E13", "fragment source", f"generated from {stamp}, checked against {src.name}",
+                         f"outputs/{stamp} is missing, so the recomputation would compare two runs"))
         return 1
     df = pd.read_csv(src / "regimes.csv")
     piv = df.pivot_table(index=["rho", "n_sites", "seed"], columns=["arm", "components"], values="risk")
@@ -238,7 +247,17 @@ def audit_phase():
 
 # ----------------------------------------------------------------------------- E12 sample complexity (E21)
 def audit_sample_complexity():
-    df = pd.read_csv(OUT / "E12" / "ladder.csv")
+    # E12b supersedes E12 once its ladder is on disk, exactly as E13x supersedes E13. The
+    # fragment stamps the run it came from; if it does not match the run being audited, the two
+    # are different experiments and comparing their numbers is meaningless -- refuse instead.
+    src = OUT / "E12b" if (OUT / "E12b" / "ladder.csv").exists() else OUT / "E12"
+    stamp = _MACROS.get("scSource")
+    if stamp and stamp != src.name:
+        FINDINGS.append(("E12", "fragment source", f"generated from {stamp}, checked against {src.name}",
+                         f"regenerate: tools/make_sample_complexity.py --src outputs/{src.name}"))
+        return 1
+    run = src.name
+    df = pd.read_csv(src / "ladder.csv")
     sizes = np.array(sorted(df.n_chains.unique())); seeds = np.array(sorted(df.seed.unique())); ts = np.array(sorted(df.t_obs.unique()))
     A = np.full((len(seeds), len(ts), len(sizes)), np.nan)
     for i, sd in enumerate(seeds):
@@ -254,15 +273,24 @@ def audit_sample_complexity():
         return np.nan
     def ols(y):
         ok = np.isfinite(y); return float(np.polyfit(ts[ok], np.log(y[ok]), 1)[0]) if ok.sum() >= 2 else np.nan
+    # Sixteen seeds put the exact enumeration at 300,540,195 multisets: infeasible, and an
+    # unconditional enumeration here would hang the gate rather than fail it. Above the limit
+    # this takes the generator's Monte Carlo branch with the generator's own B and seed.
     n = len(seeds); vals, wts = [], []
-    for ms in combinations_with_replacement(range(n), n):
-        w = factorial(n) / np.prod([factorial(v) for v in Counter(ms).values()]) / n ** n
+    if comb(2 * n - 1, n) <= SC_ENUM_MAX:
+        draws = [np.array(ms) for ms in combinations_with_replacement(range(n), n)]
+        weights = [factorial(n) / np.prod([factorial(v) for v in Counter(ms).values()]) / n ** n for ms in draws]
+    else:
+        draws = list(np.random.default_rng(20260918).integers(0, n, size=(SC_B, n)))
+        weights = [1.0 / SC_B] * SC_B
+    for ms, w in zip(draws, weights):
         r = np.sqrt(A[np.array(ms)].mean(axis=0)); v = ols(np.array([cross(r[j]) for j in range(len(ts))]))
         if np.isfinite(v): vals.append(v); wts.append(w)
     v, w = np.array(vals), np.array(wts); o = np.argsort(v); v, w = v[o], w[o]; cw = np.cumsum(w) / w.sum()
-    check("E12", "covariance slope, point (OLS over 3 levels)", ols(np.array([cross(np.sqrt(A.mean(axis=0))[j]) for j in range(len(ts))])), "scSlopeCov")
-    check("E12", "  exact-bootstrap 2.5%", float(v[np.searchsorted(cw, 0.025)]), "scSlopeCovLo")
-    check("E12", "  exact-bootstrap 97.5%", float(v[np.searchsorted(cw, 0.975)]), "scSlopeCovHi")
+    mode = "exact" if comb(2 * n - 1, n) <= SC_ENUM_MAX else "Monte-Carlo"
+    check(run, f"covariance slope, point (OLS over {len(ts)} levels)", ols(np.array([cross(np.sqrt(A.mean(axis=0))[j]) for j in range(len(ts))])), "scSlopeCov")
+    check(run, f"  {mode}-bootstrap 2.5%", float(v[np.searchsorted(cw, 0.025)]), "scSlopeCovLo")
+    check(run, f"  {mode}-bootstrap 97.5%", float(v[np.searchsorted(cw, 0.975)]), "scSlopeCovHi")
 
 
 def main() -> int:
@@ -271,7 +299,11 @@ def main() -> int:
                audit_grid, audit_learning, audit_phase, audit_sample_complexity):
         print(f"--- {fn.__name__} ---")
         try:
-            fn()
+            # a block may also refuse by returning non-zero; FINDINGS is the channel that fails
+            # the gate, so record that too rather than letting the return value evaporate
+            before = len(FINDINGS)
+            if fn() and len(FINDINGS) == before:   # refused without saying why; say it for them
+                FINDINGS.append((fn.__name__, "block refused to run", "see above", ""))
         except Exception as e:  # a block that cannot run is itself a finding
             print(f"!! {fn.__name__} failed: {type(e).__name__}: {e}")
             FINDINGS.append((fn.__name__, "block failed", str(e), ""))
