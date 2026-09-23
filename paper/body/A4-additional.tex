@@ -99,9 +99,14 @@ $\rbEmAgreeMaxDiffAll$; the last rung of the ladder is selected in $\rbEmAtCapTo
 oracle-selected and $\rbEmEvAtCapTotal$ of the evidence-selected cells, so the EM--BP error
 is an upper bound there and every factor is conservative. Against the second-order floor,
 tested per seed on the same test bundle, the best network sits below it in
-$\rbIsmBelowFloorCells$, at it at the frozen point ($\rbIsmVsFlooreightfivethirtytwo$,
-ratio $\rbIsmOverLmmseeightfivethirtytwo$) and above it in $\rbIsmAboveFloorCells$, where
-the exact radius-$4$ and radius-$8$ floors are $\audLocFloorrfourRhozeropninefive$ and
+$\rbIsmBelowFloorCells$ and above it in $\rbIsmAboveFloorCells$. At the frozen point it is
+above by $\rbIsmMinusFlooreightfivethirtytwo$
+[$\rbIsmMinusFlooreightfivethirtytwolo$, $\rbIsmMinusFlooreightfivethirtytwohi$], a ratio of
+$\rbIsmOverLmmseeightfivethirtytwo$: at matched information the best network reaches the
+floor there and does not pass it, where with clean sequences and a fresh corruption at
+every step $\baseBelowFloorND$ of six architectures pass it (\cref{sec:experiments}). At
+$\corr=0.95$ the margin is $\rbIsmMinusFloorninefivethirtytwo$ against exact radius-$4$ and
+radius-$8$ floors of $\audLocFloorrfourRhozeropninefive$ and
 $\audLocFloorreightRhozeropninefive$ (\cref{app:audit}): the miss is the architecture's,
 not the window's. At the frozen point the factor is $\rbFrozenIsmRatio$ with per-seed
 factors from $\rbIsmRatioEvMineightfivethirtytwo$ to $\rbIsmRatioEvMaxeightfivethirtytwo$,
@@ -110,3 +115,22 @@ $\matchedRatioMaxD$ over the sixteen seeds of \cref{sec:experiments}: the same p
 at a different seed count. The networks' error falls with $\nsites$ because each noised
 view carries proportionally more sites; so does EM--BP's, and the factor survives.
 }{\needsdata{E14 pending: the matched comparison across correlations and chain lengths}}
+
+\IfFileExists{sections/regime-baselines-bimodal-numbers.tex}{%
+\paragraph{A platykurtic innovation (\textsc{e14b}).}
+Every matched comparison above uses the Laplace innovation, whose excess kurtosis is
+positive, so the advantage could in principle be a statement about heavy tails. The frozen
+cell repeated with the symmetric two-component mixture, whose excess kurtosis is negative
+at the same covariance, answers it: the second-order floor is
+$\rbBimodalLmmseeightfivethirtytwo$, well below the Laplace value, because there is less
+fourth-order structure for the closure to discard; the best network, here the
+\rbBimodalIsmBestArcheightfivethirtytwo, reaches $\rbBimodalIsmBesteightfivethirtytwo$,
+close to its Laplace error, and therefore sits a factor
+$\rbBimodalIsmOverLmmseeightfivethirtytwo$ above the floor rather than at it; EM--BP
+reaches $\rbBimodalEmEveightfivethirtytwo$, a paired factor
+$\rbBimodalIsmRatioEveightfivethirtytwo$
+[$\rbBimodalIsmRatioEveightfivethirtytwolo$, $\rbBimodalIsmRatioEveightfivethirtytwohi$]
+in $\rbBimodalIsmWinsEveightfivethirtytwo$ of $\rbBimodalSeeds$ seeds, indistinguishable
+from the Laplace factor at the same point. The estimator's margin is the fourth-order
+structure the covariance twin leaves behind, of either sign.
+}{}

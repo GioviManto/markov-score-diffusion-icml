@@ -48,4 +48,7 @@ flags, without dropping, any cell whose narrowest fitted component is under two 
 cells. Every number in this paper is a macro emitted by such a generator; the manuscript
 check (\codefile{tools/check\_manuscript.py}) fails the build on any typed decimal, and
 an independent re-derivation of every headline number from the frozen files
-(\codefile{tools/audit\_claims.py}) runs with it.
+(\codefile{tools/audit\_claims.py}) runs with it. The regime sweep was recomputed at
+twice the seed count in a fresh output directory, from a different deployment of the
+source and on a different compute node; on the seeds the two runs share, every risk and
+every fitted moment agrees in double precision, bit for bit.
