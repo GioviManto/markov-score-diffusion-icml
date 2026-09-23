@@ -39,14 +39,16 @@
 \input{../paper/sections/oracle-numbers}
 \input{../paper/sections/family-numbers}
 \input{../paper/sections/grid-envelope}
+\input{../paper/sections/regime-baselines-numbers}
+\input{../paper/sections/regime-baselines-bimodal-numbers}
 
 \begin{document}
 
 \begin{center}
 {\LARGE\bfseries What survives diffusion noise}\\[0.4em]
 {\large The EM chapters after the audit: the short version}\\[0.8em]
-{\small Brief for the meeting with Jerome and Marc \quad$\cdot$\quad 20 September 2026}\\[0.2em]
-{\footnotesize Six pages. Every number is a macro from the frozen runs; the derivations and definitions are in the compendium, the audit trail in the audit report.}
+{\small Brief for the meeting with Jerome and Marc \quad$\cdot$\quad 23 September 2026}\\[0.2em]
+{\footnotesize Every number below is a macro read from a frozen run; the derivations and definitions are in the compendium, the audit trail in the audit report.}
 \end{center}
 \vspace{0.3em}\hrule height 0.8pt\vspace{1em}
 
@@ -93,8 +95,10 @@ reference crosses the coordinate's range. The correlation survives to the crosso
 the LMMSE floor ($\capEmoneD$ against $\lmmseFloorLaplace$); an eight-component mixture reaches
 $\capEmeightD$ at $M=2048$. Across the generalised-Gaussian family the gain is ordered by
 $\kappa_4$ and reverses at the Gaussian member. The contrast holds in all $\regCells$
-$(\rho,L)$ cells of a regime sweep, and in every cell the $C=1$ arm lands on the LMMSE floor to
-$\regIdentMax$, which checks the whole apparatus. \comp{Chapters 12, 14, 16}
+$(\rho,L)$ cells of a regime sweep at $\regSeeds$ seeds, the paired difference running from
+$\regGainStrongest$ to $\regGainWeakest$ with every interval excluding zero, and in every cell the
+$C=1$ arm lands on the LMMSE floor to $\regIdentMax$, which checks the whole apparatus.
+\comp{Chapters 12, 14, 16}
 
 \item \hi{Against networks, the advantage is largest at equal information.} Under the standard
 recipe (clean sequences, fresh corruption every step) the best of six architectures reaches
@@ -103,6 +107,16 @@ interface (one noised view per sequence, no clean chain, no true score for model
 best network reaches $\matchedBestD$, a paired factor $\matchedRatioBestD$
 $[\matchedRatioBestDlo,\matchedRatioBestDhi]$; given the clean sequence as a target but still one
 corruption, $\matchedFixedD$, a factor $\matchedFixedRatioD$. \comp{Chapters 7, 16, 18}
+
+\item \hi{That comparison now holds across regimes, and it is not about heavy tails.} Repeated at
+$\rbCells$ combinations of correlation and chain length, with the networks re-screened inside each
+regime and $\rbSeeds$ seeds per cell, EM--BP is ahead in every cell and in every seed, by paired
+factors from $\rbIsmRatioEvfiveonetwentyeight$ to $\rbIsmRatioEvninefivethirtytwo$. Repeated at the
+frozen point with a platykurtic innovation instead of a heavy-tailed one, the factor is
+$\rbBimodalIsmRatioEveightfivethirtytwo$
+$[\rbBimodalIsmRatioEveightfivethirtytwolo,\rbBimodalIsmRatioEveightfivethirtytwohi]$, the same as
+on the Laplace chain. What the structure buys is fourth-order structure of either sign.
+\comp{Chapters 16, 18}
 
 \item \hi{The advantage ends where the structure is wrong, at a strength we can compute.} Under an
 AR(2) coefficient or a site-dependent $\rho$ the ordering reverses inside the swept range; a
@@ -146,41 +160,70 @@ held-out one-view log-evidence instead of on validation risk against the true ke
 $\audSelEvidenceA$ against $\audSelOracleA$ at $M=32$ (the last rung: $\audSelLastA$).
 \end{itemize}
 
-\section{What is still running, and one thing that went wrong}
+\section{What is still running, and two defects we found in our own data}
+
+Of the eight cluster runs of the past week, seven are complete and frozen. \hi{E12b}
+(sample complexity by order) is $478$ of its $480$ cells through and finishing; its analysis was
+amended before any data, so that the target is the exact information curve rather than the
+asymptotic exponents, whose local slopes on the levels swept are $6$--$7$ for shape and
+$3.8$--$3.9$ for correlation.
+
+Two defects were found in our own code, both by us, both recorded as negative results, and both
+worth stating plainly because they are the same defect.
 
 \begin{itemize}
-\item \hi{E12b} (sample complexity by order, sixteen seeds, five levels) is two thirds through on
-the cluster. Its analysis was amended before any data: the target is the exact information
-curve, whose local slopes on the swept levels are $6$--$7$ for shape and $3.8$--$3.9$ for
-correlation, not the asymptotic $8$ and $4$.
-\item \hi{E14} (the matched comparison across three correlations and two chain lengths) is the
-claim a referee will press on hardest. Its first runs were void: the driver re-created the
-random generator inside its sampling loop, so every training chain was the same draw, and both
-arms fitted $2048$ copies of one chain. Found by running two independent training functions on
-the same data; fixed with an assertion; the corrected run is queued on the GPU partition and
-takes about a day. Recorded as negative result N-22.
-\item \hi{The quadrature envelope} now covers the longer chains: the worst drift on the
-operating grid moves by a factor $\gridLenWorstRatioMax$ from $L=32$ to $L=128$.
+\item \hi{The regime comparison's first runs were void.} The driver re-created its random
+generator inside the loop that draws training sequences, so every sequence was the same draw and
+both arms were fitted to one chain repeated $2048$ times. It was found by running two independently
+written training functions on the same data: both failed on the new experiment's data and both
+succeeded on the older experiment's, which put the fault in the data rather than in either
+estimator. The driver now asserts that
+its training set contains distinct chains, and a test forbids the pattern anywhere in the
+repository. The corrected runs are the ones reported above.
+
+\item \hi{The same defect is in the thesis's capacity sweep, and voids it.} The archival
+experiment behind ``capacity does not help'' has the identical line at the commit whose outputs are
+frozen: every arm, every capacity and every seed was fitted to a single chain. Re-running one cell
+reproduces its frozen numbers to six decimals from a training set with one distinct sequence, so
+this is certain rather than inferred. The conclusion was already retired on other grounds; what
+changes is the reason, and our own earlier explanation of it (an asymmetric stopping rule) is
+withdrawn. The paper's capacity evidence is unaffected: those runs draw their chains correctly and
+pass the new test. The thesis chapter and its table are the one place still to correct.
 \end{itemize}
+
+\hi{A reproducibility result came out of the same week.} The regime sweep recomputed at twice the
+seed count, in a new directory, from a different deployment of the source and on a different
+compute node, agrees with the frozen earlier run on all $\regReproRows$ shared rows to the last
+bit: maximum absolute difference $\regReproMaxDiff$ in the reported error and
+$\regReproMaxDiffKurt$ in the fitted shape.
 
 \section{Decisions for the meeting}
 
 \begin{enumerate}
 \item \hi{Headline.} ``Structure beats networks at equal information by $\matchedRatioBestD\times$,
 and the standard comparison understates it'' (recommended), or the standard-recipe factor of
-$\baseRatioBestD\times$ with the matched one as a robustness check.
+$\baseRatioBestD\times$ with the matched one as a robustness check. The regime sweep is now in
+hand and supports the first: the factor is above one in every cell and every seed.
+
 \item \hi{Efficiency.} Present learning through noise as ``at the reference while identifiable,
 collapse where the reference says'' (recommended) rather than as a Cram\'er--Rao efficiency
 statement.
-\item \hi{Framing before or after E14.} Wait for the corrected E14 (about a day) before fixing
-the regime sentence (recommended), or state the headline at one point and add the sweep as it
-lands.
-\item \hi{Page budget.} The ICML body is four pages over. The recorded cut order moves the
-family figure, the generation table, the length table and the regime paragraph to the appendix;
-the theory verification is compressed. Agreement needed on what must stay in the body.
-\item \hi{Compendium.} A self-contained compendium (twenty chapters: from cumulants and Hermite
+
+\item \hi{How much of the regime sweep belongs in the body.} The body currently carries one
+paragraph of it and the appendix the table. The alternative is a figure in the body, which costs
+half a page we do not have.
+
+\item \hi{Page budget.} The body runs four pages over the limit. The recorded cut order moves the
+family figure, the generation table, the length table and the regime paragraph to the appendix, and
+compresses the theory verification; that recovers about two pages, and the rest has to come from
+prose in the experiments section. Agreement is needed on what must stay.
+
+\item \hi{The thesis correction.} The capacity chapter of the thesis rests on the void sweep of
+Section~4. Whether it is corrected now or at submission is a decision for the three of us.
+
+\item \hi{Compendium.} A self-contained compendium (twenty-one chapters, from cumulants and Hermite
 polynomials to belief propagation, quadrature, EM, quasi-likelihood, score matching and the
-protocol) is being written so that every line of the paper can be checked without the
+protocol, with a glossary) is drafted so that every line of the paper can be checked without the
 literature. Its scope and level are for you to set.
 \end{enumerate}
 
