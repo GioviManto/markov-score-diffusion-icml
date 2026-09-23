@@ -20,6 +20,16 @@
 \usepackage{titlesec}
 \usepackage[hidelinks]{hyperref}
 \usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\graphicspath{{../paper/figures/}}
+
+% the paper's notation, so its generated tables can be dropped in unchanged
+\newcommand{\corr}{\rho}
+\newcommand{\ncomp}{C}
+\newcommand{\nseq}{M}
+\newcommand{\nsites}{L}
+\newcommand{\tstar}{t_\ast}
 \titleformat{\section}{\large\bfseries}{\thesection}{0.7em}{}
 \titlespacing*{\section}{0pt}{1.4em}{0.5em}
 \setlist[itemize]{leftmargin=1.2em,itemsep=0.3em,topsep=0.3em}
@@ -46,7 +56,7 @@
 
 \begin{center}
 {\LARGE\bfseries What survives diffusion noise}\\[0.4em]
-{\large The EM chapters after the audit: the short version}\\[0.8em]
+{\large The EM chapters: the results}\\[0.8em]
 {\small Brief for the meeting with Jerome and Marc \quad$\cdot$\quad 23 September 2026}\\[0.2em]
 {\footnotesize Every number below is a macro read from a frozen run; the derivations and definitions are in the compendium, the audit trail in the audit report.}
 \end{center}
@@ -125,113 +135,183 @@ misspecified EM--BP is a closed-form Kullback--Leibler projection bias $b(\varep
 reproduces the measured errors to within $\audBiasMaxAbsDevLagoneD$. \comp{Chapter 17}
 \end{enumerate}
 
-\section{What the audit changed}
+\section{What survives the noise, order by order}
 
-These are corrections to what the 18 September report and the manuscript \emph{said}; no frozen
-number was wrong.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{fig_theory.pdf}
+\caption{\emph{(a)} Exact Fisher information about the correlation in the Gaussian chain,
+divided by its predicted asymptote $\tfrac12\|\partial_\corr\Sigma_0\|_F^2e^{-4t}$: every curve
+reaches $1$, and the crossover $\tstar=\tfrac12\log\lambda_{\max}(\Sigma_0)$ (ticks) says when.
+\emph{(b)} Information per sequence about the correlation (degree two) and the innovation shape
+(degree four) of the generalised-Gaussian chain, against the guides $e^{-4t}$ and $e^{-8t}$.
+\emph{(c)} The price of second-order closure, $\mathbb{E}\|S_t-S_t^G\|^2$ measured by exact message
+passing and divided by the predicted $\tfrac16\|\kappa_4\|_F^2e^{-8t}$: the families with finite
+eighth moments converge to $1$.}
+\end{figure}
+
+\noindent
+This is the spine of the paper and it is computation, not fitting. Under the
+Ornstein--Uhlenbeck channel the Hermite moment of degree $m$ is attenuated exactly by $e^{-mt}$,
+so the Fisher information about a feature that first appears at degree $m$ decays as $e^{-2mt}$
+and the sequences needed for a fixed precision grow as $e^{2mt}$. Correlation sits at degree two
+and shape at degree four, which is why they are lost at different speeds and why the gap between
+them widens with $t$. Panel (c) is the sharpest version: the entire cost of approximating a
+non-Gaussian chain by its covariance twin is $\tfrac16\|\kappa_4\|_F^2e^{-8t}$, and adding the
+fourth-order term back closes $\audEdgeClosedLaplaceTzeropsixeight$ of it at
+$t=\audEdgeLevelTzeropsixeight$ and all of it from $t=2$.
+\comp{Chapters 2, 4, 9, 12}
+
+\section{What capacity buys}
+
+\input{../paper/sections/tab-capacity}
+
+\noindent
+A Gaussian-innovation kernel ($\ncomp=1$) cannot beat the LMMSE of the covariance twin, and does
+not: it sits on that floor at every sample size. The mixture goes far below it, and the margin is
+the fourth-order structure and nothing else --- across the generalised-Gaussian family the gain is
+ordered by $\kappa_4$ and vanishes exactly at the Gaussian member.
+
+The contrast is not a property of the frozen corner. Repeating it over five correlations and three
+chain lengths at $\regSeeds$ seeds gives the same answer in all $\regCells$ cells, with every
+interval excluding zero:
+
+\begin{table}[H]
+\centering\small
+\caption{Capacity across regimes (\textsc{e13x}, $\regSeeds$ seeds). Last column: the paired
+difference $\ncomp=8$ minus $\ncomp=1$, negative in favour of the mixture. The $\ncomp=1$ column
+against the \textsc{lmmse} column is Proposition~1 checked at every cell --- they agree to
+$\regIdentMax$ in the worst of the $\regCells$.}
+\input{../paper/sections/regime-table}
+\end{table}
+
+\noindent
+Two things are worth taking from that table beyond the result. The margin shrinks as $\corr$ rises,
+in the direction the theory gives: a strongly correlated chain has a nearly Gaussian marginal
+(excess kurtosis $3(1-\corr^2)/(1+\corr^2)$), so there is less fourth-order structure
+to buy. And the $\ncomp=1$ arm lands on the LMMSE floor in every one of the $\regCells$ cells,
+which tests the grid, the message passing, the EM and the scoring simultaneously, at fifteen
+independent configurations. The sixteen-seed run also reproduces its eight-seed predecessor
+exactly: $\regReproRows$ shared rows recomputed in a different directory, from a different
+deployment, on a different node, agree to $\regReproMaxDiff$.
+\comp{Chapters 12, 14, 16}
+
+\section{Structure against networks, at equal information}
+
+This is the claim a referee will press hardest, so it is worth being precise about what is being
+compared. Both sides see exactly one noised view of each sequence, drawn once. Neither side ever
+sees the clean chain. Neither side uses the true score to choose when to stop: the networks select
+on the implicit objective of a held-out noisy bundle, EM--BP on the held-out one-view evidence.
+
+\begin{table}[H]
+\centering\small
+\caption{Interface~C across correlation and length (\textsc{e14}, $\rbSeeds$ seeds, $\nseq=2048$,
+networks re-screened inside each regime). Columns: the \textsc{lmmse} oracle; EM--BP with its
+iteration count chosen by held-out evidence (ev.) and by validation against the true kernel (bp);
+the best network trained by implicit score matching on the same one-view bundle (C); the best
+network given the clean sequence with one fixed corruption (B); and the paired factor of the C
+network over the evidence-selected EM--BP, with a percentile bootstrap over seeds.}
+\input{../paper/sections/regime-baselines-table}
+\end{table}
+
+\noindent
+EM--BP is ahead in every one of the $\rbCells$ cells and in every one of the $\rbSeeds$ seeds of
+each, by factors from $\rbIsmRatioEvfiveonetwentyeight$ to $\rbIsmRatioEvninefivethirtytwo$. The
+factor is also conservative: the evidence-selected EM--BP is still improving when its iteration
+ladder runs out in \rbEmEvAtCapTotal{} of the cells, so its error there is an upper bound on what
+a longer ladder would give.
+
+Three readings of the table matter more than the headline number.
 
 \begin{itemize}
-\item \hi{``Information-matched, $7.3\times$'' was the wrong arm.} That network saw the clean
-chain as a regression target. The matched arm is $\matchedRatioBestD\times$; the $7.3\times$ arm
-is now reported as ``even given the clean sequence''.
-\item \hi{``Attains the Cram\'er--Rao bound at $1.02\times$'' is withdrawn.} The average mixed
-levels where the fit is at the reference with levels where it is collapsed; the bound is for a
-one-parameter family and the estimator is a mixture selected on validation. The paper now reports
-the per-level picture of item~3 above.
-\item \hi{``Locality is a ceiling'' is withdrawn.} The exact best radius-4 estimator has error
-$\audLocFloorrfourRhozeropeightfive$ at $\rho=0.85$ against the window head's $\baseWindowD$: the
-radius costs little, the architecture costs the rest.
-\item \hi{Theorem~3 needs an exponential moment}, which its proof used and its statement lacked.
-Restated; every family in the paper satisfies it except Student-$t$, whose heavy-tailed regime
-is now a separate proposition. On a wide enough domain the sampled Student-$t_5$ chain reaches
-the Hermite constant ($\audConstRatioStudentfiveTfour$ at $t=4$); its earlier ``departure'' was
-grid truncation.
-\item \hi{``All belief mass outside the domain'' was one or two sites in $8192$.} The
-Student-$t$ row of the family ladder is now computed on a $(\phaseWideN,\phaseWideA)$ domain,
-where it has stopped moving (by $\phaseStudentMoveWide$ between the two widest grids).
-\item \hi{The departure of $\hat\rho$ from the reference at $t\ge1.4$ was partly budget.}
-With the EM ladder extended to $\learnBudgetLadderMax$ iterations the error at $t=1.4$ falls
-from $\learnRmseRhoTonepfour$ to $\learnBudgetRmseRhoTonepfour$; at $t=2$ from
-$\learnRmseRhoTtwo$ to $\learnBudgetRmseRhoTtwo$ with the ladder still binding in
-$\learnBudgetAtCapTtwo$ of cells. Past the crossover EM is as limited by its convergence as by
-the information.
-\item \hi{Model selection without the truth works.} Selecting EM--BP's iteration count on the
-held-out one-view log-evidence instead of on validation risk against the true kernel gives
-$\audSelEvidenceA$ against $\audSelOracleA$ at $M=32$ (the last rung: $\audSelLastA$).
+\item \hi{The advantage is smallest where the chain carries the most higher-order structure.}
+At $\corr=0.5$ the marginal's excess kurtosis is $\rbKurtfivethirtytwo$ and the factor is
+$\rbIsmRatioEvfivethirtytwo$; at $\corr=0.95$ the kurtosis is $\rbKurtninefivethirtytwo$ and the
+factor is larger. Above $\corr=0.85$ the two chain lengths part company, so we report the direction
+and not a law.
+
+\item \hi{Length does not rescue the network.} At $\nsites=128$ each noised view carries four times
+as many sites, and both arms improve --- the network from $\rbIsmBesteightfivethirtytwo$ to
+$\rbIsmBesteightfiveonetwentyeight$ at $\corr=0.85$, EM--BP likewise --- so the factor survives
+rather than being an artefact of short chains.
+
+\item \hi{Where the network sits relative to the second-order floor is a statement about the
+floor.} The network's error changes little across the sweep while the floor falls steeply with
+$\corr$. So the network is below the floor at \rbIsmBelowFloorCells{} and above it at
+\rbIsmAboveFloorCells{} --- at $\corr=0.95$, $\nsites=32$ by
+$\rbIsmMinusFloorninefivethirtytwo$
+$[\rbIsmMinusFloorninefivethirtytwolo,\rbIsmMinusFloorninefivethirtytwohi]$, against an exact
+radius-$8$ floor of $\audLocFloorreightRhozeropninefive$ at that correlation. Where the covariance
+carries most of the score energy, one view per sequence is not enough for a network to learn even
+the covariance, while the estimator that knows the factorisation recovers it.
 \end{itemize}
 
-\section{What is still running, and two defects we found in our own data}
+\noindent
+\hi{And it is not about heavy tails.} Repeated at the frozen point with a \emph{platykurtic}
+innovation --- a symmetric two-component mixture, kurtosis on the other side of Gaussian --- the
+factor is $\rbBimodalIsmRatioEveightfivethirtytwo$
+$[\rbBimodalIsmRatioEveightfivethirtytwolo,\rbBimodalIsmRatioEveightfivethirtytwohi]$ over
+$\rbBimodalSeeds$ seeds, with the best network (\rbBimodalIsmBestArcheightfivethirtytwo) at
+$\rbBimodalIsmBesteightfivethirtytwo$ against a floor of $\rbBimodalLmmseeightfivethirtytwo$ ---
+$\rbBimodalIsmOverLmmseeightfivethirtytwo$ times above it. What explicit structure buys is
+fourth-order structure of either sign.
+\comp{Chapters 7, 16, 18}
 
-Of the eight cluster runs of the past week, seven are complete and frozen. \hi{E12b}
-(sample complexity by order) is $478$ of its $480$ cells through and finishing; its analysis was
-amended before any data, so that the target is the exact information curve rather than the
-asymptotic exponents, whose local slopes on the levels swept are $6$--$7$ for shape and
-$3.8$--$3.9$ for correlation.
+\section{Where the advantage ends}
 
-Two defects were found in our own code, both by us, both recorded as negative results, and both
-worth stating plainly because they are the same defect.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{fig_misspec.pdf}
+\caption{\emph{Top row:} ratio of a screened radius-2 window head's pooled error to EM--BP's
+against the strength of four departures from the first-order Markov assumption, at two sample
+sizes; above the dotted line the misspecified chain estimator still wins. \emph{Bottom row:}
+EM--BP's own error at both sizes (points, paired standard errors) against the closed-form bias
+$b(\varepsilon)$ of the Kullback--Leibler projection of the perturbed truth onto the chain family
+(dotted) and the finite-sample prediction $\sqrt{b(\varepsilon)^2+v/\nseq}$ (lines), with $v$ read
+off the well-specified cells. The bias is predicted in closed form, not fitted to these points.}
+\end{figure}
 
-\begin{itemize}
-\item \hi{The regime comparison's first runs were void.} The driver re-created its random
-generator inside the loop that draws training sequences, so every sequence was the same draw and
-both arms were fitted to one chain repeated $2048$ times. It was found by running two independently
-written training functions on the same data: both failed on the new experiment's data and both
-succeeded on the older experiment's, which put the fault in the data rather than in either
-estimator. The driver now asserts that
-its training set contains distinct chains, and a test forbids the pattern anywhere in the
-repository. The corrected runs are the ones reported above.
+\noindent
+The estimator assumes a first-order Markov chain, and the honest question is how wrong that may be
+before the advantage goes. Each departure is Gaussian, so its score is exact and every arm is
+scored against the truth of the perturbed model rather than against the chain. Adding an order
+(\textsc{ar}(2)) or making the chain inhomogeneous (a site-dependent $\corr$) reverses the ordering
+inside the swept range, at $\misBreakLoArtwoD$--$\misBreakHiArtwoD$ and
+$\misBreakLoSitevarD$--$\misBreakHiSitevarD$ respectively. A rank-one global latent and a
+long-range precision coupling never reverse it: the first is absorbed by the fitted $\corr$, the
+second decays to a tie at the widest coupling swept. The two sample sizes separate the two failure
+modes exactly as the theory says they should --- at zero strength the error halves between
+$\nseq=512$ and $2048$, which is estimation; past the break-even it does not move at all, which is
+bias, and no amount of data will move it.
+\comp{Chapters 18, 19}
 
-\item \hi{The same defect is in the thesis's capacity sweep, and voids it.} The archival
-experiment behind ``capacity does not help'' has the identical line at the commit whose outputs are
-frozen: every arm, every capacity and every seed was fitted to a single chain. Re-running one cell
-reproduces its frozen numbers to six decimals from a training set with one distinct sequence, so
-this is certain rather than inferred. The conclusion was already retired on other grounds; what
-changes is the reason, and our own earlier explanation of it (an asymmetric stopping rule) is
-withdrawn. The paper's capacity evidence is unaffected: those runs draw their chains correctly and
-pass the new test. The thesis chapter and its table are the one place still to correct.
-\end{itemize}
+\section{Does score accuracy become sample quality}
 
-\hi{A reproducibility result came out of the same week.} The regime sweep recomputed at twice the
-seed count, in a new directory, from a different deployment of the source and on a different
-compute node, agrees with the frozen earlier run on all $\regReproRows$ shared rows to the last
-bit: maximum absolute difference $\regReproMaxDiff$ in the reported error and
-$\regReproMaxDiffKurt$ in the fitted shape.
+\input{../paper/sections/tab-generation}
 
-\section{Decisions for the meeting}
+\noindent
+Driven through the same reverse diffusion on identical Brownian paths, so that the only difference
+between the arms is the score, the fitted kernel produces sequences with innovation excess kurtosis
+$\genKurtgenBEm$ against the reference sample's $\genKurtrefB$ --- close to what the \emph{exact}
+score itself achieves under the same sampler ($\genKurtgenBExact$), so most of the residue is the
+discretisation of the reverse process and not the estimate. Its log-likelihood gap under the true
+law is $\genLoglikgapBEm$ against the exact arm's $\genLoglikgapBExact$. The covariance-matched
+score gives $\genKurtgenBLmmse$ --- an essentially Gaussian chain, the fourth-order structure gone
+altogether --- at a gap of $\genLoglikgapBLmmse$, and the isotropic score $\genLoglikgapBIso$.
+Score error and sample quality move together, which is what licenses reading the rest of the paper
+as being about generative models and not only about an estimation problem.
+\comp{Chapter 20}
 
-\begin{enumerate}
-\item \hi{Headline.} ``Structure beats networks at equal information by $\matchedRatioBestD\times$,
-and the standard comparison understates it'' (recommended), or the standard-recipe factor of
-$\baseRatioBestD\times$ with the matched one as a robustness check. The regime sweep is now in
-hand and supports the first: the factor is above one in every cell and every seed.
+\section{Where the evidence stands}
 
-\item \hi{Efficiency.} Present learning through noise as ``at the reference while identifiable,
-collapse where the reference says'' (recommended) rather than as a Cram\'er--Rao efficiency
-statement.
-
-\item \hi{How much of the regime sweep belongs in the body.} The body currently carries one
-paragraph of it and the appendix the table. The alternative is a figure in the body, which costs
-half a page we do not have.
-
-\item \hi{Page budget.} The body runs four pages over the limit. The recorded cut order moves the
-family figure, the generation table, the length table and the regime paragraph to the appendix, and
-compresses the theory verification; that recovers about two pages, and the rest has to come from
-prose in the experiments section. Agreement is needed on what must stay.
-
-\item \hi{The thesis correction.} The capacity chapter of the thesis rests on the void sweep of
-Section~4. Whether it is corrected now or at submission is a decision for the three of us.
-
-\item \hi{Compendium.} A self-contained compendium (twenty-one chapters, from cumulants and Hermite
-polynomials to belief propagation, quadrature, EM, quasi-likelihood, score matching and the
-protocol, with a glossary) is drafted so that every line of the paper can be checked without the
-literature. Its scope and level are for you to set.
-\end{enumerate}
-
-\vspace{1em}\hrule height 0.4pt\vspace{0.5em}
-\noindent{\footnotesize Sources: \texttt{paper/main.pdf} (manuscript), \texttt{reports/audit-2026-09-18.pdf}
-(the audit: what was found, what was run, what was changed), \texttt{reports/compendium/compendium.pdf}
-(definitions and derivations), \texttt{docs/NEGATIVE\_RESULTS.md} (N-14 to N-22),
-\texttt{experiments/registry/} (pre-registrations and amendments). Every macro in this brief is
-regenerated from the frozen outputs by \texttt{make check}.}
+Every number above is a macro read from a run whose output directory is pinned by SHA-256 in its
+registry entry, together with the commit that produced it and the seeds it used; the manuscript
+refuses to build if a generated number disagrees with the artefact it came from, and a second,
+independent recomputation of every headline number runs beside it. The confirmatory experiments
+are frozen: the information decay and its constants, the capacity sweep and its infinite-data
+reference, the six-architecture comparison with its screen, generation, misspecification, the
+quadrature envelope, the regime sweeps in both capacity and the matched comparison, and the
+platykurtic cell. One run is still finishing on the cluster --- the sample-complexity ladder, whose
+last two cells of four hundred and eighty are recomputing --- and one paragraph waits on it.
 
 \end{document}
