@@ -16,7 +16,8 @@
     "run": 664806
    },
    "resources": "compute, pending resources at registration (cnode06 held by the void 663144)",
-   "note": "Outputs in ~/msd-icml/outputs/eddf372-20260921T094638Z/E13x/; fetch with MSD_DEPLOY_ENV=hpc/.deploy_eddf372.env hpc/icml_fetch.sh E13x; freeze with tools/freeze.py E13x."
+   "note": "Outputs in ~/msd-icml/outputs/eddf372-20260921T094638Z/E13x/; fetch with MSD_DEPLOY_ENV=hpc/.deploy_eddf372.env hpc/icml_fetch.sh E13x; freeze with tools/freeze.py E13x.",
+   "outcome_664806": "COMPLETED 2026-09-22 (job 664806, 04:58:39, commit eddf372 clean), 240 cells, sixteen seeds. Confirms the frozen eight-seed E13 at every one of the fifteen cells (gains -0.2299 to -0.0470, every interval excluding zero; Proposition 1 check worst cell 0.00994). Reproducibility: the 480 rows for seeds 0-7, recomputed in a new directory from a different deployment on a different node, match the frozen E13 bit-for-bit (max |difference| 0.000e+00 in risk and in fitted kurtosis). NOT FROZEN pending the audit session's reading."
   }
  ],
  "status": "REGISTERED 2026-09-21 (extension of E13 to sixteen seeds, see provenance_note); SUBMITTED (job 664806)"

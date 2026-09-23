@@ -5,7 +5,7 @@
  "design": "E12 with levels (0.6, 0.7, 0.8, 0.9, 1.0) instead of (0.6, 0.8, 1.0), 16 seeds instead of 8, and em_checkpoints extended to 8000. rho = 0.5, M ladder 256-8192, C = 8, everything else at E12's settings.",
  "predeclared_analysis": "tools/make_sample_complexity.py: As E12: M* by log-linear interpolation of the seed-pooled RMSE curve between the bracketing rungs, OLS log-slope across levels with a seed bootstrap, and the PAIRED ratio M*_shape/M*_cov whose slope is the corollary's own statement and in which the common noise cancels. The at_cap and censoring rates are reported per (level, M) as a condition of the reading; a level whose cells are predominantly at the cap is reported as a bound, not a point. The bootstrap over seeds is ENUMERATED exactly (every multiset of n draws, multinomial weights) whenever that is feasible, so the interval carries no Monte Carlo error; the 18 Sep audit found the 97.5th percentile of the covariance slope moving between 7.7 and 8.2 across Monte Carlo streams at B = 4000, i.e. across the very prediction it tests.",
  "motivation": "E12 (frozen 2026-09-18) gave point estimates on the predictions -- 7.54 and 8.53 for the shape coordinate against 8, 5.40 [2.13, 7.57] for the covariance against 4, 4.44 for the ratio against 4 -- with bootstrap intervals too wide to exclude the alternatives, and, more seriously, a confound: at t = 1.0 every cell is censored by the 1200-iteration cap (stop_reason = censored in 40/40 cells, at_cap 1.00 at M >= 4096) and the fitted kurtosis scatters between 0 and 3.4 across seeds with no concentration. At that level the experiment measured the optimiser's budget, not the sample complexity. The binding constraint is the iteration ladder, not M.",
- "status": "PRE-REGISTERED 2026-09-18; SUBMITTED 2026-09-18 (job 662796)",
+ "status": "PRE-REGISTERED 2026-09-18; SUBMITTED 2026-09-18 (job 662796); 662796 TIMEOUT at 478/480, resumed as 667192 (23 Sep)",
  "registered": "2026-09-18",
  "hpc_runs": [
   {
@@ -16,7 +16,8 @@
     "run": 662796
    },
    "resources": "compute/40cpu/2-23:00",
-   "note": "Submitted from the clean deployment 92da540 (hpc/.last_deploy.env); outputs land in ~/msd-icml/outputs/92da540-20260918T180147Z/E12b/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. Pre-registered before submission; nothing in this entry's hypothesis or analysis may change after the result is seen."
+   "note": "Submitted from the clean deployment 92da540 (hpc/.last_deploy.env); outputs land in ~/msd-icml/outputs/92da540-20260918T180147Z/E12b/ and are fetched with hpc/icml_fetch.sh, then frozen with tools/freeze.py. Pre-registered before submission; nothing in this entry's hypothesis or analysis may change after the result is seen.",
+   "outcome_662796": "TIMEOUT 2026-09-22T09:13 after 2-23:00:25 of a 2-23:00:00 limit, with 478 of 480 cells written; the missing two are (t = 1.0, M = 8192, seeds 10 and 12), the heaviest of the design. No cell is lost: run_cells writes per cell. Resumed 2026-09-23 as job 667192 into the SAME directory and the same source (MSD_DEPLOY_ENV=hpc/.deploy_92da540.env), which skips the 478 on disk."
   }
  ],
  "amendments": [
