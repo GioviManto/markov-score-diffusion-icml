@@ -50,5 +50,7 @@ check (\codefile{tools/check\_manuscript.py}) fails the build on any typed decim
 an independent re-derivation of every headline number from the frozen files
 (\codefile{tools/audit\_claims.py}) runs with it. The regime sweep was recomputed at
 twice the seed count in a fresh output directory, from a different deployment of the
-source and on a different compute node; on the seeds the two runs share, every risk and
-every fitted moment agrees in double precision, bit for bit.
+source and on a different compute node; across the $\regReproRows$ rows it shares with
+\regReproSource{}, \regReproExact{} risk and \regReproExact{} fitted moment agrees to
+the last bit (maximum absolute difference $\regReproMaxDiff$ in the pooled error and
+$\regReproMaxDiffKurt$ in the fitted excess kurtosis).

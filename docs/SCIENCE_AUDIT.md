@@ -181,3 +181,16 @@ fragment shipped since 18 Sep. Every "make check green" statement before this da
 read as "typed literals, references, freeze and build green; regenerate-and-diff green for
 the legacy fragments only". Four more generators are registered with the gate
 (grid_envelope, regime_numbers, sample_complexity, regime_baselines).
+
+**23 Sep: the two-gate design caught a source mismatch, the first time it has fired.** When
+the paper's regime numbers moved from the frozen eight-seed E13 to the sixteen-seed E13x,
+`tools/audit_claims.py` failed: its recomputation gave a weakest paired gain of −0.0442
+against the macro's −0.047. Neither number was wrong; the checker was reading
+`outputs/E13` while the fragment was generated from `outputs/E13x`, so the "independent"
+re-derivation had silently become a comparison of two datasets. `audit_regimes()` now reads
+E13x when it exists and labels its rows with the source it used. The lesson is about the
+design and not about this experiment: a regenerate-and-diff gate and an independent
+re-derivation only check the manuscript while both read what the manuscript reports, and a
+change of source has to be made in both places at once. Two of the OPTIONAL generator
+entries were also writing the same fragment (`make_regime_numbers.py` on E13 and on E13x);
+whichever ran second won silently, and the E13 entry was removed.
