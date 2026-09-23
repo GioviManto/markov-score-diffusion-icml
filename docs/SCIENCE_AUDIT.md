@@ -234,8 +234,10 @@ in this pass and all fixed before the data landed.
    over here (16 seeds); read `scMcErr` before reading the limits.
 4. `make check` **must fail at this point** if step 3 was skipped: the fragment's `scSource`
    stamp will say E12 while the auditor reads E12b. That refusal is the point, not a nuisance.
-5. Write the M\*(t) paragraph. E12 alone cannot support the corollary — its shape slope is
+5. If the shape coordinate does not resolve, `scSlopeShape*` will be WITHHELD, not `nan`
+   (N-24 iv). That is the tool refusing, not failing: report the one-sided bound instead.
+6. Write the M\*(t) paragraph. E12 alone cannot support the corollary — its shape slope is
    7.54 [−3.15, 12.35] and its ratio 4.44 [−9.66, 11.88], both including zero — which is why
    E12b exists. If E12b's intervals also include zero, that is the result and it is reported as
    the result; the corollary is then unconfirmed at this budget, and says so.
-6. Update this file, `EXPERIMENT_REGISTRY.md`, `CLAIM_EVIDENCE_MATRIX.md` and the meeting brief.
+7. Update this file, `EXPERIMENT_REGISTRY.md`, `CLAIM_EVIDENCE_MATRIX.md` and the meeting brief.

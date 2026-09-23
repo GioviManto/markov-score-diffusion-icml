@@ -307,7 +307,7 @@ iterations), with one distinct chain among the 512 drawn. The frozen exp_32 numb
 therefore the output of a one-chain training set with certainty, not by inference; the
 rerun stays in that session's scratchpad and is not frozen.
 
-**N-24. The E12b analysis path had three defects that fire only when the data lands; found
+**N-24. The E12b analysis path had four defects that fire only when the data lands; found
 and fixed before it did (23 Sep).** E12b moves from 8 seeds and 3 levels to 16 and 5. Nothing
 about that is visible until `outputs/E12b/ladder.csv` exists, so a self-audit went looking for
 what the arrival would break. (i) The bootstrap is enumerated exactly while that is feasible;
@@ -327,8 +327,17 @@ protocol is a declared parameter, not a result) and reads E12b when present. (ii
 OPTIONAL registry mapped the bare generator to E12's ladder, so adding an E12b key would have
 left two generators writing one fragment and the later one winning silently — N-22's sibling and
 exactly the trap E13/E13x sprang. A `SUPERSEDES` rule now drops the superseded key, and the
-fragment carries a `scSource` stamp that the auditor asserts. None of this could be tuned to a
-result: the result does not exist yet.
+fragment carries a `scSource` stamp that the auditor asserts. (iv) Found by running the tool at E12b's
+shape (16 seeds, 5 levels) on synthetic input in a scratchpad — structural smoke test only, no
+value from it entered `outputs/`, a fragment or the paper, and it was deleted after: a
+coordinate that never crosses its accuracy threshold has no M* and no slope, and the tool
+emitted `\newcommand{\scSlopeShape}{nan}`, which would typeset the string "nan" anywhere the
+macro was used. E12's shape coordinate resolved, so this never fired there; E12b runs to
+t = 1.0, where E12 was already censored in 40/40 cells, so an unresolved shape coordinate is a
+likely outcome and not a contrived one. Valueless macros are now WITHHELD and named on stdout:
+prose that uses one then fails at LaTeX time with an undefined control sequence, which is the
+loud version of the same fact. Runtime at E12b's shape is 13 s, so the gate does not slow
+materially. None of this could be tuned to a result: the result does not exist yet.
 
 **N-25. A refusal that did not refuse: `audit_claims` discarded its own return codes.** The
 E13x source-stamp guard committed in 3386f21 ended `return 1`, and `main()` called `fn()`

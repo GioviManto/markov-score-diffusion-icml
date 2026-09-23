@@ -200,7 +200,7 @@ def main() -> int:
         se = per.std(axis=0, ddof=1) / np.sqrt(len(per))
         return lo, hi, float(np.sum(w)), float(np.max(se))
 
-    macros, report, mcerrs = {}, [], []
+    macros, report, mcerrs, withheld = {}, [], [], []
     for name, val, pred, key in (("Shape", s_shape, 8, "shape"), ("Cov", s_cov, 4, "cov"),
                                  ("Ratio", s_ratio, 4, "ratio")):
         lo, hi, mass, mcerr = boot(key)
@@ -210,8 +210,16 @@ def main() -> int:
             out = [p for p in (4, 8) if not (lo <= p <= hi)]
             if out:
                 excl = "excludes " + ", ".join(str(p) for p in out)
-        macros[f"scSlope{name}"] = f"{val:.2f}"
-        macros[f"scSlope{name}Lo"] = f"{lo:.2f}"; macros[f"scSlope{name}Hi"] = f"{hi:.2f}"
+        # A coordinate that never crossed its threshold has NO slope. Emitting `nan` would put
+        # the string "nan" into the manuscript wherever the macro is used, silently; withholding
+        # the macro makes the same prose fail at LaTeX time with an undefined control sequence,
+        # which is the loud version of the same fact. E12's shape coordinate resolved, so this
+        # never fired there; E12b runs to t = 1.0, where E12 was already censored in 40/40 cells.
+        for suffix, x in (("", val), ("Lo", lo), ("Hi", hi)):
+            if np.isfinite(x):
+                macros[f"scSlope{name}{suffix}"] = f"{x:.2f}"
+            else:
+                withheld.append(f"scSlope{name}{suffix}")
         report.append(f"  {name:6s} slope {val:6.2f}  95% CI [{lo:6.2f}, {hi:6.2f}]  "
                       f"predicted {pred}  -> {excl}  (resolved mass {mass:.3f})")
 
@@ -261,6 +269,11 @@ def main() -> int:
     if len(use) < 3:
         print(f"\nNOTE: {len(use)} usable level(s). A slope from fewer than three points has no "
               f"residual degrees of freedom and is a difference, not a fit. Reported as such.")
+    if withheld:
+        print(f"\nWITHHELD {len(withheld)} macro(s) with no value, rather than emitting nan: "
+              f"{', '.join(withheld)}. The coordinate did not reach its threshold on the ladder, "
+              f"so it has no M* and no slope. Prose that uses these will fail to compile, which "
+              f"is the point -- there is no number to report.")
     print(f"\nwrote {dest/'sample-complexity-numbers.tex'} ({len(macros)} macros)")
     return 0
 
