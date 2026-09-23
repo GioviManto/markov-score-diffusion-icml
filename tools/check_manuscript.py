@@ -43,7 +43,10 @@ OPTIONAL = {"make_capacity_numbers.py": "outputs/E02a/capacity.csv", "make_learn
             "make_baseline_numbers.py": "outputs/E03/confirm.csv", "make_family_numbers.py": "outputs/E02b/family.csv",
             "make_audit_numbers.py": "outputs/E16/edgeworth.csv", "make_fig_theory.py": "outputs/E18/closure_wide.csv",
             "make_fig_locality.py": "outputs/E15/locality.csv", "make_exceedance.py": "outputs/E07/ladder.csv",
-            "make_grid_envelope.py": "outputs/E11/grid.csv", "make_regime_numbers.py": "outputs/E13/regimes.csv",
+            "make_grid_envelope.py": "outputs/E11/grid.csv",
+            # regime-numbers.tex is generated from E13x, the sixteen-seed run, NOT from the frozen
+            # eight-seed E13: both would write the same fragment and the later one would silently win.
+            # E13 stays frozen as history and feeds nothing.
             "make_sample_complexity.py": "outputs/E12/ladder.csv", "make_regime_baselines.py": "outputs/E14/regimes.csv",
             "make_regime_baselines.py --src outputs/E14b": "outputs/E14b/regimes.csv",
             "make_regime_numbers.py --src outputs/E13x": "outputs/E13x/regimes.csv"}

@@ -1,0 +1,92 @@
+{
+  "0.5|32|transformer": {
+    "hp": {
+      "d": 64,
+      "heads": 4,
+      "layers": 4
+    },
+    "screen_risk": 0.1875236286291421
+  },
+  "0.5|32|window": {
+    "hp": {
+      "radius": 2,
+      "width": 64
+    },
+    "screen_risk": 0.12526881881820945
+  },
+  "0.5|128|transformer": {
+    "hp": {
+      "d": 32,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.10921135051475464
+  },
+  "0.5|128|window": {
+    "hp": {
+      "radius": 2,
+      "width": 64
+    },
+    "screen_risk": 0.08925233389148485
+  },
+  "0.85|32|transformer": {
+    "hp": {
+      "d": 32,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.17095212619633654
+  },
+  "0.85|32|window": {
+    "hp": {
+      "radius": 4,
+      "width": 64
+    },
+    "screen_risk": 0.165992515459786
+  },
+  "0.85|128|transformer": {
+    "hp": {
+      "d": 64,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.11710914179616935
+  },
+  "0.85|128|window": {
+    "hp": {
+      "radius": 4,
+      "width": 64
+    },
+    "screen_risk": 0.1045051759206525
+  },
+  "0.95|32|transformer": {
+    "hp": {
+      "d": 64,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.14835304519969533
+  },
+  "0.95|32|window": {
+    "hp": {
+      "radius": 8,
+      "width": 128
+    },
+    "screen_risk": 0.1897192556628598
+  },
+  "0.95|128|transformer": {
+    "hp": {
+      "d": 32,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.10752432487145144
+  },
+  "0.95|128|window": {
+    "hp": {
+      "radius": 8,
+      "width": 64
+    },
+    "screen_risk": 0.11872059855890625
+  }
+}

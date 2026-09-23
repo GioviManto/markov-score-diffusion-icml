@@ -1,0 +1,36 @@
+note: "version 2" Tectonic command-line interface activated
+note: Running TeX ...
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 4120) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 2027) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 2644) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 2096) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 3417) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 6493) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 10000) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 1231) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 1769) in paragraph at lines 546--546
+note: Rerunning TeX because "04-fisher-cramer-rao.aux" changed ...
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 4120) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 2027) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 2644) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 2096) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 3417) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 6493) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 10000) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 1231) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 1769) in paragraph at lines 546--546
+note: Rerunning TeX because "04-fisher-cramer-rao.aux" changed ...
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 4120) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 2027) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 2644) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 2096) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 3417) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 6493) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 10000) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 1231) in paragraph at lines 546--546
+warning: parts/04-fisher-cramer-rao.tex:546: Underfull \hbox (badness 1769) in paragraph at lines 546--546
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `build/04-fisher-cramer-rao.pdf` (109.83203125 KiB)
+note: Writing `build/04-fisher-cramer-rao.idx` (590 B)
+note: Skipped writing 2 intermediate files (use --keep-intermediates to keep them)

@@ -1,0 +1,25 @@
+\indexentry{factorisation|hyperpage}{1}
+\indexentry{factors|hyperpage}{1}
+\indexentry{scope|hyperpage}{1}
+\indexentry{factor graph|hyperpage}{1}
+\indexentry{variable node|hyperpage}{1}
+\indexentry{factor node|hyperpage}{1}
+\indexentry{unary|hyperpage}{1}
+\indexentry{pairwise|hyperpage}{1}
+\indexentry{graphical model|hyperpage}{1}
+\indexentry{normaliser|hyperpage}{1}
+\indexentry{partition function|hyperpage}{1}
+\indexentry{evidence|hyperpage}{1}
+\indexentry{marginal likelihood|hyperpage}{1}
+\indexentry{Markov property|hyperpage}{2}
+\indexentry{tree|hyperpage}{2}
+\indexentry{marginal|hyperpage}{2}
+\indexentry{sum-product algorithm|hyperpage}{2}
+\indexentry{belief propagation|hyperpage}{2}
+\indexentry{belief|hyperpage}{2}
+\indexentry{distributive law|hyperpage}{2}
+\indexentry{locally consistent|hyperpage}{3}
+\indexentry{loopy belief propagation|hyperpage}{3}
+\indexentry{unary likelihood factor|hyperpage}{3}
+\indexentry{pairwise marginal|hyperpage}{5}
+\indexentry{log-evidence|hyperpage}{5}

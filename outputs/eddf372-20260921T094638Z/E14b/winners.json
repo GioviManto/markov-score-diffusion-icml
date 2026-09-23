@@ -1,0 +1,17 @@
+{
+  "0.85|32|transformer": {
+    "hp": {
+      "d": 32,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.1555831323588885
+  },
+  "0.85|32|window": {
+    "hp": {
+      "radius": 4,
+      "width": 64
+    },
+    "screen_risk": 0.1670530666989791
+  }
+}

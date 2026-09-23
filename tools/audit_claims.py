@@ -171,7 +171,12 @@ def audit_misspec():
 
 # ----------------------------------------------------------------------------- E13 regimes (E20)
 def audit_regimes():
-    df = pd.read_csv(OUT / "E13" / "regimes.csv")
+    # E13x, the sixteen-seed run, is what paper/sections/regime-numbers.tex is generated from;
+    # the frozen eight-seed E13 stays as history and is not what the paper reports. Recomputing
+    # from E13 while the macros come from E13x compares two different datasets and disagrees by
+    # the seed count (it did: weakest gain -0.0442 against -0.047).
+    src = OUT / "E13x" if (OUT / "E13x" / "regimes.csv").exists() else OUT / "E13"
+    df = pd.read_csv(src / "regimes.csv")
     piv = df.pivot_table(index=["rho", "n_sites", "seed"], columns=["arm", "components"], values="risk")
     piv.columns = ["_".join(str(c) for c in col) for col in piv.columns]; piv = piv.reset_index()
     wins = 0; ident = 0.0; gains = []
@@ -179,10 +184,11 @@ def audit_regimes():
         d = g.em_bp_8 - g.em_bp_1; se = d.std(ddof=1) / np.sqrt(len(d))
         wins += int(d.mean() + 1.96 * se < 0); gains.append(d.mean())
         ident = max(ident, float((g.em_bp_1 - g.lmmse_true_0).abs().max()))
-    check("E13", "cells whose 95% normal CI excludes zero (of 15)", wins, None, fmt="{}")
-    check("E13", "strongest paired gain", min(gains), "regGainStrongest")
-    check("E13", "weakest paired gain", max(gains), "regGainWeakest")
-    check("E13", "Prop. 1 check: max |C=1 - LMMSE| over cells", ident, "regIdentMax")
+    tag = src.name
+    check(tag, "cells whose 95% normal CI excludes zero (of 15)", wins, None, fmt="{}")
+    check(tag, "strongest paired gain", min(gains), "regGainStrongest")
+    check(tag, "weakest paired gain", max(gains), "regGainWeakest")
+    check(tag, "Prop. 1 check: max |C=1 - LMMSE| over cells", ident, "regIdentMax")
 
 
 # ----------------------------------------------------------------------------- E11 grid envelope (E19)

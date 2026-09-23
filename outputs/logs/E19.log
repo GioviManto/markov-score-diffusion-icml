@@ -1,0 +1,8 @@
+  [E19] t=0.05 RMSE rho 0.0311  RMSE kurt 1.416
+  [E19] t=0.1  RMSE rho 0.0227  RMSE kurt 1.208
+  [E19] t=0.2  RMSE rho 0.0302  RMSE kurt 1.823
+  [E19] t=0.4  RMSE rho 0.0387  RMSE kurt 1.841
+  [E19] t=0.7  RMSE rho 0.0487  RMSE kurt 3.780
+  [E19] t=1    RMSE rho 0.0598  RMSE kurt 15.224
+  [E19] t=1.4  RMSE rho 0.1616  RMSE kurt 12727.910
+  [E19] t=2    RMSE rho 0.3852  RMSE kurt 1224.347

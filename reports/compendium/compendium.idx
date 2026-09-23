@@ -1,0 +1,320 @@
+\indexentry{term|hyperpage}{8}
+\indexentry{Sites|hyperpage}{11}
+\indexentry{chain length|hyperpage}{11}
+\indexentry{ambient dimension|hyperpage}{11}
+\indexentry{Sequences|hyperpage}{11}
+\indexentry{Grid points|hyperpage}{11}
+\indexentry{Multi-indices|hyperpage}{11}
+\indexentry{degree|hyperpage}{11}
+\indexentry{probabilists' Hermite polynomials|hyperpage}{12}
+\indexentry{physicists' Hermite polynomials|hyperpage}{12}
+\indexentry{standardised white noise|hyperpage}{12}
+\indexentry{signal-to-noise ratio|hyperpage}{12}
+\indexentry{score|hyperpage}{13}
+\indexentry{diffusion score|hyperpage}{13}
+\indexentry{statistical score|hyperpage}{13}
+\indexentry{moment|hyperpage}{16}
+\indexentry{central moment|hyperpage}{16}
+\indexentry{symmetric|hyperpage}{16}
+\indexentry{kurtosis|hyperpage}{16}
+\indexentry{excess kurtosis|hyperpage}{16}
+\indexentry{moment-generating function|hyperpage}{16}
+\indexentry{cumulant-generating function|hyperpage}{16}
+\indexentry{cumulant|hyperpage}{17}
+\indexentry{joint cumulant|hyperpage}{18}
+\indexentry{cumulant tensor|hyperpage}{18}
+\indexentry{transformation rule|hyperpage}{18}
+\indexentry{multisets|hyperpage}{18}
+\indexentry{moving-average representation|hyperpage}{19}
+\indexentry{invariant law|hyperpage}{19}
+\indexentry{shape coordinate|hyperpage}{21}
+\indexentry{exponential moment|hyperpage}{21}
+\indexentry{standard Gaussian density|hyperpage}{24}
+\indexentry{probabilists' Hermite polynomial|hyperpage}{25}
+\indexentry{Hermite expansion|hyperpage}{26}
+\indexentry{Hermite moment|hyperpage}{26}
+\indexentry{degree|hyperpage}{27}
+\indexentry{chaos expansion|hyperpage}{27}
+\indexentry{Wick product|hyperpage}{27}
+\indexentry{first Edgeworth correction|hyperpage}{30}
+\indexentry{Hermite tensors|hyperpage}{31}
+\indexentry{Markov chain|hyperpage}{33}
+\indexentry{initial density|hyperpage}{33}
+\indexentry{transition kernels|hyperpage}{33}
+\indexentry{time-homogeneous|hyperpage}{33}
+\indexentry{Chapman--Kolmogorov equation|hyperpage}{33}
+\indexentry{invariant|hyperpage}{34}
+\indexentry{strictly stationary|hyperpage}{34}
+\indexentry{second-order stationary|hyperpage}{34}
+\indexentry{AR(1) chain|hyperpage}{34}
+\indexentry{Kac--Murdock--Szeg\H {o} matrix|hyperpage}{35}
+\indexentry{precision matrix|hyperpage}{35}
+\indexentry{crossover time|hyperpage}{36}
+\indexentry{chain length|hyperpage}{37}
+\indexentry{number of sequences|hyperpage}{37}
+\indexentry{score|hyperpage}{39}
+\indexentry{statistical score|hyperpage}{39}
+\indexentry{diffusion score|hyperpage}{39}
+\indexentry{Fisher information matrix|hyperpage}{40}
+\indexentry{efficient|hyperpage}{41}
+\indexentry{efficient information|hyperpage}{41}
+\indexentry{nuisance cost|hyperpage}{41}
+\indexentry{efficient score|hyperpage}{41}
+\indexentry{outer-product estimator|hyperpage}{42}
+\indexentry{locally asymptotically normal|hyperpage}{43}
+\indexentry{differentiable in quadratic mean|hyperpage}{43}
+\indexentry{regular|hyperpage}{44}
+\indexentry{pairwise posterior marginals|hyperpage}{45}
+\indexentry{replicate|hyperpage}{48}
+\indexentry{seed|hyperpage}{48}
+\indexentry{inferential unit|hyperpage}{48}
+\indexentry{mean over seeds|hyperpage}{48}
+\indexentry{sample standard deviation|hyperpage}{48}
+\indexentry{standard error of the mean|hyperpage}{48}
+\indexentry{root mean squared error|hyperpage}{48}
+\indexentry{bias|hyperpage}{48}
+\indexentry{dispersion|hyperpage}{48}
+\indexentry{percentile bootstrap|hyperpage}{49}
+\indexentry{resamples|hyperpage}{49}
+\indexentry{exact enumerated bootstrap|hyperpage}{49}
+\indexentry{paired|hyperpage}{50}
+\indexentry{sign count|hyperpage}{50}
+\indexentry{mean of ratios|hyperpage}{50}
+\indexentry{ratio of means|hyperpage}{50}
+\indexentry{log-slope|hyperpage}{50}
+\indexentry{bundles|hyperpage}{51}
+\indexentry{training bundle|hyperpage}{51}
+\indexentry{validation bundle|hyperpage}{51}
+\indexentry{test bundle|hyperpage}{51}
+\indexentry{bulk|hyperpage}{51}
+\indexentry{schedule-pooled relative score error|hyperpage}{51}
+\indexentry{Development seeds|hyperpage}{52}
+\indexentry{Confirmatory seeds|hyperpage}{52}
+\indexentry{registered experiment|hyperpage}{52}
+\indexentry{frozen|hyperpage}{52}
+\indexentry{pre-data amendment|hyperpage}{52}
+\indexentry{Brownian motion|hyperpage}{55}
+\indexentry{white noise|hyperpage}{55}
+\indexentry{standardised|hyperpage}{55}
+\indexentry{stochastic differential equation|hyperpage}{55}
+\indexentry{drift|hyperpage}{55}
+\indexentry{diffusion coefficient|hyperpage}{55}
+\indexentry{It\^o isometry|hyperpage}{55}
+\indexentry{Ornstein--Uhlenbeck channel|hyperpage}{55}
+\indexentry{preserves the variance|hyperpage}{56}
+\indexentry{unary likelihood factor|hyperpage}{57}
+\indexentry{signal-to-noise ratio|hyperpage}{57}
+\indexentry{score|hyperpage}{58}
+\indexentry{linear minimum-mean-square estimator|hyperpage}{59}
+\indexentry{covariance twin|hyperpage}{59}
+\indexentry{score model|hyperpage}{62}
+\indexentry{explicit score-matching|hyperpage}{62}
+\indexentry{implicit score-matching|hyperpage}{62}
+\indexentry{banded|hyperpage}{65}
+\indexentry{schedule-pooled relative score error|hyperpage}{66}
+\indexentry{Fokker--Planck equation|hyperpage}{69}
+\indexentry{probability-flow ODE|hyperpage}{70}
+\indexentry{nested Brownian paths|hyperpage}{72}
+\indexentry{strong error|hyperpage}{72}
+\indexentry{autoregressive residuals|hyperpage}{72}
+\indexentry{feature|hyperpage}{76}
+\indexentry{Hermite degree|hyperpage}{76}
+\indexentry{Hermite polynomials|hyperpage}{77}
+\indexentry{grade|hyperpage}{79}
+\indexentry{Wick product|hyperpage}{80}
+\indexentry{bulk|hyperpage}{82}
+\indexentry{efficient information|hyperpage}{84}
+\indexentry{differentiable in quadratic mean|hyperpage}{85}
+\indexentry{regularly varying|hyperpage}{86}
+\indexentry{factorisation|hyperpage}{92}
+\indexentry{factors|hyperpage}{92}
+\indexentry{scope|hyperpage}{92}
+\indexentry{factor graph|hyperpage}{92}
+\indexentry{variable node|hyperpage}{92}
+\indexentry{factor node|hyperpage}{92}
+\indexentry{unary|hyperpage}{92}
+\indexentry{pairwise|hyperpage}{92}
+\indexentry{graphical model|hyperpage}{92}
+\indexentry{normaliser|hyperpage}{92}
+\indexentry{partition function|hyperpage}{92}
+\indexentry{evidence|hyperpage}{92}
+\indexentry{marginal likelihood|hyperpage}{92}
+\indexentry{Markov property|hyperpage}{93}
+\indexentry{tree|hyperpage}{93}
+\indexentry{marginal|hyperpage}{93}
+\indexentry{sum-product algorithm|hyperpage}{93}
+\indexentry{belief propagation|hyperpage}{93}
+\indexentry{belief|hyperpage}{93}
+\indexentry{distributive law|hyperpage}{93}
+\indexentry{locally consistent|hyperpage}{94}
+\indexentry{loopy belief propagation|hyperpage}{94}
+\indexentry{unary likelihood factor|hyperpage}{94}
+\indexentry{pairwise marginal|hyperpage}{96}
+\indexentry{log-evidence|hyperpage}{96}
+\indexentry{half-width|hyperpage}{99}
+\indexentry{grid|hyperpage}{99}
+\indexentry{spacing|hyperpage}{99}
+\indexentry{composite trapezoidal rule|hyperpage}{99}
+\indexentry{discretised factor model|hyperpage}{99}
+\indexentry{column-mass defect|hyperpage}{100}
+\indexentry{quadrature error|hyperpage}{100}
+\indexentry{truncation error|hyperpage}{100}
+\indexentry{Euler--Maclaurin formula|hyperpage}{100}
+\indexentry{second order|hyperpage}{100}
+\indexentry{spectral accuracy|hyperpage}{100}
+\indexentry{Poisson summation formula|hyperpage}{101}
+\indexentry{first order|hyperpage}{101}
+\indexentry{pinned to the boundary|hyperpage}{102}
+\indexentry{Gaussian moment projection|hyperpage}{106}
+\indexentry{Moment-projected sum-product|hyperpage}{106}
+\indexentry{linear estimator|hyperpage}{107}
+\indexentry{mean-square error|hyperpage}{107}
+\indexentry{linear minimum-mean-square estimator|hyperpage}{107}
+\indexentry{normal equations|hyperpage}{107}
+\indexentry{orthogonality principle|hyperpage}{107}
+\indexentry{covariance twin|hyperpage}{107}
+\indexentry{minimum-mean-square estimator|hyperpage}{107}
+\indexentry{information form|hyperpage}{108}
+\indexentry{tilted|hyperpage}{108}
+\indexentry{floor for every second-order estimator|hyperpage}{110}
+\indexentry{closure gap|hyperpage}{110}
+\indexentry{relative score error|hyperpage}{110}
+\indexentry{isotropic score|hyperpage}{111}
+\indexentry{statistical model|hyperpage}{114}
+\indexentry{true parameter|hyperpage}{114}
+\indexentry{likelihood|hyperpage}{114}
+\indexentry{log-likelihood|hyperpage}{114}
+\indexentry{maximum-likelihood estimator|hyperpage}{114}
+\indexentry{score|hyperpage}{114}
+\indexentry{Fisher information|hyperpage}{114}
+\indexentry{regular|hyperpage}{114}
+\indexentry{identifiable|hyperpage}{114}
+\indexentry{asymptotically efficient|hyperpage}{115}
+\indexentry{latent-variable model|hyperpage}{115}
+\indexentry{latent|hyperpage}{115}
+\indexentry{hidden|hyperpage}{115}
+\indexentry{missing|hyperpage}{115}
+\indexentry{marginal likelihood|hyperpage}{115}
+\indexentry{complete-data log-likelihood|hyperpage}{115}
+\indexentry{Gibbs' inequality|hyperpage}{115}
+\indexentry{evidence lower bound|hyperpage}{115}
+\indexentry{free energy|hyperpage}{116}
+\indexentry{evidence lower bound|hyperpage}{116}
+\indexentry{coordinate ascent|hyperpage}{116}
+\indexentry{E-step|hyperpage}{116}
+\indexentry{M-step|hyperpage}{116}
+\indexentry{Q-function|hyperpage}{116}
+\indexentry{generalised EM|hyperpage}{117}
+\indexentry{expectation--conditional maximisation|hyperpage}{117}
+\indexentry{conditional maximisations|hyperpage}{117}
+\indexentry{Fisher's identity|hyperpage}{117}
+\indexentry{complete information|hyperpage}{117}
+\indexentry{observed information|hyperpage}{117}
+\indexentry{missing information|hyperpage}{117}
+\indexentry{fraction of missing information|hyperpage}{117}
+\indexentry{tolerance|hyperpage}{118}
+\indexentry{iteration cap|hyperpage}{118}
+\indexentry{selection rule|hyperpage}{118}
+\indexentry{nats per transition|hyperpage}{118}
+\indexentry{censored|hyperpage}{118}
+\indexentry{checkpoint ladder|hyperpage}{118}
+\indexentry{early stopping|hyperpage}{118}
+\indexentry{responsibilities|hyperpage}{119}
+\indexentry{one-view protocol|hyperpage}{121}
+\indexentry{marginal log-likelihood|hyperpage}{121}
+\indexentry{Fisher's identity|hyperpage}{122}
+\indexentry{expected transition statistic|hyperpage}{122}
+\indexentry{belief-weighted Yule--Walker equations|hyperpage}{124}
+\indexentry{responsibilities|hyperpage}{125}
+\indexentry{conditional maximisations|hyperpage}{125}
+\indexentry{validation bundle|hyperpage}{126}
+\indexentry{Gaussian quasi-likelihood|hyperpage}{130}
+\indexentry{quasi-maximum-likelihood estimator|hyperpage}{130}
+\indexentry{sample covariance|hyperpage}{131}
+\indexentry{population quasi-likelihood|hyperpage}{131}
+\indexentry{quasi-score|hyperpage}{132}
+\indexentry{M-estimator|hyperpage}{133}
+\indexentry{sandwich covariance|hyperpage}{133}
+\indexentry{method-of-moments estimator|hyperpage}{134}
+\indexentry{asymptotic relative efficiency|hyperpage}{134}
+\indexentry{k-statistic|hyperpage}{136}
+\indexentry{bundle|hyperpage}{140}
+\indexentry{training bundle|hyperpage}{140}
+\indexentry{validation bundle|hyperpage}{140}
+\indexentry{test bundle|hyperpage}{140}
+\indexentry{paired|hyperpage}{141}
+\indexentry{one-view groups|hyperpage}{141}
+\indexentry{checkpoint ladder|hyperpage}{141}
+\indexentry{rung|hyperpage}{141}
+\indexentry{cap|hyperpage}{141}
+\indexentry{selected checkpoint|hyperpage}{141}
+\indexentry{at cap|hyperpage}{141}
+\indexentry{validation risk|hyperpage}{141}
+\indexentry{bulk|hyperpage}{142}
+\indexentry{oracle rule|hyperpage}{142}
+\indexentry{held-out log-evidence per edge|hyperpage}{142}
+\indexentry{evidence rule|hyperpage}{142}
+\indexentry{Fisher divergence|hyperpage}{143}
+\indexentry{development seeds|hyperpage}{144}
+\indexentry{confirmatory seeds|hyperpage}{144}
+\indexentry{fair|hyperpage}{144}
+\indexentry{confirmatory run|hyperpage}{145}
+\indexentry{Interface A|hyperpage}{145}
+\indexentry{Interface B|hyperpage}{145}
+\indexentry{Interface C|hyperpage}{145}
+\indexentry{misspecified maximum-likelihood estimator|hyperpage}{148}
+\indexentry{pseudo-true parameter|hyperpage}{148}
+\indexentry{Kullback--Leibler projection|hyperpage}{148}
+\indexentry{bias|hyperpage}{149}
+\indexentry{projection equations|hyperpage}{149}
+\indexentry{lag-one plug-in|hyperpage}{150}
+\indexentry{rank-one latent|hyperpage}{151}
+\indexentry{break-even|hyperpage}{152}
+\indexentry{first Edgeworth correction|hyperpage}{152}
+\indexentry{multivariate Hermite polynomials|hyperpage}{152}
+\indexentry{log form|hyperpage}{153}
+\indexentry{linear form|hyperpage}{153}
+\indexentry{neural network|hyperpage}{156}
+\indexentry{parameters|hyperpage}{156}
+\indexentry{denoisers|hyperpage}{156}
+\indexentry{x0 parameterisation|hyperpage}{156}
+\indexentry{eps parameterisation|hyperpage}{156}
+\indexentry{Fourier features|hyperpage}{157}
+\indexentry{affine layer|hyperpage}{157}
+\indexentry{activation|hyperpage}{157}
+\indexentry{GELU|hyperpage}{157}
+\indexentry{1-D convolution|hyperpage}{157}
+\indexentry{zero padding|hyperpage}{157}
+\indexentry{weight sharing|hyperpage}{157}
+\indexentry{receptive radius|hyperpage}{157}
+\indexentry{residual connection|hyperpage}{157}
+\indexentry{Layer normalisation|hyperpage}{157}
+\indexentry{pre-LN|hyperpage}{157}
+\indexentry{multilayer perceptron|hyperpage}{157}
+\indexentry{window head|hyperpage}{158}
+\indexentry{pointwise MLP|hyperpage}{158}
+\indexentry{temporal convolutional network|hyperpage}{158}
+\indexentry{recurrent network|hyperpage}{158}
+\indexentry{gated recurrent unit|hyperpage}{158}
+\indexentry{reset gate|hyperpage}{158}
+\indexentry{update gate|hyperpage}{158}
+\indexentry{Bidirectional|hyperpage}{158}
+\indexentry{transformer|hyperpage}{158}
+\indexentry{self-attention|hyperpage}{158}
+\indexentry{relative-position bias|hyperpage}{159}
+\indexentry{U-Net|hyperpage}{159}
+\indexentry{skip connection|hyperpage}{159}
+\indexentry{batch|hyperpage}{160}
+\indexentry{per-example level|hyperpage}{160}
+\indexentry{corruption|hyperpage}{160}
+\indexentry{Adam|hyperpage}{160}
+\indexentry{gradient clipping|hyperpage}{160}
+\indexentry{checkpoint ladder|hyperpage}{160}
+\indexentry{ceteris paribus|hyperpage}{166}
+\indexentry{common random numbers|hyperpage}{166}
+\indexentry{Pre-registration|hyperpage}{167}
+\indexentry{pre-data amendment|hyperpage}{167}
+\indexentry{Dirty|hyperpage}{168}
+\indexentry{cell|hyperpage}{169}
+\indexentry{frozen|hyperpage}{169}
+\indexentry{SHA-256|hyperpage}{169}

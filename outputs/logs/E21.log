@@ -1,0 +1,33 @@
+  [E21] t=0.40 I_beta_eff=5.6421e-01 I_rho_eff=9.3441e+00 (Gaussian chain 9.2164e+00)
+  [E21] t=0.50 I_beta_eff=3.2640e-01 I_rho_eff=6.3968e+00 (Gaussian chain 6.4028e+00)
+  [E21] t=0.60 I_beta_eff=1.8419e-01 I_rho_eff=4.3864e+00 (Gaussian chain 4.4418e+00)
+  [E21] t=0.70 I_beta_eff=1.0013e-01 I_rho_eff=3.0053e+00 (Gaussian chain 3.0738e+00)
+  [E21] t=0.80 I_beta_eff=5.2308e-02 I_rho_eff=2.0557e+00 (Gaussian chain 2.1207e+00)
+  [E21] t=0.90 I_beta_eff=2.6563e-02 I_rho_eff=1.4036e+00 (Gaussian chain 1.4585e+00)
+  [E21] t=1.00 I_beta_eff=1.3380e-02 I_rho_eff=9.5684e-01 (Gaussian chain 9.9986e-01)
+  [E21] t=1.20 I_beta_eff=3.5626e-03 I_rho_eff=4.4344e-01 (Gaussian chain 4.6578e-01)
+  [E21] t=1.40 I_beta_eff=1.1760e-03 I_rho_eff=2.0466e-01 (Gaussian chain 2.1483e-01)
+  [E21] t=1.70 I_beta_eff=5.1073e-04 I_rho_eff=6.3021e-02 (Gaussian chain 6.6374e-02)
+  [E21] t=2.00 I_beta_eff=3.8697e-04 I_rho_eff=1.9125e-02 (Gaussian chain 2.0286e-02)
+  [E21] t_* = 0.5413116399024404  local slopes of log(1/I_beta): [5.47 5.72 6.1  6.49 6.78 6.86 6.62 5.54 2.78 0.93]  of log(1/I_rho): [3.79 3.77 3.78 3.8  3.82 3.83 3.85 3.87 3.93 3.97]
+  [E21 constant] beta=2 t=1.0: I e^8t = 0.04177  predicted 0.04167  ratio 1.0025
+  [E21 constant] beta=2 t=1.5: I e^8t = 0.04168  predicted 0.04167  ratio 1.0003
+  [E21 constant] beta=2 t=2.0: I e^8t = 0.04167  predicted 0.04167  ratio 1.0000
+  [E21 constant] beta=2 t=2.5: I e^8t = 0.04167  predicted 0.04167  ratio 1.0000
+  [E21 constant] beta=2 t=3.0: I e^8t = 0.04167  predicted 0.04167  ratio 1.0000
+  [E21 constant] beta=2 t=3.5: I e^8t = 0.04167  predicted 0.04167  ratio 1.0000
+  [E21 constant] beta=3 t=1.0: I e^8t = 0.00482  predicted 0.00463  ratio 1.0422
+  [E21 constant] beta=3 t=1.5: I e^8t = 0.00466  predicted 0.00463  ratio 1.0064
+  [E21 constant] beta=3 t=2.0: I e^8t = 0.00463  predicted 0.00463  ratio 1.0009
+  [E21 constant] beta=3 t=2.5: I e^8t = 0.00463  predicted 0.00463  ratio 1.0001
+  [E21 constant] beta=3 t=3.0: I e^8t = 0.00463  predicted 0.00463  ratio 1.0000
+  [E21 constant] beta=3 t=3.5: I e^8t = 0.00463  predicted 0.00463  ratio 1.0000
+  [E21 constant] beta=1.5 t=1.0: I e^8t = 0.21231  predicted 0.22110  ratio 0.9602
+  [E21 constant] beta=1.5 t=1.5: I e^8t = 0.21999  predicted 0.22110  ratio 0.9950
+  [E21 constant] beta=1.5 t=2.0: I e^8t = 0.22096  predicted 0.22110  ratio 0.9994
+  [E21 constant] beta=1.5 t=2.5: I e^8t = 0.22108  predicted 0.22110  ratio 0.9999
+  [E21 constant] beta=1.5 t=3.0: I e^8t = 0.22110  predicted 0.22110  ratio 1.0000
+  [E21 constant] beta=1.5 t=3.5: I e^8t = 0.22110  predicted 0.22110  ratio 1.0000
+  [E21 constant] variance t=1.0: I e^4t = 0.50000 (predicted 0.5)
+  [E21 constant] variance t=1.5: I e^4t = 0.50000 (predicted 0.5)
+  [E21 constant] variance t=2.0: I e^4t = 0.50000 (predicted 0.5)

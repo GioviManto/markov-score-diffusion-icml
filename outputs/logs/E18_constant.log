@@ -1,0 +1,12 @@
+  [E18 constant] laplace   t=3 n=8192: ratio 0.924 [0.844, 1.007]  max/median 317
+  [E18 constant] laplace   t=4 n=8192: ratio 0.990 [0.906, 1.079]  max/median 283
+  [E18 constant] bimodal   t=3 n=8192: ratio 0.931 [0.828, 1.055]  max/median 730
+  [E18 constant] bimodal   t=4 n=8192: ratio 0.981 [0.878, 1.105]  max/median 695
+  [E18 constant] uniform   t=3 n=8192: ratio 0.955 [0.885, 1.036]  max/median 279
+  [E18 constant] uniform   t=4 n=8192: ratio 3.617 [3.567, 3.671]  max/median 25
+  [E18 constant] student5  t=3 n=8192: ratio 0.697 [0.624, 0.785]  max/median 700
+  [E18 constant] student5  t=4 n=8192: ratio 1.033 [0.986, 1.088]  max/median 157
+  [E18 constant] student7  t=3 n=8192: ratio 0.899 [0.823, 0.979]  max/median 514
+  [E18 constant] student7  t=4 n=8192: ratio 0.958 [0.882, 1.040]  max/median 371
+  [E18 constant] student9  t=3 n=8192: ratio 0.880 [0.810, 0.957]  max/median 279
+  [E18 constant] student9  t=4 n=8192: ratio 0.931 [0.859, 1.009]  max/median 303

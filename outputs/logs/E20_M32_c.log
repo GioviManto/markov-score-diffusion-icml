@@ -1,0 +1,6 @@
+  [cells] 8 cells, 3 already on disk, 5 to run, workers=5
+  [E20] M=32 seed=3: oracle ckpt 40 -> 0.1515; evidence ckpt 40 -> 0.1515; last 1200 -> 0.2305
+  [E20] M=32 seed=5: oracle ckpt 20 -> 0.0792; evidence ckpt 20 -> 0.0792; last 1200 -> 0.2623
+  [E20] M=32 seed=6: oracle ckpt 20 -> 0.1094; evidence ckpt 20 -> 0.1094; last 1200 -> 0.3130
+  [E20] M=32 seed=7: oracle ckpt 160 -> 0.1010; evidence ckpt 120 -> 0.1013; last 1200 -> 0.1297
+  [E20] M=32 seed=4: oracle ckpt 60 -> 0.0975; evidence ckpt 60 -> 0.0975; last 1200 -> 0.1517

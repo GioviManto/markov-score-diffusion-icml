@@ -20,5 +20,20 @@
    "outcome_664806": "COMPLETED 2026-09-22 (job 664806, 04:58:39, commit eddf372 clean), 240 cells, sixteen seeds. Confirms the frozen eight-seed E13 at every one of the fifteen cells (gains -0.2299 to -0.0470, every interval excluding zero; Proposition 1 check worst cell 0.00994). Reproducibility: the 480 rows for seeds 0-7, recomputed in a new directory from a different deployment on a different node, match the frozen E13 bit-for-bit (max |difference| 0.000e+00 in risk and in fitted kurtosis). NOT FROZEN pending the audit session's reading."
   }
  ],
- "status": "REGISTERED 2026-09-21 (extension of E13 to sixteen seeds, see provenance_note); SUBMITTED (job 664806)"
+ "status": "FROZEN E13x 2026-09-23T20:38:01Z; REGISTERED 2026-09-21 (extension of E13 to sixteen seeds, see provenance_note); SUBMITTED (job 664806)",
+ "frozen_outputs": {
+  "outputs/E13x/regimes.csv": "b96692e6d7f0f0be1694737910a90bb760342967fe461ed07564eeb892c6eba3",
+  "outputs/E13x/params_sweep.json": "4914a8cdf62c0b9eb627712a9642c9473b8d16e55bf469687dc5f0a928a0940d"
+ },
+ "frozen_at": {
+  "E13x": "2026-09-23T20:38:01Z"
+ },
+ "frozen_commit": {
+  "E13x": "476cf6b56a0a22a308e36d3e6999a245d46145fe"
+ },
+ "frozen_run_commits": {
+  "E13x": [
+   "eddf372"
+  ]
+ }
 }

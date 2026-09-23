@@ -6,7 +6,7 @@
  "predeclared_analysis": "E14's analysis for the single cell (tools/make_regime_baselines.py): mean pooled relative score error per arm, paired ratios of each network arm to em_bp and to em_bp_evidence with a percentile bootstrap over seeds, the divergence rule of 2026-09-21 (isotropic-objective threshold for the ISM arm; shape flag for the DSM arm). Comparison with E14's (0.85, 32) Laplace cell: the two paired factors and their ratio with a bootstrap over seeds; read as a direction against the two families' LMMSE floors, no exponent.",
  "motivation": "Every matched comparison in the paper is on Laplace innovations (positive excess kurtosis). A referee can ask whether the advantage is about heavy tails. The bimodal member has negative excess kurtosis at the same covariance; if the advantage is the fourth-order structure the covariance twin leaves behind, it should survive with the smaller size that the smaller floor predicts. The audit's plan listed this as P2.1.",
  "limitations": "One cell; one negative-kurtosis family; the screen winners are re-selected for this family but the architecture grid is E03's.",
- "status": "PRE-REGISTERED 2026-09-21 before running; SUBMITTED 2026-09-21 (jobs 664804 screen -> 664805 confirm)",
+ "status": "FROZEN E14b 2026-09-23T20:38:01Z; PRE-REGISTERED 2026-09-21 before running; SUBMITTED 2026-09-21 (jobs 664804 screen -> 664805 confirm)",
  "registered": "2026-09-21",
  "hpc_runs": [
   {
@@ -21,5 +21,23 @@
    "note": "Outputs ~/msd-icml/outputs/eddf372-20260921T094638Z/E14b/; fetch with MSD_DEPLOY_ENV=hpc/.deploy_eddf372.env hpc/icml_fetch.sh E14b. Pre-registered before submission; nothing in this entry's hypothesis or analysis may change after the result is seen.",
    "outcome_664805": "COMPLETED 2026-09-22 (jobs 664804 screen -> 664805 confirm, commit eddf372 clean), 16 cells at (rho, L) = (0.85, 32), sixteen seeds, bimodal innovation. LMMSE floor 0.082 as E07 predicts. Factor best-ISM / EM-BP(evidence) 8.8 [7.4, 10.2], 16/16 wins, zero exclusions, two flags; the best network sits ABOVE the floor (ratio 1.93). Fetched to scratch, NOT FROZEN pending the audit session's reading."
   }
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E14b/regimes.csv": "3958a8c0c66bcd2ea807bcf0294da5c3334bef74f16f193ff516347e235f71ab",
+  "outputs/E14b/screening.csv": "5dda0bdb3e4a75f0b5f667179f9182b45b7090087f91a9f0465438e7dfa26bea",
+  "outputs/E14b/params_confirm.json": "01b9597e82b3a74aacfbbf9bba4ff899b83acae74502aeb33431dd034fb0a53c",
+  "outputs/E14b/params_screen.json": "0c7c43382597a972cc866e4e0d53d3b0da65f9ab865f384a2a89bf07dce49853",
+  "outputs/E14b/winners.json": "019ba79ad9d70c4e5db5bb99bfa4f6c13bdadbdf923cc5a937cb105a09ddb6b7"
+ },
+ "frozen_at": {
+  "E14b": "2026-09-23T20:38:01Z"
+ },
+ "frozen_commit": {
+  "E14b": "476cf6b56a0a22a308e36d3e6999a245d46145fe"
+ },
+ "frozen_run_commits": {
+  "E14b": [
+   "eddf372"
+  ]
+ }
 }

@@ -1,0 +1,12 @@
+note: "version 2" Tectonic command-line interface activated
+note: Running TeX ...
+warning: parts/08-reverse-sde-generation.tex:241: Overfull \hbox (6.8063pt too wide) detected at line 241
+warning: parts/08-reverse-sde-generation.tex:305: Overfull \hbox (7.39386pt too wide) in paragraph at lines 300--305
+note: Rerunning TeX because "08-reverse-sde-generation.aux" changed ...
+warning: parts/08-reverse-sde-generation.tex:241: Overfull \hbox (6.8063pt too wide) detected at line 241
+warning: parts/08-reverse-sde-generation.tex:305: Overfull \hbox (7.39386pt too wide) in paragraph at lines 300--305
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `build/08-reverse-sde-generation.idx` (235 B)
+note: Writing `build/08-reverse-sde-generation.pdf` (95.216796875 KiB)
+note: Skipped writing 2 intermediate files (use --keep-intermediates to keep them)

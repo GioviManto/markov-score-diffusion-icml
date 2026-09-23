@@ -1,0 +1,18 @@
+note: "version 2" Tectonic command-line interface activated
+note: Running TeX ...
+warning: parts/01-moments-cumulants.tex:38: Overfull \hbox (3.01256pt too wide) in paragraph at lines 35--38
+warning: parts/01-moments-cumulants.tex:115: Overfull \hbox (2.18567pt too wide) in paragraph at lines 112--115
+warning: parts/01-moments-cumulants.tex:196: Overfull \hbox (4.35565pt too wide) in paragraph at lines 188--196
+warning: parts/01-moments-cumulants.tex:284: Overfull \hbox (15.55205pt too wide) in paragraph at lines 274--284
+warning: parts/01-moments-cumulants.tex:284: Overfull \hbox (78.09831pt too wide) in paragraph at lines 274--284
+warning: parts/01-moments-cumulants.tex:295: Overfull \hbox (4.91759pt too wide) in paragraph at lines 289--295
+note: Rerunning TeX because "01-moments-cumulants.aux" changed ...
+warning: parts/01-moments-cumulants.tex:38: Overfull \hbox (3.01256pt too wide) in paragraph at lines 35--38
+warning: parts/01-moments-cumulants.tex:115: Overfull \hbox (2.18567pt too wide) in paragraph at lines 112--115
+warning: parts/01-moments-cumulants.tex:196: Overfull \hbox (4.35565pt too wide) in paragraph at lines 188--196
+warning: parts/01-moments-cumulants.tex:295: Overfull \hbox (4.91759pt too wide) in paragraph at lines 289--295
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+note: Writing `build/01-moments-cumulants.pdf` (119.0712890625 KiB)
+note: Writing `build/01-moments-cumulants.idx` (679 B)
+note: Skipped writing 2 intermediate files (use --keep-intermediates to keep them)

@@ -6,7 +6,7 @@
  "predeclared_analysis": "Per (rho, L): mean pooled relative score error of each arm, and the paired ratio best-network / EM-BP over the confirmatory seeds with a percentile bootstrap. The trend in rho is reported against the marginal excess kurtosis 3(1-rho^2)/(1+rho^2), as a direction, not a fitted law -- the risk pools a schedule whose informative window moves with rho, so no exponent is claimed from it.",
  "motivation": "The headline comparison (claim E16: 0.023 against 0.155 at M = 2048, a paired factor 7.3) is stated at one point of the parameter space. E13 established that the capacity contrast survives a sweep of rho and L; the comparison against networks has not been tested that way, and it is the claim a reviewer will press on.",
  "limitations": "One innovation family (Laplace) and one sample size (M = 2048); two architecture families, the two that carried E03's matched comparison; eight seeds rather than the protocol's sixteen, for cost. The screen re-selects the architecture configuration per regime but not the learning rate or the parameterisation, which are held at E03's winners.",
- "status": "PRE-REGISTERED 2026-09-18; runs before 2026-09-20 15:10 void (N-22); corrected screen 664280 done, confirm 664281 COMPLETED 48/48 (orientation only, unfrozen); seeds 8-15 submitted 2026-09-21 (amendment)",
+ "status": "FROZEN E14 2026-09-23T20:37:41Z; PRE-REGISTERED 2026-09-18; runs before 2026-09-20 15:10 void (N-22); corrected screen 664280 done, confirm 664281 COMPLETED 48/48 (orientation only, unfrozen); seeds 8-15 submitted 2026-09-21 (amendment)",
  "registered": "2026-09-18",
  "hpc_runs": [
   {
@@ -44,5 +44,23 @@
   "2026-09-20 11:30 BST, PRE-DATA for the confirmatory part (no confirmatory cell has run; job 663144 was still pending on resources). The first screen (job 663143, CPU, deployment 5144a45) trained the window head with Hutchinson's one-probe divergence, as the registered design said, and at the frozen point (rho = 0.85, L = 32, M = 2048, the E03 winner's radius 4 and width 64) it gave test risks of 0.883 and 1.648 on the two development seeds against 0.166 for the same network trained with the exact trace in E03's matched arm; the held-out ISM curves rise from the first checkpoint. The one-probe estimator, not the regime, was the cause, and the arm would have been a straw man. That screen is kept under outputs/E14_screen_hutchinson/ as a negative result (docs/NEGATIVE_RESULTS.md N-22) and is superseded. Changes, all made before the confirm: (1) each network arm trains as its E03 winner did (outputs/E03/winners.json): window head with the EXACT divergence, computed by 2r+1 coloured probes (markov_score.nn_torch.divergence; equal to the L-pass trace to round-off, tests/test_nn_torch.py), learning rate 1e-3; transformer with Hutchinson's estimator and learning rate 3e-3 -- the registered text said 'held at E03's winners' but the code had used lrs[0] = 1e-3 for both; parameterisation eps for both. (2) Two arms added to bracket the comparison, not to change it: dsm_one_corruption (E03's network-favourable interface: clean targets, one fixed view per chain, checkpoint on the validation BP risk) for each screened architecture, and em_bp_evidence (the same EM ladder with the checkpoint chosen on the held-out one-view log-evidence per edge, E20's oracle-free rule) beside the registered em_bp row. (3) The networks train on the GPU partition (float32 CUDA; the CPU path is unchanged operation for operation); the EM arm stays on the CPU. The screen is re-run under the same amended driver. Predeclared analysis extended accordingly: per (rho, L) the paired ratio of each network arm (ism_one_view, dsm_one_corruption) to em_bp and to em_bp_evidence over the confirmatory seeds with a percentile bootstrap; the regime statement of H14 is read on ism_one_view against em_bp_evidence (no true score in either arm) and the dsm_one_corruption ratio is reported beside it as the network-favourable bound.",
   "2026-09-20 15:10 BST, PRE-DATA (no valid confirmatory cell exists). The cause named in the previous amendment was wrong. Both screens (663143 CPU/Hutchinson, 664056 GPU/exact trace) and both confirms (663144, 664065) ran on a degenerate training set: _common() re-created the random generator inside the sampling comprehension, so every training chain (and every validation chain) was the same draw; every arm fitted 2048 copies of one chain. Found by running E03's and E14's training functions on the same data (both ~1.2 on E14's data, both 0.166-0.169 on E03's). Fixed: one generator per set plus an assertion that the chains are distinct; the fixed pipeline reproduces E03's matched number at the frozen point. Every E14 run before this amendment is void (outputs/E14_screen_invalid/ keeps the first screen as the record of N-22); the changes of the 11:30 amendment (per-arm estimators and learning rates as E03, the dsm_one_corruption and em_bp_evidence brackets, GPU training) stand and the design is otherwise unchanged.",
   "2026-09-21 13:00 BST: confirmatory seeds extended from 0-7 to 0-15, the protocol's sixteen, for every (rho, L). NOT pre-data: 41 of the 48 eight-seed cells of the corrected run (664281) had been fetched for orientation (unfrozen) when this was decided, and in every one of them the direction is the registered prediction. The extension changes the sample size and nothing else -- arms, screen winners, selection rules and the predeclared analysis are unchanged -- and the analysis will be run on all sixteen seeds whatever the added seeds show; the eight-seed subset is not reported separately. The added cells resume the same output directory (81cf7ae/E14) from the same deployment. Job 664803 (afterok:664281)."
- ]
+ ],
+ "frozen_outputs": {
+  "outputs/E14/regimes.csv": "eb5ceab008e57a7c627dc7aeac65662d987adabbd6fb3b4d9583648efb37bf36",
+  "outputs/E14/screening.csv": "3ea8c8a488336297163a2c4a8295cf3f932b3f3cb1407008c8261e841adfd77c",
+  "outputs/E14/params_confirm.json": "dcd63f2fd364179edc156fc26658f220164a546ff2034c452cb05a9f2674eaa5",
+  "outputs/E14/params_screen.json": "6ed9475f34514231d2b0881a87970e99e2a6d2c9c579871719ce45a33bf610b9",
+  "outputs/E14/winners.json": "977be1a19186ad6f2d6031d4cde93e39b73f85eea55614cd3aa37b999817adb7"
+ },
+ "frozen_at": {
+  "E14": "2026-09-23T20:37:41Z"
+ },
+ "frozen_commit": {
+  "E14": "476cf6b56a0a22a308e36d3e6999a245d46145fe"
+ },
+ "frozen_run_commits": {
+  "E14": [
+   "81cf7ae"
+  ]
+ }
 }
