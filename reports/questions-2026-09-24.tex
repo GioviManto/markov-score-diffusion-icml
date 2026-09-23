@@ -1,0 +1,148 @@
+\documentclass[10pt,a4paper]{article}
+
+% ---------------------------------------------------------------------------
+% Anticipated questions and the honest answers, for preparation before the meeting.
+% Every number is a macro from the paper's generated fragments, so this cannot drift.
+% This is a preparation sheet, not a handout: it names the weakest points deliberately.
+% Build: cd reports && tectonic -X compile questions-2026-09-24.tex
+% ---------------------------------------------------------------------------
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1.9cm]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\corr}{\rho}
+\newcommand{\ncomp}{C}
+\newcommand{\nseq}{M}
+\newcommand{\nsites}{L}
+\newcommand{\Q}[1]{\par\medskip\noindent\textbf{#1}\par\nopagebreak\vspace{0.15em}\nopagebreak}
+\titleformat{\section}{\large\bfseries}{\thesection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.0em}{0.3em}
+\setlength{\parskip}{0.2em}
+
+\input{../paper/sections/capacity-numbers}
+\input{../paper/sections/oracle-numbers}
+\input{../paper/sections/regime-numbers}
+\input{../paper/sections/misspec-numbers}
+\input{../paper/sections/generation-numbers}
+\input{../paper/sections/regime-baselines-numbers}
+
+\begin{document}
+\pagestyle{empty}
+
+\begin{center}
+{\Large\bfseries Anticipated questions}\\[0.2em]
+{\normalsize Preparation for 25 September 2026 --- not a handout}
+\end{center}
+
+\section*{The theory}
+
+\Q{Is the decay law new? Surely low-SNR expansions are classical.}
+No, and we say so in the paper. The information law is not ours: fourth-order statistics entering
+the Gaussian-channel expansion at second order is classical; Katsevich and Bandeira give the
+order-$k$ likelihood expansion; Balanov, Bendory and Edidin give the layered
+$\mathrm{SNR}^{k}$ Fisher geometry, which under this channel is the same statement in a different
+clock; Aarts and co-authors write the forward-process cumulant attenuation. What we add is the
+statement at the level of the \emph{score} with its constant $\tfrac16\|\kappa_4\|_F^2$, the
+crossover as an exact scale, the hypothesis under which the expansion is a theorem together with
+the heavy-tailed regime outside it, verification against an exact non-Gaussian dependent score, and
+the learning consequences. If he pushes here, concede the law immediately --- the contribution is
+the constant, the boundary of validity, and the exactness.
+
+\Q{What exactly does your theorem require?}
+An exponential moment. This is a real restriction and it was tightened during the audit: without
+it the $e^{-8t}$ term is not the leading one and the expansion is not a theorem. Student-$t$ needs
+$\nu\ge9$ for the eighth moments; the family ladder shows a genuine departure for heavier tails,
+and we report it as predicted by the moment condition rather than as a failure of the law.
+
+\Q{Proposition 1 --- is that not just LMMSE with extra steps?}
+It is an identification: Gaussian message closure on the chain computes exactly the LMMSE score of
+the covariance twin. That is what turns $\lmmseFloorLaplace$ from ``the best we managed'' into a
+proven floor for every second-order method, which is what lets us attribute the margin.
+
+\section*{The comparison --- where a referee will press}
+
+\Q{Are the networks just under-trained? Is this a strawman?}
+The honest defences, in order. The architectures are transformers and convolutional window models,
+screened and re-tuned \emph{separately inside every regime}, not once at the frozen point. The best
+of them is reported per cell, not the average. We also report an easier interface in which the
+network is additionally given the \emph{clean} sequence, which bounds what the restriction costs.
+And the conservatism runs against us: our own estimator is still improving when its iteration
+ladder runs out in \rbEmEvAtCapTotal{} cells, so our reported error there is an upper bound.
+The weakest point to concede: we cannot prove no architecture would do better. The claim is about
+these architectures at this budget.
+
+\Q{Why one noisy view per sequence? That is not how diffusion models are trained.}
+Correct, and we measure three interfaces, not one. The standard recipe --- clean data, a fresh
+corruption every step --- is interface A. Interface C, one noisy view and nothing else, is the
+honest analogue of ``all you have is noisy data''. It is the setting where the structural knowledge
+should matter most, and it is the one we claim. Do not let the claim slide into A.
+
+\Q{You handed yourself the true model class. Is the comparison not circular?}
+This is the strongest objection and it has two answers, both experimental. The capacity control:
+within the same model class, restricting to Gaussian innovations puts us exactly on the
+second-order floor, so the margin is fourth-order structure rather than ``knowing the family''.
+The misspecification sweep: we perturb the data away from the assumed model and measure how far it
+can go before the advantage is gone --- a second order of memory at $\misBreakLoArtwoD$--$\misBreakHiArtwoD$,
+a correlation varying along the chain at $\misBreakLoSitevarD$--$\misBreakHiSitevarD$. We are
+claiming an advantage over a measurable range, not in general.
+
+\Q{How do you decide when to stop, without the true score?}
+On held-out one-view evidence, which uses no clean data and no true score. We also report what the
+oracle rule would have given, so the cost of being honest is visible rather than hidden: it is
+small, and the two rules pick the same iteration in \rbEmAgreeRungTotal{} cells.
+
+\section*{Scale, and what it means}
+
+\Q{$\nsites=32$ to $128$, $\nseq$ up to $2048$. Why so small?}
+Because the exact score requires the grid message passing, and its cost is what buys exactness.
+This is the trade the whole paper makes: a small, solvable laboratory in which every claim is
+measured against truth, rather than a large setting in which nothing can be checked. Say it as a
+choice, not as a limitation we hope nobody notices.
+
+\Q{Does a better score actually give better samples?}
+Yes, measured. Driven through the same reverse diffusion on identical Brownian paths, so the score
+is the only difference, the fitted kernel produces innovation excess kurtosis $\genKurtgenBEm$
+against the reference sample's $\genKurtrefB$ --- and close to what the \emph{exact} score reaches
+under the same sampler ($\genKurtgenBExact$), so most of the residue is the discretisation of the
+reverse process rather than our estimate. The covariance-matched score gives $\genKurtgenBLmmse$:
+an essentially Gaussian chain, the fourth-order structure gone entirely.
+
+\Q{What does this say about real diffusion models?}
+Keep this narrow. It says which structure the noise destroys and in what order, that the ordering
+is exponential with a computable crossover, and that in a case where we can check, knowing the
+data's factorisation is worth a large constant factor at equal information. It does not say a
+structure-aware method beats a transformer on images. Do not let the conversation drift there.
+
+\section*{Status, and integrity of the record}
+
+\Q{What is still running, and what would change?}
+One experiment: a sample-complexity measurement at sixteen seeds and five noise levels. Nothing in
+the brief depends on it. Say plainly what it is for: the corollary predicts how the number of
+sequences needed grows with noise level, and the earlier run \emph{cannot} support that claim ---
+its intervals include zero and we do not report an exponent. The new run decides whether an
+exponent can be claimed at all. If its intervals also include zero, that is the result.
+
+\Q{Has anything you previously reported turned out to be wrong?}
+Yes, twice, and both are on the record with the cause. Our first screen of the regime comparison
+was void: a defect in our own code re-created the random generator inside a loop, so the training
+set was one sequence repeated. We found it, wrote a test that now fails on that pattern anywhere in
+the repository, and re-ran everything. That same test then found the identical defect in the
+archival capacity sweep --- which is why the earlier capacity conclusion is void, and why the
+stopping-rule explanation previously offered for it is withdrawn. Volunteer this rather than wait
+for it: the pattern he should see is that the process catches its own errors.
+
+\Q{How do I know the numbers in this document are right?}
+Every experiment is frozen with hash-pinned outputs and a configuration registered before it ran.
+Each reported number is generated from those outputs by one tool and recomputed independently by a
+second that fails if they disagree; the figures check themselves against the manuscript's numbers
+and refuse to be written on a mismatch. The paper is not compiled by hand from remembered values;
+nothing in it can drift from the experiment that produced it.
+
+\end{document}

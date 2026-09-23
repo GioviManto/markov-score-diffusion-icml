@@ -51,7 +51,7 @@ def _macros():
     return dict(re.findall(r"\\newcommand\{\\([A-Za-z]+)\}\{([^}]*)\}", src.read_text()))
 
 
-def _agrees(macros, name, value, where):
+def _agrees(macros, name, value, where, tol_digits=None):
     """A plotted value must round to the macro the manuscript prints, or this refuses.
 
     The figure recomputes from the frozen output rather than reading the table, so this is a
@@ -62,7 +62,8 @@ def _agrees(macros, name, value, where):
     m = macros.get(name)
     if m is None:
         raise SystemExit(f"make_fig_brief: no macro {name} to check {where} against")
-    if abs(float(m) - value) > 0.5 * 10 ** -(len(m.split(".")[1]) if "." in m else 0) + 1e-9:
+    dig = tol_digits if tol_digits is not None else (len(m.split(".")[1]) if "." in m else 0)
+    if abs(float(m) - value) > 0.5 * 10 ** -dig + 1e-9:
         raise SystemExit(f"make_fig_brief: {where} recomputes to {value:.4f} but the manuscript "
                          f"prints {name} = {m}. One of them is wrong; the figure is not written.")
 
@@ -167,6 +168,52 @@ def panel_c(ax):
     fs.panel_label(ax, "(c)", x=-0.26)
 
 
+def _mac(x):
+    """The spelling make_misspec_numbers.py uses for a number inside a macro name."""
+    return "".join({"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five",
+                    "6": "six", "7": "seven", "8": "eight", "9": "nine"}.get(c, c)
+                   for c in str(x)).replace(".", "p")
+
+
+# The four departures, in the order that matters: the two that cost us the advantage first.
+# Named, not symbolised -- the paper calls the rank-one loading beta too, and in a page that has
+# just spent a paragraph on beta as the innovation shape that collision is not worth risking.
+MECHANISMS = [("ar2", "second order of memory"), ("sitevar", "correlation varies along chain"),
+              ("longrange", "long-range coupling"), ("global", "rank-one global latent")]
+SIZE_TAG = {512: "C", 2048: "D"}
+
+
+def fig_boundary(dest):
+    """How far the first-order assumption may be wrong before the advantage goes."""
+    d = pd.read_csv(OUT / "E08" / "misspecification.csv")
+    d = d[d.region == "all"]
+    src = ROOT / "paper" / "sections" / "misspec-numbers.tex"
+    mac = dict(re.findall(r"\\newcommand\{\\([A-Za-z]+)\}\{([^}]*)\}", src.read_text()))
+    fig, axes = plt.subplots(1, 4, figsize=(WIDTH, 1.85), sharey=True)
+    for ax, (mech, title) in zip(axes, MECHANISMS):
+        for j, M in enumerate((512, 2048)):
+            g = d[(d.mechanism == mech) & (d.n_chains == M)]
+            xs, ys = [], []
+            for eps, c in g.groupby("eps"):
+                w = c[c.arm == "window"].set_index("seed").risk
+                e = c[c.arm == "em_bp"].set_index("seed").risk
+                r = float((w / e).mean())          # mean of per-seed ratios, as the paper defines it
+                _agrees(mac, f"misRatio{_mac(mech).capitalize()}E{_mac(eps)}{SIZE_TAG[M]}", r,
+                        f"{mech} ratio at eps={eps:g}, M={M}", tol_digits=2)
+                xs.append(eps); ys.append(r)
+            ax.plot(xs, ys, color=fs.CAT[j], marker=fs.MARKERS[j], ms=3, lw=1.3,
+                    ls=fs.LINESTYLES[j], label=f"$M={M}$")
+        ax.axhline(1.0, color=fs.INK2, lw=0.8, ls=":")
+        ax.set_yscale("log")
+        ax.set_title(title, fontsize=7.5, pad=3)
+        ax.set_xlabel("strength", labelpad=1)
+    axes[0].set_ylabel("window / EM\u2013BP error")
+    axes[0].legend(loc="upper right", fontsize=7, borderpad=0.2, handletextpad=0.4,
+                   borderaxespad=0.2, labelspacing=0.2)
+    fig.subplots_adjust(wspace=0.16, left=0.093, right=0.985, bottom=0.25, top=0.84)
+    return fs.save(fig, dest / "fig-boundary.pdf")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dest", type=Path, default=ROOT / "reports" / "figures")
@@ -178,6 +225,7 @@ def main() -> int:
     fig.subplots_adjust(wspace=0.52, left=0.088, right=0.965, bottom=0.20, top=0.94)
     p = fs.save(fig, a.dest / "fig-brief.pdf")
     print(f"wrote {p}")
+    print(f"wrote {fig_boundary(a.dest)}")
     return 0
 
 
