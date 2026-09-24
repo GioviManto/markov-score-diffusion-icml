@@ -1,11 +1,10 @@
 \documentclass[10pt,a4paper]{article}
 
 % ---------------------------------------------------------------------------
-% The three-page version, for a reader who does not know the project: what we are doing,
-% how, why, and what came out. Every number is a macro from the paper's generated fragments
-% (paper/sections/*.tex), so this cannot drift from the manuscript. The seven-page version
-% for a reader who does know it is meeting-brief-2026-09-20.pdf; anticipated questions are
-% in questions-2026-09-24.pdf; full detail in reports/compendium/compendium.pdf.
+% The three-page brief: the result from the EM chapter onwards, for a reader who does not
+% know the project. Everything it uses is defined on page 1 -- the point of this document is
+% that no term, axis or column is left to be guessed at. Every number is a macro from the
+% paper's generated fragments, so it cannot drift from the manuscript.
 % Build:   cd reports && tectonic -X compile short-brief-2026-09-24.tex
 % Figures: python tools/make_fig_brief.py   (frozen outputs only; checks itself against the
 %          manuscript's macros and refuses to write if a plotted value disagrees)
@@ -14,7 +13,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
-\usepackage[margin=2.0cm]{geometry}
+\usepackage[margin=1.9cm]{geometry}
 \usepackage{microtype}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
@@ -31,10 +30,10 @@
 \newcommand{\nseq}{M}
 \newcommand{\nsites}{L}
 \titleformat{\section}{\large\bfseries}{\thesection}{0.6em}{}
-\titlespacing*{\section}{0pt}{1.0em}{0.35em}
+\titlespacing*{\section}{0pt}{0.85em}{0.3em}
 \titleformat{\subsection}[runin]{\bfseries}{}{0em}{}[.]
-\titlespacing*{\subsection}{0pt}{0.5em}{0.5em}
-\setlength{\parskip}{0.25em}
+\titlespacing*{\subsection}{0pt}{0.45em}{0.5em}
+\setlength{\parskip}{0.22em}
 
 \input{../paper/sections/capacity-numbers}
 \input{../paper/sections/oracle-numbers}
@@ -47,163 +46,187 @@
 \pagestyle{empty}
 
 \begin{center}
-{\Large\bfseries Recovering the dynamics of a sequence seen only through noise}\\[0.25em]
-{\normalsize Results in brief --- 25 September 2026}
+{\Large\bfseries Learning a sequence model from noisy data alone}\\[0.2em]
+{\normalsize What the estimator buys, what it is made of, and where it stops --- 25 September 2026}
 \end{center}
 
-\section*{1.\quad What we are doing, and why this way}
+\section*{1.\quad What is being measured}
 
-\subsection{The problem} A diffusion model generates data by learning to reverse a noising
-process. To reverse it, it must learn one object at every noise level: the \emph{score}, the
-direction in which noisy data becomes more likely. On real data nobody knows the true score, so
-nobody can measure how far a learned one is from it --- progress is judged by proxies such as
-sample quality. That leaves a class of questions unanswerable. How much information does the noise
-actually destroy? What kind of structure is lost first? And does knowing something about how the
-data is built help, or is a large enough network always enough?
+\subsection{The setting} A diffusion model generates data by learning to undo noise, and the
+object it must learn at each noise level is the \emph{score}. On real data the true score is
+unknown, so nobody can measure how far a learned one is from it. We work in a case where the true
+score is computable exactly, and ask one question: \textbf{is an estimator that knows the data has
+a sequential structure better than a general network that does not, when both are shown the same
+information?}
 
-\subsection{The trick} We work where the true score can be computed exactly, so those questions
-have exact answers. The data comes from a Markov chain: a sequence $a_1,\dots,a_{\nsites}$ in which
-each site is a fraction of the previous one plus fresh randomness,
+\subsection{The data} A Markov chain: each site is a fraction of the previous one plus fresh
+randomness,
 \[
-a_{i+1} \;=\; \corr\,a_i + \varepsilon_i .
+a_{i+1} \;=\; \corr\,a_i + \varepsilon_i ,\qquad i = 1,\dots,\nsites-1 .
 \]
-Because the dependencies form a chain, the exact score of the \emph{noised} sequence can be
-computed by message passing, to numerical precision. Every error reported below is measured against
-that truth rather than against a proxy.
+$\corr$ is the \textbf{correlation}: how strongly each site remembers the one before it. The
+innovation $\varepsilon$ is drawn from a density proportional to $e^{-|x/s|^{\beta}}$, and the
+exponent $\beta$ is the \textbf{shape}. The scale $s$ is always reset so the variance of
+$\varepsilon$ is the same for every $\beta$: $\beta$ therefore changes how the randomness is
+\emph{distributed}, never how large it is. This is what separates ``non-Gaussian structure'' from
+``more noise'', and it is the distinction the whole result turns on.
 
-\subsection{The two knobs} $\corr$ is the correlation: how strongly each site remembers the last.
-The innovation $\varepsilon$ is drawn from a \emph{generalised Gaussian}, whose density falls off
-like $e^{-|x/s|^{\beta}}$. The exponent $\beta$ is the \textbf{shape}: it sets how the randomness is
-distributed at a fixed spread. The scale $s$ is always chosen so the variance is identical for every
-$\beta$, so $\beta$ moves the \emph{fourth} moment while the second stays put --- which is exactly
-what separates ``non-Gaussian structure'' from ``more noise''.
-
-\begin{table}[H]
+\begin{minipage}[t]{0.47\textwidth}
 \centering\small
-\begin{tabular}{@{}llll@{}}
+\vspace{0.3em}
+\begin{tabular}{@{}llr@{}}
 \toprule
-$\beta$ & distribution & tails, against Gaussian & excess kurtosis \\
+$\beta$ & the innovation is & excess kurtosis \\
 \midrule
-$1$   & Laplace  & heavier: occasional large jumps & $+3.00$ \\
-$1.5$ & ---      & slightly heavier                & $+0.76$ \\
-$2$   & Gaussian & the reference                   & $0.00$ \\
-$3$   & ---      & lighter: large jumps suppressed & $-0.58$ \\
+$1$   & Laplace: occasional large jumps & $+3.00$ \\
+$1.5$ & slightly heavier than Gaussian  & $+0.76$ \\
+$2$   & Gaussian                        & $0.00$ \\
+$3$   & lighter: jumps suppressed       & $-0.58$ \\
 \bottomrule
 \end{tabular}
-\caption{The shape coordinate $\beta$, at fixed variance. Excess kurtosis is
-$\Gamma(5/\beta)\Gamma(1/\beta)/\Gamma(3/\beta)^{2}-3$, zero exactly at the Gaussian. The main
-chain uses $\beta=1$; one experiment uses a chain on the \emph{negative} side, to check that what
-matters is fourth-order structure rather than heavy tails specifically.}
-\end{table}
-
-\subsection{The comparison} Two ways of learning the score are put side by side. Ours knows the
-data is a chain, and fits the chain's parameters by EM with exact message passing. The competitors
-are neural networks --- transformers and convolutional window models --- that know nothing about
-the structure. Both are shown \emph{exactly the same information}: one noisy view of each sequence,
-never the clean one, and neither may consult the true score to decide when to stop training. That
-last condition is the one comparisons of this kind most often violate.
-
-\subsection{How we measure it} Every number in this document is a \emph{relative score error}:
-the size of the gap between a method's score and the true one, divided by the size of the true
-score itself, pooled over twelve noise levels. It has three natural landmarks. The exact score
-scores $0$. Ignoring the data's structure entirely --- answering as if the sites were independent
---- scores $\isoFloorLaplace$. And $\lmmseFloorLaplace$ is the best score achievable by any method
-that captures correlations but nothing beyond them; we prove that this is a genuine floor, not
-merely the best we managed, which is what makes it possible to say what a method has and has not
-learned rather than only which method won.
-
-\section*{2.\quad What we found}
-
-\begin{figure}[H]
-\vspace{-0.3em}
-\centering
-\includegraphics[width=\textwidth]{fig-brief.pdf}
-\caption{\textbf{(a)} What one noisy sequence still tells you about the two properties of the chain
-as noise rises: the correlation $\corr$ and the shape $\beta$. Both fall exponentially but at
-different exponents; the dotted guides are the $e^{-4t}$ and $e^{-8t}$ the theory predicts.
-\textbf{(b)} Error of our estimator against the best network at six combinations of $\corr$ and
-length $\nsites$, on identical information. Lower is better. \textbf{(c)} Why structure helps: the
-dashed line is the best any method carrying only second-order information can do; a chain model
-restricted to Gaussian randomness ($\ncomp=1$) sits on it at every sample size, while one free to
-represent non-Gaussian structure ($\ncomp=8$) goes far below.}
-\vspace{-0.6em}
-\end{figure}
-
-\subsection{Noise destroys fine structure far faster than correlation, at an exact rate} This is
-the theoretical result, and panel (a) is it measured. Structure of each order decays at its own
-exponential rate under the noise, so the higher-order detail that makes data non-Gaussian vanishes
-first while plain correlation survives much longer. The two exponents differ by a factor of two,
-and the level at which they cross is a formula rather than a fitted curve. The practical
-consequence: above a computable noise level, everything a model can still learn about the data is
-second-order --- and we can say where that level is.
-
-\subsection{Knowing the structure is worth 5--10$\times$ at equal information} Our estimator is
-ahead in all six regimes and in every one of the sixteen repetitions of each. The comparison is
-deliberately unflattering to us: the networks are re-screened and re-tuned separately inside each
-regime, while our method is denied the true score when choosing where to stop and selects on
-held-out evidence instead. The advantage is \emph{smallest} where the chain carries the most
-non-Gaussian structure --- the direction panel (a) predicts, so the experiment and the theory agree
-on a detail neither was fitted to.
-
-\begin{table}[H]
+\captionof{table}{The shape $\beta$ at fixed variance. Excess kurtosis is zero exactly at the
+Gaussian. Our chain uses $\beta=1$.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\textwidth}
 \centering\small
-\input{../paper/sections/regime-baselines-table}
-\caption{Across correlation and length, 16 seeds, $\nseq=2048$. Columns: the second-order oracle;
-our estimator stopped by held-out evidence (ev.) and, for reference, by the true kernel (bp); the
-best network given the same single noisy view (C); the best network additionally given the
-\emph{clean} sequence (B), an easier problem included to show what the restriction costs; and the
-factor between the C network and the evidence-selected estimator.}
-\end{table}
+\vspace{0.3em}
+\begin{tabular}{@{}cll@{}}
+\toprule
+ & is & values used \\
+\midrule
+$\nseq$    & how many sequences we learn from & $32$--$2048$ \\
+$\nsites$  & how many sites in each sequence  & $16$--$128$ \\
+$\ncomp$   & flexibility of the fitted noise  & $1$--$16$ \\
+$t$        & the noise level                  & $12$ levels \\
+\bottomrule
+\end{tabular}
+\captionof{table}{$\nseq$ and $\nsites$ describe the data; $\ncomp$ is a dial on our estimator,
+not a property of the data. The $12$ levels are log-spaced over $t\in[0.05,3]$.}
+\end{minipage}
 
-\subsection{The advantage is fourth-order structure, and nothing else} The capacity experiment is
-the control. Restricted to a single Gaussian innovation, the chain model lands exactly on the
-second-order floor ($\lmmseFloorLaplace$) and stays there however much data it is given; allowed
-richer innovations it goes far below. The only difference between those two arms is the freedom to
-represent non-Gaussian structure, so that is what the margin is made of. The same holds across
-fifteen further combinations of $(\corr,\nsites)$, with the restricted arm matching the theoretical
-floor to $\regIdentMax$ in the worst of them --- which incidentally tests the grid, the message
-passing, the EM and the scoring simultaneously. It also holds with the non-Gaussianity reversed, on
-a chain \emph{less} heavy-tailed than Gaussian: the factor there is
-$\rbBimodalIsmRatioEveightfivethirtytwo$
-[$\rbBimodalIsmRatioEveightfivethirtytwolo$, $\rbBimodalIsmRatioEveightfivethirtytwohi$].
+\subsection{Our estimator, and its one dial} We fit the chain by EM: alternate between inferring
+what the clean sequence probably was (exactly, by message passing) and re-estimating the
+parameters. The innovation law is \emph{not} assumed --- it is fitted as a mixture of $\ncomp$
+Gaussians with free weights, means and variances, which can represent heavy tails, skew and
+bimodality alike. It is never told the truth is Laplace, and at $\ncomp=16$ it recovers an excess
+kurtosis of $\capKurtsixteenD$ against the true $3.00$. Setting $\ncomp=1$ forces the innovation
+Gaussian; that restriction is the control in \S3.
 
-\input{../paper/sections/tab-capacity}
+\subsection{The competitors} Six neural sequence denoisers: a fully connected network, a
+convolutional window head, a dilated convolutional network (TCN), a bidirectional GRU, a
+transformer with relative-position attention, and a 1-D U-Net. Each is screened and tuned
+\emph{separately inside every regime}, and the best of the six in each cell is what we report.
 
-\section*{3.\quad Where it stops working, and what the evidence rests on}
+\subsection{The rule of the comparison} Both sides see \textbf{one noisy view of each sequence and
+nothing else} --- never the clean sequence, never a second view. Neither side may use the true
+score to decide when to stop training: the networks stop on a held-out noisy objective, our
+estimator on held-out evidence. This is the condition comparisons of this kind most often violate,
+and it is the one that makes the numbers below a fair fight.
+
+\subsection{The measure} Every number in this document is a \textbf{relative score error},
+\[
+\sqrt{\;\textstyle\sum \lVert \hat s - s_{\text{true}}\rVert^2 \;\Big/\; \sum \lVert s_{\text{true}}\rVert^2\;}
+\]
+summed over the twelve noise levels and the test sequences: the size of your error divided by the
+size of the thing you are estimating. It is dimensionless and has three landmarks. The exact score
+scores $0$. Ignoring the sequence structure entirely scores $\isoFloorLaplace$. And
+$\lmmseFloorLaplace$ is the best score reachable by \emph{any} method that uses correlations but
+nothing beyond them --- a proven floor, not an empirical best, which is what lets us say what a
+method has learned rather than only which one won.
+
+\section*{2.\quad The result: structure is worth 5--10$\times$ at equal information}
 
 \begin{figure}[H]
 \vspace{-0.2em}
 \centering
+\includegraphics[width=\textwidth]{fig-brief.pdf}
+\caption{\textbf{(a)} Relative score error, lower is better, at six combinations of correlation
+$\corr$ and length $\nsites$, at $\nseq=2048$. Blue is our estimator, orange the best of the six
+networks on the same single noisy view. \textbf{(b)} The control. The dashed line is the
+second-order floor. The same estimator restricted to a Gaussian innovation ($\ncomp=1$, orange)
+sits on that floor at every sample size and never leaves it; allowed a non-Gaussian innovation
+($\ncomp=8$, blue) it goes far below.}
+\vspace{-0.5em}
+\end{figure}
+
+\begin{table}[H]
+\centering\small
+{\setlength{\tabcolsep}{4pt}\input{../paper/sections/regime-baselines-table}}
+\caption{16 seeds per cell, $\nseq=2048$. \textsc{lmmse} is the second-order floor for that regime.
+\emph{EM--BP (ev.)} is our estimator stopped on held-out evidence, which is the honest rule;
+\emph{(bp)} is the same estimator stopped by an oracle, shown so the cost of honesty is visible.
+\emph{best net (C)} is the best network on one noisy view --- the matched comparison. \emph{best
+net (B)} is the best network additionally given the \emph{clean} sequence, an easier problem
+included to show what the restriction costs. The factor compares net (C) with EM--BP (ev.), paired
+by seed, with a percentile bootstrap. $\dagger6$: in $6$ of the $16$ seeds of that cell the
+network's held-out curve never improved on its first checkpoint --- reported, deliberately not
+excluded.}
+\end{table}
+
+\subsection{How to read it} Our estimator is ahead in all six regimes and in every one of the
+sixteen repetitions of each, by factors from $\rbIsmRatioEvfiveonetwentyeight$ to
+$\rbIsmRatioEvninefivethirtytwo$. Three things in the table matter beyond that headline. First,
+\emph{ev.} and \emph{bp} are nearly identical, so being denied the true score when choosing where
+to stop costs us almost nothing --- the two rules pick the same iteration in
+\rbEmAgreeRungTotal{} cells. Second, the conservatism runs against us: our estimator is still
+improving when its iteration budget runs out in \rbEmEvAtCapTotal{} cells, so its error there is an
+upper bound. Third, the floor itself moves with $\corr$, and where the network sits relative to it
+is the real story: at $\corr=0.95$ the network ($\rbIsmBestninefivethirtytwo$) is \emph{worse} than the floor ($\rbLmmseninefivethirtytwo$),
+meaning one noisy view per sequence is not enough for it to learn even the correlation, while at
+$\corr=0.5$ it is below the floor and has genuinely learned beyond second order.
+
+\clearpage
+\section*{3.\quad The control, and the boundary}
+
+\subsection{What the margin is made of} Panel (b) and the table above are a comparison of our
+estimator with \emph{itself}, one dial moved. Restricted to a Gaussian innovation it lands on the
+second-order floor and stays there however much data it is given; allowed a non-Gaussian
+innovation it goes far below. Since nothing else differs, the margin is fourth-order structure and
+cannot be anything else. The same holds across fifteen further combinations of $(\corr,\nsites)$,
+with the restricted arm matching the theoretical floor to $\regIdentMax$ in the worst of them ---
+which incidentally tests the grid, the message passing, the EM and the scoring at once. It also
+holds with the non-Gaussianity reversed, on a chain \emph{less} heavy-tailed than Gaussian, where
+the factor is $\rbBimodalIsmRatioEveightfivethirtytwo$
+[$\rbBimodalIsmRatioEveightfivethirtytwolo$, $\rbBimodalIsmRatioEveightfivethirtytwohi$].
+
+\input{../paper/sections/tab-capacity}
+
+\subsection{Two things to notice in it} At $\nseq=32$ the richest kernel ($\capEmsixteenA$) is \emph{worse}
+than the simplest non-Gaussian one ($\capEmtwoA$): flexibility costs variance when data is short, and
+the ordering only reverses by $\nseq=2048$. And the last column is the mixture closest in
+Kullback--Leibler divergence to the innovation law itself, which is a reference for how expressive
+the family is --- not a bound on score error, and not comparable with the finite-$\nseq$ columns.
+
+\begin{figure}[H]
+\vspace{-0.1em}
+\centering
 \includegraphics[width=\textwidth]{fig-boundary.pdf}
-\caption{How wrong the first-order chain assumption may be before the advantage goes. Each panel
-pushes the data away from the assumed model in a different way and plots a network's error divided
-by ours; above the dotted line at $1$ the misspecified chain estimator still wins. Every
-perturbation is Gaussian, so the true score of the \emph{perturbed} model remains exactly
-computable and both sides are scored against it --- we are not grading ourselves against our own
-assumption.}
+\caption{How wrong the chain assumption may be before the advantage goes. The vertical axis is a
+\emph{ratio}: a convolutional window head's error divided by ours, so the dotted line at $1$ is a
+tie and above it we still win. Strength $0$ is the assumed model in every panel; the four
+departures are, left to right, a second order of memory ($a_i=\corr_1a_{i-1}+\corr_2a_{i-2}+\varepsilon$,
+strength $=\corr_2$), a correlation that drifts along the sequence
+($\corr_i=\corr+\delta\cos(2\pi i/\nsites)$, strength $=\delta$), a long-range coupling, and one
+shared hidden factor. All four perturbed models are Gaussian, so the true score of the
+\emph{perturbed} model is computable exactly and both sides are scored against it --- we are not
+grading ourselves against our own assumption.}
 \vspace{-0.4em}
 \end{figure}
 
-\subsection{The boundary} Two departures reverse the ordering inside the range swept: adding a
-second order of memory, at a coefficient between $\misBreakLoArtwoD$ and $\misBreakHiArtwoD$, and
-letting the correlation vary along the sequence, between $\misBreakLoSitevarD$ and
-$\misBreakHiSitevarD$. Two others never reverse it --- a rank-one global latent is absorbed into
-the fitted correlation, and a long-range coupling decays to a tie. The two sample sizes also
-separate the two ways of being wrong: at zero perturbation the error halves when the data
-quadruples, which is estimation error; past break-even it does not move at all, which is bias, and
-no amount of data will fix it.
+\subsection{Where it ends} Two departures reverse the ordering inside the range swept: a second
+order of memory between $\misBreakLoArtwoD$ and $\misBreakHiArtwoD$, and a drifting correlation
+between $\misBreakLoSitevarD$ and $\misBreakHiSitevarD$. Two never reverse it --- a shared hidden
+factor is absorbed into the fitted correlation, and a long-range coupling decays to a tie. The
+limitation to state plainly: all four perturbations are Gaussian, because that is what makes the
+perturbed truth's score exact, so this locates the boundary against departures in the
+\emph{dependency structure} and not against departures in the shape of the noise.
 
-\subsection{What the numbers rest on} Every experiment behind this page is frozen: its outputs are
-hash-pinned and its configuration was registered before it ran. Each number here is generated from
-those outputs by a tool and then recomputed independently by a second tool that fails if the two
-disagree, and the figures check themselves against the manuscript's own numbers and refuse to be
-written if a value does not match. One experiment, a sample-complexity measurement, is still
-running on the cluster; nothing on this page depends on it.
-
-\subsection{One correction on the record} The capacity sweep in the earlier archival study is void.
-Its training set was drawn in a way that re-created the random generator for each sequence, so every
-configuration was in fact fitted to a single repeated sequence. The earlier explanation offered for
-that study's conclusion --- a stopping-rule asymmetry --- is withdrawn with it. The capacity
-evidence above was computed independently and is unaffected.
+\subsection{What the numbers rest on} Every experiment is frozen with hash-pinned outputs and a
+configuration registered before it ran. Each number is generated from those outputs by one tool
+and recomputed independently by a second that fails if the two disagree; the figures check
+themselves against the manuscript's numbers and refuse to be written on a mismatch. One correction
+is on the record: the capacity sweep in the earlier archival study is void --- its training draw
+left every configuration fitted to a single repeated sequence --- and the capacity evidence above
+was computed independently of it.
 
 \end{document}
