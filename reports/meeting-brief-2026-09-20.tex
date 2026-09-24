@@ -71,7 +71,7 @@ uniform, bimodal, a one-parameter family in between), noised coordinate by coord
 the noise attaches one factor per site, the posterior stays a chain and two sweeps of exact
 message passing return the score. The covariance of every innovation family is the same by
 construction, so the laboratory separates second-order structure (correlation $\rho$) from
-higher-order structure (the shape of the innovation law) cleanly. \comp{Chapters 3, 6, 10}
+higher-order structure (the shape of the innovation law) cleanly. \comp{Chapters 4, 7, 11}
 
 Three questions were asked of it. What information survives the noise, order by order? Can the
 dynamics be learned from noised sequences alone, and how efficiently? And what does an
@@ -85,13 +85,13 @@ that stop?
 attenuated exactly by $e^{-mt}$; the Fisher information about a feature first visible at degree
 $m$ decays as $e^{-2mt}$; the number of sequences needed for a fixed local precision grows as
 $e^{2mt}$. Correlation lives at degree two, shape at degree four. Verified on the exact score,
-with the constants. \comp{Chapters 2, 4, 9}
+with the constants. \comp{Chapters 3, 5, 10}
 
 \item \hi{Second-order closure has an exact price.} Gaussian message closure computes the LMMSE of
 the covariance twin (Proposition~1), and the gap to the true score is
 $\tfrac16\|\kappa_4\|_F^2e^{-8t}$ to leading order. Adding the fourth-order term back closes
 $\audEdgeClosedLaplaceTzeropsixeight$ of the gap at $t=\audEdgeLevelTzeropsixeight$ and all of it
-from $t=2$. \comp{Chapters 9, 12}
+from $t=2$. \comp{Chapters 10, 13}
 
 \item \hi{The dynamics are learnable through the noise, and the information curve says where
 learning stops.} From $\learnSize$ sequences the shape is recovered at the reference up to
@@ -99,7 +99,7 @@ $t=\learnLevelTzeropfour$; fits split at $t=\learnLevelTzeropseven$
 ($\audCollapsedTzeropseven$ of $\audCollapsedNTzeropseven$ collapse to a Gaussian innovation) and
 collapse at $t=1$, one level below the point $t=\learnKurtBoundCross$ where the Cram\'er--Rao
 reference crosses the coordinate's range. The correlation survives to the crossover.
-\comp{Chapters 4, 14}
+\comp{Chapters 5, 15}
 
 \item \hi{Capacity buys exactly the fourth-order structure.} A Gaussian-innovation kernel lands on
 the LMMSE floor ($\capEmoneD$ against $\lmmseFloorLaplace$); an eight-component mixture reaches
@@ -108,7 +108,7 @@ $\kappa_4$ and reverses at the Gaussian member. The contrast holds in all $\regC
 $(\rho,L)$ cells of a regime sweep at $\regSeeds$ seeds, the paired difference running from
 $\regGainStrongest$ to $\regGainWeakest$ with every interval excluding zero, and in every cell the
 $C=1$ arm lands on the LMMSE floor to $\regIdentMax$, which checks the whole apparatus.
-\comp{Chapters 12, 14, 16}
+\comp{Chapters 13, 15, 17}
 
 \item \hi{Against networks, the advantage is largest at equal information.} Under the standard
 recipe (clean sequences, fresh corruption every step) the best of six architectures reaches
@@ -116,7 +116,7 @@ $\baseBestD$ at $M=2048$, a paired factor $\baseRatioBestD$ behind EM--BP. At EM
 interface (one noised view per sequence, no clean chain, no true score for model selection) the
 best network reaches $\matchedBestD$, a paired factor $\matchedRatioBestD$
 $[\matchedRatioBestDlo,\matchedRatioBestDhi]$; given the clean sequence as a target but still one
-corruption, $\matchedFixedD$, a factor $\matchedFixedRatioD$. \comp{Chapters 7, 16, 18}
+corruption, $\matchedFixedD$, a factor $\matchedFixedRatioD$. \comp{Chapters 8, 17, 19}
 
 \item \hi{That comparison now holds across regimes, and it is not about heavy tails.} Repeated at
 $\rbCells$ combinations of correlation and chain length, with the networks re-screened inside each
@@ -126,13 +126,13 @@ frozen point with a platykurtic innovation instead of a heavy-tailed one, the fa
 $\rbBimodalIsmRatioEveightfivethirtytwo$
 $[\rbBimodalIsmRatioEveightfivethirtytwolo,\rbBimodalIsmRatioEveightfivethirtytwohi]$, the same as
 on the Laplace chain. What the structure buys is fourth-order structure of either sign.
-\comp{Chapters 16, 18}
+\comp{Chapters 17, 19}
 
 \item \hi{The advantage ends where the structure is wrong, at a strength we can compute.} Under an
 AR(2) coefficient or a site-dependent $\rho$ the ordering reverses inside the swept range; a
 rank-one global latent or a long-range coupling never reverses it. The large-sample error of the
 misspecified EM--BP is a closed-form Kullback--Leibler projection bias $b(\varepsilon)$ that
-reproduces the measured errors to within $\audBiasMaxAbsDevLagoneD$. \comp{Chapter 17}
+reproduces the measured errors to within $\audBiasMaxAbsDevLagoneD$. \comp{Chapter 18}
 \end{enumerate}
 
 \section{What survives the noise, order by order}
@@ -160,7 +160,7 @@ them widens with $t$. Panel (c) is the sharpest version: the entire cost of appr
 non-Gaussian chain by its covariance twin is $\tfrac16\|\kappa_4\|_F^2e^{-8t}$, and adding the
 fourth-order term back closes $\audEdgeClosedLaplaceTzeropsixeight$ of it at
 $t=\audEdgeLevelTzeropsixeight$ and all of it from $t=2$.
-\comp{Chapters 2, 4, 9, 12}
+\comp{Chapters 3, 5, 10, 13}
 
 \section{What capacity buys}
 
@@ -209,7 +209,7 @@ range several times wider. The earlier diagnosis --- that a stopping rule explai
 conclusion --- is withdrawn with it; the asymmetry is real but is \textsc{em}'s behaviour on one
 chain. Nothing in this section depends on that sweep: the runs behind it draw every chain
 independently and assert that they did.
-\comp{Chapters 12, 14, 16}
+\comp{Chapters 13, 15, 17}
 
 \section{Structure against networks, at equal information}
 
@@ -270,7 +270,7 @@ $\rbBimodalSeeds$ seeds, with the best network (\rbBimodalIsmBestArcheightfiveth
 $\rbBimodalIsmBesteightfivethirtytwo$ against a floor of $\rbBimodalLmmseeightfivethirtytwo$ ---
 $\rbBimodalIsmOverLmmseeightfivethirtytwo$ times above it. What explicit structure buys is
 fourth-order structure of either sign.
-\comp{Chapters 7, 16, 18}
+\comp{Chapters 8, 17, 19}
 
 \section{Where the advantage ends}
 
@@ -315,7 +315,7 @@ score gives $\genKurtgenBLmmse$ --- an essentially Gaussian chain, the fourth-or
 altogether --- at a gap of $\genLoglikgapBLmmse$, and the isotropic score $\genLoglikgapBIso$.
 Score error and sample quality move together, which is what licenses reading the rest of the paper
 as being about generative models and not only about an estimation problem.
-\comp{Chapter 20}
+\comp{Chapters 9, 21}
 
 \section{Where the evidence stands}
 
