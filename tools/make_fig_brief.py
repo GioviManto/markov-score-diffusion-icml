@@ -6,8 +6,10 @@ Usage: make_fig_brief.py [--dest reports/figures]
 
 Every number is read from a FROZEN output; nothing here is recomputed or hand-entered.
 
-  (a) structure against networks     outputs/E14/regimes.csv             (frozen)
-  (b) what the margin is made of     outputs/E02a/capacity.csv           (frozen)
+  fig-brief    (a) structure against networks   outputs/E14/regimes.csv         (frozen)
+               (b) what the margin is made of   outputs/E02a/capacity.csv       (frozen)
+  fig-decay    what the noise destroys, by order outputs/E01/shape_information.csv (frozen)
+  fig-boundary how wrong the assumption may be   outputs/E08/misspecification.csv  (frozen)
 
 The two panels are the two sentences of the result: an estimator that knows the chain beats a
 network given the same information, in every regime tested (a); and the margin is fourth-order
@@ -141,6 +143,33 @@ def panel_capacity(ax):
     fs.panel_label(ax, "(b)", x=-0.20)
 
 
+def fig_decay(dest):
+    """What one noisy sequence still says about each coordinate, as the noise rises."""
+    d = pd.read_csv(OUT / "E01" / "shape_information.csv")
+    d = d[d.beta == 1.0]
+    m = d.groupby("t").agg(rho=("eff_rho", "mean"), beta=("eff_beta", "mean")).reset_index()
+    m = m[m.t <= 3.0]   # past t = 3 the outer-product estimate of the shape coordinate floors
+    fig, ax = plt.subplots(figsize=(4.3, 2.35))
+    ax.plot(m.t, m.rho, color=fs.CAT[0], lw=1.6)
+    ax.plot(m.t, m.beta, color=fs.CAT[1], lw=1.6)
+    tt = np.array([1.2, 3.0])
+    ax.plot(tt, 3.0e1 * np.exp(-4 * (tt - 1.2)) * 1.1, color=fs.INK2, lw=0.8, ls=":")
+    ax.plot(tt, 2.0e-2 * np.exp(-8 * (tt - 1.2)) * 1.6, color=fs.INK2, lw=0.8, ls=":")
+    ax.text(2.2, 3.0e1 * np.exp(-4 * 0.95) * 3.0, "$e^{-4t}$", fontsize=7.5, color=fs.INK2)
+    ax.text(2.2, 2.0e-2 * np.exp(-8 * 0.95) * 4.0, "$e^{-8t}$", fontsize=7.5, color=fs.INK2)
+    ax.set_xscale("log"); ax.set_yscale("log")
+    ax.set_xlim(0.045, 3.4); ax.set_ylim(1e-9, 2e3)
+    ax.set_xticks([0.05, 0.1, 0.3, 1, 3]); ax.set_xticklabels(["0.05", "0.1", "0.3", "1", "3"])
+    ax.set_xlabel("noise level  $t$")
+    ax.set_ylabel("information per sequence")
+    fs.label_on_curve(ax, m.t.to_numpy(), m.rho.to_numpy(), r"$\rho$ (correlation)",
+                      at_x=0.16, color=fs.CAT[0], fontsize=7.5, offset=5.0, zorder=6)
+    fs.label_on_curve(ax, m.t.to_numpy(), m.beta.to_numpy(), r"$\beta$ (shape)",
+                      at_x=0.16, color=fs.CAT[1], fontsize=7.5, offset=5.0, zorder=6)
+    fig.subplots_adjust(left=0.16, right=0.97, bottom=0.19, top=0.96)
+    return fs.save(fig, dest / "fig-decay.pdf")
+
+
 def _mac(x):
     """The spelling make_misspec_numbers.py uses for a number inside a macro name."""
     return "".join({"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five",
@@ -199,6 +228,7 @@ def main() -> int:
     p = fs.save(fig, a.dest / "fig-brief.pdf")
     print(f"wrote {p}")
     print(f"wrote {fig_boundary(a.dest)}")
+    print(f"wrote {fig_decay(a.dest)}")
     return 0
 
 

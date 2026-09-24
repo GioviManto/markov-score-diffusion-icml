@@ -38,6 +38,8 @@
 \input{../paper/sections/capacity-numbers}
 \input{../paper/sections/oracle-numbers}
 \input{../paper/sections/regime-numbers}
+\input{../paper/sections/audit-numbers}
+\input{../paper/sections/baseline-numbers}
 \input{../paper/sections/misspec-numbers}
 \input{../paper/sections/regime-baselines-numbers}
 \input{../paper/sections/regime-baselines-bimodal-numbers}
@@ -110,7 +112,7 @@ parameters. The innovation law is \emph{not} assumed --- it is fitted as a mixtu
 Gaussians with free weights, means and variances, which can represent heavy tails, skew and
 bimodality alike. It is never told the truth is Laplace, and at $\ncomp=16$ it recovers an excess
 kurtosis of $\capKurtsixteenD$ against the true $3.00$. Setting $\ncomp=1$ forces the innovation
-Gaussian; that restriction is the control in \S3.
+Gaussian; that restriction is the control in \S6.
 
 \subsection{The competitors} Six neural sequence denoisers: a fully connected network, a
 convolutional window head, a dilated convolutional network (TCN), a bidirectional GRU, a
@@ -134,7 +136,43 @@ $\lmmseFloorLaplace$ is the best score reachable by \emph{any} method that uses 
 nothing beyond them --- a proven floor, not an empirical best, which is what lets us say what a
 method has learned rather than only which one won.
 
-\section*{2.\quad The result: structure is worth 5--10$\times$ at equal information}
+\section*{2.\quad How the estimator is built}
+
+Two steps, repeated. \textbf{E-step:} with the parameters held fixed, compute the exact posterior
+over the clean chain given its one noisy view. Because the dependencies form a chain this is
+sum--product message passing --- forward--backward --- and the messages are carried on a grid of
+$401$ points over $[-8,8]$, which is what makes it exact to numerical precision rather than
+approximate. \textbf{M-step:} re-estimate the parameters from that posterior in closed form:
+$\corr$ by a weighted least-squares solve, the innovation mixture by its conditional-maximisation
+updates. Then stop somewhere: the iteration count is chosen on the held-out evidence of a noisy
+bundle, never on the true score.
+
+What it is never given: a clean sequence, a second view of any sequence, or the true score at any
+point in training or selection. What it is given, and the networks are not, is the knowledge that
+the data is a chain.
+
+\section*{3.\quad What the noise destroys, order by order}
+
+\begin{figure}[H]
+\vspace{-0.2em}
+\centering
+\includegraphics[width=0.66\textwidth]{fig-decay.pdf}
+\caption{How much one noisy sequence still says about each of the two coordinates, as the noise
+rises. Both fall exponentially, but at different exponents: the dotted guides are the $e^{-4t}$ and
+$e^{-8t}$ the theory predicts, not fitted lines. \emph{The vertical positions of the two curves are
+not comparable} --- they are informations about different parameters, so only the slopes carry the
+claim.}
+\vspace{-0.4em}
+\end{figure}
+
+\noindent
+Correlation lives at second order and shape at fourth, and noise attenuates order $m$ at
+$e^{-2mt}$. So fine structure disappears first and correlation survives much longer. This is why
+the advantage below is \emph{smallest} where the chain is most strongly correlated: a strongly
+correlated chain has a nearly Gaussian marginal, so there is less fourth-order structure left to
+exploit. The experiment and the theory agree on a detail neither was fitted to.
+
+\section*{4.\quad The result: structure is worth 5--10$\times$ at equal information}
 
 \begin{figure}[H]
 \vspace{-0.2em}
@@ -151,7 +189,7 @@ sits on that floor at every sample size and never leaves it; allowed a non-Gauss
 
 \begin{table}[H]
 \centering\small
-{\setlength{\tabcolsep}{4pt}\input{../paper/sections/regime-baselines-table}}
+{\setlength{\tabcolsep}{4pt}\input{../paper/sections/regime-baselines-table}}\label{tab:regimes}
 \caption{16 seeds per cell, $\nseq=2048$. \textsc{lmmse} is the second-order floor for that regime.
 \emph{EM--BP (ev.)} is our estimator stopped on held-out evidence, which is the honest rule;
 \emph{(bp)} is the same estimator stopped by an oracle, shown so the cost of honesty is visible.
@@ -161,6 +199,7 @@ included to show what the restriction costs. The factor compares net (C) with EM
 by seed, with a percentile bootstrap. $\dagger6$: in $6$ of the $16$ seeds of that cell the
 network's held-out curve never improved on its first checkpoint --- reported, deliberately not
 excluded.}
+\label{tab:regimes}
 \end{table}
 
 \subsection{How to read it} Our estimator is ahead in all six regimes and in every one of the
@@ -175,10 +214,37 @@ is the real story: at $\corr=0.95$ the network ($\rbIsmBestninefivethirtytwo$) i
 meaning one noisy view per sequence is not enough for it to learn even the correlation, while at
 $\corr=0.5$ it is below the floor and has genuinely learned beyond second order.
 
-\clearpage
-\section*{3.\quad The control, and the boundary}
+\section*{5.\quad How each network behaved}
 
-\subsection{What the margin is made of} Panel (b) and the table above are a comparison of our
+\input{../paper/sections/tab-baselines}
+
+\noindent
+Table~\ref{tab:baselines} is the \emph{complement} of Table~\ref{tab:regimes}, and the difference matters. Here every
+network is trained the standard way --- on \textbf{clean} sequences with a fresh corruption drawn
+at each step --- while EM--BP still sees only one noisy view per sequence and never a clean one.
+The networks are therefore \emph{advantaged}, and EM--BP is still ahead of the best of them by a
+factor of $\baseRatioBestD$ at $\nseq=2048$, winning in all $\baseWinsBestD$ seeds.
+
+\subsection{What separates the architectures} The fully connected network ignores the sequence
+structure and is worst everywhere ($\baseWorstD$). The four that exploit it --- dilated
+convolutions, the bidirectional GRU, the transformer and the U-Net --- all land between
+$\baseBestD$ and $\baseTcnD$, so the remaining gap to EM--BP is not an
+architecture-selection problem. The window head is the interesting one: it stops improving
+($\baseWindowC$ at $\nseq=512$, $\baseWindowD$ at $\nseq=2048$) while the others keep going. That
+plateau is \emph{not} its limited receptive field --- the exact error floor a radius-4 window must
+pay at this correlation is $\audLocFloorrfourRhozeropeightfive$, far below where the head stops ---
+so it is a property of that one-layer architecture, not of locality. Given clean data,
+$\baseBelowFloorND$ of the six do get below the second-order floor, so they are genuinely learning
+fourth-order structure here; that is exactly what they fail to do from one noisy view.
+
+\subsection{The caveat that runs against us} Two of the networks were still improving when their
+training budget ran out, in $\baseAtCapTransformerD\%$ of cells for the transformer and
+$\baseAtCapMlpD\%$ for the fully connected one. Their errors are therefore upper bounds, as ours
+are in the matched comparison. We report both rather than only the one that flatters us.
+
+\section*{6.\quad The control, and the boundary}
+
+\subsection{What the margin is made of} Panel (b) and Table~\ref{tab:capacity} are a comparison of our
 estimator with \emph{itself}, one dial moved. Restricted to a Gaussian innovation it lands on the
 second-order floor and stays there however much data it is given; allowed a non-Gaussian
 innovation it goes far below. Since nothing else differs, the margin is fourth-order structure and
@@ -191,7 +257,7 @@ the factor is $\rbBimodalIsmRatioEveightfivethirtytwo$
 
 \input{../paper/sections/tab-capacity}
 
-\subsection{Two things to notice in it} At $\nseq=32$ the richest kernel ($\capEmsixteenA$) is \emph{worse}
+\subsection{Two things to notice in Table~\ref{tab:capacity}} At $\nseq=32$ the richest kernel ($\capEmsixteenA$) is \emph{worse}
 than the simplest non-Gaussian one ($\capEmtwoA$): flexibility costs variance when data is short, and
 the ordering only reverses by $\nseq=2048$. And the last column is the mixture closest in
 Kullback--Leibler divergence to the innovation law itself, which is a reference for how expressive
