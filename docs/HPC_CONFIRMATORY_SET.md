@@ -84,11 +84,18 @@ the fact. This matters more than it sounds: the networks are GPU-native and BP's
 goes through `cupy`, so timing a GPU transformer against a CPU BP would report an artefact
 of what each arm was allowed to run on.
 
-*Blocked on one thing*: `venv-cuda` on the cluster has torch 2.6.0+cu124 but **no cupy**.
-`hpc/bocconi_gpu.sbatch` records the version pin that must be respected —
-`cupy-cuda12x < 14`, because 14.x fails to JIT-compile its cub kernels against this
-cluster's toolkit in a way that is *partial and misleading* (cuBLAS matmuls still work, so
-a GPU looks usable until the first `.max(axis=...)` in the recursion).
+*Resolved before submission*: `venv-cuda` had torch 2.6.0+cu124 but **no cupy**, so BP had
+no GPU path at all. `cupy-cuda12x==13.6.0` was installed into it. The `< 14` pin is
+load-bearing and is recorded in `hpc/bocconi_gpu.sbatch`: 14.x fails to JIT-compile its cub
+kernels against this cluster's toolkit in a way that is *partial and misleading* — cuBLAS
+matmuls still succeed, so a GPU looks usable right up until the first `.max(axis=...)` in
+the recursion.
+
+A second safeguard worth knowing about: `_resolve_devices` drops a `gpu` arm it cannot
+satisfy rather than failing, so a GPU job on a node without a device would still produce
+output. That output is self-describing — every row carries `device_name`, and the params
+file records `cupy_gpu_available` — so a CPU-only fallback is visible rather than silent.
+Check those two fields before quoting any GPU number.
 
 ### E25 — the neural kernel, finally run
 
