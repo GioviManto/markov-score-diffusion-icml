@@ -63,12 +63,27 @@ class GridBPResult:
                        constants (likelihood normalizers and message rescalings).
                        Exact for the finite-state model the grid defines; see the
                        module docstring on what "exact" does and does not cover.
+    forward, backward: the normalized messages L_i and R_i on the grid, shape
+                       (n, M) each, present only when `grid_bp(..., return_messages=True)`
+                       was asked for and None otherwise.
+
+                       These are the objects the BP literature calls mu_k, and they are
+                       returned because a question was asked about their SHAPE, not only
+                       about the marginals they produce (docs/JEROME_CALL_2026-09-25.md
+                       Q3: "if you look at the messages mu_K, what do they look like?").
+                       Exposing them from this recursion is deliberate: the alternative
+                       is a second implementation of the same sweep inside an experiment,
+                       which is exactly what the module docstring and `backend.py` argue
+                       against. L_i and R_i EXCLUDE the local likelihood ell_i, matching
+                       the convention in the recursion below.
     """
 
     means: np.ndarray
     variances: np.ndarray
     beliefs: np.ndarray
     log_evidence: float
+    forward: np.ndarray | None = None
+    backward: np.ndarray | None = None
 
 
 def grid_bp(
@@ -80,6 +95,8 @@ def grid_bp(
     alpha: float,
     delta: float,
     log_mu: np.ndarray | None = None,
+    *,
+    return_messages: bool = False,
 ) -> GridBPResult:
     """Sum-product BP with grid-represented messages on the chain posterior.
 
@@ -153,7 +170,12 @@ def grid_bp(
     log_evidence = log_z_fwd + np.log(tail) + log_const
 
     return GridBPResult(
-        means=means, variances=variances, beliefs=beliefs, log_evidence=log_evidence
+        means=means, variances=variances, beliefs=beliefs, log_evidence=log_evidence,
+        # Normalized to unit quadrature mass, as the recursion leaves them, so they are
+        # densities on the grid and can be compared with candidate message families
+        # directly. R[-1] is the constant 1 by construction and is returned as such.
+        forward=(L.copy() if return_messages else None),
+        backward=(R.copy() if return_messages else None),
     )
 
 
