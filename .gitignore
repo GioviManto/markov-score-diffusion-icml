@@ -34,3 +34,6 @@ paper/figures/*.png
 reports/*.aux
 reports/*.log
 reports/*.out
+
+# Third-party papers kept locally for reference (Jerome's ICML papers); not ours to redistribute
+icml-jerome/

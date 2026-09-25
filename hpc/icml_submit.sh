@@ -29,9 +29,13 @@ WORKERS_CAP=${MSD_HPC_WORKERS:-}; GRES=${MSD_HPC_GRES:-}; VENV=${MSD_HPC_VENV:-v
 # exception: it measures wall-clock, so it must be told how many threads it is allowed and
 # must record that -- a timing at an unstated thread count is not a reproducible number.
 THREADS=${MSD_HPC_THREADS:-1}
+# MSD_HPC_SERIAL_CPUS: cpus for a driver that declares no --workers (default 4).
+# E24 is the case that needs it: it is deliberately serial because it measures
+# wall-clock, and it still wants a node with enough cores to be realistic.
+SERIAL_CPUS=${MSD_HPC_SERIAL_CPUS:-4}
 AFTER=""; WHAT=${1:-}; shift || true
 while [[ $# -gt 0 ]]; do case "$1" in --after) AFTER="$2"; shift 2;; *) echo "unknown arg $1" >&2; exit 2;; esac; done
-[[ -n "$WHAT" ]] || { echo "usage: $0 <e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
+[[ -n "$WHAT" ]] || { echo "usage: $0 <e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
 
 partition() {
   if [[ -n "${MSD_HPC_PARTITION:-}" ]]; then echo "$MSD_HPC_PARTITION"; return; fi
@@ -79,6 +83,29 @@ cmd_for() {
     # so the cross-device ratio comes from one process on one machine rather than two runs.
     e24-cpu)     echo "e24_inference_cost.py --set devices=\"('cpu',)\" --output-dir {OUT}/E24";;
     e24-gpu)     echo "e24_inference_cost.py --set devices=\"('cpu', 'gpu')\" --output-dir {OUT}/E24gpu";;
+    # ================= confirmatory set of 25 Sep, after the Jerome call ==================
+    # docs/HPC_CONFIRMATORY_SET.md defines these. Each widens a laptop result across every
+    # factor that could plausibly explain it away, so that a conclusion is a property of the
+    # model and not of one configuration.
+    #
+    # E22c: message shapes, everything the laptop run held fixed now swept -- correlation
+    # (3), chain length (2), grid resolution (2, which is what separates model error from
+    # quadrature WITHOUT appealing to E11), four innovation families, twelve levels, 512
+    # chains. 576 cells, resumable.
+    e22c)        echo "e22_message_shapes.py --set 'rhos=(0.5, 0.85, 0.95)' --set 'lengths=(32, 128)' --set 'grids=((801, 12.0), (1601, 16.0))' --set n_chains=512 --set 'sites=(1, 2, 4, 8, 16, 31, 63, 127)' --output-dir {OUT}/E22c";;
+    # E24c: the cost numbers on a quiet node with a declared thread count. The laptop run was
+    # explicitly EXPLORATORY for exactly this reason.
+    e24c-cpu)    echo "e24_inference_cost.py --set \"devices=('cpu',)\" --set n_repeat=15 --set scale_repeat=9 --set 'train_sizes=(32, 128, 512, 2048, 8192)' --output-dir {OUT}/E24c";;
+    # E24c-gpu: the SAME driver with both devices in one process, so the cross-device ratio
+    # comes from one machine and one run rather than from two jobs compared after the fact.
+    e24c-gpu)    echo "e24_inference_cost.py --set \"devices=('cpu', 'gpu')\" --set n_repeat=15 --set scale_repeat=9 --output-dir {OUT}/E24gpu";;
+    # E25: the MDN-kernel rung of the information ladder -- Jerome's "small neural network
+    # that learns a transition kernel". exp_34 has existed unrun since before the call. It is
+    # serial with its own CSV resume, so the seeds are split across four jobs and merged.
+    e25-s0)      echo "exp_34_information_ladder.py --set seed0=0  --set seeds=4 --output-dir {OUT}/E25_s0";;
+    e25-s4)      echo "exp_34_information_ladder.py --set seed0=4  --set seeds=4 --output-dir {OUT}/E25_s4";;
+    e25-s8)      echo "exp_34_information_ladder.py --set seed0=8  --set seeds=4 --output-dir {OUT}/E25_s8";;
+    e25-s12)     echo "exp_34_information_ladder.py --set seed0=12 --set seeds=4 --output-dir {OUT}/E25_s12";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }
@@ -90,7 +117,7 @@ submit_one() {
   # do not, and passing it to them failed E07b at launch on 18 Sep (argparse: unrecognized
   # arguments). Decided here, at submission, from the driver's own source.
   local driver=${cmd%% *} workers_flag='' cpus=$CPUS
-  if grep -q -- '"--workers"' "experiments/$driver"; then workers_flag="--workers ${WORKERS_CAP:-\$SLURM_CPUS_PER_TASK}"; else cpus=4; fi
+  if grep -q -- '"--workers"' "experiments/$driver"; then workers_flag="--workers ${WORKERS_CAP:-\$SLURM_CPUS_PER_TASK}"; else cpus=${MSD_HPC_SERIAL_CPUS:-4}; fi
   local gres_line=''; [[ -n "$GRES" ]] && gres_line="#SBATCH --gres=$GRES"
   local jid
   jid=$(ssh -o BatchMode=yes "$MSD_HPC_HOST" "sbatch --parsable $depflag" <<SB

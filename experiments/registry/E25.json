@@ -1,0 +1,19 @@
+{
+ "id": "E25",
+ "script": "experiments/exp_34_information_ladder.py",
+ "hypothesis": "Jerome's proposal (docs/JEROME_CALL_2026-09-25.md Q6): a small neural network that learns the TRANSITION KERNEL inside exact BP, rather than a large network that learns the score. MDNKernel -- an MLP whose heads parameterise a per-parent-state Gaussian mixture, fitted by the same Fisher-identity generalised M-step the mixture kernel uses -- is given the Markov factorisation and homogeneity across sites but NOT the linear-autoregressive form: its mean and scale are arbitrary functions of the parent state, not rho*a. Prediction: it sits between the unstructured networks and the mixture-innovation EM-BP on the information ladder, and it is the arm whose training cost does not grow with the dataset (E24's training result).",
+ "design": "exp_34's registered ladder: 16 seeds x sizes (32, 128, 512, 2048) x arms (em_bp, mdn), rho = 0.85, L = 32, grid (401, 8), EM ladder to 1200 and MDN ladder to 400, checkpoints selected on the validation bundle. The driver is serial with its own CSV resume, so the seeds are split across four jobs (seed0 = 0, 4, 8, 12) into separate output directories and merged at fetch time.",
+ "predeclared_analysis": "Test risk per (seed, n_chains, arm), read as the ladder rung between the shared-window/bidirectional arms (exp_31) and mixture-innovation EM-BP. The failure mode Jerome named unprompted -- 'the real issue is going to be message passing with this, because then it will overfit; the problem you already observed with a few centroids is going to get worse' -- is the thing to look for: MDN test risk rising with capacity or with EM iterations while its training evidence still improves.",
+ "seeds": {
+  "confirmatory": "0-15, split 0-3 / 4-7 / 8-11 / 12-15 across four jobs"
+ },
+ "status": "REGISTERED 2026-09-25, submitted to the Bocconi HPC. The script has existed complete since before the call and had NEVER been run: no output directory for it exists anywhere in the tree.",
+ "registered": "2026-09-25",
+ "script_sha256": "ae9c1b400c3fe65f119bbb2bcd9a938527240b91dc9f182cb3a5fced2dc196dc",
+ "motivation": "Jerome, 25 September 2026: 'An intermediate model between the neural network and BP would be to actually fit K with a neural network... Exploit the structure by learning only one small neural network that will learn a transition kernel. And that's the only thing that it's doing, instead of a huge neural network, like an attention, that needs to understand that -- because when you learn the kernel, you've exploited the structure.' MDNKernel's own docstring already contains the same argument, written before the call.",
+ "follow_up": "The capacity axis is NOT in exp_34 and is the first follow-up: E24 showed the M-step cost is flat in dataset size (slope +0.008) while the E-step is linear, so 'a score network pays for its parameters on every example at every step, EM-BP pays once per iteration on the grid'. Turning that into 'small network beats huge network' requires sweeping the kernel capacity and showing the M-step stays flat in M as the kernel grows, against a score network whose per-step cost grows with its parameter count.",
+ "frozen_outputs": {},
+ "frozen_at": {},
+ "frozen_commit": {},
+ "frozen_run_commits": {}
+}

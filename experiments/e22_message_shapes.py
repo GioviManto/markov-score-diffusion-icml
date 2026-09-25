@@ -96,21 +96,23 @@ FAMILIES = {
 }
 
 SETTINGS = dict(
-    rho=FROZEN.rho,
-    n_sites=FROZEN.n_sites,
+    rhos=(FROZEN.rho,),
+    lengths=(FROZEN.n_sites,),
     families=("laplace", "gaussian", "student", "uniform"),
     levels=FROZEN.t_grid,
     n_chains=64,
-    # A finer grid than the production 401: this experiment's whole point is to separate a
-    # modelling error from a quadrature error, so the quadrature floor has to sit well below
-    # the effect. E11's envelope puts (801, 12) two orders below (401, 8).
-    grid_size=801,
-    half_width=12.0,
+    # (grid_size, half_width) pairs. A finer grid than the production 401: this experiment's
+    # whole point is to separate a modelling error from a quadrature error, so the floor has
+    # to sit well below the effect. E11's envelope puts (801, 12) two orders below (401, 8).
+    # Sweeping TWO resolutions is what turns "the floor is below the effect" from an appeal
+    # to E11 into a property of this experiment's own data: if the site-31 divergence is the
+    # same at (801, 12) and (1601, 16) then it is not quadrature, whatever E11 said.
+    grids=((801, 12.0),),
     sites=(1, 2, 4, 8, 16, 31),          # 1 is the analytic control (see P1)
     workers=1,
 )
 QUICK = dict(families=("laplace",), levels=(FROZEN.t_grid[3], FROZEN.t_grid[8]),
-             n_chains=8, grid_size=401, half_width=8.0, sites=(1, 4, 16))
+             n_chains=8, grids=((401, 8.0),), sites=(1, 4, 16))
 
 _LOG2PI = float(np.log(2.0 * np.pi))
 
@@ -213,9 +215,10 @@ def _std_cumulants(p, grid, w):
 
 
 def _cell(item):
-    cfg, family, t = item
-    rho, n_sites = cfg["rho"], int(cfg["n_sites"])
-    grid, w = make_grid(cfg["half_width"], cfg["grid_size"])
+    cfg, family, t, rho, n_sites, grid_spec = item
+    rho, n_sites = float(rho), int(n_sites)
+    grid_size, half_width = int(grid_spec[0]), float(grid_spec[1])
+    grid, w = make_grid(half_width, grid_size)
     prior = FAMILIES[family](rho)
     log_K = prior.log_transition_matrix(grid)
     alpha, delta = alpha_delta(float(t))
@@ -225,7 +228,7 @@ def _cell(item):
     # rather than a second construction of "the same" density.
     K = np.exp(log_K)
 
-    rng = rng_for("e22-shapes", family, float(t))
+    rng = rng_for("e22-shapes", family, float(t), rho, n_sites, grid_size)
     rows = []
     for c in range(int(cfg["n_chains"])):
         a = prior.sample(rng, n_sites)
@@ -245,14 +248,14 @@ def _cell(item):
                     lambda g, ww, mm, lv: _gauss_through_transition(g, ww, mm, lv, K),
                     # start from the moments of the message pulled back through the
                     # transition: mean/rho, and a variance floored away from zero
-                    [mu / max(cfg["rho"], 1e-3), np.log(max(v, 1e-3))],
+                    [mu / max(rho, 1e-3), np.log(max(v, 1e-3))],
                     p, grid, w),
                 "gauss_plus_laplace": _fit(
                     _gauss_plus_laplace, [0.0, mu, np.log(v), 0.5 * np.log(v)], p, grid, w),
             }
             base = dict(family=family, level=float(t), site=site, chain=c,
-                        grid_size=int(cfg["grid_size"]), half_width=float(cfg["half_width"]),
-                        rho=float(rho), **_std_cumulants(p, grid, w))
+                        grid_size=grid_size, half_width=half_width,
+                        rho=rho, n_sites=n_sites, **_std_cumulants(p, grid, w))
             for name, (kl, q, _theta) in cand.items():
                 rows.append({**base, "ansatz": name, "kl_nats": kl,
                              "hellinger": _hellinger(p, q, w)})
@@ -260,9 +263,11 @@ def _cell(item):
 
 
 def part_shapes(cfg, out):
-    cells = [(cfg, f, t) for f in cfg["families"] for t in cfg["levels"]]
+    cells = [(cfg, f, t, rho, L, g)
+             for f in cfg["families"] for t in cfg["levels"]
+             for rho in cfg["rhos"] for L in cfg["lengths"] for g in cfg["grids"]]
     rows = run_cells(cells, _cell, int(cfg["workers"]), out, "shapes.csv",
-                     key=lambda c: f"{c[1]}_t{c[2]}")
+                     key=lambda c: f"{c[1]}_t{c[2]}_r{c[3]}_L{c[4]}_g{c[5][0]}")
     _summarise(rows, out)
     return rows
 
@@ -273,13 +278,15 @@ def _summarise(rows, out):
 
     g = collections.defaultdict(list)
     for r in rows:
-        g[(r["family"], r["level"], r["site"], r["ansatz"])].append(r)
+        g[(r["family"], r["rho"], r["n_sites"], r["grid_size"],
+           r["level"], r["site"], r["ansatz"])].append(r)
     summary = []
-    for (fam, t, site, ans), rs in sorted(g.items()):
+    for (fam, rho, L, gs, t, site, ans), rs in sorted(g.items()):
         kl = np.array([r["kl_nats"] for r in rs])
         he = np.array([r["hellinger"] for r in rs])
         summary.append({
-            "family": fam, "level": t, "site": site, "ansatz": ans, "n_chains": len(rs),
+            "family": fam, "rho": rho, "n_sites": L, "grid_size": gs,
+            "level": t, "site": site, "ansatz": ans, "n_chains": len(rs),
             "kl_median": float(np.median(kl)), "kl_p90": float(np.percentile(kl, 90)),
             "kl_max": float(kl.max()),
             "hellinger_median": float(np.median(he)),
@@ -298,26 +305,33 @@ def _summarise(rows, out):
     # the three candidate families contains the true message exactly, and whatever KL is
     # measured there is pure quadrature. That number, at the same (level, site, ansatz), is
     # the floor everything else is judged against.
-    floor = {(s["level"], s["site"], s["ansatz"]): s["kl_median"]
+    # Keyed by CONFIGURATION as well: the quadrature floor of a (801, 12) run is not the
+    # floor of a (1601, 16) run, and comparing across them would be the very confusion this
+    # control exists to prevent.
+    floor = {(s["rho"], s["n_sites"], s["grid_size"], s["level"], s["site"], s["ansatz"]): s["kl_median"]
              for s in summary if s["family"] == "gaussian"}
     if not floor:
         print("  [E22] no gaussian control in this run: P1 falls back to the site-1 value "
               "as its own floor, which cannot separate quadrature from model error", flush=True)
 
+    configs = sorted({(s["rho"], s["n_sites"], s["grid_size"]) for s in summary})
     verdict = []
-    for fam in sorted({s["family"] for s in summary}):
+    for (rho, L, gs) in configs:
+      for fam in sorted({s["family"] for s in summary}):
         if fam == "gaussian":
             continue
         for t in sorted({s["level"] for s in summary if s["family"] == fam}):
             sel = {s["site"]: s for s in summary
-                   if s["family"] == fam and s["level"] == t and s["ansatz"] == "gauss_through_transition"}
+                   if s["family"] == fam and s["level"] == t
+                   and (s["rho"], s["n_sites"], s["grid_size"]) == (rho, L, gs)
+                   and s["ansatz"] == "gauss_through_transition"}
             if 1 not in sel or len(sel) < 2:
                 continue
             deep = max(sel)
-            f1 = floor.get((t, 1, "gauss_through_transition"))
-            fd = floor.get((t, deep, "gauss_through_transition"))
+            f1 = floor.get((rho, L, gs, t, 1, "gauss_through_transition"))
+            fd = floor.get((rho, L, gs, t, deep, "gauss_through_transition"))
             verdict.append({
-                "family": fam, "level": t,
+                "family": fam, "rho": rho, "n_sites": L, "grid_size": gs, "level": t,
                 "kl_site1": sel[1]["kl_median"], "kl_deepest": sel[deep]["kl_median"],
                 "deepest_site": deep,
                 "quadrature_floor_site1": f1 if f1 is not None else "",
@@ -337,7 +351,8 @@ def _summarise(rows, out):
             v = verdict[-1]
             p1 = ("ok" if v["P1_site1_at_floor"] is True else
                   "FAIL" if v["P1_site1_at_floor"] is False else "no control")
-            print(f"  [E22 verdict] {fam:9s} t={t:<7.4f} KL(site 1)={sel[1]['kl_median']:.3e} "
+            print(f"  [E22 verdict] rho={rho} L={L} Ng={gs} {fam:9s} t={t:<7.4f} "
+                  f"KL(site 1)={sel[1]['kl_median']:.3e} "
                   f"KL(site {deep})={sel[deep]['kl_median']:.3e} "
                   f"x{v['growth_factor']:.0f}  P1={p1} "
                   f"P2={'grows' if v['P2_grows_with_depth'] else 'FLAT -- ansatz may be closed!'}",
@@ -359,17 +374,19 @@ def part_cumulants(cfg, out):
     for r in rows:
         if r["ansatz"] != "gaussian":                     # one row per (chain, site), not three
             continue
-        g[(r["family"], float(r["level"]), int(r["site"]))].append(r)
+        g[(r["family"], float(r["rho"]), int(r["n_sites"]), int(r["grid_size"]),
+           float(r["level"]), int(r["site"]))].append(r)
     out_rows = []
-    for (fam, t, site), rs in sorted(g.items()):
-        rec = {"family": fam, "level": t, "site": site, "n_chains": len(rs)}
+    for (fam, rho, L, gs, t, site), rs in sorted(g.items()):
+        rec = {"family": fam, "rho": rho, "n_sites": L, "grid_size": gs,
+               "level": t, "site": site, "n_chains": len(rs)}
         for k in ("k3", "k4", "k5", "k6", "var"):
             v = np.array([float(r[k]) for r in rs])
             rec[f"{k}_median"] = float(np.median(v))
             rec[f"{k}_absmedian"] = float(np.median(np.abs(v)))
         out_rows.append(rec)
         if site == max(int(r["site"]) for r in rows):
-            print(f"  [E22 cumulants] {fam:9s} t={t:<7.4f} site={site:3d} "
+            print(f"  [E22 cumulants] rho={rho} Ng={gs} {fam:9s} t={t:<7.4f} site={site:3d} "
                   f"|k3|={rec['k3_absmedian']:.3e} |k4|={rec['k4_absmedian']:.3e} "
                   f"|k5|={rec['k5_absmedian']:.3e} |k6|={rec['k6_absmedian']:.3e}", flush=True)
     write_csv(Path(out) / "cumulants.csv", out_rows)
