@@ -20,9 +20,9 @@ reason).
 | # | Question | Closed by | Status |
 |---|---|---|---|
 | Q1 | Is Gaussian-message BP provably the same as using the Gaussian (linear) score? Is the route through the Kalman filter? | Lemma + E23 | OPEN |
-| Q2 | With a Laplace *ansatz* for the messages and a Laplace innovation, is BP exact? | E22 | OPEN |
-| Q3 | What do the messages $\mu_k$ actually look like? Is it Gaussian $\ast\ P_\varepsilon$? | E22 | OPEN |
-| Q4 | Is closure possible only for the Gaussian, or for any finitely-parameterised family? | Lemma + E22 | OPEN |
+| Q2 | With a Laplace *ansatz* for the messages and a Laplace innovation, is BP exact? | E22 | **ANSWERED — no** |
+| Q3 | What do the messages $\mu_k$ actually look like? Is it Gaussian $\ast\ P_\varepsilon$? | E22 | **ANSWERED — his conjecture is very nearly right** |
+| Q4 | Is closure possible only for the Gaussian, or for any finitely-parameterised family? | Lemma + E22 | **ANSWERED empirically** |
 | Q5 | Can BP be done in Fourier space — truncation on modes instead of a real-space grid? | E23 | OPEN — **but E24 has already changed the design; see below** |
 | Q6 | Can $K$ be a neural network, fitted by EM through BP? Does it overfit? | E25 | OPEN |
 | Q7 | Posterior mean for one noisy sequence: how long for a network, how long for BP? | E24 | **ANSWERED (laptop CPU)** — BP is *slower*, §2 Q7 |
@@ -65,82 +65,114 @@ is a validation check and a rung of a ladder, not a result.
 
 ---
 
-### Q2 — A Laplace *ansatz* for the messages
+### Q2, Q3, Q4 — the message shapes, answered together
 
-> *"What if you take a Laplace ansatz for the messages in the BP? … And then is this
-> exact when the innovation is exact? To me, it's not immediate that they match."*
+E22 answers all three at once, because they are one question: *what family do the BP
+messages live in?* Evidence: `outputs/E22/` (four innovation families × twelve levels ×
+64 chains, grid (801, 12), messages fitted by direct KL minimisation over each
+candidate's own parameters).
 
-**Status:** OPEN.
+**The construction being tested.** Jérôme's *"Gaussian plus the family of epsilon"* is,
+made precise, **a Gaussian pushed through one transition of the true chain**:
+$\mu = \mathcal{N}(m, v)$ dilated by $\rho$ and convolved with $p_\varepsilon$. Two free
+parameters. Compared against a plain Gaussian (2 params) and a Gaussian+Laplace mixture
+(4 params).
 
-**What we believe, and why it is probably "no".** It is almost certainly *not* exact, and
-his own instinct in the call was right. Two message operations act on $\mu_k$:
-multiplication by the Gaussian likelihood, and convolution with $P_\varepsilon$. Even
-with a Laplace innovation, multiplying a Laplace by a Gaussian does not give a Laplace,
-and convolving a Laplace with a Laplace does not give a Laplace. So the family is not
-closed under either operation, and any fixed finite parameterisation carries
-misspecification error — which is the point the call landed on (*"then there will be
-some misspecification"*).
+#### The answer to Q3: his conjecture is very nearly right, and dramatically better than a Gaussian
 
-The honest version of his intuition is the one he reached himself:
+KL(message ‖ best fit), median over chains, at the deepest site (31):
 
-> *"Where you're right is that the good Gaussian BP iteration — to really update just the
-> variance and the mean — this you can only do for the Gaussian. I think this is true."*
+| family | $t$ | Gaussian | **transition ansatz** | Gaussian+Laplace |
+|---|---|---|---|---|
+| gaussian (control) | any | 1e-17 | 1e-15 | 1e-16 |
+| laplace | 0.05 | 3.5e-2 | **2.2e-5** | 1.2e-3 |
+| laplace | 3.00 | 3.4e-3 | **7.7e-4** | 5.6e-4 |
+| student | 0.05 | 2.9e-2 | **1.8e-6** | 5.0e-4 |
+| student | 3.00 | 5.4e-3 | 8.8e-4 | **3.0e-4** |
+| uniform | 0.05 | 3.4e-2 | **3.7e-4** | 3.4e-2 |
 
-**What closes it.** E22 fits the best 4-parameter Gaussian+Laplace ansatz to the true
-grid messages and reports the residual against the grid reference, for a Laplace chain,
-across $t$ and site position. If the residual is at or below the grid's own quadrature
-error the ansatz is viable; otherwise it is a closure approximation with a measurable
-price, and we report the price.
+His two-parameter family beats a plain Gaussian by **1 600×** (Laplace) and **16 000×**
+(Student-$t$) at small $t$. It also beats the *four*-parameter Gaussian+Laplace mixture by
+**50×** there. That is worth saying plainly: **the right two-parameter family beats a
+wrong four-parameter family by a factor of fifty.** Structure beats capacity — which is
+the paper's own thesis, showing up in a place we did not plant it.
 
----
+(On `uniform`, Gaussian+Laplace matches the plain Gaussian exactly: the optimiser drove
+the Laplace weight to zero. The family simply has nothing to offer a compact-support
+innovation.)
 
-### Q3 — What do the messages actually look like?
+#### The answer to Q2: not exact — exact one step in, then it fails by ten orders
 
-> *"If you look at the messages, $\mu_K$ … what do they look like? … I wonder if it's not
-> Gaussian plus — you see what I mean? Like if you say $\mu$ of $a$ is equal to sort of
-> Gaussian [convolved with] the family of $\varepsilon$, so $P_\varepsilon$ — is this exact?"*
+| | KL at site 1 | KL at site 31 | growth |
+|---|---|---|---|
+| laplace, $t = 0.98$ | 1.3e-14 | 6.3e-4 | 4.9e10 |
+| student, $t = 0.98$ | 2.2e-14 | 4.3e-4 | 1.9e10 |
+| uniform, $t = 0.98$ | 3.0e-14 | 3.5e-4 | 1.1e10 |
 
-**Status:** OPEN. This is the cheapest question on the list and it has never been looked at.
+**P1 holds everywhere** (site-1 KL between 2.5e-15 and 3.1e-14, i.e. machine precision —
+as derived, because $L_1$ is the Gaussian prior pushed through exactly one transition).
+**P2 holds everywhere**: the divergence grows by ten orders of magnitude into the chain
+interior, for every family and every level. The family is *not* a fixed point of the
+recursion, exactly as the algebra said: $(G \ast p_\varepsilon)\cdot\mathcal{N}$ is not of
+the form $G' \ast p_\varepsilon$.
 
-**What closes it.** E22 dumps the grid messages and plots them. Three candidate fits,
-scored by KL and Hellinger against the grid reference: (i) Gaussian, (ii) Gaussian
-$\ast\ P_\varepsilon$ — his conjecture, (iii) 4-parameter Gaussian+Laplace. Reported
-alongside the message cumulants $\kappa_3\ldots\kappa_6$ as functions of $t$ and site,
-which is the representation-independent version of the same question and feeds directly
-into E23's truncation order.
+So Jérôme's instinct — *"to me, it's not immediate that they match"* — was right, and the
+honest version of his own follow-up (*"the good Gaussian BP iteration, you can only do for
+the Gaussian"*) is confirmed.
 
-Note his conjecture has a plausible mechanism: the forward message at site $k$ is a
-convolution of the (Gaussian-tilted) previous message with $P_\varepsilon$, so a
-"Gaussian $\ast\ P_\varepsilon$" form is what one step produces from a Gaussian start.
-The question is whether it is a *fixed point* — whether the form survives iteration. We
-expect it does not exactly, and E22 measures the drift.
+#### The answer to Q4
 
----
+Both halves, now with evidence. *Exact* closure: Gaussian-only, and site 1 versus site 31
+is the demonstration. *Projected* closure: available for any family, with a price that is
+now measured rather than asserted — 1e-5 to 1e-3 nats per message for the best
+two-parameter family. Whether that price is acceptable is a question about the downstream
+score error, not about the messages, and it is what E23 will answer.
 
-### Q4 — Is closure Gaussian-only?
+#### P3 was falsified, and the reason is instructive
 
-> *"So you think closure is only possible in the Gaussian case?"* … *"I think it's possible
-> for any family that is characterised by a finite amount of parameters."*
+Predicted: the ansatz error would be smallest at large $t$, because the likelihood
+flattens and the product step stops doing anything. **Measured: the opposite.** For
+Laplace and Student the error *grows* monotonically with $t$ (2.2e-5 → 7.7e-4;
+1.8e-6 → 8.8e-4). Only `uniform` is non-monotone.
 
-**Status:** OPEN.
+The prediction had the large-$t$ limit backwards. With the likelihood flat, the recursion
+becomes a *pure repeated convolution*, which drives the message to the chain's
+**stationary law** — an infinite convolution of scaled innovations, which is as far as one
+can get from "one Gaussian through one transition". Conversely at *small* $t$ the
+likelihood is sharp, $L_i \cdot \ell_i$ is nearly a point mass, and the next message is
+nearly $p_\varepsilon$ shifted — which is *exactly* in the family. The ansatz is best
+where the data is most informative.
 
-**What we believe.** Two different claims got mixed in the call and need separating:
+This also explains why the message kurtosis plateaus rather than vanishing (below): the
+messages do not Gaussianise as $t\to\infty$, they converge to the stationary law, which
+for these chains is not Gaussian.
 
-1. *Exact* closure — the family is preserved by both message operations, so BP in the
-   parameters is exact. This holds for the Gaussian and essentially only for it
-   (stable-family exceptions aside, none of which have finite variance).
-2. *Projected* closure — represent $\mu_k$ in a finite family and project after each
-   update. This is available for **any** family, always, and is what he meant by
-   *"you provide a family and then you fit it in this way; this should be doable always."*
-   It is approximate, and its error is a measurable quantity, not a yes/no.
+#### What this hands E23: the mode budget
 
-The distinction matters because it decides what Fourier BP buys: not exactness in a new
-family, but a *controlled* truncation whose order is a dial. See Q5.
+Standardised message cumulants at site 31 (median $|\kappa|$ over chains):
 
-**What closes it.** The lemma of Q1 for part 1; E22's measured projection error for
-part 2.
+| family | $t$ | $|\kappa_3|$ | $|\kappa_4|$ | $|\kappa_5|$ | $|\kappa_6|$ |
+|---|---|---|---|---|---|
+| gaussian (control) | any | 3e-16 | 5e-16 | 2e-15 | 5e-15 |
+| laplace | 0.05 | 9.5e-3 | 2.12 | 7.3e-4 | **17.8** |
+| laplace | 3.00 | 1.3e-2 | 0.48 | 1.8e-2 | **1.04** |
+| student | 0.05 | 3.1e-3 | 3.39 | 0.72 | **228** |
+| student | 3.00 | 2.2e-2 | 0.77 | 0.20 | **12.8** |
+| uniform | 0.05 | 1.2e-2 | 0.82 | 1.6e-3 | 3.89 |
 
----
+Three consequences, all of them design constraints rather than observations:
+
+1. **Odd cumulants are negligible** ($10^{-3}$–$10^{-2}$) — the innovations are symmetric
+   and the messages inherit it. A truncation can carry even orders only, halving the
+   budget.
+2. **Order 4 is not enough.** $|\kappa_6|$ is between 1 and 228, never small. A
+   Gaussian-plus-$\kappa_4$ truncation — the natural first rung, and the one
+   `e16_edgeworth_oracle` already builds — will miss a large term. E23 must go to order 6
+   at least, and heavy-tailed families will want more.
+3. **$\kappa_4$ decays with $t$ but plateaus** (2.12 → 0.48 for Laplace), for the reason
+   above: the message tends to the stationary law, not to a Gaussian. So the mode budget
+   does *not* shrink to nothing at high noise, and a $t$-adaptive truncation saves less
+   than one might hope.
 
 ### Q5 — Fourier BP
 

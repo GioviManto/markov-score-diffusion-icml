@@ -7,7 +7,7 @@
  "seeds": {
   "confirmatory": "deterministic per cell: rng_for('e22-shapes', family, level), 64 chains"
  },
- "status": "REGISTERED 2026-09-25 (after the Jerome call), running on the laptop. Smoke runs at the quick settings already confirm P1 and P2: site-1 KL 1.0e-14 to 1.6e-14 (machine precision) against site-16 KL 5.1e-05 to 6.2e-04, a growth of ~10^10.",
+ "status": "REGISTERED 2026-09-25 and RUN on the laptop (48 cells, 4 workers). P1 and P2 confirmed for every family and every level; P3 FALSIFIED. Outputs under outputs/E22/ (shapes.csv, shapes_summary.csv, closure_verdict.csv, cumulants.csv); not yet frozen.",
  "registered": "2026-09-25",
  "script_sha256": "18dafed706ebe31e12a4a6d9183a3a6d5b691d6ade6a38866bfa7def13d7e8d3",
  "motivation": "Jerome asked this three separate ways in one call and it had never been looked at: 'if you look at the messages mu_K, what do they look like?'; 'what if you take a Laplace ansatz for the messages in the BP -- is this exact when the innovation is exact? To me it's not immediate that they match'; 'I wonder if it's not Gaussian plus the family of epsilon'. It is the cheapest open question on the list and it decides two things at once: whether the real-space grid can be replaced by a handful of parameters, and how many modes a truncated representation needs at each level (E23).",
@@ -16,5 +16,12 @@
  "frozen_outputs": {},
  "frozen_at": {},
  "frozen_commit": {},
- "frozen_run_commits": {}
+ "frozen_run_commits": {},
+ "outcome": {
+  "Q3": "Jerome's conjecture is very nearly right. The two-parameter 'Gaussian pushed through one transition' family beats a plain Gaussian by 1600x (Laplace) and 16000x (Student-t) at t=0.05, and beats the FOUR-parameter Gaussian+Laplace mixture by 50x. The right two-parameter family beats a wrong four-parameter family by fifty: structure beats capacity.",
+  "Q2": "Not exact. P1 holds everywhere -- site-1 KL is 2.5e-15 to 3.1e-14, machine precision, as derived, since L_1 is the Gaussian prior pushed through exactly one transition. P2 holds everywhere -- the divergence grows by ~10^10 into the chain interior (site 31), for all four families and all twelve levels. The family is not a fixed point of the recursion.",
+  "Q4": "Exact closure is Gaussian-only (site 1 vs site 31 is the demonstration). Projected closure is available for any family at a price now measured rather than asserted: 1e-5 to 1e-3 nats per message for the best two-parameter family.",
+  "P3_falsified": "Predicted the ansatz error would be SMALLEST at large t, because the likelihood flattens and the product step stops acting. Measured the opposite: for Laplace and Student the error grows monotonically with t (2.2e-5 -> 7.7e-4; 1.8e-6 -> 8.8e-4); only uniform is non-monotone. The prediction had the large-t limit backwards. With the likelihood flat the recursion is a pure repeated convolution, which drives the message to the chain's STATIONARY law -- an infinite convolution, maximally far from 'one Gaussian through one transition'. At small t the likelihood is sharp, L_i*ell_i is nearly a point mass, and the next message is nearly p_eps shifted, which is exactly in the family. The ansatz is best where the data is most informative.",
+  "mode_budget_for_E23": "Odd cumulants are negligible (1e-3..1e-2; symmetric innovations), so a truncation can carry even orders only. Order 4 is NOT enough: |kappa_6| runs 1 to 228 and is never small, so the Gaussian-plus-kappa_4 rung that e16_edgeworth_oracle builds will miss a large term; E23 must reach order 6 at least, more for heavy tails. |kappa_4| decays with t but PLATEAUS (2.12 -> 0.48 for Laplace) because the message tends to the stationary law rather than to a Gaussian, so a t-adaptive truncation saves less than one might hope."
+ }
 }
