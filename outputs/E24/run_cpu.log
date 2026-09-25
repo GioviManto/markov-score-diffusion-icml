@@ -1,0 +1,51 @@
+  [E24 cost] cpu t=0.05: bp_grid=0.323ms  bp_gaussian=0.036ms  mlp=0.001ms  window=0.024ms  tcn=0.058ms  bigru=0.059ms  transformer=0.159ms  unet=0.076ms
+  [E24 cost] cpu t=0.0725: bp_grid=0.359ms  bp_gaussian=0.036ms  mlp=0.002ms  window=0.020ms  tcn=0.056ms  bigru=0.059ms  transformer=0.153ms  unet=0.096ms
+  [E24 cost] cpu t=0.1053: bp_grid=0.329ms  bp_gaussian=0.037ms  mlp=0.001ms  window=0.018ms  tcn=0.055ms  bigru=0.058ms  transformer=0.151ms  unet=0.076ms
+  [E24 cost] cpu t=0.1527: bp_grid=0.333ms  bp_gaussian=0.036ms  mlp=0.002ms  window=0.023ms  tcn=0.058ms  bigru=0.059ms  transformer=0.158ms  unet=0.076ms
+  [E24 cost] cpu t=0.2216: bp_grid=0.334ms  bp_gaussian=0.036ms  mlp=0.001ms  window=0.018ms  tcn=0.057ms  bigru=0.069ms  transformer=0.152ms  unet=0.075ms
+  [E24 cost] cpu t=0.3215: bp_grid=0.326ms  bp_gaussian=0.037ms  mlp=0.002ms  window=0.018ms  tcn=0.056ms  bigru=0.058ms  transformer=0.150ms  unet=0.077ms
+  [E24 cost] cpu t=0.4665: bp_grid=0.325ms  bp_gaussian=0.036ms  mlp=0.002ms  window=0.018ms  tcn=0.057ms  bigru=0.059ms  transformer=0.151ms  unet=0.074ms
+  [E24 cost] cpu t=0.6769: bp_grid=0.363ms  bp_gaussian=0.037ms  mlp=0.002ms  window=0.018ms  tcn=0.057ms  bigru=0.059ms  transformer=0.150ms  unet=0.077ms
+  [E24 cost] cpu t=0.9821: bp_grid=0.330ms  bp_gaussian=0.036ms  mlp=0.002ms  window=0.018ms  tcn=0.057ms  bigru=0.059ms  transformer=0.150ms  unet=0.108ms
+  [E24 cost] cpu t=1.425: bp_grid=0.332ms  bp_gaussian=0.040ms  mlp=0.001ms  window=0.018ms  tcn=0.056ms  bigru=0.057ms  transformer=0.153ms  unet=0.077ms
+  [E24 cost] cpu t=2.0676: bp_grid=0.330ms  bp_gaussian=0.036ms  mlp=0.002ms  window=0.019ms  tcn=0.056ms  bigru=0.058ms  transformer=0.152ms  unet=0.075ms
+  [E24 cost] cpu t=3.0: bp_grid=0.326ms  bp_gaussian=0.036ms  mlp=0.001ms  window=0.018ms  tcn=0.056ms  bigru=0.058ms  transformer=0.159ms  unet=0.077ms
+  [E24 scaling] cpu bp_grid batch=32: 0.012s
+  [E24 scaling] cpu bp_grid batch=64: 0.020s
+  [E24 scaling] cpu bp_grid batch=128: 0.036s
+  [E24 scaling] cpu bp_grid batch=256: 0.071s
+  [E24 scaling] cpu bp_grid batch=512: 0.170s
+  [E24 scaling] cpu bp_grid batch=1024: 0.378s
+  [E24 scaling] cpu bp_grid batch=2048: 0.855s
+  [E24 scaling] cpu bp_grid n_sites=8: 0.041s
+  [E24 scaling] cpu bp_grid n_sites=16: 0.084s
+  [E24 scaling] cpu bp_grid n_sites=32: 0.169s
+  [E24 scaling] cpu bp_grid n_sites=64: 0.429s
+  [E24 scaling] cpu bp_grid n_sites=128: 0.775s
+  [E24 scaling] cpu bp_grid n_sites=256: 2.048s
+  [E24 scaling] cpu bp_grid grid_size=101: 0.041s
+  [E24 scaling] cpu bp_grid grid_size=201: 0.072s
+  [E24 scaling] cpu bp_grid grid_size=401: 0.176s
+  [E24 scaling] cpu bp_grid grid_size=801: 0.443s
+  [E24 scaling] cpu bp_grid grid_size=1601: 1.338s
+  [E24 scaling] cpu mlp done
+  [E24 scaling] cpu window done
+  [E24 scaling] cpu tcn done
+  [E24 scaling] cpu bigru done
+  [E24 scaling] cpu transformer done
+  [E24 scaling] cpu unet done
+  [E24 slope] cpu  bigru        batch      full=+0.758 top=+0.745
+  [E24 slope] cpu  bigru        n_sites    full=+0.981 top=+0.828
+  [E24 slope] cpu  bp_grid      batch      full=+1.044 top=+1.189  (predicted +1.0)
+  [E24 slope] cpu  bp_grid      n_sites    full=+1.120 top=+1.128  (predicted +1.0)
+  [E24 slope] cpu  bp_grid      grid_size  full=+1.273 top=+1.465  (predicted +2.0)
+  [E24 slope] cpu  mlp          batch      full=+0.684 top=+0.754
+  [E24 slope] cpu  mlp          n_sites    full=+0.102 top=+0.181
+  [E24 slope] cpu  tcn          batch      full=+0.831 top=+0.864
+  [E24 slope] cpu  tcn          n_sites    full=+0.846 top=+0.941
+  [E24 slope] cpu  transformer  batch      full=+0.855 top=+0.915
+  [E24 slope] cpu  transformer  n_sites    full=+1.055 top=+1.651
+  [E24 slope] cpu  unet         batch      full=+0.916 top=+0.945
+  [E24 slope] cpu  unet         n_sites    full=+0.559 top=+0.762
+  [E24 slope] cpu  window       batch      full=+0.891 top=+0.922
+  [E24 slope] cpu  window       n_sites    full=+0.873 top=+0.916

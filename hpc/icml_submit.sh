@@ -24,9 +24,14 @@ CPUS=${MSD_HPC_CPUS:-32}; MEM=${MSD_HPC_MEM:-64G}; TIME=${MSD_HPC_TIME:-12:00:00
 # MSD_HPC_GRES adds a --gres line (e.g. gpu:4g.40gb:1), MSD_HPC_VENV picks another venv under
 # $MSD_HPC_ROOT (default venv; venv-cuda carries the CUDA torch build for the GPU partitions).
 WORKERS_CAP=${MSD_HPC_WORKERS:-}; GRES=${MSD_HPC_GRES:-}; VENV=${MSD_HPC_VENV:-venv}
+# MSD_HPC_THREADS sets the BLAS/OMP thread count inside the job. Default 1, which is right
+# for the cell-parallel drivers (one thread per worker, no oversubscription). E24 is the
+# exception: it measures wall-clock, so it must be told how many threads it is allowed and
+# must record that -- a timing at an unstated thread count is not a reproducible number.
+THREADS=${MSD_HPC_THREADS:-1}
 AFTER=""; WHAT=${1:-}; shift || true
 while [[ $# -gt 0 ]]; do case "$1" in --after) AFTER="$2"; shift 2;; *) echo "unknown arg $1" >&2; exit 2;; esac; done
-[[ -n "$WHAT" ]] || { echo "usage: $0 <e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
+[[ -n "$WHAT" ]] || { echo "usage: $0 <e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
 
 partition() {
   if [[ -n "${MSD_HPC_PARTITION:-}" ]]; then echo "$MSD_HPC_PARTITION"; return; fi
@@ -68,6 +73,12 @@ cmd_for() {
     e10)         echo "e10_capacity_evidence.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E10";;
     e04)         echo "e04_refinement.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --output-dir {OUT}/E04";;
     e05)         echo "e05_generation.py --set em_source=\"'{OUT}/E02a/capacity.csv'\" --set net_dir=\"'{OUT}/E03/ckpts'\" --output-dir {OUT}/E05";;
+    # --- 25 Sep, after the Jerome call: inference cost and scaling (docs/JEROME_CALL_2026-09-25.md Q7/Q11) ---
+    # Cost is the whole measurement here, so both arms must get the same hardware. The CPU job
+    # asks for a whole node's threads; the GPU job runs the SAME driver with devices=("cpu","gpu")
+    # so the cross-device ratio comes from one process on one machine rather than two runs.
+    e24-cpu)     echo "e24_inference_cost.py --set devices=\"('cpu',)\" --output-dir {OUT}/E24";;
+    e24-gpu)     echo "e24_inference_cost.py --set devices=\"('cpu', 'gpu')\" --output-dir {OUT}/E24gpu";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }
@@ -95,7 +106,7 @@ set -euo pipefail
 # limit to every process in the job, which kills a multi-worker run partway through with
 # 'CPU time limit exceeded' (E05, 15 Sep) or leaves the job holding an idle node (E06b).
 ulimit -t unlimited 2>/dev/null || true
-export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1
+export OMP_NUM_THREADS=$THREADS OPENBLAS_NUM_THREADS=$THREADS MKL_NUM_THREADS=$THREADS VECLIB_MAXIMUM_THREADS=$THREADS
 export PYTHONPATH=\$HOME/$MSD_SRC/src
 cd \$HOME/$MSD_SRC/experiments
 echo "start=\$(date -Is) host=\$(hostname) job=\$SLURM_JOB_ID cpus=\$SLURM_CPUS_PER_TASK"; cat ../REVISION
