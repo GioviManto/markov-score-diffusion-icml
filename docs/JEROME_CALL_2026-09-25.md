@@ -348,6 +348,60 @@ not a new run.
 
 ---
 
+### Q7b — Training cost, which is where the argument actually lives
+
+Not a question Jérôme asked, but the one his Q7 turns into once Q7 is answered badly for
+us. The claim the project is making — *one small kernel instead of one large score
+network* — was never an inference claim. At inference BP loses. At training the structure
+of the cost is completely different, and that difference is measurable.
+
+**Predeclared prediction** (fixed in `e24_inference_cost.part_training` before running):
+an EM iteration splits into an E-step (exact BP over the data) that is **linear in $M$**,
+and an M-step (the kernel's own update) that is **independent of $M$**, because the kernel
+is evaluated only on the $N_g$ grid points and the data reaches it only through the
+accumulated statistics $\Xi$.
+
+**Measured** (E24 `training`, `outputs/E24/training.csv`, seconds per EM iteration):
+
+| $M$ | E-step | M-step (mixture) | M-step (MDN) | M-step share, MDN |
+|---|---|---|---|---|
+| 32 | 0.037 | 1.035 | 0.086 | 70 % |
+| 128 | 0.068 | 1.046 | 0.099 | 60 % |
+| 512 | 0.231 | 1.065 | 0.094 | 27 % |
+| 2048 | 0.858 | 1.068 | 0.073 | 8 % |
+
+| quantity | slope in $M$ (full / top half) | predicted |
+|---|---|---|
+| E-step | +0.77 / +0.95 (mixture), +0.77 / +0.87 (MDN) | +1 ✓ |
+| **M-step** | **+0.008 / +0.002 (mixture), −0.037 / −0.180 (MDN)** | **0 ✓** |
+
+**The M-step cost is flat to three decimal places across a 64× range of dataset sizes.**
+The mechanism `MDNKernel`'s docstring asserts is real and now measured: *a score network
+pays for its parameters on every example at every step; EM–BP pays for its parameters once
+per iteration, on the grid, whatever the dataset.*
+
+**But the headline number is not a blowout, and should not be sold as one.** At $M = 2048$:
+
+| arm | training cost at its protocol budget |
+|---|---|
+| window head | 101 s (32k steps) |
+| EM–BP, MDN kernel | 368 s (400 EM iterations) |
+| EM–BP, mixture kernel | 771 s (400) / 2316 s (1200) |
+| transformer | 1011 s (32k steps) |
+
+EM–BP is *comparable* to the networks in absolute training cost, not orders below. What is
+categorically different is how the cost responds to scaling **the model**: for EM–BP only
+the (data-independent) M-step term grows, while for a score network model size multiplies
+against data × steps. The MDN kernel at 0.07–0.10 s per M-step is ~11× cheaper to update
+than the mixture kernel's closed-form step, and is 8 % of the iteration at $M = 2048$.
+
+**The measurement this argument still needs** (deferred to E25, where it belongs): sweep
+the *kernel capacity* and confirm the M-step stays flat in $M$ as the kernel grows, against
+a score network whose per-step cost grows with its parameter count. That is the "small
+network vs huge network" claim stated as an experiment rather than as an intuition.
+
+---
+
 ### Q8 — Generation without a score
 
 > *"If we have the exact score, or say the exact BP — so not even a score — I think we

@@ -1,0 +1,38 @@
+  [E24 training] M=   32 em_bp_mixture    e_step= 0.037s m_step= 1.035s  m_step share=97%
+  [E24 training] M=   32 em_bp_mdn        e_step= 0.037s m_step= 0.086s  m_step share=70%
+  [E24 training] M=   32 mlp                3.79 ms/step ->     121s at 32000 steps
+  [E24 training] M=   32 window             1.90 ms/step ->      61s at 32000 steps
+  [E24 training] M=   32 tcn                8.19 ms/step ->     262s at 32000 steps
+  [E24 training] M=   32 bigru             11.49 ms/step ->     368s at 32000 steps
+  [E24 training] M=   32 transformer       17.71 ms/step ->     567s at 32000 steps
+  [E24 training] M=   32 unet              10.93 ms/step ->     350s at 32000 steps
+  [E24 training] M=  128 em_bp_mixture    e_step= 0.068s m_step= 1.046s  m_step share=94%
+  [E24 training] M=  128 em_bp_mdn        e_step= 0.067s m_step= 0.099s  m_step share=60%
+  [E24 training] M=  128 mlp                1.09 ms/step ->      35s at 32000 steps
+  [E24 training] M=  128 window             4.51 ms/step ->     144s at 32000 steps
+  [E24 training] M=  128 tcn               12.90 ms/step ->     413s at 32000 steps
+  [E24 training] M=  128 bigru             15.58 ms/step ->     498s at 32000 steps
+  [E24 training] M=  128 transformer       31.82 ms/step ->    1018s at 32000 steps
+  [E24 training] M=  128 unet              17.87 ms/step ->     572s at 32000 steps
+  [E24 training] M=  512 em_bp_mixture    e_step= 0.231s m_step= 1.065s  m_step share=82%
+  [E24 training] M=  512 em_bp_mdn        e_step= 0.255s m_step= 0.094s  m_step share=27%
+  [E24 training] M=  512 mlp                1.14 ms/step ->      36s at 32000 steps
+  [E24 training] M=  512 window             3.54 ms/step ->     113s at 32000 steps
+  [E24 training] M=  512 tcn               12.64 ms/step ->     404s at 32000 steps
+  [E24 training] M=  512 bigru             16.45 ms/step ->     526s at 32000 steps
+  [E24 training] M=  512 transformer       34.28 ms/step ->    1097s at 32000 steps
+  [E24 training] M=  512 unet              19.08 ms/step ->     610s at 32000 steps
+  [E24 training] M= 2048 em_bp_mixture    e_step= 0.858s m_step= 1.068s  m_step share=55%
+  [E24 training] M= 2048 em_bp_mdn        e_step= 0.848s m_step= 0.073s  m_step share=8%
+  [E24 training] M= 2048 mlp                0.99 ms/step ->      32s at 32000 steps
+  [E24 training] M= 2048 window             3.15 ms/step ->     101s at 32000 steps
+  [E24 training] M= 2048 tcn               12.68 ms/step ->     406s at 32000 steps
+  [E24 training] M= 2048 bigru             16.46 ms/step ->     527s at 32000 steps
+  [E24 training] M= 2048 transformer       31.61 ms/step ->    1011s at 32000 steps
+  [E24 training] M= 2048 unet              17.94 ms/step ->     574s at 32000 steps
+  [E24 training slope] em_bp_mdn        e_step_sec   full=+0.772 top=+0.866  (predicted +1.0)
+  [E24 training slope] em_bp_mdn        m_step_sec   full=-0.037 top=-0.180  (predicted +0.0)
+  [E24 training slope] em_bp_mdn        iter_sec     full=+0.489 top=+0.699
+  [E24 training slope] em_bp_mixture    e_step_sec   full=+0.769 top=+0.948  (predicted +1.0)
+  [E24 training slope] em_bp_mixture    m_step_sec   full=+0.008 top=+0.002  (predicted +0.0)
+  [E24 training slope] em_bp_mixture    iter_sec     full=+0.138 top=+0.286

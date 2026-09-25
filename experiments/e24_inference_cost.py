@@ -118,10 +118,18 @@ SETTINGS = dict(
     scale_grids=(101, 201, 401, 801, 1601),
     scale_level=T_GRID[6],
     scale_repeat=3,
+    # --- part `training` ---------------------------------------------------------
+    train_sizes=(32, 128, 512, 2048),
+    train_repeat=3,
+    train_steps=200,                 # measured budget; scaled to `protocol_steps` for reporting
+    protocol_steps=32_000,           # PROTOCOL.net_steps, the budget the confirmatory runs use
+    mdn_components=4,
+    mdn_hidden=32,
 )
 QUICK = dict(
     batch=32, n_repeat=2, levels=(T_GRID[3], T_GRID[8]), grid_size=201,
     scale_batches=(16, 32, 64), scale_sites=(8, 16), scale_grids=(101, 201), scale_repeat=2,
+    train_sizes=(32, 128), train_repeat=1, train_steps=20,
 )
 
 
@@ -502,7 +510,142 @@ def part_anatomy(cfg, out):
     return rows
 
 
-PARTS = {"cost": part_cost, "scaling": part_scaling, "anatomy": part_anatomy}
+def part_training(cfg, out):
+    """Training cost, and the decomposition that carries the whole argument.
+
+    WHY THIS PART EXISTS. Part `cost` answered Jerome's Q7 and the answer was bad for us:
+    at inference exact BP is 2.2x SLOWER than a transformer per posterior mean. But the
+    claim the project is actually making -- one small kernel instead of one large score
+    network -- was never an inference claim. It is a *training* claim, and it rests on a
+    structural asymmetry that `MDNKernel`'s docstring already states:
+
+        a score network backpropagates through every training example at every gradient
+        step; EM-BP evaluates and updates the kernel ONLY on the N_g grid points, once
+        per EM iteration, no matter how large the dataset is. Data enters the M-step
+        exclusively through the accumulated statistics Xi.
+
+    So the two halves of an EM iteration should scale completely differently:
+        E-step  (exact BP over the data)     -- LINEAR in M, independent of the kernel
+        M-step  (the kernel's own update)    -- INDEPENDENT of M, set by N_g and capacity
+
+    PREDECLARED PREDICTION, fixed before this part was run: the fitted exponent of
+    m_step wall-clock in M is ~0, and of e_step wall-clock in M is ~1. If the M-step
+    exponent is materially above zero the mechanism is not what the docstring claims and
+    the "small network" argument loses its basis.
+
+    Both kernels are timed: the mixture kernel (closed-form M-step) and MDNKernel (a
+    small MLP, gradient M-step) -- the latter being the arm Jerome proposed and the one
+    the prediction matters for.
+
+    The network arms are timed per gradient step and reported both per step and scaled to
+    the protocol's 32k-step budget, so the two families can be put on one axis.
+    """
+    rows = []
+    n_sites = int(cfg["n_sites"])
+    grid, weights = make_grid(cfg["half_width"], cfg["grid_size"])
+    prior = LaplaceAR1(cfg["rho"])
+    levels = list(cfg["levels"])
+    rep = int(cfg["train_repeat"])
+
+    from markov_score.em import e_step_multi
+    from markov_score.kernels import MDNKernel, MixtureInnovationKernel
+
+    for M in cfg["train_sizes"]:
+        M = int(M)
+        rng = rng_for("e24-train", M)
+        A = np.stack([prior.sample(rng, n_sites) for _ in range(M)])
+        # PROTOCOL.one_view: one noised view per sequence, sequences split evenly over levels.
+        groups, per = [], max(1, M // len(levels))
+        for j, t in enumerate(levels):
+            sl = A[j * per:(j + 1) * per]
+            if len(sl) == 0:
+                continue
+            al, de = alpha_delta(float(t))
+            groups.append((al * sl + np.sqrt(de) * rng.standard_normal(sl.shape), al, de))
+
+        kernels = {
+            "em_bp_mixture": MixtureInnovationKernel.init(
+                8, rho=0.3, var=0.8, rng=rng_for("e24-train-init", M)),
+            "em_bp_mdn": MDNKernel.init(
+                int(cfg["mdn_components"]), int(cfg["mdn_hidden"]),
+                rng_for("e24-train-mdn-init", M)),
+        }
+        for arm, k0 in kernels.items():
+            log_K = k0.log_transition_matrix(grid)
+            e = _timed(lambda: e_step_multi(grid, weights, log_K, groups), rep)
+            stats = e_step_multi(grid, weights, log_K, groups)
+            m = _timed(lambda: k0.m_step(stats, grid), rep)
+            rows.append({
+                "arm": arm, "family": "em_bp", "M": M, "n_sites": n_sites,
+                "grid_size": int(cfg["grid_size"]),
+                "e_step_sec": e["wall_median"], "m_step_sec": m["wall_median"],
+                "iter_sec": e["wall_median"] + m["wall_median"],
+                "m_step_fraction": m["wall_median"] / (e["wall_median"] + m["wall_median"]),
+                "n_params": int(getattr(k0, "theta", np.zeros(0)).size),
+                "n_repeat": rep,
+                # net-only columns, kept present so every row carries the same schema
+                # (write_csv takes its fieldnames from the first row)
+                "train_steps": "", "train_sec": "", "train_sec_at_protocol": "",
+            })
+            print(f"  [E24 training] M={M:5d} {arm:16s} e_step={e['wall_median']:6.3f}s "
+                  f"m_step={m['wall_median']:6.3f}s  m_step share={100 * rows[-1]['m_step_fraction']:.0f}%",
+                  flush=True)
+
+        # --- the network arms: seconds per gradient step -------------------------
+        try:
+            import torch  # noqa: F401
+
+            from markov_score import nn_torch as nt
+        except Exception as exc:
+            print(f"  [E24 training] torch unavailable, network arms skipped ({exc})", flush=True)
+            continue
+        for arch, hp in NET_ARMS:
+            cfg_t = nt.TrainConfig(steps=int(cfg["train_steps"]), batch_size=64, lr=1e-3,
+                                   parameterization="eps", loss="dsm",
+                                   checkpoints=(int(cfg["train_steps"]),),
+                                   t_levels=tuple(float(t) for t in levels), device="cpu",
+                                   seed=int(rng_for("e24-train-net", arch, M).integers(0, 2**31 - 1)))
+            model = nt.build(arch, n_sites, **hp)
+            t0 = time.perf_counter()
+            try:
+                nt.train(model, A, cfg_t)
+            except Exception as exc:
+                print(f"  [E24 training] {arch} M={M} failed: {exc}", flush=True)
+                continue
+            dt = time.perf_counter() - t0
+            rows.append({
+                "arm": arch, "family": "net", "M": M, "n_sites": n_sites, "grid_size": 0,
+                "e_step_sec": float("nan"), "m_step_sec": float("nan"),
+                "iter_sec": dt / int(cfg["train_steps"]),
+                "m_step_fraction": float("nan"),
+                "n_params": nt.n_params(model), "n_repeat": 1,
+                "train_steps": int(cfg["train_steps"]), "train_sec": dt,
+                "train_sec_at_protocol": dt / int(cfg["train_steps"]) * int(cfg["protocol_steps"]),
+            })
+            print(f"  [E24 training] M={M:5d} {arch:16s} {dt / int(cfg['train_steps']) * 1e3:6.2f} ms/step "
+                  f"-> {rows[-1]['train_sec_at_protocol']:7.0f}s at {cfg['protocol_steps']} steps", flush=True)
+
+    write_csv(out / "training.csv", rows)
+
+    # The exponents that decide whether the mechanism is real.
+    slopes = []
+    for arm in sorted({r["arm"] for r in rows if r["family"] == "em_bp"}):
+        sel = sorted((r for r in rows if r["arm"] == arm), key=lambda r: r["M"])
+        for col, pred in (("e_step_sec", 1.0), ("m_step_sec", 0.0), ("iter_sec", "")):
+            vals = [r[col] for r in sel]
+            if len(sel) < 2 or not all(np.isfinite(v) and v > 0 for v in vals):
+                continue
+            s, s_top, n_top = _slopes([r["M"] for r in sel], vals)
+            slopes.append({"arm": arm, "quantity": col, "slope_full": s, "slope_top": s_top,
+                           "n_top": n_top, "predicted": pred, "n_points": len(sel)})
+            print(f"  [E24 training slope] {arm:16s} {col:12s} full={s:+.3f} top={s_top:+.3f}"
+                  + (f"  (predicted {pred:+.1f})" if pred != "" else ""), flush=True)
+    write_csv(out / "training_slopes.csv", slopes)
+    return rows
+
+
+PARTS = {"cost": part_cost, "scaling": part_scaling, "anatomy": part_anatomy,
+         "training": part_training}
 
 
 def main():
