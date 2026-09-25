@@ -35,7 +35,7 @@ THREADS=${MSD_HPC_THREADS:-1}
 SERIAL_CPUS=${MSD_HPC_SERIAL_CPUS:-4}
 AFTER=""; WHAT=${1:-}; shift || true
 while [[ $# -gt 0 ]]; do case "$1" in --after) AFTER="$2"; shift 2;; *) echo "unknown arg $1" >&2; exit 2;; esac; done
-[[ -n "$WHAT" ]] || { echo "usage: $0 <e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
+[[ -n "$WHAT" ]] || { echo "usage: $0 <e23|e24c-capacity|e26|e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
 
 partition() {
   if [[ -n "${MSD_HPC_PARTITION:-}" ]]; then echo "$MSD_HPC_PARTITION"; return; fi
@@ -106,6 +106,17 @@ cmd_for() {
     e25-s4)      echo "exp_34_information_ladder.py --set seed0=4  --set seeds=4 --output-dir {OUT}/E25_s4";;
     e25-s8)      echo "exp_34_information_ladder.py --set seed0=8  --set seeds=4 --output-dir {OUT}/E25_s8";;
     e25-s12)     echo "exp_34_information_ladder.py --set seed0=12 --set seeds=4 --output-dir {OUT}/E25_s12";;
+    # E23: how many numbers does a BP message need? A MEASUREMENT on the true messages,
+    # deliberately prior to building any Fourier solver -- E24 showed an FFT caps at 1.3x
+    # and E22 showed |kappa_6| is never small, so the premise had to be tested first.
+    e23)         echo "e23_representation.py --output-dir {OUT}/E23";;
+    # E24 capacity: the other half of the "small kernel vs huge score network" claim --
+    # does the M-step stay flat in dataset size as the MODEL grows?
+    e24c-capacity) echo "e24_inference_cost.py --only capacity --set 'cap_sizes=(128, 512, 2048, 8192)' --set train_repeat=7 --output-dir {OUT}/E24c";;
+    # E26: generation without a score (Q8). Reads the fitted mixture kernels from the E02a
+    # run of the 15 Sep deployment -- an absolute path, because that output lives under a
+    # DIFFERENT deployment tag and {OUT} points at this one.
+    e26)         echo "e05_generation.py --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --output-dir {OUT}/E26";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }

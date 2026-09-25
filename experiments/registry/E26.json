@@ -1,0 +1,18 @@
+{
+ "id": "E26",
+ "script": "experiments/e05_generation.py",
+ "hypothesis": "Jerome's Q8: 'If we have the exact score, or say the exact BP -- so not even a score -- I think we don't even need it to generate. We can just start from a flat marginal and run BP once.' The weaker, already-implemented form: does score ACCURACY transfer to generation? Every arm drives the same reverse SDE on the SAME Brownian path, so the comparison is paired and a difference is attributable to the score.",
+ "design": "e05_generation's registered arms -- exact (true-kernel grid BP), em_bp (the mixture kernel fitted in E02a, validation-selected), lmmse (the covariance twin), isotropic -- plus the step study on nested Brownian paths at 100/200/400/800 steps, so resolution differences measure discretisation rather than Monte Carlo scatter. Metrics from markov_score.gen_metrics.compare, predeclared in docs/RESEARCH_PLAN.md (E5). The reference sample is drawn from the true law at t_min, never from clean p_0, which was the archival target error.",
+ "predeclared_analysis": "Per-arm distance to the reference law, paired across arms by Brownian path; the step study's convergence in the number of integrator steps.",
+ "seeds": {
+  "confirmatory": "0-3, as registered in E05.json"
+ },
+ "status": "REGISTERED as E05 on 15 Sep (PRE-REGISTERED, smoke-tested, never run); SUBMITTED 25 Sep as E26 to answer Q8. Reads the fitted kernels from the E02a run of the 15 Sep deployment (ea0435a-20260915T104955Z), an absolute path because that output lives under a different deployment tag.",
+ "registered": "2026-09-25 (as E26; the config was registered 15 Sep as E05)",
+ "script_sha256": "96d99ccc8f0652860d661644e8ee384347f9ff78a8d798638b68ab88597edfa8",
+ "scope_note": "This answers the WEAK form of Q8 -- that BP can drive generation -- not the strong form Jerome actually proposed, which is one forward-backward sweep from a flat marginal with no reverse SDE and no score at all. The strong form is a separate sampler that does not exist yet and is the natural follow-up; recorded here so the distinction is not lost when the results land.",
+ "frozen_outputs": {},
+ "frozen_at": {},
+ "frozen_commit": {},
+ "frozen_run_commits": {}
+}

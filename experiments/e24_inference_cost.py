@@ -25,8 +25,9 @@ site over L sites for B independent chains, i.e.
 -- linear in the number of sequences, linear in L, QUADRATIC IN THE GRID. Part `scaling`
 measures all three exponents rather than leaving that as a reading of the source. The
 distinction is not bookkeeping: it says the bottleneck Jerome identified by instinct is
-exactly the N_g^2 factor, which is what a Fourier/FFT update (E23) removes, and that the
-data-scaling was never the problem.
+in the GRID and not in the data. (What follows from that is more subtle than it first
+looked, and part `anatomy` below is what settled it: the N_g^2 matmul is only 24% of a
+sweep at the production resolution, so an FFT cannot be the answer -- see E23.)
 
 WHAT IS AND IS NOT MEASURED
 ---------------------------
@@ -125,11 +126,19 @@ SETTINGS = dict(
     protocol_steps=32_000,           # PROTOCOL.net_steps, the budget the confirmatory runs use
     mdn_components=4,
     mdn_hidden=32,
+    # --- part `capacity` --------------------------------------------------------
+    cap_sizes=(128, 512, 2048),
+    cap_components=(1, 2, 4, 8, 16, 32),
+    cap_hidden=(16, 32, 64, 128, 256),
+    cap_transformer=((32, 2), (64, 4), (128, 4), (256, 6)),
+    cap_steps=100,
 )
 QUICK = dict(
     batch=32, n_repeat=2, levels=(T_GRID[3], T_GRID[8]), grid_size=201,
     scale_batches=(16, 32, 64), scale_sites=(8, 16), scale_grids=(101, 201), scale_repeat=2,
     train_sizes=(32, 128), train_repeat=1, train_steps=20,
+    cap_sizes=(32, 128), cap_components=(1, 4), cap_hidden=(16, 32),
+    cap_transformer=((32, 2),), cap_steps=10,
 )
 
 
@@ -644,8 +653,127 @@ def part_training(cfg, out):
     return rows
 
 
+def part_capacity(cfg, out):
+    """Does the M-step stay flat in M as the MODEL grows? The "small vs huge network" claim.
+
+    WHY THIS PART EXISTS. Part `training` showed the M-step cost is flat in dataset size
+    (slope +0.008 over a 64x range) while the E-step is linear. That is half the argument.
+    The other half -- the half that turns it into "one small kernel network instead of one
+    huge score network" -- is what happens when the MODEL grows:
+
+        EM-BP           the kernel is evaluated on N_g grid points once per iteration, so
+                        capacity should multiply the (data-independent) M-step term only
+        score network   every parameter is touched by every example at every step, so
+                        capacity multiplies against data x steps
+
+    PREDECLARED, fixed before running: the M-step exponent in M stays ~0 at EVERY capacity,
+    while the M-step cost itself grows with capacity. If the M-step exponent in M rises with
+    capacity, the mechanism is leakier than claimed and the argument weakens -- which is the
+    outcome worth knowing, since this is the claim the paper would lead with.
+    """
+    rows = []
+    n_sites = int(cfg["n_sites"])
+    grid, weights = make_grid(cfg["half_width"], cfg["grid_size"])
+    prior = LaplaceAR1(cfg["rho"])
+    levels = list(cfg["levels"])
+    rep = int(cfg["train_repeat"])
+
+    from markov_score.em import e_step_multi
+    from markov_score.kernels import MDNKernel, MixtureInnovationKernel
+
+    def bundle(M):
+        rng = rng_for("e24-cap", M)
+        A = np.stack([prior.sample(rng, n_sites) for _ in range(M)])
+        groups, per = [], max(1, M // len(levels))
+        for j, t in enumerate(levels):
+            sl = A[j * per:(j + 1) * per]
+            if len(sl) == 0:
+                continue
+            al, de = alpha_delta(float(t))
+            groups.append((al * sl + np.sqrt(de) * rng.standard_normal(sl.shape), al, de))
+        return A, groups
+
+    for M in cfg["cap_sizes"]:
+        M = int(M)
+        A, groups = bundle(M)
+        for C in cfg["cap_components"]:
+            k0 = MixtureInnovationKernel.init(int(C), rho=0.3, var=0.8,
+                                              rng=rng_for("e24-cap-mix", M, C))
+            log_K = k0.log_transition_matrix(grid)
+            e = _timed(lambda: e_step_multi(grid, weights, log_K, groups), rep)
+            stats = e_step_multi(grid, weights, log_K, groups)
+            m = _timed(lambda: k0.m_step(stats, grid), rep)
+            rows.append({"arm": "em_bp_mixture", "family": "em_bp", "capacity": int(C),
+                         "capacity_axis": "components", "M": M, "n_params": int(k0.theta.size),
+                         "e_step_sec": e["wall_median"], "m_step_sec": m["wall_median"],
+                         "sec_per_unit": m["wall_median"], "n_repeat": rep})
+        for H in cfg["cap_hidden"]:
+            k0 = MDNKernel.init(int(cfg["mdn_components"]), int(H),
+                                rng_for("e24-cap-mdn", M, H))
+            log_K = k0.log_transition_matrix(grid)
+            e = _timed(lambda: e_step_multi(grid, weights, log_K, groups), rep)
+            stats = e_step_multi(grid, weights, log_K, groups)
+            m = _timed(lambda: k0.m_step(stats, grid), rep)
+            rows.append({"arm": "em_bp_mdn", "family": "em_bp", "capacity": int(H),
+                         "capacity_axis": "hidden", "M": M, "n_params": int(k0.theta.size),
+                         "e_step_sec": e["wall_median"], "m_step_sec": m["wall_median"],
+                         "sec_per_unit": m["wall_median"], "n_repeat": rep})
+            print(f"  [E24 capacity] M={M:5d} mdn hidden={H:4d} params={rows[-1]['n_params']:6d} "
+                  f"m_step={m['wall_median']:.4f}s", flush=True)
+
+        try:
+            import torch  # noqa: F401
+
+            from markov_score import nn_torch as nt
+        except Exception:
+            continue
+        for d, layers in cfg["cap_transformer"]:
+            hp = dict(d=int(d), heads=4, layers=int(layers))
+            cfg_t = nt.TrainConfig(steps=int(cfg["cap_steps"]), batch_size=64, lr=1e-3,
+                                   parameterization="eps", loss="dsm",
+                                   checkpoints=(int(cfg["cap_steps"]),),
+                                   t_levels=tuple(float(t) for t in levels), device="cpu",
+                                   seed=int(rng_for("e24-cap-net", d, layers, M).integers(0, 2**31 - 1)))
+            model = nt.build("transformer", n_sites, **hp)
+            t0 = time.perf_counter()
+            try:
+                nt.train(model, A, cfg_t)
+            except Exception as exc:
+                print(f"  [E24 capacity] transformer {hp} M={M} failed: {exc}", flush=True)
+                continue
+            dt = time.perf_counter() - t0
+            rows.append({"arm": "transformer", "family": "net", "capacity": int(d),
+                         "capacity_axis": "d_model", "M": M, "n_params": nt.n_params(model),
+                         "e_step_sec": float("nan"), "m_step_sec": float("nan"),
+                         "sec_per_unit": dt / int(cfg["cap_steps"]), "n_repeat": 1})
+            print(f"  [E24 capacity] M={M:5d} transformer d={d} l={layers} "
+                  f"params={rows[-1]['n_params']:6d} {dt / int(cfg['cap_steps']) * 1e3:.2f} ms/step",
+                  flush=True)
+
+    write_csv(out / "capacity.csv", rows)
+
+    # The predeclared test: M-step exponent in M, AT EACH CAPACITY.
+    slopes = []
+    for arm in sorted({r["arm"] for r in rows if r["family"] == "em_bp"}):
+        for cap in sorted({r["capacity"] for r in rows if r["arm"] == arm}):
+            sel = sorted((r for r in rows if r["arm"] == arm and r["capacity"] == cap),
+                         key=lambda r: r["M"])
+            vals = [r["m_step_sec"] for r in sel]
+            if len(sel) < 2 or not all(np.isfinite(v) and v > 0 for v in vals):
+                continue
+            sl, sl_top, n_top = _slopes([r["M"] for r in sel], vals)
+            slopes.append({"arm": arm, "capacity": cap, "quantity": "m_step_sec",
+                           "slope_full": sl, "slope_top": sl_top, "predicted": 0.0,
+                           "n_params": sel[-1]["n_params"], "n_points": len(sel)})
+            print(f"  [E24 capacity slope] {arm:14s} cap={cap:4d} m_step slope in M = "
+                  f"{sl:+.3f} (predicted 0)", flush=True)
+    write_csv(out / "capacity_slopes.csv", slopes)
+    return rows
+
+
 PARTS = {"cost": part_cost, "scaling": part_scaling, "anatomy": part_anatomy,
-         "training": part_training}
+         "training": part_training,
+         "capacity": part_capacity}
 
 
 def main():

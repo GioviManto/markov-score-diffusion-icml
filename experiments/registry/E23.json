@@ -1,0 +1,19 @@
+{
+ "id": "E23",
+ "script": "experiments/e23_representation.py",
+ "hypothesis": "Jerome's Q5: 'I wonder if we even need a grid in real space... instead of having a grid, we have a truncation on the number of Fourier modes... let's say the first 20 Fourier modes explain 99% of this space.' This experiment tests the PREMISE before building the solver, because three prior measurements made the solver look like a bad bet: E24's anatomy (only 23.8% of a sweep is the N_g^2 matmul, so an FFT caps at 1.3x), E22's cumulants (|kappa_6| runs 1 to 228, never small), and a scratch check showing Gauss-Legendre is an order of magnitude WORSE than uniform trapezoid here. The question is therefore prior to any solver: for the messages exact BP actually produces, how many degrees of freedom does each candidate representation need?",
+ "design": "Part `representation`: true forward messages from grid BP at a (3201, 16) reference, 64 chains, 4 families x 12 levels x 3 rho x 4 sites, each compressed to D degrees of freedom and scored by KL(true || reconstruction). Four representations: grid (D uniform points, the status quo yardstick), fourier (D lowest modes on the solver's SHARED domain -- what a drop-in replacement faces), fourier_adapted (the same truncation on a per-message window, +2 dof for mean and scale -- what a real Fourier solver would do), cumulant (Gram-Charlier through order D, the representation in which the OU channel acts diagonally and order 2 IS the Gaussian closure). Part `quadrature`: relative score error of grid BP against the reference as a function of node count, for uniform trapezoid, Gauss-Legendre and Clenshaw-Curtis.",
+ "predeclared_analysis": "D*(eps): the smallest dof reaching KL <= 1e-2, 1e-4, 1e-6, per representation and cell. R1 grid reaches 1e-6 at a few hundred dof. R2 fourier needs MORE than 20 modes. R3 cumulant does NOT converge monotonically (Gram-Charlier is asymptotic, not convergent), so the 'one dial from Gaussian closure to exact' framing has a ceiling. R4 no representation beats grid by the >4x that would matter given E24's cap. R2/R3/R4 all predict the Fourier/cumulant route does NOT pay, and are written down in advance precisely because the project has an incentive to find otherwise.",
+ "seeds": {
+  "confirmatory": "deterministic, rng_for('e23-repr'|'e23-quad', family, level, rho)"
+ },
+ "status": "REGISTERED 2026-09-25, submitted to the Bocconi HPC. Quick-settings smoke already indicates R3 (cumulant non-monotone in 4/4 cells: KL 9.7e-4 at order 9, 3.2e+02 at order 21) and that the quadrature rules rank trapezoid > Gauss-Legendre ~ Clenshaw-Curtis by ~10x. It also showed fourier_adapted at 47 dof (4.3e-5) beating grid at 45 dof (1.1e-3) by 26x, so the ADAPTED variant is where any win would come from.",
+ "registered": "2026-09-25",
+ "script_sha256": "b098b56eb3d1a374a64446e285ff80a2c455808c35e97551df5bd44d918e336c",
+ "fairness_note": "The first version measured Fourier truncation only on the solver's shared [-12, 12] domain, where the lowest harmonics are ~48x wider than a typical message and 'the first 20 modes' describes mostly empty space. Reporting that alone would have been a strawman of the proposal. `fourier_adapted` was added before submission; the gap between the two variants is the price of the SHARED DOMAIN, reported separately from the price of the representation, and it is that distinction which decides whether an adaptive-domain solver is worth building even if a drop-in is not.",
+ "measurement_floor": "Both Fourier variants are scored by interpolating back onto the reference grid, which puts a floor of order 1e-5 on the measured KL and makes their curves flatten at high dof. The production reference is 3201 points, pushing the floor below the low-dof region where the comparison is decided. A flat tail near 1e-5 is the instrument, not the method.",
+ "frozen_outputs": {},
+ "frozen_at": {},
+ "frozen_commit": {},
+ "frozen_run_commits": {}
+}
