@@ -32,12 +32,17 @@ A number that survives all three is as close to "sure" as this gets.
 
 ## The set
 
-| id | question it closes | scale | partition |
-|---|---|---|---|
-| **E22c** | Q2, Q3, Q4 — the message-family question, swept | 576 cells; 4 families × 12 levels × 3 $\rho$ × 2 $L$ × 2 grids × 512 chains | `compute`, 40 cpu, 2 d |
-| **E24c-cpu** | Q7, Q9, Q11 — cost and scaling, quiet node | 15 repeats, declared threads, train sizes to 8192 | `defq`, serial |
-| **E24c-gpu** | Q7 across devices | both devices in one process on an H200 | `medium_gpuh200` |
-| **E25** (×4) | Q6 — the neural kernel inside exact BP | 16 seeds × 4 sizes × 2 arms | `compute`, 4 jobs |
+| job | id | question it closes | scale | partition |
+|---|---|---|---|---|
+| 669321 | **E22c** | Q2, Q3, Q4 — the message-family question, swept | 576 cells; 4 families × 12 levels × 3 $\rho$ × 2 $L$ × 2 grids × 512 chains | `compute`, 40 cpu, 2 d |
+| 669375 | **E23** | Q5 — how many numbers a message needs | 4 representations × 12 dof × 4 families × 12 levels × 3 $\rho$; plus 3 quadrature rules × 10 node counts | `compute`, 40 cpu |
+| 669327 | **E24c-cpu** | Q7, Q9, Q11 — cost and scaling, quiet node | 15 repeats, declared threads, train sizes to 8192 | `defq`, serial |
+| 669334 | **E24c-gpu** | Q7 across devices | both devices in one process on an H200 | `medium_gpuh200` |
+| 669376 | **E24c-capacity** | the other half of "small kernel vs huge network" | capacity × dataset size, M-step exponent refitted per capacity | `medium_cpu` |
+| 669323/4/5/6 | **E25** | Q6 — the neural kernel inside exact BP | 16 seeds × 4 sizes × 2 arms | `compute`, 4 jobs |
+| 669377 | **E26** | Q8 — does score accuracy transfer to generation | 4 arms on shared Brownian paths + step study | `compute` |
+
+(Plus the pre-existing 667192, E12b, still pending since 23 September.)
 
 ### E22c — message shapes, everything swept
 
@@ -110,24 +115,45 @@ grows with its parameter count? That sweep is not in `exp_34` and is the first f
 
 ---
 
-## Still to build: E23
+## E23 — built and submitted, as a measurement rather than a solver
 
-Not in this wave, because it does not exist yet. E24 and E22 have between them already
-fixed its design, which is the main reason they went first:
+The plan of record was to build a Fourier BP solver. Three results since then said that
+would be a week spent before finding out whether the premise holds:
 
-- **E24 killed the FFT-first plan.** At $N_g = 401$ only 23.8 % of a sweep is the $N_g^2$
-  matmul; the rest is $O(B L N_g)$ traffic over 158 MB of message arrays. An FFT that made
-  the matmul free buys ≤ 1.3×. Truncation attacks the part where the time actually is.
-- **E22 fixed the mode budget.** Odd cumulants are negligible (10⁻³–10⁻²), so carry even
-  orders only. **Order 4 is not enough**: $|\kappa_6|$ runs 1–228 and is never small, so the
-  Gaussian-plus-$\kappa_4$ rung that `e16_edgeworth_oracle` already builds will miss a large
-  term. Order 6 minimum; more for heavy tails. And $\kappa_4$ *plateaus* rather than
-  vanishing at large $t$ — the messages converge to the chain's stationary law, not to a
-  Gaussian — so a $t$-adaptive truncation saves less than one would hope.
+- **E24 `anatomy`**: at $N_g = 401$ only 23.8 % of a sweep is the $N_g^2$ matmul. An FFT
+  that made it *free* buys ≤ 1.3×. Acceleration is not where the time is.
+- **E22**: $|\kappa_6|$ of the messages runs 1–228 and is never small, so a low-order
+  truncation cannot be assumed cheap.
+- **Quadrature**: Gauss–Legendre is ~10× *worse* than uniform trapezoid here. The Laplace
+  kink and the narrow likelihood are not polynomial-like, while trapezoid is spectrally
+  accurate for a rapidly decaying integrand. A better rule does not shrink the grid.
 
-E23 gets built against these constraints while this set runs.
+So E23 asks the question that is prior to any solver: **for the messages exact BP actually
+produces, how many degrees of freedom does each representation need?** If twenty Fourier
+modes really do explain 99 %, a solver is worth a week. If it takes two hundred, nothing
+built on that representation beats the 401-point grid, and we should say so and stop. Two
+days instead of two weeks, and a negative answer is as useful as a positive one.
 
----
+**Fairness was a real problem here and the first version got it wrong.** Truncating on the
+solver's shared $[-12, 12]$ domain — where the lowest harmonics are ~48× wider than a
+typical message — makes "the first 20 modes" describe mostly empty space. That is a
+strawman of the proposal. `fourier_adapted` truncates on a per-message window instead, and
+the gap between the two variants is the price of the **shared domain**, reported separately
+from the price of the representation. On the smoke run the adapted variant at 47 dof beat
+the grid at 45 dof by **26×**, so that is where any win would come from.
+
+Predictions R2–R4 all say the Fourier/cumulant route does *not* pay, and they are written
+down in advance precisely because the project has an incentive to find otherwise — and
+because the two previous experiments each falsified a prediction we preferred.
+
+## E26 — generation, weak form
+
+`e05_generation.py` was pre-registered on 15 September and never run. It answers the
+*weak* form of Q8 — that BP can drive generation, paired against the same Brownian paths.
+It does **not** answer the strong form Jerome actually proposed: one forward–backward sweep
+from a flat marginal, with no reverse SDE and no score at all. That sampler does not exist
+yet; the distinction is recorded in `experiments/registry/E26.json` so it is not lost when
+the results land.
 
 ## Provenance
 
