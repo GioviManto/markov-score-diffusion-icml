@@ -132,6 +132,7 @@ submit_one() {
   local driver=${cmd%% *} workers_flag='' cpus=$CPUS
   if grep -q -- '"--workers"' "experiments/$driver"; then workers_flag="--workers ${WORKERS_CAP:-\$SLURM_CPUS_PER_TASK}"; else cpus=${MSD_HPC_SERIAL_CPUS:-4}; fi
   local gres_line=''; [[ -n "$GRES" ]] && gres_line="#SBATCH --gres=$GRES"
+  local gpu_env_line=''; [[ -n "$GRES" ]] && gpu_env_line="source \$HOME/$MSD_SRC/hpc/icml_gpu_env.sh"
   local jid
   jid=$(ssh -o BatchMode=yes "$MSD_HPC_HOST" "sbatch --parsable $depflag" <<SB
 #!/bin/bash
@@ -147,6 +148,10 @@ set -euo pipefail
 # 'CPU time limit exceeded' (E05, 15 Sep) or leaves the job holding an idle node (E06b).
 ulimit -t unlimited 2>/dev/null || true
 export OMP_NUM_THREADS=$THREADS OPENBLAS_NUM_THREADS=$THREADS MKL_NUM_THREADS=$THREADS VECLIB_MAXIMUM_THREADS=$THREADS
+# A GPU job needs the CUDA 12.4 pin and libnvrtc on the library path, or cupy's device probe
+# fails -- selectively, depending on whether torch was imported first, which is how job 669334
+# produced a CPU-only cost table from a working H200. Sourced here so it cannot be forgotten.
+$gpu_env_line
 # MSD_JOB_ENV: extra exports baked into the job body at submission time (e.g.
 # "export E24_REQUIRE_GPU=1" to make a GPU job fail closed).
 ${MSD_JOB_ENV:-}
