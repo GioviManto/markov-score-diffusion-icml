@@ -171,3 +171,72 @@ already on disk, so a timeout costs one cell rather than the run.
 
 On return: `hpc/icml_fetch.sh`, then `tools/registry.py --check`, then `tools/freeze.py`
 before any generator reads the outputs.
+
+
+---
+
+# Run log
+
+## 26 September, 09:00 — first results, and two silent-wrong-answer bugs
+
+**Completed:** E24c-cpu (669327), E24c-gpu (669334), E24c-capacity (669376), E25 ×4
+(669323–6). **Running:** E26 (669377), E25-s0 (669832). **Queued:** E22c (669837), E23
+(669838), E25-s4/8/12 (669833–5), E24c-gpu (669836).
+
+### E24c-capacity — the claim confirmed, at every capacity
+
+The M-step exponent in $M$ stays at zero as the model grows, over a 64× range of dataset
+sizes:
+
+| kernel | capacity | M-step slope in $M$ | params |
+|---|---|---|---|
+| MDN | hidden 16 → 256 | −0.038, −0.020, +0.016, +0.020, +0.016 | 508 → 69,388 |
+| mixture | $C$ = 1 → 32 | −0.085 … −0.012 | 4 → 97 |
+
+And the cost of capacity itself, at $M = 8192$: **136× more kernel parameters (508 →
+69,388) costs 1.8× more per M-step (0.101 → 0.181 s)**, because the network is evaluated
+only on the $N_g$ grid points. Against that, 175× more transformer parameters (18k → 3.2M)
+costs 6.3× more *per step* (8.3 → 52.2 ms) — and that is paid on every one of 32,000 steps.
+
+One honesty check that matters: at $M = 8192$ the **E-step** costs 4.1 s against the MDN
+M-step's 0.13 s. So EM–BP's total training cost is dominated by exact BP over the data, not
+by the kernel, and at that size it is *comparable* to a transformer's total. The kernel is
+nearly free to update; the BP sweeps are not. The "small network" claim is about the
+parameters and should be stated that way.
+
+### E24c-gpu — a CPU-only cost table from a working GPU
+
+Job 669334 ran on an H200 NVL with cupy and torch-CUDA both functional, and wrote a
+cost table containing **only CPU rows**, while `scaling.csv` *from the same process* has GPU
+rows. `backend.gpu_available()`'s first probe — the call that pays for CUDA context and
+cuBLAS handle creation — failed transiently, and `except Exception: return False` discarded
+the reason.
+
+It is fixed (retry, record the error, and `E24_REQUIRE_GPU=1` exits nonzero rather than
+producing a CPU-only cost table from a GPU job), and it was caught only because every row
+carries `device_name` and the params file carries `cupy_gpu_available` — the self-describing
+output the set was designed with. **Check those two fields before quoting any GPU number.**
+
+The scaling rows that did land already overturn a headline. On the H200, `bp_grid` is **flat
+at 0.020 s from batch 32 to 2048** — launch-latency-bound, with enormous headroom — i.e.
+**0.0105 ms/sequence** against 0.3797 on the same node's CPU, a **36× speedup**. So "BP is
+2.2× slower than a transformer at inference" was an artefact of running BP on a CPU where it
+is memory-bound. The fair same-device table is what 669836 is for.
+
+### E25 — void, and the same defect for the third time
+
+All four E25 jobs are void: `exp_34` re-seeded `rng_for()` inside a comprehension, so every
+training set was **one chain replicated $M$ times**. Full account in
+`outputs/hpc_E25_s0_VOID_degenerate_training_set/VOID.md` and registry amendment N-23.
+
+The numbers flagged themselves before the cause was known — both arms flat in $M$, `em_bp`
+worse than this project's own LMMSE floor, the validation-selected checkpoint at the first
+rung in nearly every cell — which is why they were checked instead of reported.
+
+`tests/test_no_degenerate_bundles.py` now fails on the pattern anywhere in the tree, and it
+immediately found a fourth instance (`exp_33`) that a hand-written grep had missed.
+
+**Scheduling note:** E22c and E23 sat PENDING for 18 hours because each wanted a whole
+40-cpu `compute` node (3 nodes) while small E25 shards backfilled ahead of them. Both were
+cancelled at 0:00 elapsed and resubmitted to `defq` at 24 cpus (6 nodes, and 24 makes every
+node eligible). They are resumable, so the shorter 23 h limit costs nothing.
