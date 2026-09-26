@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-09-26 19:07:27",
+  "git_commit": "bd7ad429d317d676f6d5f15e6093a24059922e3a",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "8807619767bd2eca7c6cff7e70e89b9207d9940219d6efccfb0cd539234b5233",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode06",
+  "slurm_job_id": "669837",
+  "slurm_array_task_id": "",
+  "cpu_count": "40",
+  "blas_threads": "1",
+  "resolved_config_hash": "1615ead54258",
+  "settings": {
+    "rhos": [
+      0.5,
+      0.85,
+      0.95
+    ],
+    "lengths": [
+      32,
+      128
+    ],
+    "families": [
+      "laplace",
+      "gaussian",
+      "student",
+      "uniform"
+    ],
+    "levels": [
+      0.05,
+      0.0725,
+      0.1053,
+      0.1527,
+      0.2216,
+      0.3215,
+      0.4665,
+      0.6769,
+      0.9821,
+      1.425,
+      2.0676,
+      3.0
+    ],
+    "n_chains": 512,
+    "grids": [
+      [
+        801,
+        12.0
+      ],
+      [
+        1601,
+        16.0
+      ]
+    ],
+    "sites": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      31,
+      63,
+      127
+    ],
+    "workers": 24
+  },
+  "quick": false,
+  "frozen": {
+    "rho": 0.85,
+    "n_sites": 32,
+    "innovation": "laplace",
+    "n_grid": 401,
+    "half_width": 8.0,
+    "t_grid": [
+      0.05,
+      0.0725,
+      0.1053,
+      0.1527,
+      0.2216,
+      0.3215,
+      0.4665,
+      0.6769,
+      0.9821,
+      1.425,
+      2.0676,
+      3.0
+    ],
+    "n_seeds": 16,
+    "sizes": [
+      32,
+      128,
+      256,
+      512,
+      1024,
+      2048,
+      4096
+    ],
+    "efficiency_sizes": [
+      32,
+      64,
+      128,
+      256,
+      512,
+      1024,
+      2048
+    ],
+    "n_heldout": 256,
+    "heldout_seed_offset": 1000000,
+    "em_max_iters": 400,
+    "em_loglik_tol": 1e-09,
+    "em_shape_tol": 0.001,
+    "n_components": 8,
+    "ring_n_frames": 12,
+    "ring_sigma": 0.3,
+    "ring_lambda": 0.05,
+    "ring_r_star": 1.0,
+    "ring_psi_true": 0.5235987755982988,
+    "ring_n_psi": 128,
+    "base_seed": 20260816
+  }
+}

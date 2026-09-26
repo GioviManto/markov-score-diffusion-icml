@@ -433,6 +433,7 @@ def fit_em(
     n_iters: int = 50,
     log_mu: np.ndarray | None = None,
     tol: float = 1e-9,
+    patience: int = 3,
     chunk: int = 256,
     checkpoints: "set[int] | None" = None,
 ):
@@ -443,7 +444,11 @@ def fit_em(
     over the whole dataset followed by the kernel's own M-step.
 
     Stops early when the marginal log-likelihood increases by less than `tol`
-    NATS PER TRANSITION, and only if it increased.
+    NATS PER TRANSITION on `patience` CONSECUTIVE iterations, and only if it increased
+    each time. The consecutive requirement is what distinguishes a genuine fixed point
+    from a generalized M-step whose line search rejected one step (see the comment at the
+    convergence test; a single rejected step silently ended E25's MDN arm at iteration 10
+    of 400 and made a broken optimiser look like a worse model).
 
     The load-bearing change is the sign. The old test was
 
@@ -484,6 +489,7 @@ def fit_em(
     trace = EMTrace(log_evidence=[], theta=[], seconds=[])
     current = kernel
     prev = -np.inf
+    small_streak = 0
     saved: dict[int, object] = {}
     for it in range(n_iters):
         t0 = time.perf_counter()
@@ -501,7 +507,31 @@ def fit_em(
         trace.n_edges = stats.n_edges
         # Per transition, and signed: a decrease is not convergence.
         gain = (stats.log_evidence - prev) / stats.n_edges
-        converged = np.isfinite(prev) and 0.0 <= gain <= tol
+        # PATIENCE, AND WHY IT IS NOT COSMETIC (amendment N-24, 26 September 2026).
+        #
+        # This test used to fire on ONE below-tolerance increment. For an EXACT M-step that
+        # is right: a zero increment is a fixed point. For a GENERALIZED M-step it is not.
+        # `MDNKernel.m_step` is a backtracked Adam ascent, and when the line search rejects
+        # every scale it returns the kernel unchanged -- so the next increment is exactly
+        # 0.0, indistinguishable here from convergence.
+        #
+        # That is what happened to E25's MDN arm. Its per-transition increments ran
+        #   0.130, 0.032, 0.012, 0.018, 0.007, 0.016, 0.0076, 0.0062, 0.000
+        # and the run stopped at iteration 10 of a planned 400, labelled "converged", with
+        # every one of the eight preceding increments seven to eight orders of magnitude
+        # ABOVE tol = 1e-9. On the cluster it stopped at the FIRST checkpoint (5) in all 48
+        # cells, which is why the arm looked flat in the dataset size and ~10x worse than
+        # the mixture kernel. That was not a property of neural kernels; it was this line.
+        #
+        # Requiring `patience` CONSECUTIVE below-tolerance non-negative increments separates
+        # the two cases: a genuine fixed point keeps producing them, a rejected step does
+        # not. A true fixed point therefore costs `patience - 1` extra iterations and
+        # changes no result; a rejected step no longer ends the run.
+        if np.isfinite(prev) and 0.0 <= gain <= tol:
+            small_streak += 1
+        else:
+            small_streak = 0
+        converged = small_streak >= max(1, patience)
         prev = stats.log_evidence
         if converged:
             # `current` is the parameter whose evidence is the last logged entry. The

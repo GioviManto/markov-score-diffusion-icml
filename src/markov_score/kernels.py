@@ -649,6 +649,24 @@ class MixtureInnovationKernel:
 # Rung 4: neural transition kernel (mixture-density network)
 # ----------------------------------------------------------------------------
 
+def _clone_mlp(net):
+    """A deep copy of an MLP: same architecture, independent parameter arrays."""
+    import copy
+
+    clone = copy.copy(net)
+    clone.params = [p.copy() for p in net.params]
+    return clone
+
+
+def _clone_adam(state):
+    """A deep copy of the Adam moment state, or None."""
+    if state is None:
+        return None
+    return {"m": [a.copy() for a in state["m"]],
+            "v": [a.copy() for a in state["v"]],
+            "step": state["step"]}
+
+
 @dataclass
 class MDNKernel:
     """K(a'|a) = sum_c pi_c(a) N(a'; m_c(a), s_c(a)^2), heads from a small MLP.
@@ -777,18 +795,52 @@ class MDNKernel:
 
         q_before = float(np.sum(stats.xi * self.log_transition_matrix(grid)))
         saved = [p.copy() for p in self.net.params]
-        direction = self._adam_direction(grads)
-        for scale in self.backtrack_scales:
-            for p, s, d_p in zip(self.net.params, saved, direction):
+
+        # RETURN A NEW KERNEL; DO NOT MUTATE self. (Amendment N-25, 26 September 2026.)
+        #
+        # This method used to update `self.net.params` in place and `return self`. Every
+        # other kernel here returns a NEW object, and `em.fit_em` depends on that: it stores
+        # `saved[it] = current` to build the checkpoint ladder. Returning the same mutated
+        # object made every checkpoint an alias of one kernel, so all of them carried the
+        # FINAL parameters -- measured: 1 distinct object and 1 distinct theta across 4
+        # checkpoints, against 5 of 5 for the mixture kernel.
+        #
+        # The consequence was not a slightly wrong number. Validation-based checkpoint
+        # selection became a no-op for this kernel, which silently disabled the single
+        # control E25 exists to exercise -- the overfitting Jerome predicted unprompted
+        # ("the real issue is going to be message passing with this, because then it will
+        # overfit"). An arm cannot demonstrate early stopping when all its checkpoints are
+        # the same parameters.
+        trial = MDNKernel(net=self.net.clone() if hasattr(self.net, "clone") else _clone_mlp(self.net),
+                          n_components=self.n_components, lr=self.lr,
+                          backtrack_scales=self.backtrack_scales,
+                          _adam=_clone_adam(self._adam))
+        direction = trial._adam_direction(grads)
+        for scale in trial.backtrack_scales:
+            for p, s, d_p in zip(trial.net.params, saved, direction):
                 p[...] = s - scale * d_p
-            q_after = float(np.sum(stats.xi * self.log_transition_matrix(grid)))
+            q_after = float(np.sum(stats.xi * trial.log_transition_matrix(grid)))
             if np.isfinite(q_after) and q_after >= q_before:
-                return self
-        # No ascent found: stay put rather than take a step that would break the
-        # guarantee. A run that stalls here is reporting that its learning rate
-        # is too large, which is information; a run that silently descends is not.
-        for p, s in zip(self.net.params, saved):
+                return trial
+
+        # NO ASCENT AT ANY SCALE. The old code restored the parameters and returned `self`,
+        # on the reasoning that stalling "is reporting that its learning rate is too large,
+        # which is information". Nothing acted on that information: `lr` was never reduced
+        # and the Adam moments kept advancing, so once the search entered a region where
+        # every scale overshot it stalled THERE FOR GOOD. Combined with the convergence test
+        # (see em.fit_em, amendment N-24) that ended E25's MDN arm after ~10 of 400
+        # iterations and made a stuck optimiser look like a model 10x worse than the
+        # mixture kernel.
+        #
+        # So a rejection now DOES something: the step is not taken, and the returned kernel
+        # carries a halved learning rate, so the next attempt is genuinely smaller. The
+        # ascent guarantee of generalized EM is preserved -- Q never decreases -- while the
+        # search can recover instead of dying.
+        for p, s in zip(trial.net.params, saved):
             p[...] = s
+        return MDNKernel(net=trial.net, n_components=self.n_components,
+                         lr=self.lr * 0.5, backtrack_scales=self.backtrack_scales,
+                         _adam=trial._adam)
         return self
 
     def _adam_direction(self, grads) -> list[np.ndarray]:

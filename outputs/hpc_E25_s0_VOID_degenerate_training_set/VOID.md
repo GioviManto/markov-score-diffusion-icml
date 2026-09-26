@@ -16,11 +16,25 @@ is the same chain.** Measured directly: 1 unique row out of 8. The "training set
 chains" was one sequence replicated M times, for every M and every seed.
 
 This is the same defect as amendment **N-22**, which voided E14's first runs on 20
-September. It was fixed then in `e14_regime_baselines.py`, and in `e02_capacity.py` — where
-the broken line was left behind as dead code (`... if False else None`) instead of being
-deleted — but it was never swept for elsewhere. It was therefore still present in
-`exp_32`, `exp_33` and `exp_34`, none of which had ever been executed, so nothing failed
-until E25 ran.
+September.
+
+**CORRECTION to the first version of this note, which said the defect "was never swept for
+elsewhere". That is false, and the truth is worse.** It *was* swept for, on 21 September, by
+`tests/test_no_regenerated_rng.py` (commit `269f763`, "A gate for the re-seeded-generator
+defect"). That sweep found `exp_32`, `exp_33` and `exp_34` and, rather than fixing them,
+**allowlisted** them in a `KNOWN_ARCHIVAL` set, on the stated reasoning that they were
+archival copies the paper does not build from, so the gate would be "green on what the paper
+builds from and red the moment the pattern reappears in a live driver".
+
+Four days later `exp_34` was submitted to the cluster as E25 — four jobs, about thirty
+CPU-hours — by someone (me) who never looked at the allowlist. The defect was known,
+documented, and named in a test file, and it still cost a full run. The allowlist WAS the
+warning; nothing connected "this driver is on a known-broken list" to "this driver is about
+to be run", so the warning had no way to fire.
+
+The lesson is not "sweep for the defect" — that had been done. It is that **a known-broken
+driver must be repaired, not registered as acceptably broken.** `KNOWN_ARCHIVAL` is now empty
+and documented as needing to stay empty.
 
 ## How it showed up in the numbers, before the cause was known
 
@@ -40,8 +54,12 @@ Any one of those should stop a reader; together they are unambiguous.
 - `exp_34`, `exp_32` and `exp_33` fixed (generator hoisted out of the comprehension);
 - the dead broken line in `e02_capacity.py` deleted, so it cannot be copied again;
 - `tests/test_no_degenerate_bundles.py` added: an AST check over `experiments/`, `src/` and
-  `tools/` that fails on any comprehension re-seeding `rng_for` per iteration. It found
-  `exp_33`, which a hand-written grep had missed;
+  `tools/` that fails on any comprehension re-seeding `rng_for` per iteration, with no
+  allowlist. It walks the syntax tree rather than matching text, so it also covers forms the
+  existing regex gate does not;
+- `KNOWN_ARCHIVAL` in `tests/test_no_regenerated_rng.py` emptied, now that all three files are
+  actually fixed — its own `test_known_archival_list_is_current` demands exactly that, and it
+  is what failed and surfaced this whole history;
 - E25 resubmitted from the fixed driver.
 
 ## Open question this raises, NOT yet answered

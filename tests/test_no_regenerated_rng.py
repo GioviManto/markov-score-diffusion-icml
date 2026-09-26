@@ -14,10 +14,16 @@ whose loop variable is inside `rng_for(...)` (`for k in range(n)`, exp_05, exp_1
 degenerate form is exactly a freshly seeded generator inside a `for _ in` loop: the seed
 cannot depend on a variable the loop throws away.
 
-The archival copies exp_32, exp_33 and exp_34 carry the pattern in this repository (found
-21 Sep 2026, docs/NEGATIVE_RESULTS.md). They are listed, not silently fixed, so the gate is
-green on what the paper builds from and red the moment the pattern reappears in a live
-driver; removing an entry from the list must come with fixing the file.
+exp_32, exp_33 and exp_34 were found to carry the pattern on 21 September 2026 and were
+ALLOWLISTED rather than fixed, so this gate stayed green while the pattern remained. On 25
+September exp_34 was then submitted as E25 and all four jobs were void (amendment N-23). The
+allowlist is now empty and must stay so; see KNOWN_ARCHIVAL below.
+
+A second, stronger gate on the same defect class lives in tests/test_no_degenerate_bundles.py:
+it walks the AST instead of matching text, so it covers any comprehension that re-seeds
+rng_for per iteration rather than only `.sample(rng_for(...))` inside `for _ in`, and it has no
+allowlist. Both are kept deliberately — this one pins the exact original line and the shapes
+that must NOT be flagged, which is a different job from a general sweep.
 """
 
 from __future__ import annotations
@@ -30,11 +36,21 @@ CALL = re.compile(r"\.sample\(\s*rng_for\(")
 THROWAWAY_LOOP = re.compile(r"\bfor\s+_\s+in\b")
 WINDOW = 3          # lines after the call within which the loop header may sit
 
-KNOWN_ARCHIVAL = {
-    "experiments/exp_32_capacity_equivalence.py",
-    "experiments/exp_33_target_diagnostic.py",
-    "experiments/exp_34_information_ladder.py",
-}
+KNOWN_ARCHIVAL: set[str] = set()
+"""Empty since 26 September 2026, and it should stay empty.
+
+It used to list exp_32, exp_33 and exp_34, on the reasoning below that they were archival
+copies the paper does not build from, so listing them kept this gate green while leaving the
+pattern visible. That reasoning failed in the only way that mattered: on 25 September exp_34
+was submitted to the cluster as experiment E25, four jobs and about thirty CPU-hours, and
+every training set was one chain replicated M times. The allowlist WAS the warning and it was
+walked straight past, because nothing connects "this driver is on a known-broken list" to
+"this driver is about to be run".
+
+All three are now fixed, so the list is empty. Do not add to it. A driver with this defect
+should be repaired, not registered as acceptably broken — an entry here is an invitation to
+run it.
+"""
 
 
 def degenerate_hits(text: str, name: str = "<src>") -> list[str]:
