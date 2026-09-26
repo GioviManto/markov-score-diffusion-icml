@@ -193,7 +193,6 @@ def _capacity_cell(args):
     prior = LaplaceAR1(FROZEN.rho)
     log_k = prior.log_transition_matrix(grid)
     sampler = lambda rng: prior.sample(rng, N_SITES)
-    A = np.stack([sampler(rng_for("exp31-train", seed, n)) for _ in range(n)]) if False else None
     rng_train = rng_for("exp31-train", seed, n)
     A = np.stack([prior.sample(rng_train, N_SITES) for _ in range(n)])
     _, val = _bundle(sampler, log_k, grid, weights, "exp31-val", seed, cfg["n_val"])

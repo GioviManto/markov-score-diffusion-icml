@@ -7,13 +7,20 @@
  "seeds": {
   "confirmatory": "0-15, split 0-3 / 4-7 / 8-11 / 12-15 across four jobs"
  },
- "status": "REGISTERED 2026-09-25, submitted to the Bocconi HPC. The script has existed complete since before the call and had NEVER been run: no output directory for it exists anywhere in the tree.",
+ "status": "AMENDED 26 Sep: every run of 25-26 Sep (jobs 669323-669326, ~30 CPU-hours) is VOID and was moved to outputs/hpc_E25_s*_VOID_degenerate_training_set/ with a VOID.md. RESUBMITTED from the fixed driver.",
  "registered": "2026-09-25",
- "script_sha256": "ae9c1b400c3fe65f119bbb2bcd9a938527240b91dc9f182cb3a5fced2dc196dc",
+ "script_sha256": "61d7d8d49424c5818bc7b00e973aa1d5e58ee716205bd255056de2274beb0188",
  "motivation": "Jerome, 25 September 2026: 'An intermediate model between the neural network and BP would be to actually fit K with a neural network... Exploit the structure by learning only one small neural network that will learn a transition kernel. And that's the only thing that it's doing, instead of a huge neural network, like an attention, that needs to understand that -- because when you learn the kernel, you've exploited the structure.' MDNKernel's own docstring already contains the same argument, written before the call.",
  "follow_up": "The capacity axis is NOT in exp_34 and is the first follow-up: E24 showed the M-step cost is flat in dataset size (slope +0.008) while the E-step is linear, so 'a score network pays for its parameters on every example at every step, EM-BP pays once per iteration on the grid'. Turning that into 'small network beats huge network' requires sweeping the kernel capacity and showing the M-step stays flat in M as the kernel grows, against a score network whose per-step cost grows with its parameter count.",
  "frozen_outputs": {},
  "frozen_at": {},
  "frozen_commit": {},
- "frozen_run_commits": {}
+ "frozen_run_commits": {},
+ "amendment_N23": {
+  "date": "2026-09-26",
+  "defect": "exp_34 built its training set with rng_for() INSIDE the comprehension, so the generator was re-seeded identically on every iteration and every row of A was the same chain: a training set of one sequence replicated M times, for every M and every seed. Measured: 1 unique row out of 8. This is the N-22 defect that voided E14's first runs on 20 September, fixed then in e14_regime_baselines.py and in e02_capacity.py -- where the broken line was left as dead code rather than deleted -- and never swept for elsewhere. exp_32, exp_33 and exp_34 all still carried it; none had ever been run, so nothing failed until E25.",
+  "how_it_showed": "both arms flat in M (em_bp 0.288/0.228/0.305/0.314 across a 64x range); em_bp test risk 0.23-0.31, worse than this project's own LMMSE floor of 0.168 where the headline reports 0.018; the validation-selected checkpoint was the first or second rung of a ladder reaching 1200, MDN taking iteration 5 in all 64 cells; stop_reason=censored in 63 of 64 em_bp cells.",
+  "fix": "generator hoisted out of the comprehension in exp_32, exp_33 and exp_34; the dead broken line deleted from e02_capacity.py; tests/test_no_degenerate_bundles.py added -- an AST check over experiments/, src/ and tools/ that fails on any comprehension re-seeding rng_for per iteration. It immediately found exp_33, which a hand-written grep had missed.",
+  "open_question": "exp_32_capacity_equivalence.py carried the same defect and is cited by CLAIM_EVIDENCE_MATRIX, SCIENCE_AUDIT, NEGATIVE_RESULTS and tools/make_tab_capacity.py. It has no outputs in this repository, so those numbers came from the archival tree. Whether the 'no mixture capacity improves on a single Gaussian innovation' conclusion (audit C12, and the void thesis capacity sweep of Ch. 10) rests on a degenerate training set is now OPEN: one replicated chain would suppress exactly the benefit a richer kernel should show. Must be checked against the archival run's own code before that conclusion is repeated."
+ }
 }

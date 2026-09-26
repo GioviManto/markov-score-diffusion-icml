@@ -175,8 +175,10 @@ def _resolve_devices(requested) -> list[str]:
     `backend.get_xp('gpu')` already refuses to fall back silently. Here the request is
     filtered up front so a mixed sweep on a laptop runs its CPU half instead of dying.
     """
+    from markov_score import backend
     from markov_score.backend import gpu_available
 
+    strict = os.environ.get("E24_REQUIRE_GPU", "").strip() not in ("", "0")
     out = []
     for d in requested:
         d = str(d).lower()
@@ -185,8 +187,19 @@ def _resolve_devices(requested) -> list[str]:
         elif d in ("gpu", "cuda", "cupy"):
             if gpu_available():
                 out.append("gpu")
+            elif strict:
+                # A job submitted to a GPU partition that quietly produces CPU-only numbers
+                # is worse than one that fails: on 25 September exactly that happened and the
+                # cost table -- the one the job existed for -- was silently CPU-only while the
+                # scaling table in the SAME process had GPU rows.
+                raise SystemExit(
+                    "E24_REQUIRE_GPU is set and no usable GPU was found.\n  probe: "
+                    + (backend.last_probe_error or "(no error recorded)")
+                    + "\nRefusing to produce a CPU-only cost table from a GPU job."
+                )
             else:
-                print("  [E24] 'gpu' requested but no usable device; dropping that arm", flush=True)
+                print("  [E24] 'gpu' requested but no usable device; dropping that arm"
+                      f" (probe: {backend.last_probe_error or 'no error recorded'})", flush=True)
         else:
             raise SystemExit(f"unknown device {d!r}; expected 'cpu' or 'gpu'")
     if not out:
@@ -237,6 +250,8 @@ def _thread_info() -> dict:
     try:
         from markov_score.backend import device_name, get_xp, gpu_available
         info["cupy_gpu_available"] = str(gpu_available())
+        from markov_score import backend as _b
+        info["cupy_probe_error"] = _b.last_probe_error
         info["bp_device_name"] = device_name(get_xp("auto")) if gpu_available() else "cpu:numpy"
     except Exception as exc:
         info["cupy_gpu_available"] = f"unavailable ({exc})"

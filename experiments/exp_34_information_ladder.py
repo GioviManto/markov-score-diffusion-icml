@@ -148,10 +148,15 @@ def part_run(cfg, out):
             arms_needed = [a for a in ("em_bp", "mdn") if (seed, n_chains, a) not in done]
             if not arms_needed:
                 continue
-            A = np.stack([
-                prior.sample(rng_for("exp34-train", seed, n_chains), N_SITES)
-                for _ in range(n_chains)
-            ])
+            # rng_for() OUTSIDE the comprehension. Calling it inside builds a fresh
+            # generator with the same seed on every iteration, so every row of A is the
+            # SAME chain and the training set is one sequence replicated n_chains times --
+            # the N-22 defect that voided E14's first runs, present here verbatim and
+            # undetected because this script had never been executed. It voided the whole
+            # of E25 (jobs 669323-669326, 25-26 Sep); see tests/test_no_degenerate_bundles.py,
+            # which now fails on this pattern anywhere in the tree.
+            rng_train = rng_for("exp34-train", seed, n_chains)
+            A = np.stack([prior.sample(rng_train, N_SITES) for _ in range(n_chains)])
             rng_split = rng_for("exp34-split", seed, n_chains)
             idx = np.array_split(rng_split.permutation(n_chains), len(T_SCHEDULE))
             noise = rng_for("exp34-noise", seed, n_chains)

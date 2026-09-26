@@ -98,6 +98,8 @@ cmd_for() {
     e24c-cpu)    echo "e24_inference_cost.py --set \"devices=('cpu',)\" --set n_repeat=15 --set scale_repeat=9 --set 'train_sizes=(32, 128, 512, 2048, 8192)' --output-dir {OUT}/E24c";;
     # E24c-gpu: the SAME driver with both devices in one process, so the cross-device ratio
     # comes from one machine and one run rather than from two jobs compared after the fact.
+    # Submit with MSD_JOB_ENV="export E24_REQUIRE_GPU=1" so the job FAILS rather than
+    # silently producing a CPU-only cost table (see the 25 Sep incident in E24.json).
     e24c-gpu)    echo "e24_inference_cost.py --set \"devices=('cpu', 'gpu')\" --set n_repeat=15 --set scale_repeat=9 --output-dir {OUT}/E24gpu";;
     # E25: the MDN-kernel rung of the information ladder -- Jerome's "small neural network
     # that learns a transition kernel". exp_34 has existed unrun since before the call. It is
@@ -145,6 +147,9 @@ set -euo pipefail
 # 'CPU time limit exceeded' (E05, 15 Sep) or leaves the job holding an idle node (E06b).
 ulimit -t unlimited 2>/dev/null || true
 export OMP_NUM_THREADS=$THREADS OPENBLAS_NUM_THREADS=$THREADS MKL_NUM_THREADS=$THREADS VECLIB_MAXIMUM_THREADS=$THREADS
+# MSD_JOB_ENV: extra exports baked into the job body at submission time (e.g.
+# "export E24_REQUIRE_GPU=1" to make a GPU job fail closed).
+${MSD_JOB_ENV:-}
 export PYTHONPATH=\$HOME/$MSD_SRC/src
 cd \$HOME/$MSD_SRC/experiments
 echo "start=\$(date -Is) host=\$(hostname) job=\$SLURM_JOB_ID cpus=\$SLURM_CPUS_PER_TASK"; cat ../REVISION

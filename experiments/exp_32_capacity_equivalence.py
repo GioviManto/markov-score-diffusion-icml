@@ -211,10 +211,10 @@ def part_sweep(cfg, out):
         _, test = _bundle(prior, grid, weights, "exp32-test", seed, cfg["n_test"], T_SCHEDULE)
 
         for n_chains in sorted({n for n, _ in pending}):
-            A = np.stack([
-                prior.sample(rng_for("exp32-train", seed, n_chains), N_SITES)
-                for _ in range(n_chains)
-            ])
+            # See exp_34 and tests/test_no_degenerate_bundles.py: rng_for() must be called
+            # ONCE, outside the comprehension, or every row of A is the same chain.
+            rng_train = rng_for("exp32-train", seed, n_chains)
+            A = np.stack([prior.sample(rng_train, N_SITES) for _ in range(n_chains)])
             # One-view split across the schedule, matching exp_31 and the
             # headline protocol: each chain is noised at exactly one level.
             rng_split = rng_for("exp32-split", seed, n_chains)

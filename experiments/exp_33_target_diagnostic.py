@@ -121,10 +121,12 @@ def part_run(cfg, out):
         print(f"resuming: {len(done)} cell(s) on disk", flush=True)
 
     for seed in range(cfg["seed0"], cfg["seed0"] + cfg["seeds"]):
-        A_fixed = np.stack([
-            prior.sample(rng_for("exp33-train", seed), N_SITES)
-            for _ in range(cfg["n_chains"])
-        ])
+        # The "fixed finite training set" arm of the 2x2 needs n_chains DISTINCT chains
+        # that are then reused, not one chain replicated n_chains times. rng_for() inside
+        # the comprehension gave the latter (see tests/test_no_degenerate_bundles.py),
+        # which would have made the whole fixed-vs-fresh contrast meaningless.
+        rng_fixed = rng_for("exp33-train", seed)
+        A_fixed = np.stack([prior.sample(rng_fixed, N_SITES) for _ in range(cfg["n_chains"])])
         _, val = _bundle(prior, grid, weights, "exp33-val", seed, cfg["n_val"])
         _, test = _bundle(prior, grid, weights, "exp33-test", seed, cfg["n_test"])
 

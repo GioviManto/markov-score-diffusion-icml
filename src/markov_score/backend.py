@@ -58,27 +58,55 @@ def _try_import_cupy():
     return _CUPY
 
 
-def gpu_available() -> bool:
+# The exception from the most recent failed probe, for diagnostics. `gpu_available()`
+# has to return a bool, so without this the reason a probe failed is lost -- which is
+# exactly what happened on 25 September (see the retry note below).
+last_probe_error: str = ""
+
+
+def gpu_available(attempts: int = 3, pause: float = 0.5) -> bool:
     """True only if cupy imports *and* a device actually responds.
 
     The import succeeding is not enough: cupy installs fine on a login node with no GPU, and
     the failure would otherwise surface deep inside a BP sweep rather than at startup.
+
+    WHY IT RETRIES, AND WHY THE ERROR IS KEPT (25 September 2026). E24's GPU job on an H200
+    called this twice in one process, seconds apart: the FIRST call returned False and the
+    second returned True. The job therefore produced a CPU-only cost table and a
+    GPU-inclusive scaling table, and the cost table -- the one answering the question the
+    job existed for -- was silently wrong. The `except Exception: return False` threw away
+    the only evidence of why.
+
+    The first probe is the one that pays for CUDA context creation and the cuBLAS handle,
+    and on a busy node that can transiently fail. So: retry a few times with a short pause,
+    and record the last exception in `last_probe_error` so a caller can report WHY rather
+    than only THAT a device was not found. Callers that must not degrade should ask for
+    `get_xp("gpu")`, which raises, or check `last_probe_error` after a False.
     """
+    global last_probe_error
     cp = _try_import_cupy()
     if cp is None:
+        last_probe_error = "cupy could not be imported"
         return False
-    try:
-        cp.cuda.runtime.getDeviceCount()
-        # A matmul, not just an allocation. Allocation succeeds without cuBLAS loaded, so an
-        # allocation-only probe reports a usable GPU on a node where every matrix product
-        # will fail -- which is exactly what happened on the first cluster attempt
-        # (libcublas.so.12 missing because the cuda module was not loaded in the batch job).
-        # The probe has to exercise the operation the recursion actually depends on.
-        a = cp.ones((8, 8), dtype=cp.float64)
-        float((a @ a).sum())
-        return True
-    except Exception:  # pragma: no cover - depends on the machine
-        return False
+    import time as _time
+
+    for k in range(max(1, attempts)):
+        try:
+            cp.cuda.runtime.getDeviceCount()
+            # A matmul, not just an allocation. Allocation succeeds without cuBLAS loaded, so
+            # an allocation-only probe reports a usable GPU on a node where every matrix
+            # product will fail -- which is exactly what happened on the first cluster attempt
+            # (libcublas.so.12 missing because the cuda module was not loaded in the batch job).
+            # The probe has to exercise the operation the recursion actually depends on.
+            a = cp.ones((8, 8), dtype=cp.float64)
+            float((a @ a).sum())
+            last_probe_error = ""
+            return True
+        except Exception as exc:  # pragma: no cover - depends on the machine
+            last_probe_error = f"attempt {k + 1}/{attempts}: {type(exc).__name__}: {exc}"
+            if k + 1 < attempts:
+                _time.sleep(pause)
+    return False
 
 
 def get_xp(device: str | None = None) -> Any:
