@@ -307,6 +307,39 @@ iterations), with one distinct chain among the 512 drawn. The frozen exp_32 numb
 therefore the output of a one-chain training set with certainty, not by inference; the
 rerun stays in that session's scratchpad and is not frozen.
 
+**N-23, addendum (27 Sep).** Two quantities the 21 Sep entry did not put a number on, both
+measured against the archival draw (`rng_for` and `_stable_hash` are byte-identical between
+`src/markov_score/utils.py` and the archival `src/utils.py`, verified by diff, so
+reproducing the call signature reproduces the archival stream exactly):
+
+* **Every cell, not a sample of them.** All **32/32** (seed, M) cells of the archival sweep
+  — 16 seeds × M ∈ {128, 512} — have **exactly one** unique training chain, while the
+  validation and test bundles have 512 and 1024 distinct chains respectively, because
+  `_bundle` hoists its generator (archival `exp_32_capacity_equivalence.py:159-161`) and the
+  training draw does not (`:214-217`). `git log -L214,217` shows the lines unchanged since
+  the file's first commit (3ec893c), and the frozen outputs stamp `git_commit = 35578c99`
+  with `source_is_clean = true`, so no run of exp_32 was ever free of it.
+* **The training-size axis was a no-op.** The M-step is fitted on transitions: at M = 128 it
+  receives 3968 of them, of which **31 are distinct** — one chain's worth — and the same 31
+  at M = 512. The frozen numbers carry that signature. Paired within (seed, C), going from
+  M = 128 to M = 512 buys **+0.011 ± 0.094** in test log-evidence per edge and
+  **−0.046 ± 0.302** in schedule score risk over 80 pairs: both inside one standard error of
+  zero. A fourfold increase in nominal training data changed nothing, because the latent
+  sample size did not increase at all.
+
+This also explains the *direction* of the retired claim, which is worth stating because the
+direction was what made it credible. Capacity does not merely fail to help in the frozen
+data, it monotonically **hurts**: mean schedule score risk 0.280 → 0.397 → 0.460 → 0.458 →
+0.463 and Hellinger² 0.037 → 0.068 → 0.097 → 0.102 → 0.103 for C = 1, 2, 4, 8, 16. That is
+what fitting a flexible mixture to 31 effective samples looks like. Read as "a single
+Gaussian innovation suffices" it also contradicts this project's central claim, since a
+Laplace innovation has excess kurtosis 3 and E02a's C = 8 fits reach 0.018–0.090 against the
+LMMSE floor of 0.168 that any correct C = 1 fit cannot beat (Proposition 1). Claim **E5** is
+already RETIRED in `docs/CLAIM_EVIDENCE_MATRIX.md` (2026-09-21) and no number in the paper
+comes from exp_32; scope claim **C12** in `docs/CURRENT_STATE_AUDIT.md` was already flagged
+as self-inconsistent by that audit's W2. Nothing further to withdraw — this addendum closes
+the question with numbers rather than leaving it as "to be checked".
+
 **N-24. The E12b analysis path had four defects that fire only when the data lands; found
 and fixed before it did (23 Sep).** E12b moves from 8 seeds and 3 levels to 16 and 5. Nothing
 about that is visible until `outputs/E12b/ladder.csv` exists, so a self-audit went looking for

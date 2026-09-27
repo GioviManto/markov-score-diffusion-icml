@@ -119,6 +119,11 @@ cmd_for() {
     # run of the 15 Sep deployment -- an absolute path, because that output lives under a
     # DIFFERENT deployment tag and {OUT} points at this one.
     e26)         echo "e05_generation.py --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --output-dir {OUT}/E26";;
+    # E27: Q8's STRONG form -- generation with no score and no reverse SDE. Same E02a
+    # kernels as E26 (absolute path, that output lives under a different deployment tag),
+    # so every contrast between the two is paired.
+    e27)         echo "e27_direct_sampler.py --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --output-dir {OUT}/E27";;
+    e27-cost)    echo "e27_direct_sampler.py --only cost --output-dir {OUT}/E27";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }
