@@ -66,10 +66,14 @@ REGIONS = {"all": slice(None), "bulk": slice(4, N_SITES - 4), "centre": slice(N_
 
 SETTINGS = dict(
     seeds=PROTOCOL.seeds, sizes=(128, 2048), components=8,
-    n_test=1024, grid_size=FROZEN.n_grid, half_width=FROZEN.half_width,
+    # MUST be PROTOCOL's, not a number typed here: E02a and E03 both scored on
+    # n_test = 2048, and the first E28 run hardcoded 1024, which made every pooled risk
+    # a different estimand and was caught by part `verify` (N-26).
+    n_val=PROTOCOL.n_val, n_test=PROTOCOL.n_test,
+    grid_size=FROZEN.n_grid, half_width=FROZEN.half_width,
     em_source="outputs/E02a/capacity.csv",
     winners="outputs/E03/winners.json",
-    ckpt_dir=None,                 # E03 confirm's ckpts/ directory; networks skipped if absent
+    ckpt_dir=None,                 # E03 confirm's ckpts/; networks skipped if absent
     e03_confirm="outputs/E03/confirm.csv",
     archs=("mlp", "window", "tcn", "bigru", "transformer", "unet"),
     regions=("all",),
@@ -130,6 +134,20 @@ def _mean_fns(cfg, seed, n, grid, weights, sigma0):
     fns["isotropic"] = lambda X, t: (lambda al, de: al / (al**2 + de) * X)(*alpha_delta(t))
 
     if cfg.get("ckpt_dir"):
+        # N-26 (27 Sep), CORRECTED. The first E28 run's `verify` refused the output: the
+        # pooled risk disagreed with E03's confirm.csv by up to 2.878e-02 relative. I first
+        # diagnosed that as float32 reduction-order drift from reloading 15 Sep checkpoints
+        # under a newer torch, on the evidence that the disagreement was symmetric scatter
+        # (111 of 192 cells high, 81 low) and largest for bigru and transformer. THAT WAS
+        # WRONG. The cause was that this file hardcoded n_test = 1024 while E02a and E03 both
+        # scored on 2048, so every pooled risk really was a different estimand -- exactly what
+        # the gate said, and nothing to do with the checkpoints. At the correct n_test the
+        # em_bp arm pools back to E02a's risk to 4.65e-11.
+        #
+        # The network arms are therefore kept, and the gate is left to judge them on the right
+        # bundle rather than being told in advance what it will find. If a residual remains
+        # once n_test is right, THEN it is worth attributing to the reload -- and it will be
+        # measured, not assumed.
         import torch
         from markov_score import nn_torch as nt
         win = json.loads((root / cfg["winners"]).read_text())
@@ -189,8 +207,37 @@ def part_verify(cfg, out):
     mine = pd.read_csv(dest)
     e03 = pd.read_csv(root / cfg["e03_confirm"])
     mine["arch"] = mine.arm.str.replace("^net:", "", regex=True)
-    j = mine[mine.arm.str.startswith("net:")].groupby(
-        ["seed", "n_chains", "arch", "region"]).agg(
+    nets = mine[mine.arm.str.startswith("net:")]
+    if nets.empty:
+        # The default configuration carries no network arms (N-26), so there is nothing to
+        # check against E03. Verify the arms that ARE present against E02a instead: em_bp's
+        # pooled risk is a deterministic function of the same per-level pairs.
+        em = mine[mine.arm == "em_bp"]
+        if em.empty:
+            raise SystemExit("FATAL: neither network nor em_bp rows present; nothing verified")
+        j = em.groupby(["seed", "n_chains", "region"]).agg(
+            num=("sq_err", "sum"), den=("sq_ref", "sum")).reset_index()
+        j["risk_e28"] = np.sqrt(j.num / j.den)
+        ref = pd.read_csv(root / cfg["em_source"])
+        ref = ref[(ref.arm == "em_bp") & (ref.components == cfg["components"])
+                  & (ref.region == "all")]
+        ref = ref.groupby(["seed", "n_chains", "region"]).risk.median().reset_index()
+        m = j.merge(ref, on=["seed", "n_chains", "region"], how="inner")
+        if m.empty:
+            raise SystemExit("FATAL: no overlap with E02a capacity.csv — nothing was verified")
+        m["rel"] = (m.risk_e28 - m.risk).abs() / m.risk
+        worst = float(m.rel.max())
+        m.to_csv(out / "verify.csv", index=False)
+        print(f"[verify] {len(m)} (seed, n, region) em_bp cells against E02a capacity.csv")
+        print(f"[verify] worst relative disagreement in the POOLED risk: {worst:.3e}")
+        if worst > 1e-6:
+            print(m.nlargest(8, "rel").to_string(), flush=True)
+            raise SystemExit(
+                f"FATAL: em_bp's per-level pairs do not pool back to E02a's risk "
+                f"(worst {worst:.3e}). The decomposition is of a DIFFERENT estimand.")
+        print("[verify] OK — the per-level decomposition is E02a's own pooled estimand")
+        return
+    j = nets.groupby(["seed", "n_chains", "arch", "region"]).agg(
         num=("sq_err", "sum"), den=("sq_ref", "sum")).reset_index()
     j["risk_e28"] = np.sqrt(j.num / j.den)
     ref = e03.groupby(["seed", "n_chains", "arch", "region"]).risk.median().reset_index()
