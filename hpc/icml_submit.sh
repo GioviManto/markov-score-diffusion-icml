@@ -121,8 +121,11 @@ cmd_for() {
     e26)         echo "e05_generation.py --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --output-dir {OUT}/E26";;
     # E27: Q8's STRONG form -- generation with no score and no reverse SDE. Same E02a
     # kernels as E26 (absolute path, that output lives under a different deployment tag),
-    # so every contrast between the two is paired.
-    e27)         echo "e27_direct_sampler.py --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --output-dir {OUT}/E27";;
+    # so every contrast between the two is paired. `sample` and `steps` fan out over cells
+    # and want many cpus; `cost` is a TIMING measurement and is a separate job so it does
+    # not share a node with a worker pool -- E24's laptop run was downgraded to exploratory
+    # for exactly that reason (the machine was not quiet).
+    e27)         echo "e27_direct_sampler.py --only sample,steps --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --output-dir {OUT}/E27";;
     e27-cost)    echo "e27_direct_sampler.py --only cost --output-dir {OUT}/E27";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
