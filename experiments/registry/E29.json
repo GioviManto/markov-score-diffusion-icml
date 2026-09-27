@@ -1,0 +1,24 @@
+{
+ "id": "E29",
+ "script": "experiments/e29_matched_parameters.py",
+ "hypothesis": "The experiment that can refute this project's own supporting claim. The user has ranked the paper's three claims -- structure and sample efficiency lead, PARAMETER EFFICIENCY supports, training cost stated narrowly -- and the parameter-efficiency claim as it stands compares the MDN kernel's 1,516 parameters against a 135,825-parameter transformer. The first question a referee asks is what a 1,516-parameter TRANSFORMER does, and nobody has run that. If any architecture at ~1,516 parameters reaches EM-BP's risk, the claim is dead and the paper must say so.",
+ "design": "A capacity LADDER per architecture, not a single matched point, because a single point invites the objection that the configuration was unlucky. Parameter counts measured with markov_score.nn_torch.n_params at L = 32, not estimated; every architecture has a rung bracketing 1,516 (window r2w32 = 1,601; mlp (16,16) = 1,488 and (32,32) = 3,456; bigru h8 = 1,105; transformer d8h2l1 = 843 and d16h2l1 = 2,579; tcn c8 = 1,193; unet c4 = 933), and the ladders span roughly 80 to 136,000 parameters, so the deliverable is a CURVE of risk against parameter count with the kernel's 1,516 marked on it. Everything else is E03's protocol IMPORTED rather than reimplemented -- same training bundle ('exp31-train'), same validation and test bundles, same checkpoint ladder and validation selection, same pooled estimand -- so E29 is directly comparable with E03, E28 and E25. One learning rate and one parameterisation per architecture, taken from E03's winners.json: re-screening them here would make the ladder a hyperparameter search rather than a capacity sweep. Risk is recorded per level as well as pooled, because E28 found the pooled scalar hides a crossover near t = 0.5.",
+ "predeclared_analysis": "ladder.csv: risk_pooled against n_params per (arch, seed, n_chains), and risk_level against t at the rung nearest 1,516. The headline numbers are (a) the best pooled risk achieved by ANY architecture at <= 2,600 parameters, against em_bp's at the same (seed, n_chains); (b) the smallest n_params at which any architecture reaches em_bp's risk; (c) the ratio of that count to 1,516.",
+ "predeclared_predictions": {
+  "P1": "no architecture at <= 2,600 parameters reaches em_bp's pooled risk at any M. FALSIFIED by a single counterexample, and the counterexample kills the parameter-efficiency claim. This is the point of the experiment.",
+  "P2": "the nets' risk falls monotonically with parameter count at fixed M. If it does not, the ladder is confounded with optimisation difficulty and the comparison at 1,516 is not a capacity statement. The 200-step smoke already shows one inversion (5,505 params worse than 1,601), which at 0.6% of the training budget is expected and is exactly why this is predeclared.",
+  "P3": "the gap at matched parameter count is LARGER at small M than at large M, because the claim being supported is that structure buys sample efficiency, not that it buys capacity.",
+  "P4": "a net needs at least an order of magnitude more parameters than the kernel to match it. This is the quantitative form of the supporting claim and the number the paper would quote."
+ },
+ "seeds": {
+  "confirmatory": "PROTOCOL.seeds, and E03's own bundle streams, so every comparison with E03/E28/E25 is paired"
+ },
+ "status": "REGISTERED 2026-09-27, PREDECLARED, smoke-tested at --quick (net_steps 200, one seed, M = 32, grid 201, window only). Confirmatory run NOT yet executed.",
+ "registered": "2026-09-27",
+ "script_sha256": "9df3b566d4d7172878f7f1f5c0bf4f663889ab3d9e10df8bdfb442c6d6352d73",
+ "smoke_note": "At 200 training steps (0.6% of PROTOCOL.net_steps) the window ladder gives pooled risk 0.744, 0.375, 0.277, 0.299, 0.248 at 81, 209, 1601, 5505, 19201 parameters. Not indicative of anything except that the driver runs and the ladder is ordered; the 1,601-parameter rung at 0.277 against em_bp's 0.05-0.10 at M = 32 is an undertrained net, not a result.",
+ "frozen_outputs": {},
+ "frozen_at": {},
+ "frozen_commit": {},
+ "frozen_run_commits": {}
+}

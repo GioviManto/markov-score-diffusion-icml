@@ -130,6 +130,24 @@ cmd_for() {
     # E28: Q9's second half -- does the ranking hold at every noise level? No training: the
     # E03 confirm checkpoints live under the 15 Sep deployment tag, hence the absolute path.
     e28)         echo "e28_per_level_ranking.py --set ckpt_dir=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/ckpts'\" --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --set e03_confirm=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/confirm.csv'\" --set winners=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/winners.json'\" --output-dir {OUT}/E28";;
+    # E29: score nets AT the kernel's parameter count -- the arm that can refute the
+    # parameter-efficiency claim. Sharded by architecture: six independent ladders.
+    e29-window)  echo "e29_matched_parameters.py --set 'archs=(\"window\",)'      --output-dir {OUT}/E29";;
+    e29-mlp)     echo "e29_matched_parameters.py --set 'archs=(\"mlp\",)'         --output-dir {OUT}/E29";;
+    e29-bigru)   echo "e29_matched_parameters.py --set 'archs=(\"bigru\",)'       --output-dir {OUT}/E29";;
+    e29-tf)      echo "e29_matched_parameters.py --set 'archs=(\"transformer\",)' --output-dir {OUT}/E29";;
+    e29-tcn)     echo "e29_matched_parameters.py --set 'archs=(\"tcn\",)'         --output-dir {OUT}/E29";;
+    e29-unet)    echo "e29_matched_parameters.py --set 'archs=(\"unet\",)'        --output-dir {OUT}/E29";;
+    # E25 at MATCHED EM budget: the current run gives em_bp up to 1200 iterations and the MDN
+    # 400. The asymmetry favours the baseline, so results are conservative -- but "em_bp had 3x
+    # the compute" is a one-line referee objection and removing it costs one rerun.
+    e25m-s0)     echo "exp_34_information_ladder.py --set seed0=0  --set seeds=4 --set 'mdn_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200)' --output-dir {OUT}/E25m_s0";;
+    e25m-s4)     echo "exp_34_information_ladder.py --set seed0=4  --set seeds=4 --set 'mdn_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200)' --output-dir {OUT}/E25m_s4";;
+    e25m-s8)     echo "exp_34_information_ladder.py --set seed0=8  --set seeds=4 --set 'mdn_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200)' --output-dir {OUT}/E25m_s8";;
+    e25m-s12)    echo "exp_34_information_ladder.py --set seed0=12 --set seeds=4 --set 'mdn_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200)' --output-dir {OUT}/E25m_s12";;
+    # E27 cost at LARGE batch, where E24 puts BP's crossover with the transformer (~12,600):
+    # states the one-sweep speed-up where BP is launch-bound and cheapest, not just at B=128.
+    e27-cost-big) echo "e27_direct_sampler.py --only cost --set 'cost_batch=(2048, 8192, 32768)' --set 'steps_ladder=(100, 400)' --output-dir {OUT}/E27big";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }
