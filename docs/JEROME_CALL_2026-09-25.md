@@ -28,7 +28,7 @@ reason).
 | Q7 | Posterior mean for one noisy sequence: how long for a network, how long for BP? | E24, E24gpu2 | **ANSWERED on BOTH devices** — BP is ~15× *slower*; not a CPU artefact, §2 Q7 |
 | Q8 | Can we generate without a score — flat marginal, run BP once? | E26 (weak), **E27** (strong) | **WEAK FORM ANSWERED — yes.** Strong form built and registered as E27, predeclared, not yet run |
 | Q9 | Is the score compared at a fixed $t$ or averaged over $t$? | E24 | PARTIAL (answered in call; to be reported both ways) |
-| Q10 | Do the information curves quantify information about $\rho$ and $\beta$, or about $\kappa_2$ and $\kappa_4$? | E01 relabel | RESOLVED in call — implementation pending |
+| Q10 | Do the information curves quantify information about $\rho$ and $\beta$, or about $\kappa_2$ and $\kappa_4$? | `tools/cumulant_information.py` | **DONE — and a RECOMPUTE, not a relabel:** a relabel would have been wrong by 2.3–1518×, §2 Q10 |
 | Q11 | How does EM–BP scale in $M$ (sequences) and $L$ (sites)? | E24 | **ANSWERED** — the call's answer was wrong, and so was ours; §5.1 |
 
 ---
@@ -693,12 +693,75 @@ report per-level curves beside the pooled scalar.
 > technically you need all the modes, all the cumulants. So I think here it is more … the
 > information of the second cumulant and of the fourth cumulant."*
 
-**Status:** RESOLVED in the call, in his favour. Implementation pending.
+**Status:** **DONE (27 Sep), and he was more right than the call made it sound.**
+`tools/cumulant_information.py`, `outputs/E01/cumulant_information.csv`,
+`tests/test_cumulant_information.py` (10 tests).
 
-He is right. The curves are the information about $\kappa_2$ and $\kappa_4$, not about
-$\rho$ and $\beta$. This is a change in `e01_information_decay.py` and its figure, not
-only an axis label, and it should propagate to every place the paper says "shape
-information".
+He is right, and the fix is **a recomputation, not a relabel**. E01's `shape` part computes
+the Fisher information about $\theta = (\rho, q, \beta)$. Going to
+$\varphi = (\rho, \kappa_2, \kappa_4)$ is a change of coordinates, so it needs the delta
+method. For `GeneralizedGaussianKernel`, which holds $\mathrm{Var}(\varepsilon) = q$ at every
+$\beta$:
+
+$$\kappa_2 = q, \qquad \kappa_4 = \gamma_2(\beta)\,q^2, \qquad
+  \gamma_2(\beta) = \frac{\Gamma(5/\beta)\Gamma(1/\beta)}{\Gamma(3/\beta)^2} - 3,$$
+
+so $J = \partial\varphi/\partial\theta$ is lower triangular with rows $(1,0,0)$, $(0,1,0)$,
+$(0,\ 2\gamma_2 q,\ \gamma_2' q^2)$, and
+$\mathrm{eff}(\varphi_k) = 1/(j_k^\top I_\theta^{-1} j_k)$. Two coordinates come out
+unchanged — $\rho$ and $\kappa_2 = q$, because their rows of $J$ are unit vectors, which is
+the internal check that $J$ is assembled right — and $\kappa_4$ does not, because $j_3$ mixes
+in the $q$ direction.
+
+**A relabel would have been wrong by a factor between 2.3 and 1518.** Across $\beta$ at a
+fixed noise level, medians over 8 replicates:
+
+| $\beta$ | $\gamma_2$ | $\gamma_2'$ | $\mathrm{eff}(\beta)$ | $\mathrm{eff}(\kappa_4)$ | $\mathrm{eff}(\kappa_4)/\mathrm{eff}(\kappa_2)$ |
+|---|---|---|---|---|---|
+| 1.00 (Laplace) | 3 | −8.50 | 0.1382 | 0.288 | 0.033 |
+| 1.25 | 1.527 | −4.05 | 0.0374 | 0.379 | 0.045 |
+| 1.50 | 0.762 | −2.30 | 0.0140 | 0.443 | 0.050 |
+| 2.00 (Gaussian) | 0 | −1.00 | 0.00284 | 0.479 | 0.057 |
+| 3.00 | −0.582 | −0.333 | 0.000343 | 0.525 | 0.061 |
+
+*(at $t = 0.4665$; $q = \kappa_2 = 0.2775$.)*
+
+**The qualitative reading of the $\beta$ curve inverts.** $\mathrm{eff}(\beta)$ falls by
+**403×** from $\beta = 1$ to $\beta = 3$ (48.5× at $t = 0.05$, 440× at $t = 1.425$), which
+reads naturally as *"shape information collapses as the law approaches the Gaussian."* It
+does not. $\mathrm{eff}(\kappa_4)$ **rises**, by 1.83×. The collapse is the coordinate going
+degenerate: $|\gamma_2'|$ shrinks from 8.50 to 0.333 over that range, a factor 25.5, and it
+enters $\mathrm{eff}(\kappa_4)$ **squared** — $25.5^2 = 650$, which accounts for the
+observed 403–440×. Near $\beta = 2$ a change in $\beta$ barely moves any cumulant, so
+$\beta$ is nearly unidentifiable *however much data you have*. That is exactly Jérôme's
+objection, and it is now a measured factor rather than a conceptual worry.
+
+**The decay-in-$t$ claim SURVIVES, and is stronger in the honest coordinates.** This was the
+thing at risk, so it is the thing to report. Over $t$ from 0.05 to 4.0 on the Laplace chain
+($\beta = 1$):
+
+| quantity | decay over the full $t$ range |
+|---|---|
+| $\mathrm{eff}(\rho)$ | $9.1\times10^5$ |
+| $\mathrm{eff}(\kappa_2)$ | $3.6\times10^6$ |
+| $\mathrm{eff}(\kappa_4)$ | $5.9\times10^8$ |
+
+$\kappa_4$'s information decays **163× faster than $\kappa_2$'s** — and the asymmetry
+widens with $\beta$ (1.0e5× at $\beta=1.5$, 1.6e6× at $\beta=3$). The
+parameterisation-free statement of the project's central claim is therefore the ratio
+$\mathrm{eff}(\kappa_4)/\mathrm{eff}(\kappa_2)$, which on the Laplace chain runs
+**0.071 → 0.033 → 0.0048** at $t = 0.05,\ 0.47,\ 1.43$: shape carries 7% of scale's
+information at low noise and 0.5% by $t = 1.43$. *"The channel removes information about
+shape faster than about correlation"* is not an artefact of using $\beta$; it is 163× in
+cumulant coordinates, and it should be stated that way from now on.
+
+**What is verified, not assumed.** $\gamma_2'$ in closed form against a central difference at
+$\beta \in \{0.8, 1, 1.25, 1.5, 2, 3, 5\}$; the reparameterisation inverts to 1e-9; and
+$I_\theta$ is reconstructed from the stored `diag_*`/`corr_*` and then **checked against the
+stored `eff_*`** before anything is computed from it — worst relative error **8.6e-13** over
+560 rows, and the tool exits non-zero if that check fails, because rebuilding a matrix from
+summary statistics is exactly the step that silently produces plausible numbers when the
+convention has changed.
 
 ---
 
