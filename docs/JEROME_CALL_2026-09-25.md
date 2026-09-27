@@ -27,7 +27,7 @@ reason).
 | Q6 | Can $K$ be a neural network, fitted by EM through BP? Does it overfit? | E25 | OPEN — two void attempts (N-23, N-24/N-25); third running (671442–5) |
 | Q7 | Posterior mean for one noisy sequence: how long for a network, how long for BP? | E24, E24gpu2 | **ANSWERED on BOTH devices** — BP is ~15× *slower*; not a CPU artefact, §2 Q7 |
 | Q8 | Can we generate without a score — flat marginal, run BP once? | E26 (weak), **E27** (strong) | **WEAK FORM ANSWERED — yes.** Strong form built and registered as E27, predeclared, not yet run |
-| Q9 | Is the score compared at a fixed $t$ or averaged over $t$? | E24 | PARTIAL (answered in call; to be reported both ways) |
+| Q9 | Is the score compared at a fixed $t$ or averaged over $t$? | **E28** | Answered in call (pooled). Per-level ranking built and submitted; **the smoke already shows a crossover the pooled scalar hides**, §2 Q9 |
 | Q10 | Do the information curves quantify information about $\rho$ and $\beta$, or about $\kappa_2$ and $\kappa_4$? | `tools/cumulant_information.py` | **DONE — and a RECOMPUTE, not a relabel:** a relabel would have been wrong by 2.3–1518×, §2 Q10 |
 | Q11 | How does EM–BP scale in $M$ (sequences) and $L$ (sites)? | E24 | **ANSWERED** — the call's answer was wrong, and so was ours; §5.1 |
 
@@ -680,10 +680,65 @@ the paper is about, and it is Jérôme's, not ours.
 > *"When you do this comparison between neural networks and the EM–BP, you compare the
 > score at some time, or you average over time?"* — *"You average over time."*
 
-**Status:** PARTIAL. The answer given was correct (the estimand is schedule-pooled; see
-`experiments/protocol.py`, `estimand`). But a pooled number can hide a crossover, and
-the natural question after his is *"does the ranking hold at every $t$?"*. E24 and E25
-report per-level curves beside the pooled scalar.
+**Status:** The answer given was correct (the estimand is schedule-pooled; see
+`experiments/protocol.py`, `estimand`). The second half — *"does the ranking hold at every
+$t$?"* — is **built and submitted as E28**, not yet run at scale.
+
+**Correcting this entry.** It previously said *"E24 and E25 report per-level curves beside the
+pooled scalar."* **That was wrong.** E24's `level` column is a *timing* level and E25's
+`information_ladder.csv` has no level column at all. A header scan of every frozen output
+finds no per-noise-level risk for the arm comparison anywhere in the project. The nearest
+thing, E14's `t_star`, turns out to be `theory.crossover_time` evaluated per $(\rho, L)$ —
+**one value per configuration** — so what looks like a level effect in E14 is a $\rho$
+effect. Nothing had measured this.
+
+**What E14 does say, stated properly, because nobody had.** Reading within a configuration,
+EM–BP is first in all six regimes, but its margin over the LMMSE *oracle* shrinks
+monotonically with $\rho$: **14.6× at $\rho = 0.5$, 12.4× at $\rho = 0.85$, 5.6× at
+$\rho = 0.95$** ($L = 128$; 11.5× / 8.7× / 4.3× at $L = 32$). The other arms reorder too —
+`lmmse_true` moves from fifth place to third as $\rho$ rises.
+
+**E28** (`experiments/e28_per_level_ranking.py`, registered, predeclared) needs no training:
+the 384 E03 confirm checkpoints are loaded from the cluster, the E02a kernel from its `theta`
+column, and E03's own test-bundle stream and `_sq` are reproduced exactly. E03's `_eval`
+already accumulates one $(\text{sq\_err}, \text{sq\_ref})$ pair *per level* and then pools
+them, so the per-level decomposition is just those pairs reported instead of summed — and
+that makes the validation exact rather than approximate: **part `verify` rebuilds the pooled
+risk from E28's own pairs and requires it to match E03's `confirm.csv` to 1e-6, exiting
+non-zero otherwise.** Without it, plausible-looking per-level numbers could be a
+decomposition of a different estimand.
+
+**The smoke run already shows a crossover, which would falsify our own P1.** At grid 201,
+$n_\text{test} = 64$, seed 0, $n = 128$, with the real E02a fit and no network arms:
+
+| $t$ | em_bp | lmmse (oracle) | isotropic | lmmse/em_bp |
+|---|---|---|---|---|
+| 0.05 | **0.0786** | 0.2673 | 0.8758 | 3.40 |
+| 0.2216 | **0.0389** | 0.0879 | 0.6852 | 2.26 |
+| 0.4665 | **0.0284** | 0.0373 | 0.5023 | 1.31 |
+| 0.6769 | 0.0279 | **0.0188** | 0.3765 | 0.67 |
+| 1.4250 | 0.0197 | **0.0033** | 0.1112 | 0.17 |
+| 3.0000 | 0.0050 | **0.0000** | 0.0052 | 0.0018 |
+
+EM–BP is first at the seven lowest levels and the LMMSE oracle is first at the five highest,
+crossing between $t = 0.4665$ and $t = 0.6769$. **The pooled scalars are em_bp 0.0540 against
+lmmse 0.1632 — a 3× advantage that hides the crossover completely.** That is precisely the
+thing Jérôme's question was aimed at, and it is the single strongest argument for reporting
+the curve and not only the scalar.
+
+**And the reading is not that EM–BP fails.** Above the crossover there is nothing
+non-Gaussian left to recover, so knowing $\rho$ *exactly* beats estimating a whole kernel:
+the oracle's model error vanishes with $t$ while the fitted kernel's estimation error does
+not. This is the *relaxation* of the low-pass-filter framing pointing the other way — above
+the crossover the Gaussian picture is **right**, and the paper should say where the crossover
+is instead of claiming uniform dominance. Note this is **not** `theory.crossover_time`, which
+is 1.1667 at the frozen configuration and defined by $e^{2t}\lambda_{\max}(\Sigma_0) = 1$; the
+relationship between the two deserves a line once the confirmatory numbers exist.
+
+The table above is one seed at half the grid resolution with 64 test chains and no network
+arms. It is a smoke test, it is reported as one, and the predeclared P1 has deliberately been
+left unedited in `experiments/registry/E28.json`: a prediction revised after seeing data is
+not a prediction.
 
 ---
 

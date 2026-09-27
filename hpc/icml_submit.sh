@@ -127,6 +127,9 @@ cmd_for() {
     # for exactly that reason (the machine was not quiet).
     e27)         echo "e27_direct_sampler.py --only sample,steps --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --output-dir {OUT}/E27";;
     e27-cost)    echo "e27_direct_sampler.py --only cost --output-dir {OUT}/E27";;
+    # E28: Q9's second half -- does the ranking hold at every noise level? No training: the
+    # E03 confirm checkpoints live under the 15 Sep deployment tag, hence the absolute path.
+    e28)         echo "e28_per_level_ranking.py --set ckpt_dir=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/ckpts'\" --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --set e03_confirm=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/confirm.csv'\" --set winners=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/winners.json'\" --output-dir {OUT}/E28";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }
