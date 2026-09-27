@@ -1,0 +1,741 @@
+\documentclass[10pt,a4paper]{article}
+
+% ---------------------------------------------------------------------------
+% Everything done since the call with Jerome of 25 September 2026: the mathematics,
+% the implementation, the results, the errors found, and what is left.
+% Build: cd reports && tectonic -X compile jerome-followup-2026-09-27.tex
+% Every number here is traceable to a registered output; the provenance is in
+% experiments/registry/*.json and docs/JEROME_CALL_2026-09-25.md.
+% ---------------------------------------------------------------------------
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1.85cm]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{array}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\corr}{\rho}
+\newcommand{\nsites}{L}
+\newcommand{\nseq}{M}
+\newcommand{\Dt}{\Delta_t}
+\newcommand{\Pg}{\mathsf{P}_{\mathrm{G}}}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\st}[1]{\textbf{#1}}
+\titleformat{\section}{\large\bfseries}{\thesection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.1em}{0.35em}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
+\titlespacing*{\subsection}{0pt}{0.8em}{0.25em}
+\setlength{\parskip}{0.25em}
+\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{1.08}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries After the call with Jérôme}\\[0.25em]
+{\normalsize The mathematics, the implementation, the results, and what is left}\\[0.35em]
+{\footnotesize Call 25 September 2026 \textperiodcentered\ this report 27 September 2026 \textperiodcentered\ branch
+\code{claude/jerome-followup-2026-09-25}}
+\end{center}
+
+\vspace{-0.4em}
+
+\section*{Where the eleven questions stand}
+
+\noindent\begin{tabular}{@{}c p{8.6cm} l l@{}}
+\toprule
+\# & Question & Evidence & Status \\
+\midrule
+Q1 & Is Gaussian-message BP provably the same as the linear score? Via Kalman? & derivation & \st{Done} \\
+Q2 & With a Laplace ansatz and a Laplace innovation, is BP exact? & E22, E22c & \st{Done --- no} \\
+Q3 & What do the messages look like? Gaussian $*\,P_\varepsilon$? & E22, E22c & \st{Done --- nearly} \\
+Q4 & Closure only for the Gaussian, or any finite family? & E22 & \st{Done} \\
+Q5 & Can BP be done in Fourier space? & E23 + analysis & \st{Done --- no} \\
+Q6 & Can $K$ be a neural network fitted by EM through BP? & E25 & \st{Open} (3rd attempt running) \\
+Q7 & Posterior mean: how long for a network, how long for BP? & E24, E24gpu2 & \st{Done --- BP slower} \\
+Q8 & Generate without a score: flat marginal, run BP once? & E26, E27 & \st{Done --- yes} \\
+Q9 & Is the score compared at fixed $t$ or averaged? & E28 & \st{Running} \\
+Q10 & Information about $(\corr,\beta)$ or about $(\kappa_2,\kappa_4)$? & recomputation & \st{Done} \\
+Q11 & How does EM--BP scale in $\nseq$ and $\nsites$? & E24 & \st{Done --- linear} \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\noindent Eight of eleven answered. Six of them came out \emph{against} what one of us
+asserted in the call, and three against a prediction of my own that had been written down
+first. Those are marked throughout.
+
+\section{The mathematics}
+
+\subsection{Q1. Gaussian closure, the LMMSE estimator and the Kalman smoother}
+
+Moment-projected sum-product --- apply $\Pg$ (match mean and variance) to every message
+immediately after each transition integral --- returns the LMMSE estimator of the
+covariance-matched Gaussian twin,
+\[
+\hat a_{\mathrm{LMMSE}}
+= \operatorname{Cov}(a,x)\operatorname{Cov}(x)^{-1}x
+= e^{-t}\Sigma_0\bigl(e^{-2t}\Sigma_0 + \Dt I\bigr)^{-1}x ,
+\]
+and Jérôme's guess that ``the route is through the Kalman filter'' is right: this is exactly
+the Rauch--Tung--Striebel smoother of the linear-Gaussian state-space model matched to the
+chain's first two moments. Verified against an RTS smoother written from scratch:
+$\max|\mathrm{BP}-\mathrm{RTS}| = 6.66\times10^{-16}$ on the posterior means,
+$4.44\times10^{-16}$ on the variances, $2.0\times10^{-15}$ against a dense LMMSE solve, and
+$8.9\times10^{-15}$ against $-\Sigma_t^{-1}x$ as the score.
+
+\st{The lemma I drafted for this was false, and the way it was false is the point.} It dropped
+the hypothesis ``\emph{and an initial message Gaussian or projected by} $\Pg$''. That is not a
+technicality: $\Pg$ \emph{does not commute with the likelihood tilt}, so a non-Gaussian initial
+message is not equivalent to its projection and the error propagates down the chain instead of
+being absorbed at the first site. Counterexample computed at $\nsites=32$, $\corr=0.85$,
+$q=0.2775$, $v_0=1$, innovation $\mathrm{Laplace}(0,1/\sqrt2)$, $2\times10^5$-point quadrature,
+$t=1$: the posterior means differ by $4.148\times10^{-2}$ at site 0.
+
+Three further errors in the same draft: $\Sigma_0 = \corr^{|i-j|}$ is missing the factor $v_0$;
+the $\corr=0$ reduction is $\alpha v_i/(\alpha^2 v_i + \Dt)\,x_i$, not
+$\alpha/(\alpha^2+\Dt)\,x_i$; and ``both algorithms advance a state in $\mathbb{R}^2$ by the
+same map'' is false for the backward sweep --- BP's backward map is autonomous in
+$(\lambda,r)$ while RTS's gain $J_i = \corr P_{i|i}/P_{i+1|i}$ depends on stored forward
+quantities. They agree on the \emph{answer}, not on the recursion. \st{No new lemma is needed}:
+the identification is already in \code{reports/compendium/parts/12-gaussian-closure-lmmse.tex}
+and in the archival thesis at 80 configurations with max disagreement $1.3\times10^{-15}$. One
+sentence in Proposition 1's remark closes it.
+
+\subsection{Q5. The BP message in Fourier, in closed form}
+
+Write $K(a'|a) = p_\varepsilon(a' - \corr a)$ and $g_i = L_i \ell_i$ for the tilted message. One
+forward step is $L_{i+1}(a') = \int p_\varepsilon(a'-\corr a)g_i(a)\,da$, and substituting
+$y = \corr a$ turns it into a convolution with a \emph{dilated} $g_i$. Hence
+\begin{equation}
+\widehat{L}_{i+1}(\omega) = \varphi_\varepsilon(\omega)\,\widehat{g_i}(\corr\omega).
+\label{eq:step}
+\end{equation}
+\st{Two of the three BP operations are free in Fourier}: the transition is the dilation
+$\omega\mapsto\corr\omega$, and adding the innovation is the multiplication by
+$\varphi_\varepsilon$. With a flat likelihood $\widehat{g_i} = \widehat{L_i}$, and unrolling
+\eqref{eq:step} from $\widehat{L_1} = \varphi_\mu$,
+\begin{equation}
+\boxed{\;\widehat{L}_{k+1}(\omega) \;=\; \varphi_\mu(\corr^k\omega)\prod_{j=0}^{k-1}\varphi_\varepsilon(\corr^j\omega).\;}
+\label{eq:closed}
+\end{equation}
+Verified against this project's own \code{grid\_bp}: max absolute error
+$2.16\times10^{-8}$ at sites $1,2,4,8,16,31$, which is the grid's quadrature error at
+$h=0.006$ and not model error.
+
+As $k\to\infty$, $\varphi_\mu(\corr^k\omega)\to1$ and the message tends to
+$\prod_{j\ge0}\varphi_\varepsilon(\corr^j\omega)$ --- the stationary law's characteristic
+function, \st{an infinite product}. This explains a prediction of ours that E22 falsified: we
+expected the Gaussian-ansatz error to be \emph{smallest} at large $t$ and it \emph{grows},
+because with a near-flat likelihood the recursion drives messages to exactly this object, which
+lies in no finite-parameter family.
+
+\paragraph{The decay law.} For $\mathrm{Laplace}(b)$,
+$\varphi_\varepsilon(\omega) = (1+b^2\omega^2)^{-1}$, so
+$\log|\widehat{L}_\infty| = -\sum_j\log(1+b^2\corr^{2j}\omega^2)$. The terms with
+$b\corr^j|\omega|\gg1$ contribute $-2\log(b\corr^j|\omega|)$ and there are
+$J = \log(b|\omega|)/\log(1/\corr)$ of them; summing the progression gives
+\begin{equation}
+\log\bigl|\widehat{L}_\infty(\omega)\bigr| \;\sim\; -\,\frac{\bigl(\log b|\omega|\bigr)^{2}}{\log(1/\corr)} .
+\label{eq:decay}
+\end{equation}
+\st{A Gaussian decay in $\log\omega$} --- super-polynomial, sub-exponential. Fitted over
+$3\le\omega\le3\times10^4$:
+
+\medskip
+\noindent\begin{tabular}{@{}l ccccc@{}}
+\toprule
+$\corr$ & 0.50 & 0.70 & 0.85 & 0.95 & 0.99 \\
+\midrule
+fitted slope & $-1.5339$ & $-2.8988$ & $-6.2578$ & $-19.654$ & $-100.55$ \\
+$-1/\log(1/\corr)$ & $-1.4427$ & $-2.8037$ & $-6.1531$ & $-19.496$ & $-99.499$ \\
+ratio & 1.063 & 1.034 & \st{1.017} & 1.008 & 1.011 \\
+$R^2$ & 0.99993 & 0.99995 & \st{0.99997} & 0.99999 & 0.99999 \\
+\bottomrule
+\end{tabular}
+
+\medskip
+The ratio tends to 1 as $\corr\to1$, as it must: the derivation assumes many terms in the
+product. \st{Do not use \eqref{eq:decay} numerically at practical tolerances} --- inverting it
+gives $\omega_{\max}(\eta)\approx b^{-1}\exp\sqrt{\log(1/\eta)\log(1/\corr)}$, which
+over-predicts by $1.4$--$1.8\times$ at $\eta = 10^{-2}\ldots10^{-6}$ (6.4/9.1/12.0 predicted
+against 3.6/5.9/8.3 measured), because the fitted intercept of $-6.57$ nats is the whole budget
+when $\omega_{\max}$ is only 4--8. Evaluate the product in \eqref{eq:closed} instead; it costs
+nothing. What matters is that \st{the truncation level is analytically computable}.
+
+\paragraph{The likelihood tilt is the one hard operation, and it is hardest at \emph{low} noise.}
+$\ell_i \propto \mathcal N(a; x_i/\alpha, \Dt/\alpha^2)$ is a product in real space, hence a
+\emph{convolution} in mode space with a Gaussian of width
+\[
+\sigma_\omega = \frac{\alpha}{\sqrt{\Dt}} = \frac{e^{-t}}{\sqrt{1-e^{-2t}}},
+\]
+which is \emph{decreasing} in $t$. On a domain of half-width $W$ the mode spacing is $\pi/W$,
+so the bandwidth is $\approx 3\sigma_\omega W/\pi$ ($W=6$):
+
+\medskip
+\noindent\begin{tabular}{@{}l ccccccccc@{}}
+\toprule
+$t$ & 0.05 & 0.073 & 0.105 & 0.153 & 0.222 & 0.467 & 0.982 & 2.07 & 3.00 \\
+\midrule
+$\sigma_\omega$ & 3.08 & 2.53 & 2.07 & 1.67 & 1.34 & 0.81 & 0.40 & 0.13 & 0.05 \\
+bandwidth (modes) & \st{17.7} & \st{14.5} & 11.8 & 9.6 & 7.7 & 4.6 & 2.3 & 0.7 & \st{0.29} \\
+\bottomrule
+\end{tabular}
+
+\medskip
+Banded at ten of twelve levels, effectively dense at the two lowest, and \st{the hard end is
+low noise} --- the opposite of the natural guess. At $t=3$ the kernel is $0.29$ modes wide, so
+the tilt is free. This answers the tractability question and does \emph{not} revive the solver;
+see \S\ref{sec:q5res}.
+
+\subsection{Q5. Why the cumulant basis fails where Fourier does not}
+
+The Hermite / Gram--Charlier expansion converges in $L^2$ only under \st{Cramér's condition}
+$\int q(z)^2/\phi(z)\,dz<\infty$, with $q$ the density being expanded and $\phi$ the standard
+normal. It \st{fails for every standardised BP message, at every noise level}:
+
+\medskip
+\noindent\begin{tabular}{@{}l r rrrr l@{}}
+\toprule
+$t$ & msg.\ var & $A=8$ & $A=12$ & $A=16$ & $A=20$ & growth \\
+\midrule
+0.05 & 0.331 & 2.3e23 & 5.5e66 & 1.7e131 & 5.6e216 & $\times2.4\mathrm{e}193$ \\
+0.222 & 0.441 & 2.7e13 & 4.9e43 & 6.3e89 & 5.1e151 & $\times1.9\mathrm{e}138$ \\
+0.982 & 0.751 & 60.5 & 1.9e15 & 1.6e38 & 2.8e70 & $\times4.6\mathrm{e}68$ \\
+3.00 & 0.992 & 1.09 & 4.9e6 & 4.7e21 & 5.3e43 & $\times4.9\mathrm{e}43$ \\
+\bottomrule
+\end{tabular}
+
+\medskip
+A Fourier basis is complete in $L^2$ for any finite-variance density. \st{One basis has a
+convergence theorem this chain satisfies and the other has one it violates} --- that is the
+structural reason for the measurement in \S\ref{sec:q5res}, and it replaces the weaker argument
+we had been using (that $|\kappa_6|$ runs 1--228, a symptom rather than a cause).
+
+Getting here required refuting two explanations of my own, and both refutations are why the
+third can be trusted. \emph{(i)} ``It is the metric and the positive cone'' --- refuted: the
+\emph{unweighted} $L^2$ error of the truncation diverges too, and starts diverging \emph{before}
+any negative mass appears (at $t=0.2216$ the order-6 truncation has zero negative mass and the
+$L^2$ error has already risen from 2.17e-2 to 7.58e-2). \emph{(ii)} ``It is my arithmetic''
+--- refuted by a control with a known answer: for a Gaussian message every $c_n$ with $n\ge3$
+must vanish, and the measurement gives $\max_{n\ge3}|c_n| = 1.9\times10^{-18}$ with order-30
+reconstruction error $2.9\times10^{-13}$, on three grids.
+
+\st{And my first Cramér test was itself wrong twice over}, which is the methodological lesson of
+the whole section. It evaluated the integral on the \emph{raw} message (variance 0.33--0.99,
+narrow, so it converged) rather than the \emph{standardised} one the expansion is applied to;
+and it hunted the divergence by \emph{refining the grid}, which reads 6114.3, 6113.3, 6113.1,
+6113.0 at $N_g = 1601\ldots12801$ on a fixed domain and detects nothing. \st{Grid refinement
+tests quadrature; only widening the domain tests tail integrability.}
+
+\subsection{Q8. One BP sweep is an exact sampler}
+
+Jérôme: ``\emph{the exact BP, so not even a score --- I think we don't even need it to generate.
+We can just start from a flat marginal and run BP once.}'' On a chain this is exactly right, and
+sharper than it sounds. Sum-product returns the exact conditional laws, so
+forward-filtering--backward-sampling draws from the chain posterior in one sweep: filter
+$F_i(a) \propto \ell_i(a)\int K(a|a')F_{i-1}(a')da'$, then draw $a_\nsites\sim F_\nsites$ and,
+backwards, $a_i \sim F_i(a_i)K(a_{i+1}|a_i)$. No score, no reverse SDE, no discretisation in $t$.
+
+With a \emph{flat} likelihood the backward message of a normalised kernel is constant, so
+sum-product degenerates to plain ancestral sampling $a_1\sim\mu$, $a_{i+1}\sim K(\cdot|a_i)$ ---
+the ``flat marginal'' limit. That constancy holds only up to grid error, and the two grid errors
+behave differently, which is worth recording: the kernel's column mass is $1+O(h^2)$
+(3.8e-3, 9.6e-4, 2.4e-4, 6.0e-5 at $N_g = 201,401,801,1601$) while the \emph{truncation} error
+saturates at 2.1e-2 and never improves with $N_g$, because at $|a|\sim A=8$ the kernel loses mass
+off the edge of the grid. That region lies beyond five standard deviations and carries no prior
+mass, but refining $N_g$ will never remove it.
+
+\subsection{Q10. Information about the cumulants is a recomputation, not a relabel}
+
+Jérôme: ``\emph{to resolve $\beta$ you need all the cumulants \dots{} it is more the information
+of the second cumulant and of the fourth.}'' He is right, and the fix is a change of
+coordinates, so it needs the delta method. For the generalised-Gaussian kernel, which holds
+$\operatorname{Var}(\varepsilon)=q$ at every $\beta$,
+\[
+\kappa_2 = q, \qquad \kappa_4 = \gamma_2(\beta)\,q^2, \qquad
+\gamma_2(\beta) = \frac{\Gamma(5/\beta)\Gamma(1/\beta)}{\Gamma(3/\beta)^2}-3 ,
+\]
+so with $\theta=(\corr,q,\beta)$ and $\varphi=(\corr,\kappa_2,\kappa_4)$ the Jacobian
+$J=\partial\varphi/\partial\theta$ is lower triangular with rows $(1,0,0)$, $(0,1,0)$,
+$(0,\,2\gamma_2 q,\,\gamma_2' q^2)$, and
+\[
+I_\varphi^{-1} = J\,I_\theta^{-1}J^{\!\top}, \qquad
+\mathrm{eff}(\varphi_k) = 1/\bigl(j_k^{\!\top} I_\theta^{-1} j_k\bigr),\quad j_k = \text{row }k\text{ of }J .
+\]
+$\corr$ and $\kappa_2$ come out unchanged because their rows are unit vectors --- which is the
+internal check that $J$ is assembled correctly --- and $\kappa_4$ does not, because $j_3$ mixes
+in the $q$ direction. \st{A relabel would have been wrong by a factor between 2.3 and 1518.}
+
+\section{Results}
+
+\subsection{Q2--Q4. The message shapes, confirmed at scale (E22, E22c)}
+
+Jérôme's ansatz --- a Gaussian pushed through \emph{one} transition of the true chain --- is
+exact at site 1 ($10^{-15}$, at the measured quadrature floor) and fails by $\sim\!10^{10}$ by
+site 31. It nonetheless beats a plain Gaussian by 1600--16000$\times$ and a four-parameter
+mixture by 50$\times$, so the conjecture is very nearly right and the failure is structural
+rather than a matter of fit.
+
+E22c swept $\corr\in\{0.5,0.7,0.85,0.95\}$, $\nsites\in\{32,128\}$,
+$N_g\in\{801,1601\}$, four innovation families, twelve levels: \st{both verdicts hold in 432/432
+cells}, with growth factor from site 1 to the deepest site spanning 8.0e7 to 1.15e11.
+\st{The load-bearing control:} doubling the grid does not move the error ---
+$\mathrm{KL}(1601)/\mathrm{KL}(801) = 1.000$ over 1512 cells --- so the failure is the
+\emph{model}, not the quadrature, which is the one alternative that would have made the result
+vacuous.
+
+\subsection{Q5. The Fourier solver is not worth building (E23 + the analysis)}
+\label{sec:q5res}
+
+E23 measured the premise before committing to a solver. On the Laplace chain, 144 cells per
+representation, KL of the reconstructed message against the true one:
+
+\medskip
+\noindent\begin{tabular}{@{}l cc cc@{}}
+\toprule
+representation & dof at $10^{-2}$ & dof at $10^{-4}$ & cells reaching $10^{-4}$ & non-monotone \\
+\midrule
+grid (uniform trapezoid) & 45 & 151 & \st{144/144} & \st{0/144} \\
+Fourier, shared domain & 101 & 151 & 140/144 & 92/144 \\
+Fourier, adapted per message & \st{33} & \st{47} & 53/144 & 10/144 \\
+cumulant (Gram--Charlier) & 5 & --- & 24/144 & \st{144/144} \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\st{Jérôme's intuition is quantitatively right where it converges}: the adapted Fourier basis
+beats the grid in \st{53/53} cells where both reach $10^{-4}$, median ratio \st{4.28$\times$}
+(47 dof against 151), and 47 dof $\approx$ 23 modes --- close to his ``the first 20 Fourier
+modes''. \st{It is nevertheless unusable as a solver basis}, because it reaches $10^{-4}$ in
+only 53 of 144 cells and is non-monotone in the truncation in 10; a solver must be able to
+\emph{choose} a truncation and know the error it accepts, and the grid is monotone in 144/144.
+
+Even the 4.28$\times$ would not have bought 4.28$\times$: E24's anatomy part measured that only
+\st{23.8\%} of a BP sweep at $N_g=401$ is the $N_g^2$ matmul (the rest is $O(B\nsites N_g)$
+elementwise work and traffic over 158\,MB of message arrays), so making the spectral step free
+caps the speed-up at $1/(1-0.238) = 1.3\times$. \st{The one substantive change the analysis made
+is that the tilt --- which we had assumed was the blocker --- is not. The blocker is that BP is
+memory-bound, so there is nothing for a faster spectral step to buy.}
+
+A by-product worth keeping: uniform trapezoid quadrature is not merely adequate but correct
+here. Gauss--Legendre and Clenshaw--Curtis are $\sim\!10\times$ \emph{worse}, confirmed over 144
+cells --- for a smooth decaying integrand the Euler--Maclaurin terms cancel and the trapezoid
+rule is spectrally accurate, while the Laplace kink is not polynomial-like.
+
+\subsection{Q7 and Q11. Inference cost, on both devices (E24, E24gpu2)}
+
+At the frozen operating point ($\corr=0.85$, $\nsites=32$, $N_g=401$, batch 512), milliseconds
+per posterior mean per sequence:
+
+\medskip
+\noindent\begin{tabular}{@{}l rrrrrr@{}}
+\toprule
+& bp\_grid & transformer & bigru & tcn & unet & window \\
+\midrule
+CPU & 0.3196 & 0.0254 & 0.0283 & 0.0148 & 0.0127 & 0.0025 \\
+H200 GPU & 0.0400 & 0.0028 & 0.0012 & 0.0020 & 0.0024 & 0.0010 \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\st{The call's guess that BP should be faster was wrong, and so was our own first correction of
+it.} Exact grid BP costs $\sim\!15\times$ more per posterior mean than the transformer on the
+CPU (12.6$\times$) \emph{and} on the H200 (14.3$\times$). An earlier note in this project
+recorded that ``BP is slower at inference was a CPU artefact''; that was wrong. What is a CPU
+artefact is the \emph{absolute} BP number, not the ratio.
+
+What the GPU did change is the mechanism. On the H200 \code{bp\_grid}'s wall clock is
+\st{flat at 0.0204--0.0215\,s from batch 32 to 2048} --- a 64$\times$ range for a 5.6\% change.
+It is launch-latency-bound, and inherently so: the $\nsites$-site recursion is serial, so a
+sweep is $2(\nsites-1)=62$ sequential kernel launches however wide the batch. The transformer is
+flat only to batch 512 and then becomes compute-bound. So the ratio narrows --- 15.2$\times$,
+14.8$\times$, 10.3$\times$, \st{6.1$\times$} at batch 32, 512, 1024, 2048 --- and extrapolating
+gives a \st{crossover near batch $\approx$ 12\,600}. The honest framing is neither ``BP is
+slower'' nor ``BP is faster'': \emph{BP pays a fixed serial latency and amortises it over the
+batch; the network pays per example and saturates.}
+
+\paragraph{Q11.} Scaling is \st{linear} in the number of sequences, not quadratic as answered in
+the call (slope $+1.04$ full range, $+1.19$ top half), and linear in $\nsites$ ($+1.12/+1.13$).
+Our \emph{own} predeclared $N_g$ exponent of 2.0 was also falsified: measured $+1.27/+1.47$,
+because the operation count is quadratic while the wall clock is not until $N_g\gtrsim1600$.
+
+\paragraph{Training, which is where the argument actually lives.} The M-step wall clock is
+\st{flat in dataset size} --- exponent $+0.008$ (mixture) and $-0.037$ (MDN) over a 64$\times$
+range --- while the E-step is linear ($+0.77$ to $+0.95$). And the exponent stays $\approx$ 0
+at \emph{every} capacity: 136$\times$ more kernel parameters costs 1.8$\times$ more per M-step
+against 6.3$\times$-per-step for 175$\times$ more transformer parameters. \st{Stated narrowly,
+because the totals do not support more:} at $\nseq=8192$ the E-step (4.1\,s) dwarfs the MDN
+M-step (0.13\,s), so EM--BP's total training cost is \emph{comparable} to a transformer's, not
+orders below. The claim is about parameters, not totals.
+
+\subsection{Q8. Generation without a score (E26, E27)}
+
+\paragraph{Weak form: does score accuracy transfer to generation? Yes, sharply.}
+E26 drove the same 400-step reverse SDE on identical Brownian paths with four scores:
+
+\medskip
+\noindent\begin{tabular}{@{}l rrr@{}}
+\toprule
+score & excess kurtosis of the AR residual & reference & KL of the residual histogram \\
+\midrule
+exact (true-kernel BP) & 1.66--1.78 & 1.87 & 6.2e-4 \\
+em\_bp (fitted mixture) & 1.18 & 1.87 & 2.6e-3 \\
+lmmse (covariance twin) & \st{$-0.01$} & 1.87 & 2.2e-2 \\
+isotropic & $-0.03$ & 1.87 & 3.8e-1 \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\st{The load-bearing row is lmmse: excess kurtosis $-0.01$ where the truth is 1.87.} The
+covariance-matched Gaussian score gets the covariance right (\code{cov\_fro} 0.069 against the
+exact score's 0.071) and destroys every higher-order structure in the law. This is the clearest
+statement in the project of what the ``learned scores are basically a low-pass filter of a
+Gaussian'' framing throws away.
+
+\paragraph{Strong form: is the reverse SDE needed at all? No (E27).}
+Four arms, all emitting samples at $t_{\min}$ against E26's own reference stream so the two
+experiments are paired. Medians over 4 seeds $\times$ 2 training sizes:
+
+\medskip
+\noindent\begin{tabular}{@{}l rrrr@{}}
+\toprule
+arm & KL of residual hist.\ & excess kurtosis & $\mathrm{SW}_2$ & $W_1$ \\
+\midrule
+\code{mc\_floor} (i.i.d.\ from the true law) & \st{0.00074} & 1.884 & 0.0495 & 0.0130 \\
+\code{ancestral\_true} (one BP sweep) & \st{0.00074} & 1.895 & 0.0487 & 0.0139 \\
+\code{ffbs\_true} (one sweep, conditioned at $t=3$) & 0.00072 & 1.914 & 0.0497 & 0.0146 \\
+\code{ancestral\_em} (fitted kernel) & 0.00194 & 1.831 & 0.0581 & 0.0328 \\
+\midrule
+reference & --- & 1.919 & --- & --- \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\st{One BP sweep generates at the Monte Carlo floor} --- statistically indistinguishable from
+i.i.d.\ draws from the true law. And conditioning on an observation at $t_{\max}=3$
+($\alpha=0.0498$) changes nothing measurable, which is the quantitative content of ``flat
+marginal''. The grid-quantisation control, paired on identical grid indices, moves the KL by
+$5.8\times10^{-5}$: negligible.
+
+\smallskip
+\noindent\st{Cost at equal error, which is the honest comparison.}
+\par\medskip
+\noindent\begin{tabular}{@{}l rrrrrr@{}}
+\toprule
+$n_{\text{steps}}$ & 25 & 50 & 100 & 200 & 400 & 800 \\
+\midrule
+KL & 0.00340 & 0.00146 & 0.00088 & \st{0.00069} & 0.00075 & 0.00077 \\
+KL / one sweep & 4.58 & 1.96 & 1.19 & 0.93 & 1.01 & 1.04 \\
+ms / seq (batch 2048) & 13.2 & 26.1 & 54.7 & \st{116.9} & 231.5 & 459.0 \\
+\bottomrule
+\end{tabular}
+
+\medskip
+One sweep costs \st{0.161\,ms} per sequence at batch 2048. The reverse SDE first matches it at
+$\approx$200 steps and then saturates --- so at equal error one sweep is \st{725$\times$
+cheaper}, and against the 400-step resolution E26 used, \st{1436$\times$}.
+
+\st{This falsifies a prediction of mine and corrects E26.} I predicted one exact sweep would
+\emph{beat} the 400-step reverse SDE on kurtosis. It does not: the 400-step SDE is also at the
+Monte Carlo floor. So E26's apparent deficit for the exact score (1.66 against 1.87) was Monte
+Carlo scatter, not discretisation bias. The \code{mc\_floor} arm existed precisely to catch
+that, and E26 had no such arm --- which is why its number could not be read.
+
+\paragraph{What this does to the framing.} The diffusion apparatus here is not needed to
+\emph{sample}; it is needed to \emph{learn the kernel from noisy observations}. Once the kernel
+is known, sampling on a chain is one sweep. That is Jérôme's point, and it is a statement about
+what the paper is about rather than only about cost.
+
+\subsection{Q6. The neural kernel --- still open, and why (E25)}
+
+This is Jérôme's headline suggestion and the one question still without an answer. Two attempts
+were void for unrelated reasons; a third is running. The landed second attempt shows what is at
+stake (median test risk over 16 seeds):
+
+\medskip
+\noindent\begin{tabular}{@{}l rrrr@{}}
+\toprule
+$\nseq$ & 32 & 128 & 512 & 2048 \\
+\midrule
+\code{em\_bp} (8-component mixture, 25 params) & 0.0931 & 0.0700 & 0.0398 & \st{0.0229} \\
+\code{mdn} (small network, 1516 params) & 0.3836 & 0.2732 & 0.3800 & 0.3678 \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\st{The MDN row is not a model result.} Its selected checkpoint is 1, 3, 4 or 5 in every one of
+64 cells, with \code{converged=True} in 64/64: the arm stopped after $\sim$10 EM iterations of a
+400-iteration budget. Reported naively that reads ``the neural kernel is 10$\times$ worse''. It
+is an arm that never trained. Three defects, all in shared machinery rather than in the driver:
+\code{fit\_em} declared convergence on \emph{one} below-tolerance increment (measured increments
+$0.130, 0.032, 0.012, 0.018, 0.007, \ldots$ --- plainly still climbing --- then stop at iteration
+10); \code{MDNKernel.m\_step} mutated its receiver and returned \code{self}, so four
+``checkpoints'' were four references to one object and validation selection was a no-op,
+disabling the exact overfitting control the experiment exists to test; and the stall was
+permanent because the learning rate was never reduced on a rejected step. After all three: 121
+iterations, 6/6 distinct checkpoints, monotone evidence.
+
+\st{Also note \code{em\_bp} is \code{censored} in 64/64 cells} --- it never converges inside 1200
+iterations, so its numbers are a budget-limited lower bound on its own performance.
+
+\paragraph{Predeclared reading of the third attempt, written before the data lands.} The two
+arms do not get matched iteration budgets (1200 against 400), and the asymmetry favours
+\code{em\_bp}. That is conservative for the claim ``a small neural kernel helps'': if the MDN
+still wins it wins against a better-resourced baseline; if \code{em\_bp} wins, the result is
+confounded with budget and must be reported as ``\code{em\_bp} at least matches, and had not
+finished improving''. A matched-budget rerun is queued either way.
+
+\subsection{The parameter-efficiency claim, tested where it can break (E29)}
+
+The claim ``a small network for the kernel instead of a huge one for the score'' compares 1516
+kernel parameters against 135\,825 in a transformer, and the first question a referee asks is
+what a \emph{1516-parameter transformer} does. E29 is a capacity ladder per architecture,
+designed so a single counterexample kills the claim. The transformer ladder has landed (12
+seeds); the entry is the ratio to \code{em\_bp} at the same $\nseq$, so $>1$ means the network is
+worse:
+
+\medskip
+\noindent\begin{tabular}{@{}r rrrr@{}}
+\toprule
+transformer params & $\nseq=32$ & 128 & 512 & 2048 \\
+\midrule
+843 & 2.24$\times$ & 2.01$\times$ & 3.14$\times$ & \st{5.46$\times$} \\
+2\,579 & 2.35$\times$ & 2.11$\times$ & 3.12$\times$ & 5.40$\times$ \\
+5\,193 & 2.54$\times$ & 2.17$\times$ & 2.41$\times$ & 2.63$\times$ \\
+18\,057 & 2.64$\times$ & 2.26$\times$ & 2.42$\times$ & 2.76$\times$ \\
+135\,825 & \st{2.72$\times$} & 2.37$\times$ & 2.69$\times$ & 3.12$\times$ \\
+\bottomrule
+\end{tabular}
+
+\medskip
+No transformer at any capacity matches \code{em\_bp}'s 25-parameter mixture kernel, at any
+training size. \st{And a prediction of mine is falsified}: I predicted risk would fall
+monotonically with parameter count. At $\nseq=32$ and 128 it \emph{rises} --- 2.24$\times$ to
+2.72$\times$ --- so more capacity is actively worse when data is scarce. That is overfitting,
+and it is the sample-efficiency claim appearing in the network arm itself. Five of six
+architectures are still running.
+
+\subsection{Q10. Information about the cumulants (recomputation)}
+
+Across $\beta$ at fixed noise level $t=0.4665$, medians over 8 replicates, $q=\kappa_2=0.2775$:
+
+\medskip
+\noindent\begin{tabular}{@{}l rrrrr@{}}
+\toprule
+$\beta$ & $\gamma_2$ & $\gamma_2'$ & $\mathrm{eff}(\beta)$ & $\mathrm{eff}(\kappa_4)$ & $\mathrm{eff}(\kappa_4)/\mathrm{eff}(\kappa_2)$ \\
+\midrule
+1.00 (Laplace) & 3 & $-8.50$ & 0.1382 & 0.288 & 0.033 \\
+1.25 & 1.527 & $-4.05$ & 0.0374 & 0.379 & 0.045 \\
+1.50 & 0.762 & $-2.30$ & 0.0140 & 0.443 & 0.050 \\
+2.00 (Gaussian) & 0 & $-1.00$ & 0.00284 & 0.479 & 0.057 \\
+3.00 & $-0.582$ & $-0.333$ & \st{0.000343} & \st{0.525} & 0.061 \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\st{The qualitative reading of the $\beta$ curve inverts.} $\mathrm{eff}(\beta)$ falls by
+403$\times$ from $\beta=1$ to 3 (48.5$\times$ at $t=0.05$, 440$\times$ at $t=1.425$), which
+reads naturally as ``shape information collapses as the law approaches the Gaussian''. It does
+not: $\mathrm{eff}(\kappa_4)$ \emph{rises}, by 1.83$\times$. The collapse is the coordinate
+going degenerate --- $|\gamma_2'|$ shrinks from 8.50 to 0.333, a factor 25.5, and it enters
+$\mathrm{eff}(\kappa_4)$ \emph{squared}, so $25.5^2 = 650$ accounts for the observed 403. Near
+$\beta=2$ a change in $\beta$ barely moves any cumulant, so $\beta$ is nearly unidentifiable
+\emph{however much data you have}. That is exactly Jérôme's objection, now a measured factor.
+
+\st{The decay-in-$t$ claim survives and is stronger in the honest coordinates}, which was the
+thing at risk. Over $t$ from 0.05 to 4.0 on the Laplace chain: $\mathrm{eff}(\corr)$ decays
+$9.1\times10^5$, $\mathrm{eff}(\kappa_2)$ $3.6\times10^6$, $\mathrm{eff}(\kappa_4)$
+$5.9\times10^8$ --- so \st{$\kappa_4$'s information decays 163$\times$ faster than
+$\kappa_2$'s}, widening to $1.6\times10^6$ at $\beta=3$. The parameterisation-free form of the
+project's central claim is the ratio $\mathrm{eff}(\kappa_4)/\mathrm{eff}(\kappa_2)$, which runs
+$0.071 \to 0.033 \to 0.0048$ at $t = 0.05, 0.47, 1.43$: shape carries 7\% of scale's information
+at low noise and 0.5\% by $t=1.43$.
+
+Verified rather than assumed: $\gamma_2'$ in closed form against a central difference at seven
+$\beta$; the reparameterisation inverts to $10^{-9}$; and $I_\theta$, which has to be
+reconstructed from the stored \code{diag\_*}/\code{corr\_*} because the matrix itself was not
+saved, is \emph{checked against the stored} \code{eff\_*} before anything is computed from it
+(worst relative error $8.6\times10^{-13}$ over 560 rows), with a non-zero exit if it fails.
+
+\section{Implementation}
+
+\subsection{What was built}
+
+\noindent\begin{tabular}{@{}l p{10.6cm}@{}}
+\toprule
+\code{experiments/e22\_message\_shapes.py} & Jérôme's ansatz against the true messages; the
+candidate is built from the recursion's own kernel matrix, not from a convolution lookup. \\
+\code{experiments/e23\_representation.py} & dof per representation, plus the quadrature-rule
+comparison; \code{fourier\_adapted} added after realising a shared-domain-only test was a
+strawman. \\
+\code{experiments/e24\_inference\_cost.py} & five parts: \code{cost}, \code{scaling},
+\code{anatomy}, \code{training}, \code{capacity}; \code{E24\_REQUIRE\_GPU=1} fails closed. \\
+\code{experiments/e27\_direct\_sampler.py} & the one-sweep samplers, batched FFBS, the Monte
+Carlo floor arm and the paired jitter control. \\
+\code{experiments/e28\_per\_level\_ranking.py} & per-level risk for every arm, with a
+\code{verify} part that refuses the output unless it pools back to the registered estimand. \\
+\code{experiments/e29\_matched\_parameters.py} & the capacity ladder; imports E03's trainer and
+bundles rather than reimplementing them. \\
+\code{tools/cumulant\_information.py} & the delta-method reparameterisation, with the
+reconstruction check. \\
+\code{tools/fourier\_analysis.py} & the three analytical results, each verified against
+\code{grid\_bp} or against a control with a known answer. \\
+\bottomrule
+\end{tabular}
+
+\medskip
+Changes to the library: \code{grid\_bp} gained \code{return\_messages=True} (exposing normalised
+forward/backward messages, which E22 and the FFBS sampler both need); \code{fit\_em} gained
+\code{patience}; \code{MDNKernel.m\_step} now returns a new kernel instead of mutating its
+receiver; \code{backend.gpu\_available} retries and records the probe error instead of
+swallowing it.
+
+\subsection{Verification}
+
+\begin{sloppypar}
+New tests, all of which pin a derivation against the project's own exact solver or against a
+case with a known answer rather than against a previously recorded number:
+\code{test\_ffbs\_sampler.py} (8), \code{test\_fourier\_analysis.py} (11),
+\code{test\_cumulant\_information.py} (10), \code{test\_em\_patience.py} (3),
+\code{test\_kernel\_mstep\_contract.py} (6), \code{test\_no\_degenerate\_bundles.py} (1, an AST
+walk with no allowlist). The FFBS sampler is checked three ways: its forward filter equals the
+normalised product of \code{grid\_bp}'s forward message with the local likelihood, to
+$1.4\times10^{-15}$; the last site's filter equals the last site's BP belief to
+$8.9\times10^{-16}$; and 20\,000
+\emph{draws} of one fixed observation reproduce \code{grid\_bp}'s posterior means within four
+Monte Carlo standard errors at every site, with variance matching
+$\operatorname{Var}_{\mathrm{BP}} + h^2/12$.
+\end{sloppypar}
+
+\subsection{Discipline that paid for itself}
+
+\noindent\begin{tabular}{@{}l p{10.8cm}@{}}
+\toprule
+guard & what it caught \\
+\midrule
+\code{test\_no\_degenerate\_bundles} & a \emph{fifth} instance of the re-seeded-comprehension
+defect, in E27's own \code{mc\_floor} control arm, \emph{before} anything ran. Written after
+E25 was voided by the fourth. \\
+E28's \code{verify} part & that E28's per-level decomposition was of a different estimand ---
+correctly, and for a reason I got wrong twice before getting right. \\
+\code{E24\_REQUIRE\_GPU} & a GPU job silently writing a CPU-only cost table. \\
+\code{registry.py -{}-check} & nothing, because it was crashing: an id absent from
+\code{MAIN\_CSV} made \code{d / ""} the \emph{directory}, which \code{exists()}, so the gate had
+been silently covering none of E22--E29. Now 87 frozen files, 0 problems. \\
+\bottomrule
+\end{tabular}
+
+\medskip
+The deployment had a related trap: \code{git archive HEAD} was shipping 1.5\,GB of
+\emph{fetched cluster results} back to the cluster (\code{outputs/hpc\_E22c/shapes.csv} alone is
+1.28\,GB). The \code{scp} died twice over the VPN, leaving truncated archives with no extracted
+tree and \code{.last\_deploy.env} unwritten --- so the E25 resubmission that was supposed to
+follow \emph{silently never happened}. \code{export-ignore} for \code{outputs/hpc\_*} took the
+archive to 94.5\,MB and the deploy to three minutes.
+
+\section{Errors found and corrected}
+
+Listed because the reasoning that produced them is the part worth checking.
+
+\noindent\begin{tabular}{@{}l p{11.0cm}@{}}
+\toprule
+\st{N-23} & All four E25 jobs void: the training set was one chain replicated $\nseq$ times
+($\sim$30 CPU-hours). The numbers flagged themselves before the cause was known --- both arms
+flat in $\nseq$, \code{em\_bp} worse than the project's own LMMSE floor, checkpoint pinned at
+the first rung, 63/64 censored. \\
+\st{N-23 addendum} & The archival capacity sweep measured rather than inferred: 32/32 cells have
+exactly one unique training chain, and the M-step sees 31 distinct transitions at $\nseq=128$ and
+the same 31 at 512 --- so the training-size axis was a no-op ($+0.011\pm0.094$ in test
+log-evidence over 80 paired cells). Claim E5 was already retired; this closes it with numbers. \\
+\st{N-24/25} & The MDN arm never trained: three defects in shared EM machinery (see \S2.5). \\
+\st{N-26} & E28 void --- and \emph{my first diagnosis of it was also wrong}. The gate reported a
+2.9\% disagreement; I attributed it to float32 reduction-order drift from reloading 15 Sep
+checkpoints, on the evidence that the scatter was symmetric (111 of 192 high, 81 low) and
+ordered by architecture complexity (window 0.24\% median, bigru 2.88\% worst). That story fit
+the evidence and was false. The cause was that E28 hardcoded $n_{\text{test}}=1024$ where E02a
+and E03 both scored on 2048; the tell was in the numbers all along --- \code{sq\_ref} 704\,579
+against 1\,417\,692, a factor 2.012. At the correct $n_{\text{test}}$ the gate passes at
+$4.65\times10^{-11}$. \\
+\st{Mine, E22} & I first built the ansatz from a convolution lookup applied to an
+already-dilated Gaussian, which measured the gap between two discretisations of the same
+convolution rather than model error (5.9e-8 where the ansatz is analytically exact). Rebuilt on
+the recursion's own kernel: 3.8e-17. \\
+\st{Mine, E24} & Predeclared $N_g$ exponent 2.0, measured 1.27/1.47. The \code{anatomy} part,
+added in response, is what redirected E23 away from FFT acceleration. \\
+\st{Mine, E23} & I expected Gauss--Legendre quadrature to be an obvious improvement. It is
+$\sim$10$\times$ worse. \\
+\st{Mine, E27} & I predicted one exact sweep would beat the 400-step reverse SDE. It ties; both
+are at the Monte Carlo floor. This corrected E26's reading rather than E27's. \\
+\st{Mine, E29} & I predicted risk falls monotonically with parameter count. At small $\nseq$ it
+rises. \\
+\st{Mine, Q5} & Two explanations for the cumulant failure refuted before the third stood, and
+the first Cramér test was wrong in both its variable and its refinement (\S1.3). \\
+\st{Mine, Q1} & The lemma drafted for the Kalman identification was false as stated, and its
+novelty claim was false too (\S1.1). \\
+\bottomrule
+\end{tabular}
+
+\section{What is running}
+
+Nineteen jobs on the Bocconi cluster at the time of writing.
+
+\noindent\begin{tabular}{@{}l l p{8.4cm}@{}}
+\toprule
+jobs & what & why it matters \\
+\midrule
+671442--5 & E25, third attempt & \st{Q6}, the one open question: the neural kernel with the
+N-24/N-25 fixes. \\
+671661--4 & E25 at matched EM budget & removes the 1200-against-400 iteration asymmetry, so
+``\code{em\_bp} had 3$\times$ the compute'' cannot be said. \\
+671654--60 & E29, six architecture ladders & the arm that can refute parameter efficiency;
+transformer has landed, five to go. \\
+672153 & E28, resubmitted & \st{Q9}'s per-level ranking, now on the right bundle. \\
+671665 & E27 cost at batch 2048--32\,768 & states the one-sweep speed-up where BP is
+launch-bound and cheapest. \\
+667192 & E12b (pre-existing) & sample-complexity ladder at 16 seeds. \\
+\bottomrule
+\end{tabular}
+
+\section{What is left to do}
+
+\begin{enumerate}[leftmargin=1.3em,itemsep=0.18em]
+\item \st{Q6 is the only unanswered question, and it is the headline.} Read the third E25
+attempt against its predeclared interpretation rule (\S2.5) rather than at face value, and use
+the matched-budget rerun to settle the confound rather than arguing about it.
+\item \st{Finish E29.} Five architectures outstanding. The transformer result --- no capacity
+matches a 25-parameter mixture kernel --- is strong enough that it should be attacked by the
+remaining five before it is believed.
+\item \st{Q9's crossover.} The E28 smoke shows \code{em\_bp} first at the seven lowest noise
+levels and the LMMSE \emph{oracle} first at the five highest, crossing between $t=0.4665$ and
+$0.6769$, while the pooled scalars (0.054 against 0.163) hide it entirely. If the confirmatory
+run holds, the claim to make is ``EM--BP dominates below $t_*$ and the covariance twin suffices
+above it; we locate $t_*$'', with the caveat that \code{lmmse} uses the \emph{true} $\corr$ and
+is therefore an upper bound on any learned Gaussian score. Note this is \emph{not}
+\code{theory.crossover\_time} $=1.1667$, which is a different quantity.
+\item \st{Freeze what has landed.} \code{icml\_fetch.sh}, \code{registry.py -{}-check},
+\code{freeze.py} for E22c, E23, E24gpu2, E26, E27; \code{outputs/hpc\_E28\_VOID\_estimand/} is
+retained deliberately, because a wrong diagnosis is only checkable against the numbers that
+produced it.
+\item \st{One sentence in Proposition 1's remark} naming the Kalman smoother (\S1.1). Deferred on
+instruction: results first, no paper work.
+\item \st{Not planned, and deliberately so:} a Fourier BP solver (two independent measured
+reasons), a cumulant/Hermite solver (Cramér fails), and an FFT acceleration of the grid
+recursion (caps at 1.3$\times$).
+\end{enumerate}
+
+\bigskip
+\noindent\rule{\textwidth}{0.4pt}\\[0.25em]
+{\footnotesize\begin{sloppypar}\noindent Sources: \code{docs/JEROME\_CALL\_2026-09-25.md} (the question-by-question
+ledger); \code{docs/FOURIER\_ANALYSIS.md} (\S1.2--1.3 in full);
+\code{docs/NEGATIVE\_RESULTS.md} (N-23 to N-26); \code{docs/HPC\_CONFIRMATORY\_SET.md} (the job
+table); and \code{experiments/registry/E2*.json} for each experiment's predeclared predictions,
+written before its confirmatory run.\end{sloppypar}}
+
+\end{document}
