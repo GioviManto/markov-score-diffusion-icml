@@ -23,7 +23,7 @@ reason).
 | Q2 | With a Laplace *ansatz* for the messages and a Laplace innovation, is BP exact? | E22, E22c | **ANSWERED — no.** Confirmed at scale: 432/432 cells |
 | Q3 | What do the messages $\mu_k$ actually look like? Is it Gaussian $\ast\ P_\varepsilon$? | E22, E22c | **ANSWERED — his conjecture is very nearly right** |
 | Q4 | Is closure possible only for the Gaussian, or for any finitely-parameterised family? | Lemma + E22 | **ANSWERED empirically** |
-| Q5 | Can BP be done in Fourier space — truncation on modes instead of a real-space grid? | E23 | **ANSWERED — no, and for a reason worth reporting.** §2 Q5 |
+| Q5 | Can BP be done in Fourier space — truncation on modes instead of a real-space grid? | E23 + `docs/FOURIER_ANALYSIS.md` | **ANSWERED analytically.** Closed form for the message, decay $\exp(-(\log b\omega)^2/\log\frac1\rho)$ at $R^2=0.99997$; the tilt is banded and hardest at LOW noise; cumulants provably divergent (Cramér fails). Solver still not worth building, now for a mechanism |
 | Q6 | Can $K$ be a neural network, fitted by EM through BP? Does it overfit? | E25 | OPEN — two void attempts (N-23, N-24/N-25); third running (671442–5) |
 | Q7 | Posterior mean for one noisy sequence: how long for a network, how long for BP? | E24, E24gpu2 | **ANSWERED on BOTH devices** — BP is ~15× *slower*; not a CPU artefact, §2 Q7 |
 | Q8 | Can we generate without a score — flat marginal, run BP once? | E26 (weak), **E27** (strong) | **WEAK FORM ANSWERED — yes.** Strong form built and registered as E27, predeclared, not yet run |
@@ -238,8 +238,57 @@ and on why it matters:
 > *"The bottleneck of this whole thing, honestly, is the grid. The grid updates of
 > messages, it's a pain in the ***. I wish we didn't have to do this."*
 
-**Status:** **ANSWERED — and the answer is no.** Not the main build; the build is
-cancelled, and the reason is worth a paragraph of the paper.
+**Status:** **ANSWERED, analytically as well as empirically.** The *solver* is not worth
+building; the *analysis* was, and it is in **`docs/FOURIER_ANALYSIS.md`** (three results, 11
+tests, reproduced by `tools/fourier_analysis.py`). Per the user's direction of 27 Sep — explore
+Fourier analytically first — E23's negative measurement became the input to a theory question
+rather than the end of one.
+
+**The three analytical results, in one place:**
+
+1. **The message has a closed form in Fourier.** Two of BP's three operations are free: the
+   transition is a dilation $\omega\mapsto\rho\omega$, the innovation a multiplication by
+   $\varphi_\varepsilon$. Unrolling gives
+   $\varphi_{k+1}(\omega) = \varphi_\mu(\rho^k\omega)\prod_{j<k}\varphi_\varepsilon(\rho^j\omega)$,
+   **verified against our own `grid_bp` to 2.16e-8** — the grid's quadrature error, not model
+   error. Its $k\to\infty$ limit is an *infinite product*, the stationary law's CF, which
+   **explains E22's falsified P3**: with a flat likelihood the recursion drives messages to an
+   object in no finite-parameter family, so the ansatz error grows with depth rather than
+   shrinking.
+2. **The spectrum decays like a Gaussian in $\log\omega$**:
+   $\log|\varphi_\infty(\omega)| \sim -(\log b|\omega|)^2/\log(1/\rho)$, fitted slope
+   matching $-1/\log(1/\rho)$ to within 1.7% at $\rho = 0.85$ and 0.8–6.3% over
+   $\rho\in[0.5,0.99]$, $R^2 = 0.99997$. So **the truncation level is analytically
+   computable** — which means E23's measured non-monotonicity cannot come from the message's
+   own spectrum. (The asymptotic form over-predicts $\omega_{\max}$ by 1.4–1.8× at practical
+   tolerances; evaluate the product instead.)
+3. **The likelihood tilt is the one hard operation, and it is hardest at LOW noise.** It is a
+   convolution in mode space with a Gaussian of width $\sigma_\omega = \alpha/\sqrt{\Delta}$,
+   which *decreases* with $t$: bandwidth 17.7 modes at $t = 0.05$ down to **0.29 at $t = 3$**,
+   banded at 10 of 12 levels. This is the opposite of the natural guess. It answers the
+   tractability question — and it does *not* revive the solver, because E24 measured that the
+   spectral step is only 23.8% of a sweep.
+
+**And the cumulant failure now has a theorem behind it, after two of my own explanations were
+refuted.** The Gram–Charlier expansion converges in $L^2$ only under Cramér's condition
+$\int q^2/\phi < \infty$, and **it fails for every standardised BP message at every noise
+level** (the integral grows by ×2.4e193 from half-width 8 to 20 at $t = 0.05$, and still by
+×4.9e43 at $t = 3$). One basis has a convergence theorem this chain satisfies; the other has
+one it violates. That replaces the weaker argument we had been using ($|\kappa_6|$ runs
+1–228, a symptom rather than a cause).
+
+The two refuted explanations are kept in the note because they are why the third can be
+trusted: the "it's the metric and the positive cone" story died when the *unweighted* $L^2$
+error was found to diverge *before* any negative mass appears, and "it's my arithmetic" died
+against a Gaussian control that reproduces order 30 to 2.9e-13. **The first Cramér test was
+also wrong twice over** — it used the raw rather than the standardised message, and it looked
+for the divergence by *refining the grid*, which reads 6114.3, 6113.3, 6113.1, 6113.0 at
+$N_g = $ 1601…12801 and detects nothing. **Grid refinement tests quadrature; only widening the
+domain tests tail integrability.**
+
+**The build is still cancelled, and the earlier reasoning below still stands — but note the
+one substantive change: the tilt, which we had assumed was the blocker, is not. The blocker is
+that BP is memory-bound, so there is nothing for a faster spectral step to buy.**
 
 E23 measured the premise before committing to a solver: *how many numbers does a BP
 message actually need, per representation?* On the Laplace chain, 144 cells per
