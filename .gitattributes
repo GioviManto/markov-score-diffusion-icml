@@ -1,0 +1,9 @@
+# `git archive` is how hpc/icml_deploy.sh ships a committed revision to the cluster.
+# Fetched cluster results are produced ON the cluster and consumed locally: shipping them
+# back is pure waste. outputs/hpc_E22c/shapes.csv alone is 1.28 GB, which made the archive
+# 1.57 GB and killed the deploy scp twice on 26 Sep (two truncated src.tar on the cluster,
+# no extraction, E25 silently never resubmitted). Nothing under experiments/, src/ or tools/
+# reads outputs/hpc_*; the cross-experiment dependencies are on outputs/E02A, outputs/E03,
+# outputs/E08 and outputs/frozen, which stay in the archive.
+outputs/hpc_*     export-ignore
+outputs/hpc_*/**  export-ignore
