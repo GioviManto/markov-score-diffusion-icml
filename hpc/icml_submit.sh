@@ -100,7 +100,7 @@ cmd_for() {
     # comes from one machine and one run rather than from two jobs compared after the fact.
     # Submit with MSD_JOB_ENV="export E24_REQUIRE_GPU=1" so the job FAILS rather than
     # silently producing a CPU-only cost table (see the 25 Sep incident in E24.json).
-    e24c-gpu)    echo "e24_inference_cost.py --set \"devices=('cpu', 'gpu')\" --set n_repeat=15 --set scale_repeat=9 --output-dir {OUT}/E24gpu";;
+    e24c-gpu)    echo "e24_inference_cost.py --set \"devices=('cpu', 'gpu')\" --set n_repeat=15 --set scale_repeat=9 --output-dir {OUT}/E24c_gpu";;
     # E25: the MDN-kernel rung of the information ladder -- Jerome's "small neural network
     # that learns a transition kernel". exp_34 has existed unrun since before the call. It is
     # serial with its own CSV resume, so the seeds are split across four jobs and merged.
@@ -132,12 +132,12 @@ cmd_for() {
     e28)         echo "e28_per_level_ranking.py --set ckpt_dir=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/ckpts'\" --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --set e03_confirm=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/confirm.csv'\" --set winners=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/winners.json'\" --output-dir {OUT}/E28";;
     # E29: score nets AT the kernel's parameter count -- the arm that can refute the
     # parameter-efficiency claim. Sharded by architecture: six independent ladders.
-    e29-window)  echo "e29_matched_parameters.py --set 'archs=(\"window\",)'      --output-dir {OUT}/E29";;
-    e29-mlp)     echo "e29_matched_parameters.py --set 'archs=(\"mlp\",)'         --output-dir {OUT}/E29";;
-    e29-bigru)   echo "e29_matched_parameters.py --set 'archs=(\"bigru\",)'       --output-dir {OUT}/E29";;
-    e29-tf)      echo "e29_matched_parameters.py --set 'archs=(\"transformer\",)' --output-dir {OUT}/E29";;
-    e29-tcn)     echo "e29_matched_parameters.py --set 'archs=(\"tcn\",)'         --output-dir {OUT}/E29";;
-    e29-unet)    echo "e29_matched_parameters.py --set 'archs=(\"unet\",)'        --output-dir {OUT}/E29";;
+    e29-window)  echo "e29_matched_parameters.py --set 'archs=(\"window\",)'      --output-dir {OUT}/E29_window";;
+    e29-mlp)     echo "e29_matched_parameters.py --set 'archs=(\"mlp\",)'         --output-dir {OUT}/E29_mlp";;
+    e29-bigru)   echo "e29_matched_parameters.py --set 'archs=(\"bigru\",)'       --output-dir {OUT}/E29_bigru";;
+    e29-tf)      echo "e29_matched_parameters.py --set 'archs=(\"transformer\",)' --output-dir {OUT}/E29_tf";;
+    e29-tcn)     echo "e29_matched_parameters.py --set 'archs=(\"tcn\",)'         --output-dir {OUT}/E29_tcn";;
+    e29-unet)    echo "e29_matched_parameters.py --set 'archs=(\"unet\",)'        --output-dir {OUT}/E29_unet";;
     # E25 at MATCHED EM budget: the current run gives em_bp up to 1200 iterations and the MDN
     # 400. The asymmetry favours the baseline, so results are conservative -- but "em_bp had 3x
     # the compute" is a one-line referee objection and removing it costs one rerun.

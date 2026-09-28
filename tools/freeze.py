@@ -22,6 +22,7 @@ import json
 import subprocess
 import sys
 from datetime import datetime, timezone
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -53,6 +54,13 @@ def _registry_file(out_id: str) -> Path:
     trimmed = out_id.rstrip("abcdefgh")
     if trimmed != out_id and (REG / f"{trimmed}.json").exists():
         return REG / f"{trimmed}.json"
+    # A sharded run (E25 splits its 16 seeds across four jobs, each its own directory so
+    # that concurrent jobs never share a merged CSV -- see N-27) freezes every shard into
+    # the one registry entry: `frozen_outputs` is keyed by directory, so the shards coexist.
+    # hpc_E25m_s4 -> E25, hpc_E25v3_s12 -> E25.
+    m = re.match(r"^(?:hpc_)?(E\d+)[a-z0-9]*(?:_s\d+)$", out_id)
+    if m and (REG / f"{m.group(1)}.json").exists():
+        return REG / f"{m.group(1)}.json"
     raise SystemExit(f"no registry entry maps to outputs/{out_id}")
 
 

@@ -7,20 +7,88 @@
  "seeds": {
   "confirmatory": "0-15, split 0-3 / 4-7 / 8-11 / 12-15 across four jobs"
  },
- "status": "AMENDED 26 Sep: every run of 25-26 Sep (jobs 669323-669326, ~30 CPU-hours) is VOID and was moved to outputs/hpc_E25_s*_VOID_degenerate_training_set/ with a VOID.md. RESUBMITTED from the fixed driver.",
+ "status": "FROZEN hpc_E25m_s0 2026-09-28T19:52:14Z; AMENDED 26 Sep: every run of 25-26 Sep (jobs 669323-669326, ~30 CPU-hours) is VOID and was moved to outputs/hpc_E25_s*_VOID_degenerate_training_set/ with a VOID.md. RESUBMITTED from the fixed driver.",
  "registered": "2026-09-25",
  "script_sha256": "61d7d8d49424c5818bc7b00e973aa1d5e58ee716205bd255056de2274beb0188",
  "motivation": "Jerome, 25 September 2026: 'An intermediate model between the neural network and BP would be to actually fit K with a neural network... Exploit the structure by learning only one small neural network that will learn a transition kernel. And that's the only thing that it's doing, instead of a huge neural network, like an attention, that needs to understand that -- because when you learn the kernel, you've exploited the structure.' MDNKernel's own docstring already contains the same argument, written before the call.",
  "follow_up": "The capacity axis is NOT in exp_34 and is the first follow-up: E24 showed the M-step cost is flat in dataset size (slope +0.008) while the E-step is linear, so 'a score network pays for its parameters on every example at every step, EM-BP pays once per iteration on the grid'. Turning that into 'small network beats huge network' requires sweeping the kernel capacity and showing the M-step stays flat in M as the kernel grows, against a score network whose per-step cost grows with its parameter count.",
- "frozen_outputs": {},
- "frozen_at": {},
- "frozen_commit": {},
- "frozen_run_commits": {},
+ "frozen_outputs": {
+  "outputs/hpc_E25m_s0/information_ladder.csv": "9fb4f0fb0a604e55062cd0d096a6f1901ffc037af2d39dc339f9d953c07bf64f",
+  "outputs/hpc_E25m_s0/params_all.json": "7b204e9ac73e63cce8a33abf3ae3c8deae323378174124bc514785b6432503e9",
+  "outputs/hpc_E25m_s4/information_ladder.csv": "0e4a267e5259dff8f0283237f29296bda0a0edf47f93476b6dc54011c89de459",
+  "outputs/hpc_E25m_s4/params_all.json": "86d9f7cfc67522a5482a1e750fb5b3a72a825c0e0ca3c6eda8d743e84d7434a0",
+  "outputs/hpc_E25m_s8/information_ladder.csv": "9b769e7dba687da45d0f329260d65aed3987fc66f41b435399ec06c257d907fd",
+  "outputs/hpc_E25m_s8/params_all.json": "1d9c828a17cc46f47d1ad82aeaeca5c5dd27822625d110c2835869bd53ad7e3b",
+  "outputs/hpc_E25m_s12/information_ladder.csv": "3791ff8ef6bb60f13ade3423d83eec7690ee250096cf8a8de36252ff4cd7c8c1",
+  "outputs/hpc_E25m_s12/params_all.json": "b3a2807f8fcce35e34cd7c9a598dcff75831788eaae64a5f23e99b551c780913",
+  "outputs/hpc_E25v3_s0/information_ladder.csv": "a9788a2eeb6885c8c4d3bdf20731ca42d99d182f2deec3d6bf0e3417a5b9cef9",
+  "outputs/hpc_E25v3_s0/params_all.json": "619766e47db58c0a9957b184863f59eb4bf44c6cb1f357bb6428a7efcaeaa816",
+  "outputs/hpc_E25v3_s4/information_ladder.csv": "680e2300db4a3ea87032ca8f65773b618317c53e903df16ca252ab1e0fbed3ca",
+  "outputs/hpc_E25v3_s4/params_all.json": "5fd0c7354a6779425cb4c422ea981b016d556b4d3c0d83a6e086cbab335cfa94",
+  "outputs/hpc_E25v3_s8/information_ladder.csv": "0f66278e3b72803ec9297d4ac721d5ef491458c34558a6abeef13f73407a516d",
+  "outputs/hpc_E25v3_s8/params_all.json": "20d81eb2d8d61dde6217158a60f6bebf862adb46d77a7c44a24e4c0aae7806c9",
+  "outputs/hpc_E25v3_s12/information_ladder.csv": "0c7f6848df8c160715ab750eabad9d479e45a46226a8b80c7c8ed84b047a5285",
+  "outputs/hpc_E25v3_s12/params_all.json": "f3a1f43c2b3a99c39170b4395b18722d644bdc63819f9b7c5a502e9f9c1c2d62"
+ },
+ "frozen_at": {
+  "hpc_E25m_s0": "2026-09-28T19:53:20Z",
+  "hpc_E25m_s4": "2026-09-28T19:52:51Z",
+  "hpc_E25m_s8": "2026-09-28T19:52:51Z",
+  "hpc_E25m_s12": "2026-09-28T19:52:51Z",
+  "hpc_E25v3_s0": "2026-09-28T19:52:51Z",
+  "hpc_E25v3_s4": "2026-09-28T19:52:51Z",
+  "hpc_E25v3_s8": "2026-09-28T19:52:51Z",
+  "hpc_E25v3_s12": "2026-09-28T19:52:51Z"
+ },
+ "frozen_commit": {
+  "hpc_E25m_s0": "7908703c96daf3729cdd8be17feb6a0c581e2ece",
+  "hpc_E25m_s4": "7908703c96daf3729cdd8be17feb6a0c581e2ece",
+  "hpc_E25m_s8": "7908703c96daf3729cdd8be17feb6a0c581e2ece",
+  "hpc_E25m_s12": "7908703c96daf3729cdd8be17feb6a0c581e2ece",
+  "hpc_E25v3_s0": "7908703c96daf3729cdd8be17feb6a0c581e2ece",
+  "hpc_E25v3_s4": "7908703c96daf3729cdd8be17feb6a0c581e2ece",
+  "hpc_E25v3_s8": "7908703c96daf3729cdd8be17feb6a0c581e2ece",
+  "hpc_E25v3_s12": "7908703c96daf3729cdd8be17feb6a0c581e2ece"
+ },
+ "frozen_run_commits": {
+  "hpc_E25m_s0": [
+   "515f529"
+  ],
+  "hpc_E25m_s4": [
+   "515f529"
+  ],
+  "hpc_E25m_s8": [
+   "515f529"
+  ],
+  "hpc_E25m_s12": [
+   "515f529"
+  ],
+  "hpc_E25v3_s0": [
+   "10d8d73"
+  ],
+  "hpc_E25v3_s4": [
+   "10d8d73"
+  ],
+  "hpc_E25v3_s8": [
+   "10d8d73"
+  ],
+  "hpc_E25v3_s12": [
+   "10d8d73"
+  ]
+ },
  "amendment_N23": {
   "date": "2026-09-26",
   "defect": "exp_34 built its training set with rng_for() INSIDE the comprehension, so the generator was re-seeded identically on every iteration and every row of A was the same chain: a training set of one sequence replicated M times, for every M and every seed. Measured: 1 unique row out of 8. This is the N-22 defect that voided E14's first runs on 20 September. CORRECTION to the first version of this entry: it was NOT 'never swept for'. It was swept on 21 September by tests/test_no_regenerated_rng.py (commit 269f763), which found exp_32, exp_33 and exp_34 and ALLOWLISTED them in a KNOWN_ARCHIVAL set instead of fixing them, reasoning that they were archival copies the paper does not build from. Four days later exp_34 was submitted as E25 by someone who never consulted that list. The defect was known, documented and named in a test file, and still cost about thirty CPU-hours: nothing connected 'this driver is on a known-broken list' to 'this driver is about to be run'. The lesson is that a known-broken driver must be REPAIRED, not registered as acceptably broken; KNOWN_ARCHIVAL is now empty and documented as needing to stay empty.",
   "how_it_showed": "both arms flat in M (em_bp 0.288/0.228/0.305/0.314 across a 64x range); em_bp test risk 0.23-0.31, worse than this project's own LMMSE floor of 0.168 where the headline reports 0.018; the validation-selected checkpoint was the first or second rung of a ladder reaching 1200, MDN taking iteration 5 in all 64 cells; stop_reason=censored in 63 of 64 em_bp cells.",
   "fix": "generator hoisted out of the comprehension in exp_32, exp_33 and exp_34; the dead broken line deleted from e02_capacity.py; tests/test_no_degenerate_bundles.py added -- an AST check over experiments/, src/ and tools/ that fails on any comprehension re-seeding rng_for per iteration. It immediately found exp_33, which a hand-written grep had missed.",
   "open_question": "exp_32_capacity_equivalence.py carried the same defect and is cited by CLAIM_EVIDENCE_MATRIX, SCIENCE_AUDIT, NEGATIVE_RESULTS and tools/make_tab_capacity.py. It has no outputs in this repository, so those numbers came from the archival tree. Whether the 'no mixture capacity improves on a single Gaussian innovation' conclusion (audit C12, and the void thesis capacity sweep of Ch. 10) rests on a degenerate training set is now OPEN: one replicated chain would suppress exactly the benefit a richer kernel should show. Must be checked against the archival run's own code before that conclusion is repeated."
+ },
+ "outcome": {
+  "Q6": "ANSWERED 2026-09-28, and the answer is NO. The MDN kernel (1,516 params) loses to the 25-parameter mixture kernel in 64/64 cells at matched EM budget, median ratio 2.04x (M=32), 2.24x (128), 2.28x (512), 2.57x (2048). Jobs 671442-671445 (mdn cap 400) and 671661-671664 (matched, mdn cap 1200).",
+  "arm_actually_trained": "YES, unlike attempt 2. Validation-selected checkpoints span 20-1200 (attempt 2: pinned at 5 with converged=True in essentially every cell). converged only 7/64, so the arm is mostly still improving rather than stalled.",
+  "budget_confound_settled": "Largely. Raising the MDN cap 400 -> 1200 moved the selected checkpoint in 0/16 cells at M=32, 2/16 at M=128, 9/16 at M=512 and 14/16 at M=2048, improving M=2048 test risk by 23.7%. So the cap WAS binding at large M and is now relaxed. The budget-FREE comparison is M=32 and M=128, where at_cap is 0/16 for the MDN and 0-1/16 for em_bp: there em_bp still wins 32/32 cells by 2.04x and 2.24x. Remaining caveat: at M=2048 the MDN is at_cap in 15/16 cells and em_bp in 10/16 even at 1200, so the 2.57x at the largest size is not budget-free.",
+  "control_em_bp_bit_identical": "em_bp test risk is identical between the two runs to 0.000e+00 over all 64 cells, as it must be (same cap, same bundles); the only thing that changed is the MDN budget.",
+  "jerome_predicted_this": "The failure mode is the one Jerome named unprompted in the call: 'the real issue is going to be message passing with this, because then it will overfit; the problem you already observed with a few centroids is going to get worse.' Within the small-kernel-inside-exact-BP family, 61x MORE parameters is 2-2.6x WORSE. E29 finds the same U-shape in the score networks.",
+  "cross_experiment_ladder_NOT_established": "E25's em_bp is a fresh validation-selected fit; E28's em_bp is the FROZEN E02a fit (em_source=.../E02a/capacity.csv). They disagree by 27% at M=128 (0.0700 vs 0.0570), so E25's MDN CANNOT be placed on E28's network ladder without refitting one of them. The predeclared 'sits between the unstructured networks and mixture EM-BP' is therefore NOT yet tested."
  }
 }

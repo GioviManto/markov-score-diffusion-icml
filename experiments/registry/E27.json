@@ -14,7 +14,7 @@
  "seeds": {
   "confirmatory": "PROTOCOL.seeds, the same as E26, so every contrast with E26 is paired"
  },
- "status": "REGISTERED 2026-09-27, PREDECLARED, smoke-tested on the laptop at --quick, confirmatory run NOT yet executed. The predictions above were written before any confirmatory number existed.",
+ "status": "FROZEN hpc_E27 2026-09-28T19:52:13Z; REGISTERED 2026-09-27, PREDECLARED, smoke-tested on the laptop at --quick, confirmatory run NOT yet executed. The predictions above were written before any confirmatory number existed.",
  "registered": "2026-09-27",
  "script_sha256": "754f15bc998c9bc1f3ab638e05999e66400bc594a68f3c9cd65b54f4592cc85b",
  "motivation": "docs/JEROME_CALL_2026-09-25.md Q8. E26's own registry entry recorded the gap: 'This answers the WEAK form of Q8 ... not the strong form Jerome actually proposed, which is one forward-backward sweep from a flat marginal with no reverse SDE and no score at all. The strong form is a separate sampler that does not exist yet and is the natural follow-up.' This is that sampler.",
@@ -23,8 +23,22 @@
   "grid_errors_separated": "The flat-likelihood backward message is constant only up to grid error, and the test pins the CONVERGENCE rather than a tolerance (the first version asserted 1e-9 and failed). Quadrature: the kernel's column mass is 1 + O(h^2) -- 3.8e-3, 9.6e-4, 2.4e-4, 6.0e-5 at N_g = 201, 401, 801, 1601 -- and the interior non-constancy of R after 31 backward steps follows it (4.0e-3, 9.8e-4, 2.4e-4, 6.4e-5). Truncation: over the FULL grid it saturates at 2.1e-2 and does NOT improve with N_g, because at |a| ~ A = 8 the kernel loses mass off the edge. That region is beyond five standard deviations of a unit-variance chain and carries no prior mass, but it is a truncation effect and refining N_g will never remove it."
  },
  "development_note": "The first version of `mc_floor` called rng_for() INSIDE a comprehension -- the N-22/N-23 degenerate-bundle defect, for the fifth time in this project and the first time caught before anything ran. tests/test_no_degenerate_bundles.py failed and named experiments/e27_direct_sampler.py:249. The visible symptom in the smoke run was mc_floor's sw2 at 1.31 against every other arm's 0.12. Recorded because the test was written in response to E25 being voided, and this is the evidence that writing it was worth the time.",
- "frozen_outputs": {},
- "frozen_at": {},
- "frozen_commit": {},
- "frozen_run_commits": {}
+ "frozen_outputs": {
+  "outputs/hpc_E27/cost.csv": "ac3129db04e32bbf4b057f5d819dfbf5ccb4be66a66d0afdf756784441911dda",
+  "outputs/hpc_E27/direct.csv": "0901eee78ef66351fd0de752b26ad20b82262288c24655eaf07bf0671803e890",
+  "outputs/hpc_E27/steps.csv": "280a729808d71bf21067b5d726e70ef3a8c978ddd2f2250baa38a4bfdf712164",
+  "outputs/hpc_E27/params_cost.json": "dccef8084e4588d2749a98740941edfb078e1ba051d09fd4a32c7cfee991f87f",
+  "outputs/hpc_E27/params_sample_steps.json": "5d5fe46bdcf3d144de15b57ff31fbf541dc7bbe6750d6a0672906ea68e58cb95"
+ },
+ "frozen_at": {
+  "hpc_E27": "2026-09-28T19:52:13Z"
+ },
+ "frozen_commit": {
+  "hpc_E27": "7908703c96daf3729cdd8be17feb6a0c581e2ece"
+ },
+ "frozen_run_commits": {
+  "hpc_E27": [
+   "9af53fb"
+  ]
+ }
 }

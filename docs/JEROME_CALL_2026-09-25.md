@@ -24,10 +24,10 @@ reason).
 | Q3 | What do the messages $\mu_k$ actually look like? Is it Gaussian $\ast\ P_\varepsilon$? | E22, E22c | **ANSWERED — his conjecture is very nearly right** |
 | Q4 | Is closure possible only for the Gaussian, or for any finitely-parameterised family? | Lemma + E22 | **ANSWERED empirically** |
 | Q5 | Can BP be done in Fourier space — truncation on modes instead of a real-space grid? | E23 + `docs/FOURIER_ANALYSIS.md` | **ANSWERED analytically.** Closed form for the message, decay $\exp(-(\log b\omega)^2/\log\frac1\rho)$ at $R^2=0.99997$; the tilt is banded and hardest at LOW noise; cumulants provably divergent (Cramér fails). Solver still not worth building, now for a mechanism |
-| Q6 | Can $K$ be a neural network, fitted by EM through BP? Does it overfit? | E25 | OPEN — two void attempts (N-23, N-24/N-25); third running (671442–5) |
+| Q6 | Can $K$ be a neural network, fitted by EM through BP? Does it overfit? | E25, E25m | **ANSWERED — it can, and it overfits, exactly as he predicted.** The 1,516-parameter MDN kernel loses to the 25-parameter mixture kernel in **64/64 cells at matched budget**, median 2.04–2.57×, §2 Q6 |
 | Q7 | Posterior mean for one noisy sequence: how long for a network, how long for BP? | E24, E24gpu2 | **ANSWERED on BOTH devices** — BP is ~15× *slower*; not a CPU artefact, §2 Q7 |
-| Q8 | Can we generate without a score — flat marginal, run BP once? | E26 (weak), **E27** (strong) | **WEAK FORM ANSWERED — yes.** Strong form built and registered as E27, predeclared, not yet run |
-| Q9 | Is the score compared at a fixed $t$ or averaged over $t$? | **E28** | Answered in call (pooled). Per-level ranking built and submitted; **the smoke already shows a crossover the pooled scalar hides**, §2 Q9 |
+| Q8 | Can we generate without a score — flat marginal, run BP once? | E26 (weak), **E27** (strong) | **ANSWERED, both forms — yes.** One BP sweep generates at the Monte Carlo floor and is 725× cheaper than the reverse SDE at equal error, §2 Q8 |
+| Q9 | Is the score compared at a fixed $t$ or averaged over $t$? | **E28** | **ANSWERED.** Pooled, and the pooled scalar *does* hide a crossover: em_bp first at the 8 (of 12) lowest levels at $M=128$ and the 10 lowest at $M=2048$, the LMMSE **oracle** above. The crossover **moves with data**, $t\approx0.94\to1.90$ for a 16× increase, §2 Q9 |
 | Q10 | Do the information curves quantify information about $\rho$ and $\beta$, or about $\kappa_2$ and $\kappa_4$? | `tools/cumulant_information.py` | **DONE — and a RECOMPUTE, not a relabel:** a relabel would have been wrong by 2.3–1518×, §2 Q10 |
 | Q11 | How does EM–BP scale in $M$ (sequences) and $L$ (sites)? | E24 | **ANSWERED** — the call's answer was wrong, and so was ours; §5.1 |
 
@@ -420,8 +420,19 @@ and on the training signal:
 > *"The nice thing is that you actually don't need noise anymore … the loss only depends
 > on the training data. You no longer have to noise anything."*
 
-**Status:** OPEN. **Two attempts void, for two unrelated reasons; a third is running
-(jobs 671442–671445).** This is Jérôme's headline suggestion and it is the one question
+**Status: ANSWERED 28 September 2026 — and the answer is no.** Jobs 671442–671445 (MDN iteration cap 400) and the matched-budget rerun 671661–671664 (cap 1200, equal to em_bp's) both completed. **The neural kernel loses to the 25-parameter mixture kernel in 64 of 64 cells**, by a median of 2.04× at $M=32$, 2.24× at 128, 2.28× at 512 and 2.57× at 2048. It does not win a single cell at any size or seed.
+
+**The arm did train this time.** That is the first thing to check, because attempt 2's headline number was an artefact of an arm that never moved. Validation-selected checkpoints now span 20–1200 against attempt 2's `checkpoint = 5` with `converged = True` in essentially every cell, and only 7 of 64 cells report convergence, so the arm is still improving rather than stalled. The N-24/N-25 fixes did what they were meant to.
+
+**The budget confound, which the reading rule below required to be settled rather than argued about.** Raising the MDN cap from 400 to 1200 moved the selected checkpoint in 0/16 cells at $M=32$, 2/16 at 128, 9/16 at 512 and 14/16 at 2048, improving test risk at $M=2048$ by 23.7%. So the cap *was* binding at the largest size, and is now relaxed. The clean, **budget-free** comparison is at $M=32$ and $M=128$, where the MDN is at its cap in 0/16 cells and em_bp in 0–1/16: there em_bp wins 32/32 by 2.04× and 2.24×. At $M=2048$ the MDN is still at cap in 15/16 cells and em_bp in 10/16 even at 1200, so the 2.57× at the largest size is *not* budget-free and is reported with that caveat.
+
+**The control that makes the contrast readable:** em_bp's test risk is identical between the two runs to $0.000\times10^{0}$ over all 64 cells, as it must be — same cap, same bundles. The only thing that changed is the MDN's budget.
+
+**He predicted this, unprompted, in the call.** *"The real issue is going to be message passing with this, because then it will overfit; the problem you already observed with a few centroids is going to get worse."* Inside exact BP, 61× more kernel parameters buys 2–2.6× worse test risk. E29 then finds the same U-shape in the score networks: at $M=128$ the largest rung is worse than the best smaller rung in 16/16 seeds for bigru, tcn and transformer. The overfitting is a property of fitting a flexible object through message passing, not of this particular kernel.
+
+**What this does *not* establish.** The predeclared prediction was that the MDN would sit *between* the unstructured networks and mixture EM–BP on the information ladder. That is still untested: E25's em_bp is a fresh validation-selected fit while E28's is the frozen E02a fit, and the two disagree by 27% at $M=128$ (0.0700 against 0.0570), so E25's MDN cannot be placed on E28's network ladder without refitting one of them. Resisting the arithmetic is the point — the numbers are three decimal places apart and it would be easy to quote them side by side.
+
+**The three attempts are kept in full below rather than summarised, because the first two failed for unrelated reasons and both failures were legible in the numbers before the cause was known.** This is Jérôme's headline suggestion and it is the one question
 still without an answer, so the failures are recorded in full rather than summarised.
 
 **Attempt 1 (jobs 669323–669326, 25–26 Sep): VOID — degenerate training set (N-23).**
@@ -513,6 +524,56 @@ mixture-$C$ ladder run beside it so the reader sees where flexibility stops payi
   from one noisy view, which is the interface the networks get.
 
 ---
+
+### E29 — the refutable arm: score nets *at* the kernel's parameter count
+
+Not one of Jérôme's eleven questions, but the experiment his framing invites and the one a
+referee asks for first. The parameter-efficiency claim compares a small kernel against a
+135,825-parameter transformer; nobody had run a *small* transformer. E29 is a capacity
+**ladder** per architecture — six architectures, 16 seeds, four dataset sizes, 1,792 cells,
+parameter counts measured rather than estimated and spanning 81 → 135,825, every architecture
+bracketing 1,516. Designed to be refutable: one architecture reaching em_bp at ~1,516
+parameters kills the claim. Reference arm is E28's em_bp, valid because E29 and E28 share the
+test bundle exactly ($\text{sq\_ref}$ agrees on 10,752 overlapping rows at $0.000\times10^{0}$).
+
+| $M=128$, em_bp $=0.0570$ | best rung | risk | /em_bp | | $M=2048$, em_bp $=0.0239$ | best rung | risk | /em_bp |
+|---|---|---|---|---|---|---|---|---|
+| bigru | 1,105 | **0.1080** | **1.89** | | bigru | 4,001 | **0.0560** | **2.34** |
+| tcn | 1,193 | 0.1347 | 2.36 | | unet | 3,529 | 0.0627 | 2.62 |
+| transformer | 843 | 0.1424 | 2.50 | | transformer | 5,193 | 0.0628 | 2.63 |
+| unet | 933 | 0.1428 | 2.50 | | tcn | 4,433 | 0.0683 | 2.85 |
+| window | 5,505 | 0.1428 | 2.50 | | window | 5,505 | 0.1175 | 4.91 |
+| mlp | 3,456 | 0.3839 | 6.73 | | mlp | 26,016 | 0.2077 | 8.68 |
+
+**P1 confirmed, and more strongly than predicted.** The prediction was that nothing at
+$\le 2{,}600$ parameters would reach em_bp. In fact **nothing reaches it at any capacity on
+the ladder** — the top rung, a 135,825-parameter transformer, is 2.90× em_bp's risk at
+$M=128$. The best net at $\le 2{,}600$ is bigru(1,105) at 1.89×.
+
+**P2 falsified: risk is U-shaped in capacity, not monotone.** At $M=128$ the largest rung is
+worse than the best smaller rung in **16/16 seeds** for bigru, tcn and transformer and 15/16
+for unet, and the per-seed argmin sits at 1,105 (bigru, 12/16 seeds), 843 (transformer, 8/16),
+933 (unet, 7/16), 1,193 (tcn, 8/16). mlp and window are the exceptions at 5–6/16 — they are
+weak enough to be still improving. So the best score network on this problem is a
+*thousand*-parameter one, and it still loses to 25 parameters inside exact BP. This is the
+same overfitting Jérôme predicted for the neural kernel (Q6), now visible in the score nets.
+
+**P3 falsified, in the opposite direction, and the honest restatement is a rate.** The
+matched-parameter gap is *smaller* at small $M$ (bigru ~1,105: 1.89× at $M=128$ against 2.77×
+at $M=2048$), not larger. The sample-efficiency content survives when stated as a rate rather
+than a gap: over a 16× increase in data em_bp improves 2.39× (0.0570 → 0.0239) while the best
+net improves 1.93× and a fixed bigru(1,105) only 1.63×.
+
+**P4 is not testable as stated**, because its premise fails: no net matches the kernel at any
+capacity, so "the smallest parameter count at which one does" does not exist within a ladder
+reaching 5,433× the mixture kernel's 25 parameters.
+
+**The confound that must be quoted with it.** At $M=2048$, **278 of 448 net cells (62 %)
+select the last checkpoint** — median selected step 32,000 of a 32,000 cap — so the networks
+had not finished training and the $M=2048$ gap could narrow with a longer budget. At $M=128$
+only 23 % are at cap and the median selected step is 4,000 of 32,000, so that comparison is
+effectively budget-free. **Quote $M=128$'s 1.89× as the clean number**; the $M=2048$ figures
+are reported with the caveat attached, not without it.
 
 ### Q7 — Inference cost
 
@@ -756,6 +817,46 @@ that makes the validation exact rather than approximate: **part `verify` rebuild
 risk from E28's own pairs and requires it to match E03's `confirm.csv` to 1e-6, exiting
 non-zero otherwise.** Without it, plausible-looking per-level numbers could be a
 decomposition of a different estimand.
+
+**CONFIRMATORY RUN LANDED 28 September 2026 (job 672153, 16 seeds, 12 levels, 6 architectures
+plus two oracles).** The gate passes: 192 cells, worst relative disagreement with E03's own
+pooled risk **1.712e-15**. Risk here is E03's estimand,
+$\mathrm{risk}=\sqrt{\sum \text{sq\_err}/\sum \text{sq\_ref}}$ — a relative *RMSE*, so these
+ratios square to the relative-MSE form.
+
+| | $t=0.05$ | 0.105 | 0.222 | 0.467 | 0.677 | 0.982 | 1.425 | 3.0 |
+|---|---|---|---|---|---|---|---|---|
+| **$M=128$** em_bp | **0.0950** | **0.0582** | **0.0353** | **0.0214** | **0.0175** | 0.0147 | 0.0117 | 0.0030 |
+| lmmse (oracle) | 0.2780 | 0.1770 | 0.0950 | 0.0408 | 0.0233 | **0.0107** | **0.0032** | **0.0000** |
+| best network | 0.1895 | 0.1276 | 0.0904 | 0.0713 | 0.0565 | 0.0476 | 0.0424 | 0.0411 |
+| lmmse/em_bp | 2.93 | 3.04 | 2.69 | 1.91 | 1.33 | 0.72 | 0.27 | 0.00 |
+| **$M=2048$** em_bp | **0.0431** | **0.0221** | **0.0119** | **0.0062** | **0.0048** | **0.0038** | **0.0029** | 0.0007 |
+| lmmse (oracle) | 0.2780 | 0.1770 | 0.0950 | 0.0408 | 0.0233 | 0.0107 | 0.0032 | **0.0000** |
+| lmmse/em_bp | 6.45 | 8.00 | 8.00 | 6.56 | 4.82 | 2.81 | 1.10 | 0.02 |
+
+**P1 — falsified, as predeclared it would be.** em_bp is first at the 8 lowest levels at
+$M=128$ and the 10 lowest at $M=2048$; the LMMSE *oracle* takes the rest. The prediction was
+left unedited after the smoke precisely so this would be a falsification and not a hindsight.
+
+**P2 — confirmed above the peak, falsified below it, and the nuance is the interesting part.**
+lmmse/em_bp is *not* monotone in $t$: it **rises** from 2.93 at $t=0.05$ to 3.04 at $t=0.105$
+($M=128$), and from 6.45 to 8.32 at $t=0.153$ ($M=2048$), before falling away. So over the
+bottom two or three levels the LMMSE oracle gets relatively *worse*, and only then improves.
+The "learned scores are a low-pass filter of a Gaussian" framing is right at high $t$, wrong
+at low $t$, and *most* wrong not at the very bottom of the schedule but just above it.
+
+**P3 — confirmed, in 16/16 seeds at both sizes.** The pooled scalar hides a real crossover.
+
+**The new result, which the smoke could not see: the crossover moves with the data.** Median
+$t_\times = 0.94$ (range 0.62–1.38) at $M=128$, and $1.90$ (range 1.33–2.07) at $M=2048$ — a
+16× increase in training data roughly **doubles** the range of $t$ over which a fitted kernel
+beats the oracle that knows the true covariance. That is the sample-efficiency claim showing
+up on an axis it was not designed to be measured on. It is also distinct from
+`theory.crossover_time` $= 1.1667$, which is a property of the model and does not move with $M$.
+
+**Not one network is first at any level, at either size.** best-net/em_bp rises monotonically
+with $t$: $1.99 \to 13.75$ at $M=128$ and $2.04 \to 44.24$ at $M=2048$. The per-level view was
+built to find where the headline fails; it does not rescue a single architecture anywhere.
 
 **The smoke run already shows a crossover, which would falsify our own P1.** At grid 201,
 $n_\text{test} = 64$, seed 0, $n = 128$, with the real E02a fit and no network arms:
@@ -1010,3 +1111,21 @@ one lookup away.
   Deploy fixed: `git archive` was shipping 1.5 GB of *fetched cluster results* back to the
   cluster, which killed the scp twice and is why attempt 2's resubmission silently never
   happened.
+- **2026-09-28** — **the queue drained; Q6 and Q9 both answered, and the ledger is complete
+  at 11 of 11.** E25 attempt 3 (671442–5) and the matched-budget rerun (671661–4): the MDN
+  kernel **loses to the 25-parameter mixture kernel in 64/64 cells**, median 2.04–2.57×, and
+  the arm genuinely trained this time (checkpoints 20–1200, not pinned at 5). The budget
+  confound the reading rule demanded be *settled* rather than argued: raising the MDN cap
+  400→1200 moved the checkpoint in 0/16 cells at $M=32$ and 14/16 at $M=2048$, so the clean
+  budget-free comparison is $M=32$ and $M=128$ — and em_bp wins those 32/32. **Jérôme
+  predicted this failure mode unprompted in the call.** E28 (672153): gate passes at
+  1.712e-15; P1 falsified, P2 confirmed only above a peak at $t\approx0.1$–$0.15$, P3
+  confirmed in 16/16 seeds; **the crossover moves with data**, $t\approx0.94\to1.90$ over a
+  16× increase. E29: **no architecture reaches em_bp at any capacity up to 135,825
+  parameters** — but 62 % of its $M=2048$ cells are at the training cap, so the clean number
+  is $M=128$'s 1.89×. Three of my predictions falsified (E28 P1 as expected, E29 P2 and P3
+  not). Two defects found and fixed: **N-27**, six E29 jobs sharing one output directory so
+  five architectures' merged rows were clobbered (no data lost — rebuilt from 1,792 surviving
+  per-cell files), and a latent second instance in `e24-gpu`/`e24c-gpu` that the new guard
+  `tests/test_submit_cases_disjoint_outputs.py` found on its first run. **N-26** written up
+  properly at last: the E28 `n_test` error *and* my wrong first diagnosis of it.

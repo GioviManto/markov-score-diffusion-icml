@@ -13,12 +13,31 @@
  "seeds": {
   "confirmatory": "PROTOCOL.seeds, and E03's own bundle streams, so every comparison with E03/E28/E25 is paired"
  },
- "status": "REGISTERED 2026-09-27, PREDECLARED, smoke-tested at --quick (net_steps 200, one seed, M = 32, grid 201, window only). Confirmatory run NOT yet executed.",
+ "status": "FROZEN hpc_E29 2026-09-28T19:52:14Z; REGISTERED 2026-09-27, PREDECLARED, smoke-tested at --quick (net_steps 200, one seed, M = 32, grid 201, window only). Confirmatory run NOT yet executed.",
  "registered": "2026-09-27",
  "script_sha256": "9df3b566d4d7172878f7f1f5c0bf4f663889ab3d9e10df8bdfb442c6d6352d73",
  "smoke_note": "At 200 training steps (0.6% of PROTOCOL.net_steps) the window ladder gives pooled risk 0.744, 0.375, 0.277, 0.299, 0.248 at 81, 209, 1601, 5505, 19201 parameters. Not indicative of anything except that the driver runs and the ladder is ordered; the 1,601-parameter rung at 0.277 against em_bp's 0.05-0.10 at M = 32 is an undertrained net, not a result.",
- "frozen_outputs": {},
- "frozen_at": {},
- "frozen_commit": {},
- "frozen_run_commits": {}
+ "frozen_outputs": {
+  "outputs/hpc_E29/ladder.csv": "fe0ccb64b697808d60583b003c45d65bcfdd5de2a1ae3cf106afc3d70bb08d4d",
+  "outputs/hpc_E29/params_all.json": "d0caae08436863e63c160305d9fd0ad101d935d0232d5fd10e2100d5af8492fe"
+ },
+ "frozen_at": {
+  "hpc_E29": "2026-09-28T19:52:14Z"
+ },
+ "frozen_commit": {
+  "hpc_E29": "7908703c96daf3729cdd8be17feb6a0c581e2ece"
+ },
+ "frozen_run_commits": {
+  "hpc_E29": [
+   "515f529"
+  ]
+ },
+ "outcome": {
+  "P1": "CONFIRMED, and more strongly than predicted. No architecture reaches em_bp's pooled risk at ANY capacity on the ladder, not merely at <= 2,600 parameters. Best at <= 2,600 is bigru(1,105) at 1.89x em_bp (M=128) and 2.77x (M=2048); best at any capacity is bigru(4,001) at 2.34x (M=2048). The ladder tops out at transformer(135,825) = 2.90x.",
+  "P2": "FALSIFIED. Risk is U-SHAPED in parameter count, not monotone. At M=128 the largest rung is worse than the best smaller rung in 16/16 seeds for bigru, tcn and transformer and 15/16 for unet; the per-seed argmin sits at 1,105 (bigru, 12/16 seeds), 843 (transformer, 8/16), 933 (unet, 7/16), 1,193 (tcn, 8/16). mlp and window are the exceptions (5-6/16) and are still improving with capacity, i.e. far from their optimum.",
+  "P3": "FALSIFIED, and in the opposite direction: the gap at matched parameter count is SMALLER at small M and LARGER at large M (bigru ~1,105: 1.89x at M=128 vs 2.77x at M=2048). The sample-efficiency content survives when stated as a rate instead of a gap: over a 16x increase in data em_bp improves 2.39x (0.0570 -> 0.0239) while the best net improves 1.93x and a fixed bigru(1,105) only 1.63x. PARTLY CONFOUNDED -- see budget_confound.",
+  "P4": "NOT TESTABLE AS STATED, because the premise fails: no net matches the kernel at any capacity, so 'the smallest parameter count at which one does' does not exist within a ladder reaching 135,825 = 5,433x the mixture kernel's 25 parameters.",
+  "budget_confound": "MUST BE STATED. At M=2048, 278/448 net cells (62%) select the last checkpoint, median selected step 32,000 of a 32,000 cap: the nets had NOT finished training, so the M=2048 gap could narrow with a longer budget. At M=128 only 104/448 (23%) are at cap and the median selected step is 4,000 of 32,000, so the M=128 comparison is effectively budget-free -- and there the best net at ANY capacity is still 1.89x em_bp. Quote M=128 as the clean number.",
+  "reference_arm": "em_bp is E28's frozen E02a fit, valid here because E29 and E28 share the test bundle EXACTLY: sq_ref agrees on 10,752 overlapping rows at 0.000e+00. Not E25's em_bp, which is a different fit (see E25.cross_experiment_ladder_NOT_established)."
+ }
 }

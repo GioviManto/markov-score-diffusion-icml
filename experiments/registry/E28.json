@@ -13,12 +13,33 @@
  "seeds": {
   "confirmatory": "PROTOCOL.seeds, and E03's own test bundle stream, so the comparison with E03 is paired"
  },
- "status": "REGISTERED 2026-09-27, PREDECLARED, smoke-tested at --quick (grid 201, n_test 64, seed 0, n=128, no network arms). Confirmatory run NOT yet executed.",
+ "status": "FROZEN hpc_E28 2026-09-28T19:52:14Z; REGISTERED 2026-09-27, PREDECLARED, smoke-tested at --quick (grid 201, n_test 64, seed 0, n=128, no network arms). Confirmatory run NOT yet executed.",
  "registered": "2026-09-27",
  "script_sha256": "4ff90be715d9ed56ca58b0fd4db6726fd1b9d3727f09a1d8ba754de06ac2a8a9",
  "smoke_note": "The quick smoke (grid 201, n_test 64, seed 0, n = 128, real E02a fit, no network arms) shows a CROSSOVER between t = 0.4665 and t = 0.6769: em_bp is first at the seven lowest levels (by 3.40x at t = 0.05) and the LMMSE ORACLE is first at the five highest (by 555x at t = 3.0), while the pooled scalars are em_bp 0.0540 against lmmse 0.1632, a 3x advantage that hides it entirely. If this survives the confirmatory run it FALSIFIES P1 and confirms P2 and P3, and the reading is not that EM-BP fails: above the crossover there is nothing non-Gaussian left to recover, so knowing rho exactly beats estimating a whole kernel, and the fitted kernel's estimation error does not vanish with t while the oracle's model error does. Note lmmse here is theory.chain_covariance at the TRUE (rho, q). Note also that theory.crossover_time(0.85, 0.2775, 32) = 1.1667, which is a DIFFERENT crossover (where e^{2t} lambda_max(Sigma_0) = 1) and should not be conflated with this one; the relationship between them is worth a line once the confirmatory numbers exist.",
- "frozen_outputs": {},
- "frozen_at": {},
- "frozen_commit": {},
- "frozen_run_commits": {}
+ "frozen_outputs": {
+  "outputs/hpc_E28/per_level.csv": "b87aee57179b9567ccf993c5bd3b4fdeee2422e1569776ad01bdba0c76f52dbe",
+  "outputs/hpc_E28/verify.csv": "fae1234165ed6db30d38c4ae7438089c566d4af7cbd56a982de1349d19951ff4",
+  "outputs/hpc_E28/params_all.json": "7b33ac600329ee71fc6b27eedc2c7173d246cd8e0132ded6d713cbe0ef6edf8a"
+ },
+ "frozen_at": {
+  "hpc_E28": "2026-09-28T19:52:14Z"
+ },
+ "frozen_commit": {
+  "hpc_E28": "7908703c96daf3729cdd8be17feb6a0c581e2ece"
+ },
+ "frozen_run_commits": {
+  "hpc_E28": [
+   "f396d5a"
+  ]
+ },
+ "outcome": {
+  "Q9": "ANSWERED 2026-09-28 (job 672153). Gate passes: 192 cells, worst relative disagreement with E03's pooled risk 1.712e-15.",
+  "P1": "FALSIFIED, as the smoke run predeclared it would be. em_bp is first at the 8 lowest levels at M=128 and the 10 lowest at M=2048; the LMMSE ORACLE is first above that.",
+  "P2": "CONFIRMED ABOVE THE PEAK, FALSIFIED BELOW IT. lmmse/em_bp is NOT monotone in t: it RISES from 2.93 at t=0.05 to a peak of 3.04 at t=0.105 (M=128), and from 6.45 to 8.32 at t=0.153 (M=2048), before falling to ~0 at t=3. So lmmse gets relatively WORSE over the bottom two or three levels and only then improves.",
+  "P3": "CONFIRMED. em_bp and lmmse cross in 16/16 seeds at both sizes.",
+  "crossover_moves_with_data": "The new result the smoke could not see: the crossover is at median t=0.94 (range 0.62-1.38) at M=128 and median t=1.90 (range 1.33-2.07) at M=2048. A 16x increase in training data roughly DOUBLES the range of t over which a fitted kernel beats the LMMSE oracle.",
+  "no_network_ever_wins_a_level": "Not one of the six architectures is first at any of the 24 (size, level) cells. best-net/em_bp rises monotonically with t: 1.99 -> 13.75 at M=128 and 2.04 -> 44.24 at M=2048.",
+  "estimand_note": "risk = sqrt(sum sq_err / sum sq_ref), a relative RMSE. Ratios quoted here are in that estimand; squaring them gives the relative-MSE form."
+ }
 }

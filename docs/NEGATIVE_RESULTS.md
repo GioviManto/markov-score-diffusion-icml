@@ -381,3 +381,40 @@ tested by its output rather than by its effect. Both stamp guards now append to 
 `main()` records a non-zero return as a finding in its own right so that a future guard written
 the obvious way is not silent. Both were re-tested by exit code: moving `outputs/E13x` aside
 and planting an `outputs/E12b` against an E12-stamped fragment each exit 1.
+
+**N-26. A gate caught a real error, and my first diagnosis of it was wrong.** E28's `verify`
+part rebuilds the pooled risk from its own per-level pairs and compares it against E03's
+`confirm.csv`; job 671542 failed it at 2.878e-02. I attributed the disagreement to float32
+reduction-order drift from reloading 15 September checkpoints, and the evidence fitted: the
+scatter was symmetric (111 of 192 cells high, 81 low) and ordered by architecture complexity
+(window 0.24% median, bigru 2.88%). That story was false. The real cause was that
+`e28_per_level_ranking.py` hardcoded `n_test = 1024` where E02a and E03 both score on 2,048,
+so every pooled risk was a different estimand. The tell was in the numbers from the start and
+I read past it: `sq_ref` was 704,579 against E03's 1,417,692, a factor of 2.012. At the
+correct `n_test` the gate passes at 4.650e-11, and on the rerun (672153) at 1.712e-15. Two
+lessons, the second more useful than the first. (i) Take the constants from `PROTOCOL` and
+never retype them — the line now reads `n_val=PROTOCOL.n_val, n_test=PROTOCOL.n_test` with a
+comment saying why. (ii) A plausible mechanism that explains the *pattern* of a disagreement
+is not a diagnosis; check the magnitude first. A factor of 2.012 in a denominator is not
+float32 drift, and no amount of structure in the residuals makes it so. The void output is
+kept on disk at `outputs/hpc_E28_VOID_estimand/`, because a wrong diagnosis is only checkable
+against the numbers that produced it.
+
+**N-27. Six jobs, one output directory, one merged CSV: five architectures' results were
+overwritten and nothing noticed.** The six E29 ladder jobs (671654–671660) were each given a
+single architecture via `--set 'archs=("bigru",)'` but all wrote to the same `{OUT}/E29`.
+Each job rebuilds `ladder.csv` from the cells its own config names, so the last job to finish
+(`bigru`, 20:40) left a `ladder.csv` containing bigru and nothing else. The fetched file had
+3,840 rows where six architectures should give 21,504, and it looked perfectly well-formed:
+right header, right seeds, right sizes, complete on its own terms. What exposed it was reading
+the coverage rather than the file — `sorted({x['arch'] for x in rows})` returned one element
+where six jobs had run. **No data was lost**: the 1,792 per-cell JSONs under `E29/cells/ladder/`
+survived, one per (seed, size, arch, hyper-parameter), because `run_cells` writes each cell
+before merging, and the full ladder was rebuilt from them with every cell present
+(320/320, 320/320, 256/256, 320/320, 256/256, 320/320 per architecture). The near miss is
+that a partial merged CSV is not distinguishable from a complete one by inspection, and the
+freeze machinery would have frozen it. Two fixes: `icml_submit.sh` now gives each E29
+architecture its own output directory, the way E25 already split its seeds, and
+`tools/registry.py --check` reports row counts that a coverage expectation can be read
+against. The general rule, which E25's seed split had already got right and E29 ignored:
+**concurrent jobs must not share a merged output file.**
