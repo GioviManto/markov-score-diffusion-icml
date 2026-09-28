@@ -1,0 +1,23 @@
+{
+ "id": "E31",
+ "script": "experiments/e29_matched_parameters.py",
+ "hypothesis": "E29's own recorded confound, attacked rather than argued. E29 concluded that no architecture reaches em_bp at any capacity up to 135,825 parameters, but at M=2048 278/448 of its net cells selected the LAST checkpoint (median selected step 32,000 of a 32,000 cap): the networks had not finished training, so the M=2048 gap could narrow with a longer budget. That is why E29's clean number is M=128's 1.89x, where only 23% are at cap. E31 reruns the SAME ladder at M=2048 with the step budget raised 4x, to 131,072, and asks whether the gap closes. No new script and no new arms: e29_matched_parameters.py at different settings, so the only thing that changes is the training budget.",
+ "design": "experiments/e29_matched_parameters.py with sizes=(2048,), net_steps=131072 and net_checkpoints=(8000, 16000, 32000, 65536, 131072), all six architectures and every rung of the E29 ladder, 16 seeds. Every rung is rerun rather than the best few, because selecting which architectures deserve a longer budget AFTER seeing which came closest would make the follow-up a search. One output directory per architecture (N-27). The em_bp reference is unchanged: E28's E02a kernel on the same bundles, sq_ref identical.",
+ "predeclared_predictions": {
+  "P1": "no architecture reaches em_bp's M=2048 pooled risk (0.0239 at the K=8 reference E28 and E29 use) even at 4x the budget. FALSIFIED by one counterexample, and a counterexample would mean E29's headline holds only at a budget the nets had not exhausted -- which would be a real weakening of the parameter-efficiency claim and the reason this is worth 40 CPU-hours.",
+  "P2": "the best net's risk improves by less than the 2.34x gap it has to close, so the ordering is unchanged. Quantitatively: best-net/em_bp stays above 1.5.",
+  "P3": "the U-shape persists -- the largest rung stays worse than the best smaller rung in a majority of seeds. If the U-shape DISSOLVES at a longer budget, then E29's overfitting reading was partly an optimisation artefact at M=2048 and should be restated as holding at M=128, where the budget does not bind.",
+  "P4": "the fraction of cells at cap falls below 62%. If it does not, 131,072 is still not enough and the confound is merely moved, not removed -- in which case the honest report stays 'M=128 is the clean comparison' and E31 says so rather than quoting a gap at a budget that still binds."
+ },
+ "predeclared_analysis": "ladder.csv per architecture, merged: risk_pooled against n_params at M=2048 under the 131,072-step budget, beside E29's 32,000-step values on the SAME (seed, rung) cells, which makes the comparison paired. Headline numbers: (a) best pooled risk at any capacity against em_bp's 0.0239; (b) the at_cap fraction, against E29's 62%; (c) per-rung improvement from 4x the budget, to say whether the ladder is budget-limited or capacity-limited.",
+ "seeds": {
+  "confirmatory": "PROTOCOL.seeds (0-15), the same seeds and rungs as E29, so every cell is paired with an E29 cell that differs only in budget."
+ },
+ "status": "REGISTERED 2026-09-28, PREDECLARED, not yet run. Runs the frozen E29 script unmodified at different settings, so E29's script_sha256 is untouched.",
+ "registered": "2026-09-28",
+ "motivation": "E29.json's own budget_confound entry: 'MUST BE STATED ... the nets had NOT finished training, so the M=2048 gap could narrow with a longer budget.' Writing the caveat down is not the same as removing it, and a referee will ask for exactly this run.",
+ "frozen_outputs": {},
+ "frozen_at": {},
+ "frozen_commit": {},
+ "frozen_run_commits": {}
+}

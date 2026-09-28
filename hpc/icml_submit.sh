@@ -132,6 +132,12 @@ cmd_for() {
     e28)         echo "e28_per_level_ranking.py --set ckpt_dir=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/ckpts'\" --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --set e03_confirm=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/confirm.csv'\" --set winners=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/winners.json'\" --output-dir {OUT}/E28";;
     # E29: score nets AT the kernel's parameter count -- the arm that can refute the
     # parameter-efficiency claim. Sharded by architecture: six independent ladders.
+    e31-window) echo "e29_matched_parameters.py --set 'archs=(\"window\",)' --set 'sizes=(2048,)' --set net_steps=131072 --set 'net_checkpoints=(8000, 16000, 32000, 65536, 131072)' --output-dir {OUT}/E31_window";;
+    e31-mlp)    echo "e29_matched_parameters.py --set 'archs=(\"mlp\",)' --set 'sizes=(2048,)' --set net_steps=131072 --set 'net_checkpoints=(8000, 16000, 32000, 65536, 131072)' --output-dir {OUT}/E31_mlp";;
+    e31-bigru)  echo "e29_matched_parameters.py --set 'archs=(\"bigru\",)' --set 'sizes=(2048,)' --set net_steps=131072 --set 'net_checkpoints=(8000, 16000, 32000, 65536, 131072)' --output-dir {OUT}/E31_bigru";;
+    e31-tf)     echo "e29_matched_parameters.py --set 'archs=(\"transformer\",)' --set 'sizes=(2048,)' --set net_steps=131072 --set 'net_checkpoints=(8000, 16000, 32000, 65536, 131072)' --output-dir {OUT}/E31_tf";;
+    e31-tcn)    echo "e29_matched_parameters.py --set 'archs=(\"tcn\",)' --set 'sizes=(2048,)' --set net_steps=131072 --set 'net_checkpoints=(8000, 16000, 32000, 65536, 131072)' --output-dir {OUT}/E31_tcn";;
+    e31-unet)   echo "e29_matched_parameters.py --set 'archs=(\"unet\",)' --set 'sizes=(2048,)' --set net_steps=131072 --set 'net_checkpoints=(8000, 16000, 32000, 65536, 131072)' --output-dir {OUT}/E31_unet";;
     e30-s0)     echo "e30_joint_ladder.py --set 'seeds=(0, 1, 2, 3,)' --output-dir {OUT}/E30_s0";;
     e30-s4)     echo "e30_joint_ladder.py --set 'seeds=(4, 5, 6, 7,)' --output-dir {OUT}/E30_s4";;
     e30-s8)     echo "e30_joint_ladder.py --set 'seeds=(8, 9, 10, 11,)' --output-dir {OUT}/E30_s8";;

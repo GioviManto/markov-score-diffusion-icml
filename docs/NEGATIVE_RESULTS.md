@@ -418,3 +418,47 @@ architecture its own output directory, the way E25 already split its seeds, and
 `tools/registry.py --check` reports row counts that a coverage expectation can be read
 against. The general rule, which E25's seed split had already got right and E29 ignored:
 **concurrent jobs must not share a merged output file.**
+
+**N-28. The open question left by N-23 is closed: the archival capacity conclusion is void,
+and the clean data reverses it.** N-23 recorded that `exp_32_capacity_equivalence.py` carried
+the same re-seeded-generator defect and that the conclusion drawn from it — audit C12, "no
+mixture capacity improves on a single Gaussian innovation" — was OPEN until checked against
+*the archival run's own code*. Checked, on 28 September 2026, and not by reading it: running
+the archival construction
+(`research/nongaussian-bp/experiments/exp_32_capacity_equivalence.py:214-216`) under its own
+`rng_for` gives **1 unique row out of 32, 128, 512 and 2048**. Every arm at every capacity and
+every seed was fitted to one chain replicated. The defect manufactures the conclusion: with a
+single distinct sequence there is nothing for a richer kernel to fit, so "extra components do
+not help" is what the experiment was guaranteed to say. The paper already withdraws the
+reading (`paper/body/A4-additional.tex:42-58`); what was missing was the measurement and a
+replacement number.
+
+**The replacement, from E02a, whose training set is clean** (the broken line at the frozen
+commit `ea0435a:experiments/e02_capacity.py:196` is dead — guarded by `if False` — and 197-198
+hoist the generator correctly): pooled over 16 seeds at `region=all`, a mixture beats a single
+Gaussian innovation by **1.96x at M=32, 3.23x at 128, 4.78x at 512 and 7.23x at 2048**. The
+void claim is not merely unsupported; it is backwards.
+
+| M | K=1 | K=2 | K=4 | K=8 | K=16 | val-selected K (16 seeds) | risk there |
+|---|---|---|---|---|---|---|---|
+| 32 | 0.1743 | **0.0888** | 0.0978 | 0.1033 | 0.1044 | K=2 in 13/16 | 0.0876 |
+| 128 | 0.1681 | **0.0520** | 0.0547 | 0.0570 | 0.0580 | K=2 in 10/16 | 0.0507 |
+| 512 | 0.1677 | **0.0351** | 0.0379 | 0.0366 | 0.0367 | K=2 in 7, K=16 in 5 | 0.0332 |
+| 2048 | 0.1672 | 0.0285 | 0.0252 | 0.0239 | **0.0231** | K=16 in 7, K=8 in 4 | 0.0223 |
+
+Two things follow that are worth more than the correction. **(i) A third independent instance
+of the capacity U-shape.** Beyond K=2, more components *hurt* at M=32 (0.0888 to 0.1044, 17%
+worse) and help at M=2048. The same shape appears in the MDN kernel's parameters (Q6: 61x more
+parameters, 2-2.6x worse) and in the score nets (E29: the largest rung worse than the best
+smaller one in 16/16 seeds at M=128). Three different capacity axes, one phenomenon, and the
+one Jerome named unprompted in the call. **(ii) The validation-selected capacity grows with the
+data** — modal K=2 at M=32 and 128, shifting to K=8 and K=16 at M=2048 — which is the sample
+-efficiency claim appearing on an axis it was not designed to be measured on, and selected on
+validation rather than on test.
+
+**A consequence for numbers already reported.** E28 and E29 take em_bp from E02a at a FIXED
+K=8, which is not what validation selects at small M. Against the validation-selected kernel
+the best score net is 2.13x at M=128 (reported 1.89x) and 2.51x at M=2048 (reported 2.34x).
+**The published gaps are therefore conservative by 11-13%, not optimistic.** They are left as
+they are, because E28's and E29's internal consistency rests on the single K=8 reference their
+runs actually used; the refinement is recorded here rather than substituted in.

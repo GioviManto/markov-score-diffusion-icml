@@ -116,5 +116,11 @@
   "E02b": [
    "ea0435a"
   ]
+ },
+ "outcome": {
+  "capacity_2026_09_28": "Re-read on 28 Sep as the clean replacement for the void archival capacity sweep (N-28). Pooled over 16 seeds at region=all: at M=128 K=1 0.1681, K=2 0.0520, K=8 0.0570; at M=2048 K=1 0.1672, K=2 0.0285, K=16 0.0231. A mixture beats a single Gaussian innovation by 1.96x (M=32), 3.23x (128), 4.78x (512), 7.23x (2048) -- the archival C12 conclusion is not merely unsupported, it is backwards.",
+  "capacity_U_shape": "Beyond K=2, more components HURT at M=32 (0.0888 -> 0.1044, 17% worse) and help at M=2048. Third independent instance of the same U-shape, after the MDN kernel (E25/Q6: 61x more parameters, 2-2.6x worse) and the score nets (E29: largest rung worse in 16/16 seeds at M=128). One phenomenon on three capacity axes, the one Jerome named unprompted.",
+  "validation_selected_capacity_grows_with_M": "Modal validation-selected K is 2 at M=32 (13/16 seeds) and M=128 (10/16), shifting to K=16 at M=2048 (7/16, K=8 in 4). Risk at the selected K: 0.0876 / 0.0507 / 0.0332 / 0.0223. Selected on validation, not on test.",
+  "E28_E29_reference_is_conservative": "E28 and E29 take em_bp from E02a at a FIXED K=8, which is not what validation selects at small M. Against the validation-selected kernel the best score net is 2.13x at M=128 (reported 1.89x) and 2.51x at M=2048 (reported 2.34x): the published gaps UNDERSTATE the kernel's advantage by 11-13%. Left as reported, because E28's and E29's internal consistency rests on the single K=8 reference their runs actually used."
  }
 }
