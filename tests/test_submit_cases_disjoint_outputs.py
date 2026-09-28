@@ -23,7 +23,9 @@ SUBMIT = pathlib.Path(__file__).resolve().parents[1] / "hpc" / "icml_submit.sh"
 # Chained by --after, so they share a directory on purpose and never run at the same time.
 SEQUENTIAL_FAMILIES = {"e03", "e14", "e14b", "e24c", "e24", "e27"}
 
-CASE = re.compile(r"^\s*([a-z0-9-]+)\)\s*echo (.*?);;\s*$", re.M | re.S)
+# `\s*` before the `)`: bash allows `e30-s0 )` and the first version of this regex did
+# not, so three of four E30 cases were invisible to the guard the moment they were added.
+CASE = re.compile(r"^\s*([a-z0-9-]+)\s*\)\s*echo (.*?);;\s*$", re.M | re.S)
 OUTDIR = re.compile(r"--output-dir \{OUT\}/([A-Za-z0-9_]+)")
 
 
@@ -44,7 +46,12 @@ def _family(case: str) -> str:
 def test_submit_cases_parse():
     cases = _cases()
     assert len(cases) > 20, f"parsed only {len(cases)} cases; the regex has drifted"
-    assert "e29-window" in cases and "e25-s0" in cases
+    # Every case in the file must parse. Counting `)` lines independently means a regex
+    # that silently stops matching some of them fails here instead of quietly covering less.
+    declared = len(re.findall(r"^\s*[a-z0-9-]+\s*\)\s*echo ", SUBMIT.read_text(), re.M))
+    assert len(cases) == declared, f"parsed {len(cases)} of {declared} declared cases"
+    for name in ("e29-window", "e25-s0", "e30-s0", "e30-s4", "e30-s8", "e30-s12"):
+        assert name in cases, f"{name} not parsed"
 
 
 def test_no_two_concurrent_cases_share_an_output_dir():

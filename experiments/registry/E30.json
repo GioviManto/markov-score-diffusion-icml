@@ -1,0 +1,24 @@
+{
+ "id": "E30",
+ "script": "experiments/e30_joint_ladder.py",
+ "hypothesis": "The paper's spine is 'a small kernel inside exact BP instead of a large score network'. Three comparisons support it; only two were ever measured on shared data. em_bp vs mdn is E25, on exp34-* bundles. nets vs a frozen E02a em_bp is E28/E29, on exp31-* bundles. mdn vs nets -- the row E25's own registered hypothesis is about ('sits between the unstructured networks and the mixture-innovation EM-BP on the information ladder') -- has never been measured and CANNOT be obtained by reading E25's numbers beside E29's: exp_34 draws under the tags exp34-train/val/test and E03 under exp31-train/val/test, so the two experiments are scored on DIFFERENT DATA, not the same data by different fits. E30 refits BOTH kernel arms on E03's bundles, with E03's corruption interface and E03's estimand, so every arm in the project sits on one axis.",
+ "design": "Part `ladder`: em_bp (MixtureInnovationKernel, 8 components, initialised rho=0.3 var=0.8 exactly as E25 does so a difference is attributable to the bundles and not to the start) and mdn (MDNKernel, 4 components, hidden 32) fitted by fit_em through exact BP on E03's exp31-train chains, 16 seeds x sizes (32, 128, 512, 2048). Iteration caps MATCHED at 1200 for both arms, which is what made E25's answer readable. e03._cell_common, e03._bundle, e03._sq, e03._risk and e03._one_view_groups are IMPORTED, not copied, so the bundles are the same objects the nets were scored on rather than a reconstruction that agrees. E03 hands the nets (X, t) pairs and fit_em wants (X, alpha, delta); alpha_delta(t) is that change of variable exactly, so the kernel arms train on the same corrupted sample the score nets trained on. Risk is recorded per level as well as pooled, because E28 found the pooled scalar hides a crossover. Part `verify` is the gate: E30's own sq_ref per (seed, n_chains, t) against E28's and E29's, since sq_ref depends only on the test bundle and the schedule.",
+ "predeclared_predictions": {
+  "P1": "mdn beats every score-net architecture at its best rung, at every M. This is E25's registered 'sits between' hypothesis, finally testable. FALSIFIED by any architecture whose best rung beats mdn at any M. NOTE, LEFT IN DELIBERATELY: reading E25's mdn (0.1461 at M=128, exp34 bundles) beside E29's best net (0.1080, exp31 bundles) HINTS this is false. That arithmetic is invalid -- it is the very cross-bundle comparison this experiment exists to replace -- so it does not license editing the prediction. It is recorded so a confirmation cannot later be read as having been obvious.",
+  "P2": "em_bp beats mdn at every M, replicating E25's 64/64 on different data. If it does not replicate, E25's answer to Q6 was bundle-specific and Q6 REOPENS.",
+  "P3": "the ordering is em_bp < mdn < best net at every M. P1 and P2 are its two halves.",
+  "P4": "em_bp refitted on exp31 lands within 10% of E28's frozen E02a kernel evaluated on the same bundles. A larger gap says the E02a fit and a fresh fit are not interchangeable, which would matter for every E28 and E29 ratio already reported."
+ },
+ "predeclared_analysis": "joint.csv: risk_pooled and risk_level per (seed, n_chains, arm), joined to E29's ladder.csv on (seed, n_chains) to give one table containing em_bp, mdn and every architecture rung on one estimand. Headline numbers: (a) mdn/em_bp per M, against E25's 2.04-2.57 on exp34 bundles; (b) mdn against the best net rung per M; (c) E30 em_bp against E28's frozen E02a em_bp on the same cells. at_cap and converged to be read together, as in E25.",
+ "seeds": {
+  "confirmatory": "PROTOCOL.seeds (0-15), split across four jobs by seed as E25 does, each into its OWN output directory -- N-27."
+ },
+ "status": "REGISTERED 2026-09-28, PREDECLARED, smoke-tested. The `verify` gate was verified BY EXIT CODE in both directions before first use: exit 1 on a grid-201/n_test-64 bundle (relative sq_ref difference 0.17), exit 0 on the real bundles (2.341e-16). Its first version demanded sq_ref agree at exactly 0.0 and failed on CORRECT data at 4e-17 relative, because the comparison goes through a CSV; it now uses a relative tolerance of 1e-12, which sits fifteen orders of magnitude below a wrong bundle and three above float64 round-off.",
+ "registered": "2026-09-28",
+ "script_sha256": "6feb6cf41e1debbcf814322b450e6b1f4fd23f4a558a0d0db13a63b266b043b4",
+ "motivation": "My own 28 September finding, recorded in E25.json as cross_experiment_ladder_NOT_established: the MDN cannot be placed on E28's network ladder without refitting one of them. The temptation is to quote 0.1461 next to 0.1080 -- they are three decimal places apart and look like one table. They are not.",
+ "frozen_outputs": {},
+ "frozen_at": {},
+ "frozen_commit": {},
+ "frozen_run_commits": {}
+}

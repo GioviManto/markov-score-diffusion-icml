@@ -132,6 +132,10 @@ cmd_for() {
     e28)         echo "e28_per_level_ranking.py --set ckpt_dir=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/ckpts'\" --set em_source=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E02a/capacity.csv'\" --set e03_confirm=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/confirm.csv'\" --set winners=\"'\$HOME/msd-icml/outputs/ea0435a-20260915T104955Z/E03/winners.json'\" --output-dir {OUT}/E28";;
     # E29: score nets AT the kernel's parameter count -- the arm that can refute the
     # parameter-efficiency claim. Sharded by architecture: six independent ladders.
+    e30-s0)     echo "e30_joint_ladder.py --set 'seeds=(0, 1, 2, 3,)' --output-dir {OUT}/E30_s0";;
+    e30-s4)     echo "e30_joint_ladder.py --set 'seeds=(4, 5, 6, 7,)' --output-dir {OUT}/E30_s4";;
+    e30-s8)     echo "e30_joint_ladder.py --set 'seeds=(8, 9, 10, 11,)' --output-dir {OUT}/E30_s8";;
+    e30-s12)     echo "e30_joint_ladder.py --set 'seeds=(12, 13, 14, 15,)' --output-dir {OUT}/E30_s12";;
     e29-window)  echo "e29_matched_parameters.py --set 'archs=(\"window\",)'      --output-dir {OUT}/E29_window";;
     e29-mlp)     echo "e29_matched_parameters.py --set 'archs=(\"mlp\",)'         --output-dir {OUT}/E29_mlp";;
     e29-bigru)   echo "e29_matched_parameters.py --set 'archs=(\"bigru\",)'       --output-dir {OUT}/E29_bigru";;
