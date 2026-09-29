@@ -462,3 +462,36 @@ the best score net is 2.13x at M=128 (reported 1.89x) and 2.51x at M=2048 (repor
 **The published gaps are therefore conservative by 11-13%, not optimistic.** They are left as
 they are, because E28's and E29's internal consistency rests on the single K=8 reference their
 runs actually used; the refinement is recorded here rather than substituted in.
+
+**N-29. I put a wall-clock experiment on a node I was myself loading with ten fitting jobs.**
+`sacct` for 28-29 September shows `msd-e27-cost-big` and all ten E30/E31 jobs on **cnode07
+simultaneously**: a timing run asking for 8 cpus beside ten 16-cpu fitting jobs. The damage is
+measurable because the same cell exists in both runs of e27-cost-big. At $B = 2048$ the 400-step
+reverse SDE reads **430.8 ms/seq on the contended node against 200.1 ms/seq on the earlier run**,
+while `ancestral_true` barely moves (0.1801 against 0.1758 ms/seq). So the headline ratio goes
+from 1,138x to **2,392x — contention more than doubled our apparent advantage.** It does not
+cancel in the ratio, and it does not cancel in the direction that would merely add noise: 400
+sequential network evaluations are hurt far more by a busy node than a handful of BLAS calls, so
+the error **flatters the claim**. E24's registry already states the principle — "a timing at an
+unstated thread count is not a reproducible number" — and node occupancy is the same kind of
+unstated condition. Neither run is citable: the earlier one shared cnode08 with the E29 ladders.
+Fix: `MSD_HPC_EXCLUSIVE=1` adds `#SBATCH --exclusive`, and every wall-clock case must use it.
+The lesson is narrower than "be careful": **do not queue a timing experiment and a compute
+experiment into the same partition in the same session**, because the scheduler will co-locate
+them and nothing in the output says so.
+
+**N-30. A gate placed where it could not see its references, which cost 9.6 CPU-hours to
+discover.** E30's `part_verify` compares its own `sq_ref` against `outputs/hpc_E28/per_level.csv`
+and `outputs/hpc_E29/ladder.csv`. Those are **locally fetched** artefacts, and `.gitattributes`
+export-ignores `outputs/hpc_*` from the deploy archive, so on the cluster they cannot exist. All
+four confirmatory jobs therefore ran the full ladder — 128 of 128 cells, every one written — and
+then exited 2 on a comparison that was impossible by construction. I tested the gate only where
+its references happened to be present. **No data was lost** and the gate passed on the first
+attempt once run in the right place: 1152 cells, worst relative `sq_ref` disagreement
+**0.000e+00**. Fix: `verify` is dropped from a default run with a message saying it is a
+post-fetch step, and is still available as `--only verify`. What it is deliberately NOT allowed
+to do is pass when its references are absent — that would convert it into a gate covering
+nothing, which is the failure mode of `registry.py --check` (silent for E22-E29) and of
+`audit_claims` (N-25), and it is not worth trading a loud 2 for a quiet 0. The general rule:
+**a cross-experiment gate belongs at the place where both experiments' outputs exist, which is
+after the fetch, not inside the job.**

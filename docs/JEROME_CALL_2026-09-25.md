@@ -24,7 +24,7 @@ reason).
 | Q3 | What do the messages $\mu_k$ actually look like? Is it Gaussian $\ast\ P_\varepsilon$? | E22, E22c | **ANSWERED — his conjecture is very nearly right** |
 | Q4 | Is closure possible only for the Gaussian, or for any finitely-parameterised family? | Lemma + E22 | **ANSWERED empirically** |
 | Q5 | Can BP be done in Fourier space — truncation on modes instead of a real-space grid? | E23 + `docs/FOURIER_ANALYSIS.md` | **ANSWERED analytically.** Closed form for the message, decay $\exp(-(\log b\omega)^2/\log\frac1\rho)$ at $R^2=0.99997$; the tilt is banded and hardest at LOW noise; cumulants provably divergent (Cramér fails). Solver still not worth building, now for a mechanism |
-| Q6 | Can $K$ be a neural network, fitted by EM through BP? Does it overfit? | E25, E25m | **ANSWERED — it can, and it overfits, exactly as he predicted.** The 1,516-parameter MDN kernel loses to the 25-parameter mixture kernel in **64/64 cells at matched budget**, median 2.04–2.57×, §2 Q6 |
+| Q6 | Can $K$ be a neural network, fitted by EM through BP? Does it overfit? | E25, E25m | **ANSWERED — no, twice over.** A neural kernel loses to a mixture kernel AND to a comparable score net. The 1,516-parameter MDN kernel loses to the 25-parameter mixture kernel in **64/64 cells at matched budget**, median 2.04–2.57×, and E30 puts all arms on one estimand: em_bp $<$ best net $<$ mdn, §2 Q6 |
 | Q7 | Posterior mean for one noisy sequence: how long for a network, how long for BP? | E24, E24gpu2 | **ANSWERED on BOTH devices** — BP is ~15× *slower*; not a CPU artefact, §2 Q7 |
 | Q8 | Can we generate without a score — flat marginal, run BP once? | E26 (weak), **E27** (strong) | **ANSWERED, both forms — yes.** One BP sweep generates at the Monte Carlo floor and is 725× cheaper than the reverse SDE at equal error, §2 Q8 |
 | Q9 | Is the score compared at a fixed $t$ or averaged over $t$? | **E28** | **ANSWERED.** Pooled, and the pooled scalar *does* hide a crossover: em_bp first at the 8 (of 12) lowest levels at $M=128$ and the 10 lowest at $M=2048$, the LMMSE **oracle** above. The crossover **moves with data**, $t\approx0.94\to1.90$ for a 16× increase, §2 Q9 |
@@ -430,7 +430,42 @@ and on the training signal:
 
 **He predicted this, unprompted, in the call.** *"The real issue is going to be message passing with this, because then it will overfit; the problem you already observed with a few centroids is going to get worse."* Inside exact BP, 61× more kernel parameters buys 2–2.6× worse test risk. E29 then finds the same U-shape in the score networks: at $M=128$ the largest rung is worse than the best smaller rung in 16/16 seeds for bigru, tcn and transformer. The overfitting is a property of fitting a flexible object through message passing, not of this particular kernel.
 
-**What this does *not* establish.** The predeclared prediction was that the MDN would sit *between* the unstructured networks and mixture EM–BP on the information ladder. That is still untested: E25's em_bp is a fresh validation-selected fit while E28's is the frozen E02a fit, and the two disagree by 27% at $M=128$ (0.0700 against 0.0570), so E25's MDN cannot be placed on E28's network ladder without refitting one of them. Resisting the arithmetic is the point — the numbers are three decimal places apart and it would be easy to quote them side by side.
+**SHARPENED 29 September by E30, and the sharpening is against his suggestion twice over.**
+The gap flagged below has been closed: E30 refits *both* kernel arms on E03's bundles, so the
+MDN, em_bp and every E29 architecture rung finally sit on one estimand. The gate passes at
+**0.000e+00** over 1152 cells. Measured there, pooled over 16 seeds:
+
+| arm | params | $M=32$ | $M=128$ | $M=512$ | $M=2048$ |
+|---|---|---|---|---|---|
+| em_bp, mixture kernel | 25 | **0.1022** | **0.0573** | **0.0365** | **0.0239** |
+| best score net, any rung | 329–4,001 | 0.1760 | 0.1080 | 0.0709 | 0.0560 |
+| mdn, neural kernel | 1,516 | 0.2162 | 0.1445 | 0.0900 | 0.0695 |
+| mdn / em_bp | | 2.12 | 2.52 | 2.47 | 2.91 |
+| best net / mdn | | 0.81 | 0.75 | 0.79 | 0.81 |
+
+**The ordering is em_bp $<$ best net $<$ mdn.** The neural kernel is the *worst* of the three:
+the best score net is **19–25% better than it at every dataset size**, and the MDN is beaten by
+13 rungs at $M=32$, 12 at $M=128$ and 9 at $M=2048$ — by bigru at every size. E25's registered
+hypothesis, that the MDN is an *intermediate* model sitting between the unstructured networks
+and mixture EM–BP, is **wrong**: it is below both.
+
+So the answer to Q6 is no in a second, sharper sense. It is not merely that a neural kernel
+loses to a mixture kernel. **Putting a neural network in the kernel slot loses to putting a
+comparable network in the score slot.** The win is not "learn $K$ with a network rather than
+learn the score with a network" — it is exact BP *with a parsimonious kernel*. Twenty-five
+parameters beat every architecture by 1.72–2.34×; fifteen hundred parameters in the same slot
+lose to them. That is consistent with the three-axis capacity U-shape (N-28): validation picks
+$K=2$ for the mixture at $M=32$ and $128$ — about five parameters — so 1,516 is far past the
+optimum for this problem, wherever it is spent.
+
+Two controls make this readable. **Q6 replicates on different data**: em_bp beats mdn in 64/64
+cells with ratios 2.12/2.52/2.47/2.91 against E25's 2.04/2.24/2.28/2.57, so the answer is not
+bundle-specific. And **a fresh em_bp fit lands within 0.42% of E28's frozen E02a kernel** on the
+same bundles, which was predeclared as P4 at 10% — so the two are interchangeable and every E28
+and E29 ratio already reported stands. Budget-free at $M=32$ and $M=128$ (`at_cap` 0/16 and
+1/16 for em_bp, 0/16 and 2/16 for mdn).
+
+**Why this needed a new experiment rather than arithmetic** (recorded 28 September, closed by E30 the next day). E25's numbers could not be placed beside E29's, and the reason is stronger than the 27% disagreement between E25's fresh em_bp fit and E28's frozen E02a one: `exp_34` draws its data under the tags `exp34-train/val/test` and E03 under `exp31-train/val/test`. **Different tags are different random streams, so the two experiments are scored on different data**, and quoting 0.1445 beside 0.1080 would have been an arithmetic error rather than a rounding one. Resisting that was the point: the numbers are three decimal places apart and look like one table. E30 makes them one table properly, by refitting rather than by aligning.
 
 **The three attempts are kept in full below rather than summarised, because the first two failed for unrelated reasons and both failures were legible in the numbers before the cause was known.** This is Jérôme's headline suggestion and it is the one question
 still without an answer, so the failures are recorded in full rather than summarised.
@@ -567,6 +602,21 @@ net improves 1.93× and a fixed bigru(1,105) only 1.63×.
 **P4 is not testable as stated**, because its premise fails: no net matches the kernel at any
 capacity, so "the smallest parameter count at which one does" does not exist within a ladder
 reaching 5,433× the mixture kernel's 25 parameters.
+
+**E31 (29 September): the confound attacked rather than restated, and the gap survives.** The
+same ladder at $M=2048$ with the step budget raised 4× to 131,072, every rung rerun rather than
+the few that came closest. All four predictions confirmed. **No architecture reaches em_bp at
+any capacity even at 4× the budget**; best-net/em_bp narrows from 2.34× to **2.09×** and the
+U-shape persists in 16/16 seeds for five of six architectures. The `at_cap` fraction falls from
+62% to 34%, so this reduces the confound rather than eliminating it.
+
+What settles the question is *where* the extra budget helped. It helped the under-trained small
+rungs and did nothing at the top: bigru(329) $-28.6\%$, unet(933) $-23.8\%$, bigru(1,105)
+$-22.5\%$, window(19,201) $-21.7\%$ — against bigru(59,009) $+0.0\%$, mlp(84,768) $+0.3\%$,
+transformer(135,825) $+0.3\%$. **The large rungs had already converged at 32,000 steps, so the
+top of the ladder is capacity-limited, not budget-limited**, which is exactly the point at
+issue. One row goes the other way and is recorded rather than dropped: unet(54,049) got
+$16.8\%$ *worse* with 4× the training, i.e. at fixed capacity a longer budget overfits.
 
 **The confound that must be quoted with it.** At $M=2048$, **278 of 448 net cells (62 %)
 select the last checkpoint** — median selected step 32,000 of a 32,000 cap — so the networks
@@ -1129,3 +1179,23 @@ one lookup away.
   per-cell files), and a latent second instance in `e24-gpu`/`e24c-gpu` that the new guard
   `tests/test_submit_cases_disjoint_outputs.py` found on its first run. **N-26** written up
   properly at last: the E28 `n_test` error *and* my wrong first diagnosis of it.
+- **2026-09-29** — **E30 and E31 land; Q6's answer sharpens against the suggestion twice over,
+  and two of my own errors cost 9.6 CPU-hours and a timing claim.** E30 put the MDN, em_bp and
+  every E29 rung on one estimand for the first time (gate: 1152 cells, worst relative `sq_ref`
+  disagreement **0.000e+00**). **P1 and P3 falsified**: the ordering is em_bp $<$ best net $<$
+  mdn — the neural kernel is the *worst* of the three, beaten by the best score net by 19–25%
+  at every size and by bigru at every size. E25's "intermediate model" hypothesis is wrong. So
+  the win is exact BP *with a parsimonious kernel*, not neural parameterisation of the kernel:
+  a network in the kernel slot loses to a comparable network in the score slot. **P2 and P4
+  confirmed**, and P4 matters for what is already published — a fresh em_bp fit lands within
+  **0.42%** of E28's frozen E02a kernel, so every E28 and E29 ratio stands. E31 confirmed all
+  four of its predictions: no architecture reaches em_bp at 4× the budget, the gap narrows only
+  2.34×→2.09×, and the extra budget helped the small rungs while the large ones had already
+  converged — the top of the ladder is capacity-limited, not budget-limited. **N-29**: I queued
+  `e27-cost-big` onto the same node as ten fitting jobs, which inflated the reverse-SDE cost
+  ratio from 1,138× to 2,392×; contention flatters us, so neither cost-big run is citable and
+  `MSD_HPC_EXCLUSIVE=1` now exists. **N-30**: E30's gate compared against locally fetched
+  outputs that are export-ignored from the deploy archive, so all four jobs completed 128/128
+  cells and then exited 2 on a comparison impossible on the cluster; it is a post-fetch step
+  and is no longer run inside the job — but it is still not allowed to pass when its references
+  are missing.

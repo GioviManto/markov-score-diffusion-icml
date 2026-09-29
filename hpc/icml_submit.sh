@@ -171,6 +171,13 @@ submit_one() {
   local driver=${cmd%% *} workers_flag='' cpus=$CPUS
   if grep -q -- '"--workers"' "experiments/$driver"; then workers_flag="--workers ${WORKERS_CAP:-\$SLURM_CPUS_PER_TASK}"; else cpus=${MSD_HPC_SERIAL_CPUS:-4}; fi
   local gres_line=''; [[ -n "$GRES" ]] && gres_line="#SBATCH --gres=$GRES"
+  # MSD_HPC_EXCLUSIVE=1 demands the whole node. REQUIRED for any wall-clock experiment:
+  # on 28-29 Sep e27-cost-big shared cnode07 with ten 16-cpu fitting jobs and measured the
+  # 400-step reverse SDE at 431 ms/seq against 200 ms/seq on a quieter run of the SAME
+  # cell, which inflated the headline ratio from 1138x to 2392x. Contention hits 400
+  # sequential network evaluations far harder than a handful of BLAS calls, so it does not
+  # cancel in the ratio -- it flatters us. See NEGATIVE_RESULTS N-29.
+  local excl_line=''; [[ -n "${MSD_HPC_EXCLUSIVE:-}" ]] && excl_line='#SBATCH --exclusive'
   local gpu_env_line=''; [[ -n "$GRES" ]] && gpu_env_line="source \$HOME/$MSD_SRC/hpc/icml_gpu_env.sh"
   local jid
   jid=$(ssh -o BatchMode=yes "$MSD_HPC_HOST" "sbatch --parsable $depflag" <<SB
@@ -179,6 +186,7 @@ submit_one() {
 #SBATCH --partition=$PART
 #SBATCH --nodes=1 --ntasks=1 --cpus-per-task=$cpus --mem=$MEM --time=$TIME
 #SBATCH --propagate=NONE
+$excl_line
 $gres_line
 #SBATCH --output=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.out --error=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.err
 set -euo pipefail

@@ -13,11 +13,65 @@
  "seeds": {
   "confirmatory": "PROTOCOL.seeds (0-15), the same seeds and rungs as E29, so every cell is paired with an E29 cell that differs only in budget."
  },
- "status": "REGISTERED 2026-09-28, PREDECLARED, not yet run. Runs the frozen E29 script unmodified at different settings, so E29's script_sha256 is untouched.",
+ "status": "FROZEN hpc_E31 2026-09-29T20:48:04Z; REGISTERED 2026-09-28, PREDECLARED, not yet run. Runs the frozen E29 script unmodified at different settings, so E29's script_sha256 is untouched.",
  "registered": "2026-09-28",
  "motivation": "E29.json's own budget_confound entry: 'MUST BE STATED ... the nets had NOT finished training, so the M=2048 gap could narrow with a longer budget.' Writing the caveat down is not the same as removing it, and a referee will ask for exactly this run.",
- "frozen_outputs": {},
- "frozen_at": {},
- "frozen_commit": {},
- "frozen_run_commits": {}
+ "frozen_outputs": {
+  "outputs/hpc_E31_window/ladder.csv": "7e2699eb8ef4fe5d7837ca6389881906a8173bd4a9f301cfd87c360e51d944e6",
+  "outputs/hpc_E31_window/params_all.json": "88bbe141fa4479596653b58834663d17dc37d150c670617c89650b15b83f6858",
+  "outputs/hpc_E31_mlp/ladder.csv": "883bbafa9e8c555a73c22c9d1427cff217132457d7257c8340f28b1e93f684b4",
+  "outputs/hpc_E31_mlp/params_all.json": "049193889ca90737130a208087712ea47ac817961a5bbcb4791ec18bb5fa0f6b",
+  "outputs/hpc_E31_bigru/ladder.csv": "a8efc70957276c2cd621acfa2fd8a6283fd3738cd162ecc1c9f5d809740a54a1",
+  "outputs/hpc_E31_bigru/params_all.json": "e04237c9cce7904f21327c7381aae51925f18e076d1441ed3002de9ba776578a",
+  "outputs/hpc_E31_tf/ladder.csv": "1cd0e5820daa3794217a47f73b5c9864a1ed068f63a9f19ae6fb7da165d9838c",
+  "outputs/hpc_E31_tf/params_all.json": "1a09641b68e6a6a5e44e19564b2f838b68c5315010466c74f8fa17afd0a72fbe",
+  "outputs/hpc_E31_tcn/ladder.csv": "6cfb8af9230ecc7183bb40403447c09e94f12f3274849aca8dc95fba35e57778",
+  "outputs/hpc_E31_tcn/params_all.json": "896689ed757f4318f1bde468c1aaa3ad7050d3711b2c456e9b4d22833eda95e3",
+  "outputs/hpc_E31_unet/ladder.csv": "7800d64b0611a92f25d2aa6fd4a103d0b4d14679b38f6e0247581be69af496cd",
+  "outputs/hpc_E31_unet/params_all.json": "100f51ff90d5753c9bb8dc31b51466e09374758ca3e9c1268430dd5622c9741a"
+ },
+ "frozen_at": {
+  "hpc_E31_window": "2026-09-29T20:48:55Z",
+  "hpc_E31_mlp": "2026-09-29T20:48:55Z",
+  "hpc_E31_bigru": "2026-09-29T20:48:56Z",
+  "hpc_E31_tf": "2026-09-29T20:48:56Z",
+  "hpc_E31_tcn": "2026-09-29T20:48:56Z",
+  "hpc_E31_unet": "2026-09-29T20:48:56Z"
+ },
+ "frozen_commit": {
+  "hpc_E31_window": "101a772a2a81582de95e9cacb73834ced8b7decd",
+  "hpc_E31_mlp": "101a772a2a81582de95e9cacb73834ced8b7decd",
+  "hpc_E31_bigru": "101a772a2a81582de95e9cacb73834ced8b7decd",
+  "hpc_E31_tf": "101a772a2a81582de95e9cacb73834ced8b7decd",
+  "hpc_E31_tcn": "101a772a2a81582de95e9cacb73834ced8b7decd",
+  "hpc_E31_unet": "101a772a2a81582de95e9cacb73834ced8b7decd"
+ },
+ "frozen_run_commits": {
+  "hpc_E31_window": [
+   "101a772"
+  ],
+  "hpc_E31_mlp": [
+   "101a772"
+  ],
+  "hpc_E31_bigru": [
+   "101a772"
+  ],
+  "hpc_E31_tf": [
+   "101a772"
+  ],
+  "hpc_E31_tcn": [
+   "101a772"
+  ],
+  "hpc_E31_unet": [
+   "101a772"
+  ]
+ },
+ "outcome": {
+  "P1": "CONFIRMED. NO architecture reaches em_bp's 0.0239 at M=2048 even at 4x the step budget. Best is bigru(4,001) at 0.0500 = 2.09x.",
+  "P2": "CONFIRMED. best-net/em_bp narrows 2.34x -> 2.09x, an 11% narrowing, and stays far above the predeclared 1.5 floor. The gap is real, not a budget artefact.",
+  "P3": "CONFIRMED. The U-shape persists: the largest rung is worse than the best smaller rung in 16/16 seeds for bigru, mlp, tcn, transformer AND unet. window remains the exception (6/16) and is still improving, as at 32k steps.",
+  "P4": "CONFIRMED. at_cap falls from 278/448 (62%) to 152/448 (34%); median selected step 65,536 of 131,072. A third of cells still bind, so this is a reduction of the confound, not its elimination.",
+  "where_the_budget_mattered": "The narrowing is concentrated in the UNDER-TRAINED small rungs and is absent at the top: bigru(329) -28.6%, unet(933) -23.8%, bigru(1,105) -22.5%, window(19,201) -21.7%, against bigru(59,009) +0.0%, mlp(84,768) +0.3%, transformer(135,825) +0.3%. The large rungs had already converged at 32k. So the ladder is CAPACITY-limited at the top, not budget-limited, which is the point at issue.",
+  "against_us": "unet(54,049) got 16.8% WORSE with 4x the training, and unet(3,529)/unet(13,713) +1.2%/+2.1%: at fixed capacity, longer training overfits. Recorded because it is the one direction in this table that is not a clean story."
+ }
 }

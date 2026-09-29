@@ -13,12 +13,53 @@
  "seeds": {
   "confirmatory": "PROTOCOL.seeds (0-15), split across four jobs by seed as E25 does, each into its OWN output directory -- N-27."
  },
- "status": "REGISTERED 2026-09-28, PREDECLARED, smoke-tested. The `verify` gate was verified BY EXIT CODE in both directions before first use: exit 1 on a grid-201/n_test-64 bundle (relative sq_ref difference 0.17), exit 0 on the real bundles (2.341e-16). Its first version demanded sq_ref agree at exactly 0.0 and failed on CORRECT data at 4e-17 relative, because the comparison goes through a CSV; it now uses a relative tolerance of 1e-12, which sits fifteen orders of magnitude below a wrong bundle and three above float64 round-off.",
+ "status": "FROZEN hpc_E30_s0 2026-09-29T20:48:03Z; REGISTERED 2026-09-28, PREDECLARED, smoke-tested. The `verify` gate was verified BY EXIT CODE in both directions before first use: exit 1 on a grid-201/n_test-64 bundle (relative sq_ref difference 0.17), exit 0 on the real bundles (2.341e-16). Its first version demanded sq_ref agree at exactly 0.0 and failed on CORRECT data at 4e-17 relative, because the comparison goes through a CSV; it now uses a relative tolerance of 1e-12, which sits fifteen orders of magnitude below a wrong bundle and three above float64 round-off.",
  "registered": "2026-09-28",
  "script_sha256": "6feb6cf41e1debbcf814322b450e6b1f4fd23f4a558a0d0db13a63b266b043b4",
  "motivation": "My own 28 September finding, recorded in E25.json as cross_experiment_ladder_NOT_established: the MDN cannot be placed on E28's network ladder without refitting one of them. The temptation is to quote 0.1461 next to 0.1080 -- they are three decimal places apart and look like one table. They are not.",
- "frozen_outputs": {},
- "frozen_at": {},
- "frozen_commit": {},
- "frozen_run_commits": {}
+ "frozen_outputs": {
+  "outputs/hpc_E30_s0/joint.csv": "42a5a471cfdcf2ee08b78fbcecd3646e352c550e5f607e97f57cd12d6cb9e671",
+  "outputs/hpc_E30_s0/params_all.json": "403a9afe4fede36cbf4d03c19f91f0041e78fbb5e70087d593659cb09bf82ac9",
+  "outputs/hpc_E30_s4/joint.csv": "2b4858a07f6075b987e66da71ce12be8a951189040bbaad919e1b69c1b6fe890",
+  "outputs/hpc_E30_s4/params_all.json": "1620ca35b6bab82acdf0f83be0124f52a51d81ba98547abb27617e2eef1c3cfc",
+  "outputs/hpc_E30_s8/joint.csv": "87d1baa04c7278934e464b2a063c55a0d6896e43dc2a80850564f74a2c000df6",
+  "outputs/hpc_E30_s8/params_all.json": "febc46d839fb11c67c953d9018544bae41eb1804a4d06a3abee2d486e3b5207a",
+  "outputs/hpc_E30_s12/joint.csv": "f3f56ea6080eebc14b288d0f8377666eb3dc2926a196654a3a46f6941ed56745",
+  "outputs/hpc_E30_s12/params_all.json": "06d396e91cc5d208cb20e0c3de53dd17e5f893d98002dadcfbd7bffab7b0c6ee"
+ },
+ "frozen_at": {
+  "hpc_E30_s0": "2026-09-29T20:48:03Z",
+  "hpc_E30_s4": "2026-09-29T20:48:03Z",
+  "hpc_E30_s8": "2026-09-29T20:48:04Z",
+  "hpc_E30_s12": "2026-09-29T20:48:04Z"
+ },
+ "frozen_commit": {
+  "hpc_E30_s0": "101a772a2a81582de95e9cacb73834ced8b7decd",
+  "hpc_E30_s4": "101a772a2a81582de95e9cacb73834ced8b7decd",
+  "hpc_E30_s8": "101a772a2a81582de95e9cacb73834ced8b7decd",
+  "hpc_E30_s12": "101a772a2a81582de95e9cacb73834ced8b7decd"
+ },
+ "frozen_run_commits": {
+  "hpc_E30_s0": [
+   "b08e4ba"
+  ],
+  "hpc_E30_s4": [
+   "b08e4ba"
+  ],
+  "hpc_E30_s8": [
+   "b08e4ba"
+  ],
+  "hpc_E30_s12": [
+   "b08e4ba"
+  ]
+ },
+ "outcome": {
+  "gate": "PASSED, run in the right place. 1152 overlapping (seed, n_chains, t) cells against E28 and E29, worst RELATIVE sq_ref disagreement 0.000e+00. E30 is on their bundles. The confirmatory jobs themselves exited 2 because the gate compares against locally fetched outputs that are export-ignored from the deploy archive -- see N-30; all 128 cells ran and no data was lost.",
+  "P1": "FALSIFIED, and not narrowly. The MDN does NOT beat every architecture: it is beaten by 13 rungs at M=32, 12 at M=128, 4 at M=512 and 9 at M=2048, and by bigru at EVERY size. best-net/mdn = 0.81 / 0.75 / 0.79 / 0.81, i.e. the best score net is 19-25% BETTER than the neural kernel at every dataset size. The invalid cross-bundle arithmetic recorded in the prediction hinted at this and it was right, which is why the hint was recorded rather than acted on.",
+  "P2": "CONFIRMED and slightly strengthened. em_bp beats mdn in 64/64 cells, ratios 2.12 / 2.52 / 2.47 / 2.91 against E25's 2.04 / 2.24 / 2.28 / 2.57 on exp34 bundles. Q6's answer REPLICATES on different data and is not bundle-specific.",
+  "P3": "FALSIFIED, because P1 fails. The ordering is NOT em_bp < mdn < nets. Measured on one estimand it is em_bp (25 par) < best net (~1,105-4,001 par) < mdn (1,516 par): the MDN is the WORST of the three.",
+  "P4": "CONFIRMED, far inside the 10% predicted. A fresh em_bp fit on exp31 lands within +0.42% at M=128 and -0.17% at M=2048 of E28's frozen E02a K=8 kernel on the same bundles. The E02a fit and a fresh fit ARE interchangeable, which validates every E28 and E29 ratio already reported.",
+  "headline": "The value is in exact BP with a PARSIMONIOUS kernel, not in neural parameterisation of the kernel. Putting a neural network in the kernel slot LOSES to putting a comparable network in the score slot; putting a 25-parameter mixture there wins by 1.72-2.34x. E25's registered 'intermediate model' hypothesis is wrong: the MDN is not between the nets and EM-BP, it is below both. Consistent with the three-axis capacity U-shape (N-28): validation picks K=2 for the mixture at M=32/128, about five parameters, so 1,516 is far past the optimum for this problem.",
+  "budget": "Clean at M=32 and M=128 (at_cap: em_bp 0/16 and 1/16, mdn 0/16 and 2/16). At M=2048 mdn is at cap in 14/16 and em_bp in 9/16, so quote M=32/128 as budget-free."
+ }
 }

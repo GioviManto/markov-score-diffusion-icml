@@ -58,7 +58,9 @@ def _registry_file(out_id: str) -> Path:
     # that concurrent jobs never share a merged CSV -- see N-27) freezes every shard into
     # the one registry entry: `frozen_outputs` is keyed by directory, so the shards coexist.
     # hpc_E25m_s4 -> E25, hpc_E25v3_s12 -> E25.
-    m = re.match(r"^(?:hpc_)?(E\d+)[a-z0-9]*(?:_s\d+)$", out_id)
+    # Shards: `_s<N>` (E25, E30 split by seed) or `_<arch>` (E31 split by architecture).
+    # Every shard freezes into the one registry entry; frozen_outputs is keyed by directory.
+    m = re.match(r"^(?:hpc_)?(E\d+)[a-z0-9]*_(?:s\d+|[a-z]+)$", out_id)
     if m and (REG / f"{m.group(1)}.json").exists():
         return REG / f"{m.group(1)}.json"
     raise SystemExit(f"no registry entry maps to outputs/{out_id}")

@@ -226,6 +226,21 @@ def main() -> None:
     if args.list_parts:
         print("\n".join(parts)); return
     selected = select_parts(parts, args.only)
+    # `verify` compares against outputs/hpc_E28 and outputs/hpc_E29, which are LOCALLY FETCHED
+    # artefacts and are export-ignored from the deploy archive. On the cluster they cannot
+    # exist, so a gate that runs there can only ever say "cannot verify" -- which is what the
+    # first confirmatory run did: four jobs completed all 128 cells and then exited 2 on a
+    # comparison that was impossible by construction (N-30). It is therefore dropped from a
+    # DEFAULT run and must be asked for explicitly, which is only sensible after a fetch. It
+    # is NOT made to pass when the references are missing: that would turn it into a gate that
+    # covers nothing, which is the failure this project keeps rediscovering.
+    if "verify" in selected and not args.only:
+        root = Path(__file__).resolve().parents[1]
+        if not (root / "outputs/hpc_E28/per_level.csv").is_file():
+            print("[verify] SKIPPED in a default run: E28/E29 outputs are local, fetched "
+                  "artefacts and are absent here. Run `--only verify` after "
+                  "`hpc/icml_fetch.sh`; it is a post-fetch gate, not a job step.", flush=True)
+            selected = {k: v for k, v in selected.items() if k != "verify"}
     out = ensure_dir(args.output_dir)
     tag = "_".join(selected) if args.only else "all"
     resolved = {"n_sites": N_SITES, "t_schedule": list(T_SCHEDULE), "quick": args.quick,

@@ -1,0 +1,126 @@
+{
+  "n_sites": 32,
+  "t_schedule": [
+    0.05,
+    0.0725,
+    0.1053,
+    0.1527,
+    0.2216,
+    0.3215,
+    0.4665,
+    0.6769,
+    0.9821,
+    1.425,
+    2.0676,
+    3.0
+  ],
+  "quick": false,
+  "parts": [
+    "ladder"
+  ],
+  "overrides": [
+    "archs=(\"window\",)",
+    "sizes=(2048,)",
+    "net_steps=131072",
+    "net_checkpoints=(8000, 16000, 32000, 65536, 131072)"
+  ],
+  "ladders": {
+    "window": [
+      "{'radius': 1, 'width': 4}",
+      "{'radius': 2, 'width': 8}",
+      "{'radius': 2, 'width': 32}",
+      "{'radius': 4, 'width': 64}",
+      "{'radius': 4, 'width': 128}"
+    ],
+    "mlp": [
+      "{'hidden': (8, 8)}",
+      "{'hidden': (16, 16)}",
+      "{'hidden': (32, 32)}",
+      "{'hidden': (128, 128)}",
+      "{'hidden': (256, 256)}"
+    ],
+    "bigru": [
+      "{'hidden': 4}",
+      "{'hidden': 8}",
+      "{'hidden': 16}",
+      "{'hidden': 32}",
+      "{'hidden': 64}"
+    ],
+    "transformer": [
+      "{'d': 8, 'heads': 2, 'layers': 1}",
+      "{'d': 16, 'heads': 2, 'layers': 1}",
+      "{'d': 16, 'heads': 4, 'layers': 2}",
+      "{'d': 32, 'heads': 4, 'layers': 2}",
+      "{'d': 64, 'heads': 4, 'layers': 4}"
+    ],
+    "tcn": [
+      "{'channels': 4, 'dilations': (1, 2, 4, 8)}",
+      "{'channels': 8, 'dilations': (1, 2, 4, 8)}",
+      "{'channels': 16, 'dilations': (1, 2, 4, 8)}",
+      "{'channels': 64, 'dilations': (1, 2, 4, 8)}"
+    ],
+    "unet": [
+      "{'channels': 4}",
+      "{'channels': 8}",
+      "{'channels': 16}",
+      "{'channels': 32}"
+    ]
+  },
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "sizes": [
+    2048
+  ],
+  "n_val": 1024,
+  "n_test": 2048,
+  "grid_size": 401,
+  "half_width": 8.0,
+  "net_steps": 131072,
+  "net_checkpoints": [
+    8000,
+    16000,
+    32000,
+    65536,
+    131072
+  ],
+  "batch_size": 64,
+  "grad_clip": 1.0,
+  "torch_threads": 1,
+  "archs": [
+    "window"
+  ],
+  "winners": "outputs/E03/winners.json",
+  "kernel_params": 1516,
+  "timestamp": "2026-09-29 08:07:43",
+  "git_commit": "101a772a2a81582de95e9cacb73834ced8b7decd",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "da7edf3bedf733fbd3fe6417af9790bf9566fbf2809fe2dd1dc6e8e080d2d701",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode07",
+  "slurm_job_id": "674709",
+  "slurm_array_task_id": "",
+  "cpu_count": "40",
+  "blas_threads": "1",
+  "resolved_config_hash": "7766ae05abdd"
+}
