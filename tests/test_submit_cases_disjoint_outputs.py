@@ -21,6 +21,11 @@ import re
 SUBMIT = pathlib.Path(__file__).resolve().parents[1] / "hpc" / "icml_submit.sh"
 
 # Chained by --after, so they share a directory on purpose and never run at the same time.
+# Chained with --after, so they share a directory on purpose. NOTE on "e27": its two cases
+# write DIFFERENT part files (cost.csv vs direct.csv/steps.csv) so they cannot clobber each
+# other, but they were in fact submitted CONCURRENTLY and overlapped on one node for three
+# hours -- which this test does not and cannot catch, because it is about files, not about
+# contention. Wall-clock cases are protected by MSD_HPC_EXCLUSIVE instead (N-29).
 SEQUENTIAL_FAMILIES = {"e03", "e14", "e14b", "e24c", "e24", "e27"}
 
 # `\s*` before the `)`: bash allows `e30-s0 )` and the first version of this regex did

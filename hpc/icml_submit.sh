@@ -138,6 +138,23 @@ cmd_for() {
     e31-tf)     echo "e29_matched_parameters.py --set 'archs=(\"transformer\",)' --set 'sizes=(2048,)' --set net_steps=131072 --set 'net_checkpoints=(8000, 16000, 32000, 65536, 131072)' --output-dir {OUT}/E31_tf";;
     e31-tcn)    echo "e29_matched_parameters.py --set 'archs=(\"tcn\",)' --set 'sizes=(2048,)' --set net_steps=131072 --set 'net_checkpoints=(8000, 16000, 32000, 65536, 131072)' --output-dir {OUT}/E31_tcn";;
     e31-unet)   echo "e29_matched_parameters.py --set 'archs=(\"unet\",)' --set 'sizes=(2048,)' --set net_steps=131072 --set 'net_checkpoints=(8000, 16000, 32000, 65536, 131072)' --output-dir {OUT}/E31_unet";;
+    # UNCONTENDED reruns (N-29). Every wall-clock case below MUST be submitted with
+    # MSD_HPC_EXCLUSIVE=1. The cited E24 and E27 timings were taken on shared nodes -- e27
+    # and e27-cost overlapped on cnode02 for three hours of a 4h19m timing job, both mine --
+    # and contention inflates the BP-vs-SDE ratio because 400 sequential network evaluations
+    # suffer far more than a handful of BLAS calls. It flatters us, so it must be redone.
+    e24x-cpu)    echo "e24_inference_cost.py --set \"devices=('cpu',)\" --set n_repeat=15 --set scale_repeat=9 --set 'train_sizes=(32, 128, 512, 2048, 8192)' --output-dir {OUT}/E24x";;
+    e24x-gpu)    echo "e24_inference_cost.py --set \"devices=('cpu', 'gpu')\" --set n_repeat=15 --set scale_repeat=9 --output-dir {OUT}/E24x_gpu";;
+    e27x-cost)   echo "e27_direct_sampler.py --only cost --output-dir {OUT}/E27x";;
+    # E30 at 3x the EM budget, at the two sizes where at_cap actually bound (mdn 3/16 at
+    # M=512 and 14/16 at M=2048). M=32 and M=128 are already budget-free (0/16, 2/16) and
+    # are reported as such, so rerunning them would triple the work to change nothing.
+    # Longer budget helps the LOSING arm, which is the conservative direction for E30's
+    # negative result about the neural kernel.
+    e30m-s0)  echo "e30_joint_ladder.py --only ladder --set 'seeds=(0, 1, 2, 3,)' --set 'sizes=(512, 2048)' --set 'em_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600)' --set 'mdn_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600)' --output-dir {OUT}/E30m_s0";;
+    e30m-s4)  echo "e30_joint_ladder.py --only ladder --set 'seeds=(4, 5, 6, 7,)' --set 'sizes=(512, 2048)' --set 'em_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600)' --set 'mdn_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600)' --output-dir {OUT}/E30m_s4";;
+    e30m-s8)  echo "e30_joint_ladder.py --only ladder --set 'seeds=(8, 9, 10, 11,)' --set 'sizes=(512, 2048)' --set 'em_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600)' --set 'mdn_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600)' --output-dir {OUT}/E30m_s8";;
+    e30m-s12) echo "e30_joint_ladder.py --only ladder --set 'seeds=(12, 13, 14, 15,)' --set 'sizes=(512, 2048)' --set 'em_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600)' --set 'mdn_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600)' --output-dir {OUT}/E30m_s12";;
     e30-s0)     echo "e30_joint_ladder.py --set 'seeds=(0, 1, 2, 3,)' --output-dir {OUT}/E30_s0";;
     e30-s4)     echo "e30_joint_ladder.py --set 'seeds=(4, 5, 6, 7,)' --output-dir {OUT}/E30_s4";;
     e30-s8)     echo "e30_joint_ladder.py --set 'seeds=(8, 9, 10, 11,)' --output-dir {OUT}/E30_s8";;

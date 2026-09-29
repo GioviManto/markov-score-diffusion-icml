@@ -61,5 +61,10 @@
   "P4": "CONFIRMED, far inside the 10% predicted. A fresh em_bp fit on exp31 lands within +0.42% at M=128 and -0.17% at M=2048 of E28's frozen E02a K=8 kernel on the same bundles. The E02a fit and a fresh fit ARE interchangeable, which validates every E28 and E29 ratio already reported.",
   "headline": "The value is in exact BP with a PARSIMONIOUS kernel, not in neural parameterisation of the kernel. Putting a neural network in the kernel slot LOSES to putting a comparable network in the score slot; putting a 25-parameter mixture there wins by 1.72-2.34x. E25's registered 'intermediate model' hypothesis is wrong: the MDN is not between the nets and EM-BP, it is below both. Consistent with the three-axis capacity U-shape (N-28): validation picks K=2 for the mixture at M=32/128, about five parameters, so 1,516 is far past the optimum for this problem.",
   "budget": "Clean at M=32 and M=128 (at_cap: em_bp 0/16 and 1/16, mdn 0/16 and 2/16). At M=2048 mdn is at cap in 14/16 and em_bp in 9/16, so quote M=32/128 as budget-free."
+ },
+ "amendment_extended_budget": {
+  "date": "2026-09-29",
+  "why": "E30's conclusion is a NEGATIVE result about the neural kernel, so the arm that a longer budget would help is the arm that lost. At M=2048 the MDN selected the last checkpoint in 14/16 cells and em_bp in 9/16, so the two largest sizes are not budget-free. Cases e30m-s* rerun ONLY M=512 and M=2048 with both caps raised 1200 -> 3600. M=32 and M=128 are already budget-free (mdn at_cap 0/16 and 2/16) and are what the conclusion is quoted from, so rerunning them would triple the work to change nothing.",
+  "predeclared": "P1 the ordering em_bp < best net < mdn is unchanged at M=512 and M=2048 at 3x the budget. P2 the MDN improves more than em_bp does, because it is the arm still at cap, but not enough to overtake the best score net (best-net/mdn stays below 1.0). P3 if the MDN DOES overtake the best net at 3x the budget, then E30's ordering was a budget artefact at large M and must be restated as holding at M=32 and M=128 only -- which is the outcome worth knowing and the reason this is worth the CPU-hours."
  }
 }
