@@ -24,7 +24,10 @@ approximates the continuous chain with truncation (mass outside $[-\halfwidth,\h
 and quadrature (second order in the spacing) errors that are measured, not assumed.
 
 \paragraph{Validation where the answer is known.}
-At $\ngrid=401$, $\halfwidth=8$ the recursion reproduces the Gaussian closed form and
+On the Gaussian chain every message is Gaussian, the forward sweep is the Kalman filter and
+the full forward--backward sweep is the Rauch--Tung--Striebel smoother, whose mean is the
+LMMSE estimator of \cref{prop:lmmse}; this is the sanity check of the whole recursion. At
+$\ngrid=401$, $\halfwidth=8$ the grid recursion reproduces that closed form and
 brute-force enumeration of the discretised posterior on short chains to double
 precision (\codefile{tests/test\_gaussian\_bp\_equivalence.py},
 \codefile{tests/test\_fisher\_bruteforce.py}). Against a finer reference

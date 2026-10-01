@@ -77,6 +77,20 @@ CELLS = (
 )
 
 
+# Amendment 1 (1 Oct 2026, afternoon): the note's own axis. The registered T sweep sits on the
+# iso-correlation line, which holds the correlation length in sites FIXED by construction; the
+# consolidated note (section 24.6) reads the temperature at FIXED spacing, where lowering T
+# lengthens the domains and sharpens the bimodality at the same time. Both axes are reported;
+# the base cell belongs to both. `CELLS` itself is untouched (E33 imports it).
+FIXED_H_TEMPERATURES = (0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.5, 2.0)
+FIXED_H_CELLS = tuple(dict(id=f"T{T:g}_h1_L32", T=T, h=1.0, L=32, role="fixed_h") for T in FIXED_H_TEMPERATURES)
+ALL_CELLS = CELLS + tuple(c for c in FIXED_H_CELLS if c["id"] not in {d["id"] for d in CELLS})
+
+
+def find_cell(cell_id: str) -> dict:
+    return next(c for c in ALL_CELLS if c["id"] == cell_id)
+
+
 def resolve_cell(cell: dict) -> tuple[Phi4Chain, dict]:
     """The chain of a cell, with the iso-correlation spacing solved if asked for."""
     h = cell["h"]
@@ -99,10 +113,12 @@ SETTINGS = dict(
     refinement_grids=((401, 8.0), (801, 8.0), (1601, 8.0)),
     theory_cells=("T0.3_h1_L32", "T0.5_iso_L32", "T1_iso_L32", "T2_iso_L32"),
     theory_modes=256,
+    fixed_h_cells=tuple(c["id"] for c in FIXED_H_CELLS), fixed_h_n_physics=4096,
 )
 QUICK = dict(temperatures=(0.3, 1.0), spacings=(0.5, 1.0), iso_temperatures=(0.5,),
              cells=("T0.3_h1_L32",), n_chains=16, reps=(0,), grid_size=201,
-             refinement_grids=((201, 8.0), (401, 8.0)), theory_cells=("T0.3_h1_L32",), theory_modes=64)
+             refinement_grids=((201, 8.0), (401, 8.0)), theory_cells=("T0.3_h1_L32",), theory_modes=64,
+             fixed_h_cells=("T0.3_h1_L32", "T1_h1_L32"), fixed_h_n_physics=128)
 
 
 # ------------------------------------------------------------------ parts
@@ -149,7 +165,7 @@ def _rel(m_hat, m_ref, X, al, de):
 
 def _ladder_cell(args):
     cfg, cell_id, rep = args
-    cell = next(c for c in CELLS if c["id"] == cell_id)
+    cell = find_cell(cell_id)
     chain, info = resolve_cell(cell)
     L = cell["L"]
     g, w = make_grid(cfg["half_width"], cfg["grid_size"])
@@ -260,7 +276,36 @@ def part_theory(cfg, out, workers):
     write_csv(out / "theory.csv", run_cells(cells, _theory_cell, workers, out, "theory.csv"))
 
 
-PARTS = {"spectrum": part_spectrum, "ladder": part_ladder, "refinement": part_refinement, "theory": part_theory}
+def _fixed_h_cell(args):
+    """The oracle ladder of a fixed-spacing cell plus the physical statistics of 4096 exact
+    chains (E34's `physical_statistics`, imported at call time: e34 imports this module)."""
+    cfg, cell_id, rep = args
+    cell = find_cell(cell_id)
+    chain, info = resolve_cell(cell)
+    from e34_field_physics import physical_statistics
+    A = chain.sample_batch(rng_for("e32-fixed-h-physics", chain.T, chain.h, cell["L"], rep), cfg["fixed_h_n_physics"], cell["L"])
+    st = physical_statistics(A, chain.scale, cell["L"], chain.h)
+    # scalars only (C(r) is in the spectrum); every row carries every column, the CSV writer needs that
+    st = {k: v for k, v in st.items() if np.isscalar(v)}
+    st.update(kink_density_physical=st["kink_density"] / chain.h, mean_domain_physical=st["mean_domain"] * chain.h,
+              coarse_kink_density_physical=st["coarse_kink_density"] / chain.h,
+              coarse_mean_domain_physical=st["coarse_mean_domain"] * chain.h)
+    blank = {k: np.nan for k in st}
+    rows = [{**r, "kind": "ladder", **blank} for r in _ladder_cell(args)]
+    rows.append({**info, "rep": rep, "arm": "physics", "level": np.nan, "risk": np.nan, "score_gap_sq_per_seq": np.nan,
+                 "edge_mass": np.nan, "n_chains": len(A), "kind": "physics", **st})
+    print(f"  [E32 fixed_h] {cell_id} rep={rep}: xi={info['corr_length_sites']:.2f} kinks/bond={st['kink_density']:.4f} "
+          f"coarse={st['coarse_kink_density']:.4f} bimod={st['bimodality_coefficient']:.3f}", flush=True)
+    return rows
+
+
+def part_fixed_h(cfg, out, workers):
+    cells = [(cfg, c, r) for c in cfg["fixed_h_cells"] for r in cfg["reps"]]
+    write_csv(out / "fixed_h.csv", run_cells(cells, _fixed_h_cell, workers, out, "fixed_h.csv"))
+
+
+PARTS = {"spectrum": part_spectrum, "ladder": part_ladder, "refinement": part_refinement, "theory": part_theory,
+         "fixed_h": part_fixed_h}
 
 
 def main():

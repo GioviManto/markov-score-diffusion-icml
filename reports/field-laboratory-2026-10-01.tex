@@ -533,24 +533,34 @@ $\hat V$ from $V$ on $|\phi|\le1.6$ after removing the constant.}
 \toprule
 cell & arm, data & $M$ & $\hat\Th/\Th$ & barrier & well & RMS & risk \\
 \midrule
+$\Th=0.3$ & site energy, noisy & 128 & $0.980\,(0.084)$ & $0.256\,(0.033)$ & $1.02$ & $0.019$ & $0.035$ \\
 $\Th=0.3$ & site energy, noisy & 512 & $1.005\,(0.023)$ & $0.234\,(0.016)$ & $1.00$ & $0.016$ & $0.021$ \\
-$\Th=2$   & site energy, noisy & 512 & $0.985$ & $0.267$ & $0.95$ & $0.069$ & $0.011$ \\
+$\Th=0.3$ & site energy, clean & 512 & $0.985\,(0.010)$ & $0.236\,(0.002)$ & $1.00$ & $0.009$ & $0.010$ \\
+$\Th=0.3$ & site energy, clean & 2048 & $0.999\,(0.005)$ & $0.250\,(0.000)$ & $1.00$ & $0.003$ & $0.005$ \\
 $\Th=0.3$ & spline tilt, clean & 2048 & $0.999\,(0.005)$ & $0.250\,(0.003)$ & $1.00$ & $0.004$ & $0.006$ \\
+$\Th=2$   & site energy, noisy & 512 & $1.025\,(0.056)$ & $0.50\,(0.33)$ & $1.04$ & $0.13$ & $0.019$ \\
+$\Th=2$   & site energy, clean & 2048 & $1.003\,(0.004)$ & $0.29\,(0.02)$ & $1.04$ & $0.03$ & $0.004$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Three readings. First, the temperature is identified to about a percent and the double well to
 $0.016$ RMS from noised data at $M=512$, with a score risk of $0.021$ against the Gaussian closure's
-$0.269$ on the same cell: a factor thirteen, by a kernel with five parameters. The same fitted
+$0.269$ on the same cell: a factor thirteen, by a kernel with five parameters. At $M=128$ the
+temperature is still read within $2\,\%$ on average (spread $8\,\%$) and the barrier within $3\,\%$;
+clean data at $M=2048$ read all three to $0.1$--$0.5\,\%$, so the channel costs a factor of a few in
+risk and a few percent in the physics at these sizes, not the identification. The same fitted
 kernels, sampled ancestrally from their own invariant law (E34 \code{physics\_learned} on the
 preview), reproduce the truth's kink density per bond ($0.123$ and $0.130$ against $0.123$ and
 $0.120$ on the two seeds) and its mean domain length ($5.1$ and $4.9$ sites against $5.1$ and $5.0$):
 the generated-sample quality the note asks for, in the note's own statistics. Second, at $\Th=2$
-the barrier is read high ($0.27$) and the wells inside ($0.95$): at that temperature the thermal
-energy exceeds the barrier and the marginal is near-Gaussian, so the data constrain $V$ weakly
-there, as P8 anticipated. Third, the clean-data fit of the spline tilt reads everything to
-$0.5\,\%$, the price of the channel at $M=2048$ being a factor of a few in risk, not in the physics.
+the temperature is still read to $0.3$--$2.5\,\%$ but the barrier is not: $0.50\pm0.33$ through
+noise, $0.29\pm0.02$ even from clean data. At that temperature the thermal energy is eight times
+the barrier and the marginal is near-Gaussian, so the data carry almost no information about the
+shape of $V$ between the wells; the risk is nonetheless $0.019$ against the closure's $0.041$,
+because what the score needs there is the bond and the curvature, which are identified. P8 was
+written to expect this. Third, the clean-data fits read everything to $0.5\,\%$ at the base cell:
+the price of the channel at $M=2048$ is a factor of a few in risk, not in the physics.
 
 One negative result came with the preview (N-33 in \code{docs/NEGATIVE\_RESULTS.md}): the
 \emph{polynomial} tilt fitted by clean maximum likelihood is ill-posed outside the data support. A

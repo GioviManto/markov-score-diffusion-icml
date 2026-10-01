@@ -1,0 +1,4 @@
+data,pair,cell,n_chains,n_seeds,ratio,ci_lo,ci_hi,k_below,risk_a,risk_b
+preview,clean:em_pair_quartic/noisy:em_pair_quartic,T0.3_h1_L32,512,2,0.5072,0.3995,0.6149,2,0.0101,0.0209
+preview,clean:em_mixture/clean:em_tilted_spline,T0.3_h1_L32,2048,2,51.1527,36.3985,65.9069,0,0.2695,0.0057
+preview,clean:em_mixture/clean:em_tilted_spline,T2_iso_L32,2048,1,6.4491,,,0,0.0407,0.0063

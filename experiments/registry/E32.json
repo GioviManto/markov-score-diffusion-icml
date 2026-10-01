@@ -6,13 +6,15 @@
  "predeclared_predictions": {
   "P1": "the operating grid's exact score is within 1e-3 relative of the (1601, 8) one at every level of every cell. FALSIFIED by any cell above 1e-2, which moves that cell to a finer grid in E33.",
   "P2": "the moment-projected recursion is NOT well-posed on this chain: at some level of every cell its backward messages carry more than 10% of their mass in the outer 5% of the operating grid (the message is nearly flat because the kernel pulls any far state back to a' ~ a^(1/3)), so the Gaussian-closure arm of the field chain is its covariance twin, as Proposition 1 identifies the two on linear transitions. FALSIFIED if the edge mass stays below 10% at every level of some cell.",
-  "P3": "the closure-gap ratio measured/predicted approaches 1 above t_* on every L = 32 cell, as for the AR(1) families (E01): Theorem 2 holds on the second laboratory with its own constant."
+  "P3": "the closure-gap ratio measured/predicted approaches 1 above t_* on every L = 32 cell, as for the AR(1) families (E01): Theorem 2 holds on the second laboratory with its own constant.",
+  "P4": "FIXED-SPACING sweep (amendment 1): at h = 1, L = 32, over Theta in (0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.5, 2.0), the pooled linear floor (LMMSE of the true covariance = the Gaussian closure) falls monotonically with Theta, and at Theta = 0.2 it exceeds the base cell's 0.269: lowering the temperature at fixed spacing lengthens the domains AND sharpens the bimodality, so structure is worth more there than on the iso-correlation line.",
+  "P5": "On the same sweep the coarse kink density per unit length and the bimodality coefficient fall monotonically with Theta, and the correlation length in sites is above the base cell's 6.08 below Theta = 0.3 and below it above (the spectrum part's lambda_1/lambda_0 at h = 1)."
  },
  "predeclared_analysis": "spectrum.csv and iso.csv fix the cells (recorded in cells.json with the achieved rho_1). ladder.csv: pooled and per-level relative score error per arm, rep; the floor per cell is the number E33's P6 refers to. refinement.csv: worst relative error of (401, 8) per cell over levels, the gate for E33. theory.csv: ratio per level and cell.",
  "seeds": {
   "deterministic": "rng_for('e32-ladder' | 'e32-refine', T, h, L, rep), reps 0-1"
  },
- "status": "FROZEN E32 2026-10-01T09:05:45Z; REGISTERED 2026-10-01, PREDECLARED; the registered run is the laptop run started 1 Oct 09:50 local at commit 9b1c940 (outputs/E32, 4 workers), all four parts.",
+ "status": "FROZEN E32 2026-10-01T09:05:45Z; REGISTERED 2026-10-01, PREDECLARED; the registered run is the laptop run started 1 Oct 09:50 local at commit 9b1c940 (outputs/E32, 4 workers), all four parts.; AMENDMENT 1 (1 Oct pm): part fixed_h registered and predeclared (P4, P5), to run on the laptop",
  "registered": "2026-10-01",
  "cells": [
   {
@@ -82,5 +84,13 @@
    "4c24b1f",
    "9b1c940"
   ]
- }
+ },
+ "amendments": [
+  {
+   "date": "2026-10-01 (afternoon, before the part ran)",
+   "what": "Part `fixed_h` (experiments/e32_field_oracles.py): the oracle ladder (exact BP reference, linear floor, projected diagnostic, isotropic) and E34's physical statistics on 4096 exact chains, on eight cells at h = 1, L = 32, Theta in (0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.5, 2.0), two reps, written to outputs/E32/fixed_h.csv. The registered cells, parts and files are untouched; CELLS is unchanged (E33 imports it).",
+   "why": "The consolidated note's temperature sweep (sections 24 and 24.6, figure 5 of its figures-first plan) is at fixed spacing; the registered sweep is at matched correlation so the field could be compared with the AR(1) laboratory. Both axes are needed: the fixed-h axis is the physics reading (domains lengthen and bimodality sharpens together), the iso axis isolates non-Gaussianity at fixed second-order structure.",
+   "unchanged": "P1-P3 and their frozen outputs."
+  }
+ ]
 }
