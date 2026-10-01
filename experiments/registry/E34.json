@@ -1,0 +1,19 @@
+{
+ "id": "E34",
+ "script": "experiments/e34_field_physics.py",
+ "hypothesis": "Jerome's consolidated note (30 Sep 2026) names the metrics the field benchmark should carry beside the score error: C(r), correlation length, kink density, domain-length distribution, marginal bimodality, generated-sample quality; and the clean-data maximum likelihood of the pair energy as the no-noising baseline (Marc's remark). This experiment supplies them on E33's cells and streams, so each row pairs with E33's.",
+ "design": "physics_truth (deterministic, laptop): per cell and rep, 4096 exact stationary chains; kink density per bond and per unit length, interior domain lengths, C(r) against the spectral sum, kurtosis against the exact one, barrier mass. clean (cluster, one job): per (cell, seed, M) the four kernel arms of E33 fitted by clean-data maximum likelihood on E33's training chains (same tag/seed/cell/M), a short checkpoint ladder selected on E33's validation bundle (BP risk), scored on E33's test bundle with E33's estimand and the kernel's invariant law as initial law. physics_learned (after E33): ancestral samples on the grid from every risk-selected E33 kernel at M = 2048, seeds 0-3, started from the kernel's own invariant law, same statistics against the truth.",
+ "predeclared_predictions": {
+  "P1": "exact samples reproduce the spectral C(r) within Monte Carlo error on every cell: the largest |C_sample(r) - C_spectral(r)| over lags is below 3.5 standard errors, the standard error of each lag taken from the scatter of per-chain means over 4096 independent chains (the max over 32-128 lags makes 3 too tight); and the physical kink density (per unit length) stays within 20% across the three refinement cells, which describe one physical system.",
+  "P2": "clean-data MLE beats one-view EM at every M for every kernel arm (16/16 paired), the gap shrinking with M; for the tilted kernels the clean-data risk at M = 2048 is below 0.02 pooled on every cell.",
+  "P3": "the mixture kernel's clean-data fit does not reach the tilted kernels' at M = 2048 on any cell: misspecification, not the channel, limits it.",
+  "P4": "samples from the fitted tilted-spline kernel reproduce the truth's kink density and mean domain length within 15% at M = 2048 on every cell; samples from the fitted mixture kernel overshoot the kink density (a linear drift cannot hold a domain)."
+ },
+ "predeclared_analysis": "physics.csv: sample vs spectral rows per cell. clean.csv joined to E33's kernels.csv on (cell, seed, n_chains, arm, test_bundle): paired ratio noisy/clean per arm and M with the exact bootstrap. learned.csv: per (cell, arm) kink density and mean domain length relative to the truth row of the same (cell, seed).",
+ "seeds": {
+  "confirmatory": "0-15 for clean; 0-3 for physics_learned; reps 0-1 for physics_truth",
+  "streams": "e34-physics, e34-learned*, and E33's e33-train/val/test/em keys"
+ },
+ "status": "REGISTERED 2026-10-01, PREDECLARED, smoke-tested (--quick, all three parts); clean and physics_truth to be submitted/run; physics_learned waits for E33's kernels.csv.",
+ "registered": "2026-10-01"
+}
