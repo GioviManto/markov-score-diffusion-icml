@@ -501,6 +501,26 @@ each other, not of the linear closure against the exact score, which keeps a flo
 $\Th=2$ on this axis. For the learned arms the fixed-$h$ cells are not in E33; whether to add them
 is question~3 to Jérôme and Marc.
 
+\subsection{The subsampling protocol: one field at three strides}\label{sec:stride}
+
+The note's \S21.1 recommends generating at fine resolution and subsampling; the registered
+refinement cells are instead three lattice models. E36 (registered and predeclared this evening)
+observes one fine field ($\Th=0.3$, $h=0.25$, 128 sites) every $s$-th site, $s\in\{1,2,4\}$: the
+observed chain is exactly Markov with kernel $K^s$ (Chapman--Kolmogorov on the grid, same invariant
+law, $\lambda_1/\lambda_0$ to the power $s$), so the refinement question is asked of one physical
+object. Two of its three predictions are already read. P1, that the coarse kink density and the
+coarse domain length agree across strides within $10\,\%$, holds: $0.068,0.073,0.070$ per unit
+length and $8.1,7.6,7.8$ physical units ($7.5\,\%$ and $6.7\,\%$ spread); the raw kink density per
+bond does not ($0.061,0.087,0.130$), N-31 again. P2, that the stride-4 floor is within $15\,\%$ of the
+$h=1$ lattice cell's, holds at $12.8\,\%$: $0.235$ against $0.269$. Across the three spacings the
+strided floors are $0.098,0.158,0.235$ against the lattice models' $0.098,0.162,0.269$: the two
+protocols agree at the fine end and part by $13\,\%$ at the coarse one, where the $h=1$ lattice model
+is the rougher object (marginal kurtosis $-1.35$ against the fine field's $-1.22$). The third
+prediction concerns learning: for $s\ge2$ the kernel $K^s$ is no longer a tilted walk (the Gaussian
+bond does not survive marginalising the intermediate sites), so the gradient-class kernels are
+misspecified on the subsampled chain while a state-dependent mixture is not; the clean fits that
+read P3 are running.
+
 \section{E33 and E34: what is in flight}\label{sec:e33}
 
 \subsection{E33, learning through noise}

@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-10-01 14:52:34",
+  "git_commit": "3baa2773d1c0072740a8b7d8825bc6252fefada4",
+  "git_branch": "claude/phi4-field-2026-10-01",
+  "git_dirty": "M docs/NEGATIVE_RESULTS.md\n M src/markov_score/em.py\n?? outputs/E33_preview_laptop/\n?? outputs/E33_preview_laptop_pair/\n?? outputs/E34_preview_laptop/\n?? outputs/E34_preview_laptop_learned/\n?? outputs/E34_preview_laptop_pairclean/\n?? outputs/E36/\n?? outputs/logs/e32_2026-10-01.log\n?? outputs/logs/e32_fixed_h_2026-10-01.log\n?? outputs/logs/e33_preview_2026-10-01.log\n?? outputs/logs/e33_preview_M2048_2026-10-01.log\n?? outputs/logs/e33_preview_pair_2026-10-01.log\n?? outputs/logs/e33_preview_pair_M2048_2026-10-01.log\n?? outputs/logs/e34_clean_preview_2026-10-01.log\n?? outputs/logs/e34_learned_preview_2026-10-01.log\n?? outputs/logs/e34_pairclean_preview_2026-10-01.log\n?? outputs/logs/e34_physics_2026-10-01.log\n?? outputs/logs/e35_2026-10-01.log\n?? outputs/logs/e36_2026-10-01.log\n?? reports/figures/fig-field-potential.png\n?? reports/figures/fig-field-sweep.png",
+  "source_archive_sha256": "",
+  "source_is_clean": false,
+  "revision_source": "git",
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "platform": "macOS-14.1.1-arm64-arm-64bit-Mach-O",
+  "hostname": "MacBook-Air-160.local",
+  "slurm_job_id": "",
+  "slurm_array_task_id": "",
+  "cpu_count": "8",
+  "blas_threads": "1",
+  "settings": {
+    "T": 0.3,
+    "h_fine": 0.25,
+    "L_fine": 128,
+    "strides": [
+      1,
+      2,
+      4
+    ],
+    "reps": [
+      0,
+      1
+    ],
+    "seeds": [
+      0,
+      1
+    ],
+    "n_oracle": 512,
+    "n_physics": 4096,
+    "n_clean": 2048,
+    "n_val": 1024,
+    "n_test": 2048,
+    "grid_size": 401,
+    "half_width": 8.0,
+    "arms": [
+      "em_pair_quartic",
+      "em_tilted_spline",
+      "em_mixture",
+      "em_mdn"
+    ],
+    "components": 8,
+    "poly_degree": 6,
+    "spline_basis": 24,
+    "mdn_components": 4,
+    "mdn_hidden": 32,
+    "em_init_rho": 0.3,
+    "em_init_var": 0.8,
+    "clean_checkpoints": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      120,
+      220,
+      400
+    ]
+  },
+  "quick": false,
+  "workers": 2
+}
