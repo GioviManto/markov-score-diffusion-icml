@@ -242,6 +242,28 @@ class TiltedWalkKernel:
                                 inner_iters=int(res.nit), inner_converged=bool(res.success),
                                 inner_q_gain=float(gain))
 
+    # ------------------------------------------------------------------ closed forms
+
+    def log_normaliser(self, grid: np.ndarray) -> np.ndarray:
+        """log Z(a) = log sum_k w_k N(u_k; a, gamma) g(u_k) on the grid (the ground-state transform)."""
+        grid = np.asarray(grid, dtype=float)
+        raw = self._raw(grid, grid)
+        return logsumexp(raw + np.log(_quad_weights(grid))[:, None], axis=0)
+
+    def log_stationary(self, grid: np.ndarray) -> np.ndarray:
+        """The invariant density in closed form: pi = g Z / int g Z (docs/FIELD_MODEL.md, the
+        reversibility proposition). Every tilted walk is reversible with respect to it."""
+        grid = np.asarray(grid, dtype=float)
+        lp = self.log_tilt(grid) + self.log_normaliser(grid)
+        return lp - logsumexp(lp + np.log(_quad_weights(grid)))
+
+    def site_energy(self, grid: np.ndarray) -> np.ndarray:
+        """f(a) = -(1/2) log(g / Z): the site energy of the symmetric pair energy
+        W(a, a') = (a' - a)^2 / 2 gamma + f(a) + f(a') whose Gibbs chain this kernel is. For the
+        phi^4 chain's own (gamma, g) it equals (h / 2T) V(s a) up to a constant."""
+        grid = np.asarray(grid, dtype=float)
+        return -0.5 * (self.log_tilt(grid) - self.log_normaliser(grid))
+
     # ------------------------------------------------------------------ diagnostics
 
     def tilt_diagnostics(self, grid: np.ndarray) -> dict:

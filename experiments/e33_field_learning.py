@@ -74,6 +74,7 @@ from markov_score.bp_grid import grid_bp_batch, grid_bp_projected_batch, make_gr
 from markov_score.em import e_step_multi, fit_em  # noqa: E402
 from markov_score.kernels import MDNKernel, MixtureInnovationKernel  # noqa: E402
 from markov_score.noising import alpha_delta  # noqa: E402
+from markov_score.pair_energy_kernel import PairEnergyKernel  # noqa: E402
 from markov_score.stationary import invariant_log_density_eig  # noqa: E402
 from markov_score.tilted_kernel import TiltedWalkKernel  # noqa: E402
 from markov_score.utils import ensure_dir, rng_for, write_csv, write_json  # noqa: E402
@@ -86,6 +87,11 @@ from e32_field_oracles import CELLS, resolve_cell  # noqa: E402
 
 T_SCHEDULE = tuple(FROZEN.t_grid)
 KERNEL_ARMS = ("em_mixture", "em_tilted_poly", "em_tilted_spline", "em_mdn")
+# Added 1 Oct 2026 after the four registered arms were submitted (E33.json, amendment 1): the
+# physicist's parametrisation of the same model class -- the site energy f (a quartic, 4
+# coefficients) and the bond variance, 5 parameters, exactly specified; its parameters read
+# as (Theta, V). Run as its own shards (hpc_E33q_s*), never mixed into the four arms' CSVs.
+PAIR_ARMS = ("em_pair_quartic",)
 
 SETTINGS = dict(
     cells=tuple(c["id"] for c in CELLS),
@@ -168,6 +174,8 @@ def _init_kernel(arm, cfg, grid, seed, cell_id, n):
         return TiltedWalkKernel.init("bspline", cfg["spline_basis"], grid, rho=rho, var=var)
     if arm == "em_mdn":
         return MDNKernel.init(cfg["mdn_components"], cfg["mdn_hidden"], rng)
+    if arm == "em_pair_quartic":
+        return PairEnergyKernel.init(4, rho=rho, var=var, half_width=float(np.max(np.abs(grid))))
     raise ValueError(arm)
 
 
@@ -177,7 +185,7 @@ def _kernel_diagnostics(kernel, grid):
         d["fit_rho"] = float(kernel.rho)
         d["fit_kurt"] = float(kernel.innovation_moments["innovation_excess_kurtosis"])
         d["inner_converged"] = bool(kernel.inner_converged)
-    elif isinstance(kernel, TiltedWalkKernel):
+    elif isinstance(kernel, (TiltedWalkKernel, PairEnergyKernel)):
         td = kernel.tilt_diagnostics(grid)
         d["fit_gamma"] = td["gamma"]; d["tilt_range"] = td["tilt_range"]
         d["step_resolved"] = bool(td["resolved"]); d["inner_converged"] = bool(kernel.inner_converged)

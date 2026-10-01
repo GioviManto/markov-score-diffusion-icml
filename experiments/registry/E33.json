@@ -9,7 +9,9 @@
   "P3": "em_mdn improves relative to em_mixture compared with E30 (where it lost 2.1-2.9x on the AR(1) chain): on the field chain mdn/mixture at M = 2048 is below 1.5 on every cell. A state-dependent mean is what this chain needs and what the MDN has.",
   "P4": "no network reaches em_tilted_spline at any M on any cell (16/16 paired) under either interface.",
   "P5": "the window head's deficit relative to the exact score GROWS along the refinement cells (h = 1 -> 0.5 -> 0.25 at fixed physical length: its ISM risk at M = 2048 increases monotonically) while em_tilted_spline's does not increase.",
-  "P6": "the linear floor at the base cell (T = 0.3, marginal kurtosis -1.35) is above E14b's bimodal floor 0.082 (kurtosis -0.72) at the same correlation, and falls monotonically along the temperature sweep."
+  "P6": "the linear floor at the base cell (T = 0.3, marginal kurtosis -1.35) is above E14b's bimodal floor 0.082 (kurtosis -0.72) at the same correlation, and falls monotonically along the temperature sweep.",
+  "P7": "em_pair_quartic (the physicist's parametrisation: site energy f a quartic, 4 coefficients, plus the bond variance; 5 parameters, exactly specified) is within 10% of em_tilted_spline's risk at M = 2048 on every cell, and BELOW it at M = 32 and M = 128 (16/16 paired): the same model class with 5 instead of 25 parameters has the smaller variance and no bias to pay for it.",
+  "P8": "the temperature read from the risk-selected fit, Theta_hat = gamma_hat s^2 / h, is within 10% of Theta at M = 2048 on every cell for BOTH em_pair_quartic and em_tilted_spline (16/16), and the barrier height read from the site energy f = -(1/2) log(g/Z) (pair_energy_kernel.potential_readings) is within 20% of 1/4 at M = 2048 for em_pair_quartic on the T <= 1 cells; at Theta = 2 the barrier is below the thermal scale and the reading is not expected to resolve it."
  },
  "predeclared_analysis": "kernels.csv joined to oracles.csv and nets.csv on (cell, seed, test_bundle). Per cell and M: paired ratios over seeds with the exact bootstrap (16 seeds), as make_regime_baselines does; at_cap and converged read together (E25/E30); the evidence-selected rows reported beside the risk-selected ones. The refinement reading (P5) is the window head's risk against the cell index with the exact score's own refinement error (E32) shown as the floor of what any arm can resolve.",
  "seeds": {
@@ -22,7 +24,7 @@
  "motivation": "Jerome, 1 Oct 2026: the four arms across T and h; 'a learned kernel is really needed' is here a measured statement (P1/P2) rather than an assertion; the refinement prediction is P5.",
  "hpc_runs": {
   "deployment": "9b1c940-20261001T084745Z (hpc/.deploy env written by icml_deploy.sh on 1 Oct 2026 08:47 UTC; host lnode02, user 3164542)",
-  "e33-oracles": "678084, medium_cpu, 24 cpus, 5:50 -> outputs/hpc_E33o",
+  "e33-oracles": "678084, medium_cpu, 24 cpus, 5:50 -> outputs/hpc_E33o -- COMPLETED 2026-10-01 12:55 CEST after 2:04:20, fetched the same afternoon (hpc/.deploy_9b1c940.env), 288 rows, 16/16 seeds on all six cells",
   "e33-k-s0": "678087, defq, 24 cpus, 23:50 -> outputs/hpc_E33k_s0 (seeds 0-3)",
   "e33-k-s4": "678088, defq -> outputs/hpc_E33k_s4 (seeds 4-7)",
   "e33-k-s8": "678089, defq -> outputs/hpc_E33k_s8 (seeds 8-11)",
@@ -31,5 +33,81 @@
   "e33-nets-s0": "678092, long_gpuh200, afterok:678091 -> outputs/hpc_E33n_s0 (seeds 0-7)",
   "e33-nets-s8": "678094, long_gpuh200, afterok:678091 -> outputs/hpc_E33n_s8 (seeds 8-15)",
   "submitted": "2026-10-01 ~08:55 UTC, all eight at once; nothing read before submission"
+ },
+ "amendments": [
+  {
+   "date": "2026-10-01 (afternoon; the four arms' jobs 678084-678094 pending or running; NO result of any E33 arm seen)",
+   "what": "A fifth kernel arm, em_pair_quartic (src/markov_score/pair_energy_kernel.py): Jerome's pair energy W(a, a') = (a'-a)^2/2gamma + f(a) + f(a') learned as the ground-state-transform kernel with f a quartic in a/2. It is the SAME model class as the tilted-walk arms (docs/FIELD_MODEL.md, reversibility proposition: every tilted walk is reversible with pi = g Z and site energy f = -(1/2) log(g/Z)); what differs is the parametrisation (the potential itself, 5 parameters) and the M-step (one eigensolve per evaluation, analytic gradient by perturbation theory; not concave). Predictions P7 and P8 added. Confirmatory runs as separate shards (cases e33-q-s0..s12 -> outputs/hpc_E33q_s*), same cells, seeds, sizes, bundles, ladder and selection rules as the four arms; joined to kernels.csv on (cell, seed, n_chains, test_bundle).",
+   "why": "The reversibility proposition answers the first question put to Jerome and Marc (directed kernel vs symmetric pair energy): the two are one model class, so the question becomes which parametrisation of the site energy to learn. The quartic is exactly specified for the field and its parameters are the physics (Theta, barrier, well position), which is what the note's section 24.5 asks to read off.",
+   "unchanged": "Everything about the four registered arms, their jobs, P1-P6 and the analysis plan."
+  }
+ ],
+ "outcome_oracles": {
+  "P6": "CONFIRMED on the per-seed test bundles: linear floor 0.2691 at the base cell (above E14b's 0.082), falling monotonically along the sweep [0.2691, 0.1136, 0.0586, 0.0412] (Theta = 0.3, 0.5, 1, 2); per-cell spread over 16 seeds <= 0.0006. Monotone: True.",
+  "floor_per_cell": {
+   "T0.3_h0.25_L128": {
+    "mean": 0.0983,
+    "std": 0.0004,
+    "min": 0.0976,
+    "max": 0.0991
+   },
+   "T0.3_h0.5_L64": {
+    "mean": 0.1636,
+    "std": 0.0006,
+    "min": 0.1628,
+    "max": 0.1649
+   },
+   "T0.3_h1_L32": {
+    "mean": 0.2691,
+    "std": 0.0005,
+    "min": 0.2684,
+    "max": 0.2703
+   },
+   "T0.5_iso_L32": {
+    "mean": 0.1136,
+    "std": 0.0006,
+    "min": 0.1126,
+    "max": 0.1147
+   },
+   "T1_iso_L32": {
+    "mean": 0.0586,
+    "std": 0.0004,
+    "min": 0.0577,
+    "max": 0.0593
+   },
+   "T2_iso_L32": {
+    "mean": 0.0412,
+    "std": 0.0006,
+    "min": 0.0404,
+    "max": 0.0421
+   }
+  },
+  "projected_diagnostic_edge_mass": {
+   "T0.3_h0.25_L128": [
+    1.0,
+    1.0
+   ],
+   "T0.3_h0.5_L64": [
+    1.0,
+    1.0
+   ],
+   "T0.3_h1_L32": [
+    0.381,
+    0.427
+   ],
+   "T0.5_iso_L32": [
+    0.999,
+    0.999
+   ],
+   "T1_iso_L32": [
+    0.994,
+    0.994
+   ],
+   "T2_iso_L32": [
+    0.983,
+    0.983
+   ]
+  },
+  "note": "The projected recursion is a diagnostic only (not well-posed on this chain, E32 P2): 38-43% edge mass at the base cell and 98-100% on every other cell."
  }
 }

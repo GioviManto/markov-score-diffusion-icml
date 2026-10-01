@@ -46,9 +46,14 @@ this family with log g quadratic (step variance q/ρ, tilt variance 1 + ρ). No 
 member is (a Laplace innovation is not a Gaussian step times a function of φ′), and no
 other member of this family has a state-independent innovation. The two families intersect
 at the Gaussian chain and nowhere else. The mixture-innovation kernel is misspecified on the
-field chain through its *drift*, which is nonlinear (the small-h limit is the Euler step of
-dφ = T (log g)′ ds + √(2T) dW), not through its innovation shape, a different mechanism from
-every E08 axis.
+field chain through its *drift*, which is nonlinear: the conditional mean step of a tilted
+walk is exactly γ (log Z)′(a) (exponential tilting: the drift is the gradient of the
+log-normaliser), which for the field is Th (log ψ₀)′(φ) + (h²/2) V′(φ), so the small-h limit
+is the diffusion dφ = T (log ψ₀)′ dx + √T dW in the site index. The drift is the log-derivative
+of the *ground state*, not −V′, and the noise is √T (the Wiener factor of exp(−∫(∂φ)²/2T));
+an earlier version of this note wrote √(2T), the time-SPDE's noise, which is wrong here. The
+misspecification is through the drift, not through the innovation shape, a different
+mechanism from every E08 axis.
 
 ## 2. The estimator: the learned pair energy as a transition kernel
 
@@ -73,6 +78,43 @@ normaliser computed on the grid. Then
 Two capacities are run: Legendre degree 6 (7 parameters) and 24 B-splines (25 parameters,
 the mixture kernel's count), so the capacity comparison with the paper's estimator is at
 matched parameter count.
+
+**Reversibility and the site energy (1 October, afternoon).** For any γ > 0 and any positive
+g with finite Z_g(a) = ∫ N(a′; a, γ) g(a′) da′, the tilted walk K_g(a′|a) = N(a′; a, γ) g(a′)/Z_g(a)
+is reversible with invariant density
+
+    π_g ∝ g Z_g,        since π_g(a) K_g(a′|a) ∝ g(a) g(a′) N(a′; a, γ) is symmetric in (a, a′).
+
+Equivalently K_g is the ground-state transform of the symmetric operator
+T(a, a′) = u(a) N(a′; a, γ) u(a′) with u = √(g/Z_g), whose Perron eigenfunction is ψ = √(g Z_g)
+with eigenvalue exactly 1 (T ψ = u ∫ N g = u Z_g = ψ). So every tilted walk is the Gibbs chain of
+the symmetric pair energy
+
+    W(a, a′) = (a′ − a)²/2γ + f(a) + f(a′),        f = −½ log(g / Z_g),
+
+and conversely every pair energy of this gradient form is a tilted walk (the identity of §1).
+For the field's own (γ, g), f = (h/2T) V(s a) + const to 1e-10 (`tests/test_pair_energy_kernel.py`).
+Three consequences.
+
+1. *The directed kernel and the symmetric pair energy are one model class.* Jérôme's question
+   (which to prefer) dissolves: no tilted walk is irreversible, and the symmetric form has the
+   same single free function. What differs is the algorithm: the directed form's normaliser is
+   per column (no chain-wide log Z, concave M-step in the tilt), the symmetric form's is the
+   Perron eigenvalue.
+2. *A fitted kernel reads as physics.* With a = φ/s, γ = Th/s² and f(a) = (h/2T) V(s a) + const, so
+   T̂ = γ̂ s²/h and V̂(φ) = (2T̂/h) f̂(φ/s) + const (`pair_energy_kernel.potential_readings`: the
+   temperature, the barrier height, the well position). The temperature is identified by the
+   bond variance alone, which is the one parameter that enters no tilt.
+3. *The physicist's parametrisation.* log g = log ψ_f − f is a transcendental function of the
+   potential (hence the 7- and 25-parameter bases), while f itself is a quartic. `PairEnergyKernel`
+   (`src/markov_score/pair_energy_kernel.py`) parametrises f = Σ_{m≤4} c_m (a/2)^m and log γ: five
+   parameters, exactly specified for the field, kernel by one dense eigensolve of T_f per
+   evaluation (15 ms on the 401-point grid), invariant law ψ_f² in closed form, M-step by L-BFGS-B
+   with the analytic gradient of the Perron eigenvector (first-order perturbation theory in the
+   complete discretised eigenbasis; <ψ_n|∂T/∂c_m|ψ_0> = −(λ_0 + λ_n)<ψ_n|B_m ψ_0>), not concave.
+   This is literally the pair energy W_θ of Jérôme's proposal with its Boltzmann learning
+   written as a kernel. Arm `em_pair_quartic`, E33 amendment 1 (predictions P7, P8), its own
+   cluster shards (`hpc_E33q_s*`).
 
 Because the data are strictly stationary, every EM arm uses its *own* kernel's invariant
 density as the initial law (`em.fit_em` now accepts a callable `log_mu`); the M-step

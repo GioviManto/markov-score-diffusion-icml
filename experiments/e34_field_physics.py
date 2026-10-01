@@ -62,6 +62,7 @@ from markov_score.em import clean_statistics  # noqa: E402
 from markov_score.kernels import MDNKernel, MixtureInnovationKernel  # noqa: E402
 from markov_score.nnet import MLP  # noqa: E402
 from markov_score.noising import alpha_delta  # noqa: E402
+from markov_score.pair_energy_kernel import PairEnergyKernel  # noqa: E402
 from markov_score.tilted_kernel import TiltedWalkKernel  # noqa: E402
 from markov_score.utils import ensure_dir, rng_for, write_csv, write_json  # noqa: E402
 from protocol import PROTOCOL  # noqa: E402
@@ -268,6 +269,8 @@ def kernel_from_row(row, cfg, grid):
     if arm in ("em_tilted_poly", "em_tilted_spline"):
         basis = "legendre" if arm.endswith("poly") else "bspline"
         return TiltedWalkKernel(log_gamma=float(theta[0]), coef=theta[1:], basis=basis, half_width=float(np.max(np.abs(grid))))
+    if arm == "em_pair_quartic":
+        return PairEnergyKernel(log_gamma=float(theta[0]), coef=theta[1:], half_width=float(np.max(np.abs(grid))))
     if arm == "em_mdn":
         k = MDNKernel.init(cfg["mdn_components"], cfg["mdn_hidden"], rng_for("e34-mdn-shape"))
         sizes = [p.size for p in k.net.params]

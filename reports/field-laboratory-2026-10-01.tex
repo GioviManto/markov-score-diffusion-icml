@@ -47,7 +47,8 @@
 {\Large\bfseries The $\phi^4$ field as a second laboratory}\\[0.25em]
 {\normalsize The derivation, the estimator, the first measurements, and the experiments in flight}\\[0.35em]
 {\footnotesize Jérôme's email of 1 October 2026 (after Marc) \textperiodcentered\ this report 1 October 2026 \textperiodcentered\ branch
-\code{claude/phi4-field-2026-10-01} \textperiodcentered\ E32 frozen, E33 and E34 registered}
+\code{claude/phi4-field-2026-10-01} \textperiodcentered\ revised the same afternoon: reversibility, the
+physicist's parametrisation, E33's oracles in}
 \end{center}
 
 \vspace{-0.4em}
@@ -70,8 +71,14 @@ part (E33, eight cluster jobs) and the physics part (E34) are in flight.
   drift, not through its innovation shape.
 \item \st{The learned pair energy is a transition kernel} (\S\ref{sec:est}): concave M-step, the
   gradient is Boltzmann learning's positive phase minus a \emph{conditional} negative phase, no
-  chain-wide partition function (Proposition~\ref{prop:boltz}). Two capacities, 7 and 25 parameters,
-  the second the mixture's count.
+  chain-wide partition function (Proposition~\ref{prop:boltz}).
+\item \st{The directed kernel and the symmetric pair energy are one model class}
+  (Proposition~\ref{prop:rev}, proved this afternoon): every tilted walk is reversible, with invariant
+  law $gZ$ and site energy $f=-\tfrac12\log(g/Z)$, which for the field is the potential. A fitted
+  kernel therefore reads as physics, $\hat\Th=\hat\gamma s^2/h$ and $\hat V$ from $\hat f$
+  (Corollary~\ref{cor:read}); and the parsimonious exactly specified model parametrises $f$ itself: the
+  quartic site energy, five parameters, Jérôme's $W_\theta$ literally (\S\ref{sec:pair}). It joins E33
+  as a fifth arm under a registered amendment with two further predictions.
 \item \st{One thing in the email does not survive} (\S\ref{sec:closure}): moment projection of the
   messages is not a well-posed estimator on this chain, because the backward message is nearly flat.
   Measured: 42--100\,\% of a projected message's mass at the grid edge. The Gaussian-closure arm is
@@ -81,10 +88,12 @@ part (E33, eight cluster jobs) and the physics part (E34) are in flight.
   is $0.269$ at $\Th=0.3$ against $0.168$ for the Laplace laboratory, and falls to $0.041$ at
   $\Th=2$; the operating grid is exact to $10^{-12}$; Theorem~2's gap ratio rises monotonically
   through $t_*$ to $0.73$--$0.94$ at $t=3$.
-\item \st{E33 and E34} (\S\ref{sec:e33}): four kernel arms through exact BP, the window head and the
+\item \st{E33 and E34} (\S\ref{sec:e33}): five kernel arms through exact BP, the window head and the
   transformer under both interfaces, the oracles; the physical statistics the consolidated note
-  asks for; the clean-data interface. Nine predictions were registered before any confirmatory
-  cell ran.
+  asks for; the clean-data interface. Eleven predictions were registered before any confirmatory
+  cell ran. The oracles have landed: P6 is confirmed on the per-seed test bundles (floor $0.269$,
+  $0.114$, $0.059$, $0.041$ along $\Th=0.3,0.5,1,2$; sixteen seeds, spread below $0.001$). The
+  kernel and network jobs are queued; a laptop preview on two cells and two seeds is running.
 \end{enumerate}
 
 Notation. $\Th$ is the physical temperature (the code and the cell names call it \code{T}), $h$ the lattice spacing,
@@ -254,6 +263,67 @@ maximum likelihood for their model; the directed form needs no $Z_\theta$, its c
 the ground-state transform (Proposition~\ref{prop:tilt}), and it contains the field's kernel exactly.
 \end{proposition}
 
+\begin{proposition}[every tilted walk is reversible]\label{prop:rev}
+Let $\gamma>0$ and $g>0$ with $Z_g(a)=\int\Nn(a';a,\gamma)g(a')\dd a'<\infty$, and let
+$K_g(a'\mid a)=\Nn(a';a,\gamma)g(a')/Z_g(a)$. Then $\pi_g\propto gZ_g$ is invariant and $K_g$ is reversible
+with respect to it. Equivalently $K_g$ is the ground-state transform of the symmetric operator
+$\mathsf T_g(a,a')=u(a)\Nn(a';a,\gamma)u(a')$ with $u=\sqrt{g/Z_g}$, whose Perron eigenfunction is
+$\psi=\sqrt{gZ_g}$ with eigenvalue $1$; so $K_g$ is the Gibbs chain of the pair energy
+\begin{equation}
+  W(a,a')=\frac{(a'-a)^2}{2\gamma}+f(a)+f(a'),\qquad f=-\tfrac12\log(g/Z_g),
+  \label{eq:W}
+\end{equation}
+and conversely every pair energy of this form is a tilted walk. For the field's $(\gamma,g)$ of
+\eqref{eq:tilt}, $f(a)=(h/2\Th)V(sa)+\mathrm{const}$.
+\end{proposition}
+\begin{proof}
+$\pi_g(a)K_g(a'\mid a)\propto g(a)g(a')\Nn(a';a,\gamma)$ is symmetric in $(a,a')$: detailed balance, and
+invariance by integrating over $a$. For the second form, $(\mathsf T_g\psi)(a)=u(a)\int\Nn(a';a,\gamma)
+u(a')\psi(a')\dd a'=u(a)\int\Nn(a';a,\gamma)g(a')\dd a'=u(a)Z_g(a)=\psi(a)$ since $u\psi=g$; and
+$\mathsf T_g(a,a')\psi(a')/\psi(a)=\Nn(a';a,\gamma)\,g(a')/Z_g(a)$ since $u\psi=g$ and $\psi/u=Z_g$. The converse is
+Proposition~\ref{prop:tilt} with $D=e^{-f}$. For the field, $Z_g=\lambda_0\psi_0/D$ by \eqref{eq:tilt}, so
+$g/Z_g=D^2/\lambda_0$ and $f=-\log D+\mathrm{const}=(h/2\Th)V+\mathrm{const}$.
+\end{proof}
+Numerically, on the $(401,8)$ grid: $\pi_g$ by the formula and by an eigensolve of $K_g$ agree to
+$4\times10^{-12}$, detailed balance holds to $10^{-14}$, and the site energy of the field's own kernel
+equals $(h/2\Th)V(sa)$ to $2\times10^{-10}$ (\code{tests/test\_pair\_energy\_kernel.py}). The first
+question put to Jérôme and Marc in the morning version of this report (directed kernel or symmetric
+pair energy?) dissolves: no tilted walk is irreversible, and the symmetric form has the same single
+free function. What differs is the algorithm, per-column normalisers against the Perron eigenvalue.
+
+\begin{corollary}[a fitted kernel reads as physics]\label{cor:read}
+In standardised units $\gamma=\Th h/s^2$ and $f(a)=(h/2\Th)V(sa)+\mathrm{const}$. A fit $(\hat\gamma,\hat g)$
+of any kernel of this class gives
+\[
+  \hat\Th=\hat\gamma s^2/h,\qquad \hat V(\phi)=\frac{2\hat\Th}{h}\,\hat f(\phi/s)+\mathrm{const},\qquad
+  \hat f=-\tfrac12\log\big(\hat g/Z_{\hat g}\big):
+\]
+the temperature from the bond variance, the one parameter that enters no tilt; the potential, its
+barrier and its wells, from the site energy. Moreover the conditional mean step is exactly
+$\gamma(\log Z_g)'(a)$ (exponential tilting), which for the field is $\Th h(\log\psi_0)'+(h^2/2)V'$ in
+physical units, so the small-$h$ limit is $\dd\phi=\Th(\log\psi_0)'\dd x+\sqrt{\Th}\,\dd B$: the drift of
+the stationary field in the site index is the log-derivative of the ground state, not $-V'$.
+\end{corollary}
+
+\subsection{The physicist's parametrisation}\label{sec:pair}
+Since $\log g=\log\psi_f-f$ is a transcendental function of the potential while $f$ itself is a
+quartic, the parsimonious exactly specified model parametrises $f$. \code{PairEnergyKernel}
+(\code{src/markov\_score/pair\_energy\_kernel.py}): $f(a)=\sum_{m\le4}c_m(a/2)^m$ and $\log\gamma$, five
+parameters, with the same fixed soft wall as an energy; $K_f$ by one dense eigensolve of $\mathsf T_f$
+per evaluation (15\,ms on 401 points), invariant law $\psi_f^2$ in closed form; the M-step maximises
+$Q=\langle\Xi,\log K_f\rangle$ by L-BFGS-B with the analytic gradient of the Perron eigenvector from
+first-order perturbation theory in the complete discretised eigenbasis,
+$\partial_{c_m}\psi_0=-\sum_{n\ge1}\psi_n\,\frac{\lambda_0+\lambda_n}{\lambda_0-\lambda_n}\langle\psi_n\mid B_m\psi_0\rangle$,
+checked against finite differences and Fisher's identity to $10^{-4}$. $Q$ is not concave in $c$, so a
+step is accepted only if $Q$ did not decrease, as for every other kernel. With the field's own
+$(\gamma,c)$ the kernel reproduces the chain's to $2\times10^{-3}$ (the coarse eigensolve against the
+fine one), and from 1024 clean chains at $(\Th,h)=(0.3,1)$ it reads $\hat\Th$ within $5\,\%$ and the
+barrier within $10\,\%$. This is literally the pair energy $W_\theta$ of the email, its Boltzmann learning
+written as a kernel. It joins E33 as a fifth arm, \code{em\_pair\_quartic}, under amendment~1 of the
+registry (predictions P7 and P8, declared before any E33 kernel result existed), run as its own
+shards so the four registered arms' tables are never touched. In the smoke run at $M=32$ it already
+sits at $0.13$ against the polynomial tilt's $0.25$: five parameters have the smaller variance.
+
 Implementation (\code{src/markov\_score/tilted\_kernel.py}): L-BFGS-B on $(\log\gamma,\theta)$ with the
 analytic gradient, warm-started, accepted only if $Q$ did not decrease (a rejected step returns the
 receiver's parameters in a new object, so the checkpoint ladder stays honest); Fisher's identity
@@ -385,7 +455,7 @@ levels, validation 1024 and test 2048 chains per seed):
   invariant law as initial law, both of E14's selection rules (held-out BP risk; held-out one-view
   evidence): \code{em\_mixture} ($C=8$, 25 parameters, misspecified), \code{em\_tilted\_poly} (Legendre
   degree 6, 7), \code{em\_tilted\_spline} (24 B-splines, 25), \code{em\_mdn} (E25/E30's neural kernel,
-  1{,}516);
+  1{,}516), and, by amendment~1, \code{em\_pair\_quartic} (the site energy itself, 5; \S\ref{sec:pair});
 \item the window head and the transformer, re-screened per cell on development seeds and trained
   two ways, imported unchanged from E14: implicit score matching on the one-view bundle (the matched
   interface) and denoising score matching on clean targets with one fixed corruption (the
@@ -400,13 +470,25 @@ at $M=2048$. P3 the MDN improves relative to the mixture compared with E30 (mdn/
 at $M=2048$): a state-dependent mean is what this chain needs. P4 no network reaches the spline at
 any $M$ on any cell under either interface. P5 the window head's deficit grows along the refinement
 cells while the spline's does not. P6 the floor at the base cell is above E14b's $0.082$ and falls
-along the sweep (already visible in E32; the prediction stands as registered).
+along the sweep. Amendment~1 (afternoon, before any kernel result): P7 the five-parameter site energy
+is within $10\,\%$ of the spline at $M=2048$ on every cell and below it at $M=32$ and $128$ (16/16
+paired); P8 $\hat\Th$ is within $10\,\%$ of $\Th$ at $M=2048$ for both the quartic and the spline
+(16/16), and the quartic's barrier within $20\,\%$ of $1/4$ on the $\Th\le1$ cells.
 
-Jobs, deployment \code{9b1c940-20261001T084745Z}, submitted 08:55 UTC: oracles 678084
-(\code{medium\_cpu}, running); kernels 678087--678090 (\code{defq}, four seed shards, each its own
-directory); screen 678091 then nets 678092/678094 (\code{long\_gpuh200}, one H200 each; the A100
-partition was in maintenance). The kernel shards are estimated at about eight hours each on 24
-workers, the $L=128$ cells at $M=2048$ being the long pole; the network jobs at one to two days.
+\st{Oracles, in.} Job 678084 completed after 2\,h\,04 and was fetched: 288 rows, sixteen seeds on all
+six cells. P6 is \emph{confirmed} on the test bundles: the linear floor is $0.269$ at the base cell
+(E14b's bimodal floor at the same correlation is $0.082$) and falls monotonically along the sweep,
+$0.269,\,0.114,\,0.059,\,0.041$ at $\Th=0.3,0.5,1,2$, with a spread over seeds below $0.001$; on the
+refinement cells $0.164$ and $0.098$ at $h=0.5,0.25$. The projected diagnostic carries $38$--$43\,\%$
+of its mass at the grid edge on the base cell and $98$--$100\,\%$ on every other cell, which is the
+measured form of \S\ref{sec:closure}.
+
+Jobs, deployment \code{9b1c940-20261001T084745Z}, submitted 08:55 UTC: kernels 678087--678090
+(\code{defq}, four seed shards, each its own directory); screen 678091 then nets 678092/678094
+(\code{long\_gpuh200}, one H200 each; the A100 partition was in maintenance); all still queued at the
+time of writing. The kernel shards are estimated at about eight hours each on 24 workers, the
+$L=128$ cells at $M=2048$ being the long pole; the network jobs at one to two days. The quartic arm's
+four shards are submitted from the afternoon's deployment (\S\ref{sec:pair}).
 
 \subsection{E34, the physics and the clean-data interface}
 
@@ -436,7 +518,8 @@ $C(r)$, $\xi$, kinks, domains, bimodality & E34 \code{physics\_truth} and \code{
 generated-sample quality & E34 \code{physics\_learned}; the direct sampler of E27 \\
 runtime & E24x (uncontended reruns, in queue); the field adds nothing to BP's cost, which depends on $N_g$, $L$, $B$ only \\
 clean-data learning (\S16.1) & E34 \code{clean} \\
-symmetric $W_\theta$, reversibility & not enforced: the directed family contains the reversible truth; a symmetric restriction is a follow-up \\
+symmetric $W_\theta$, reversibility & by construction: every tilted walk is reversible (Proposition~\ref{prop:rev}); the symmetric site energy is learned directly by \code{em\_pair\_quartic} (\S\ref{sec:pair}) \\
+$\Th$ read from the data & Corollary~\ref{cor:read}: $\hat\Th=\hat\gamma s^2/h$ from any kernel of the class; P8 \\
 Fourier BP for the SPDE (\S23) & not pursued: E24 found BP memory-bound (23.8\,\% of a sweep is the matmul), so a spectral step caps at $1.3\times$ \\
 ``minimal decisive experiment'' & E32 (floor across $\Th$, $h$) plus E33's window arm \\
 figures-first (\S28) & figs.~5 and 6 of the note are E32/E33's; the summary figure is pending the E33 data \\
@@ -447,10 +530,13 @@ figures-first (\S28) & figs.~5 and 6 of the note are E32/E33's; the summary figu
 \section{Questions for Jérôme and Marc}
 
 \begin{enumerate}[leftmargin=1.4em,itemsep=0.15em]
-\item The learned local law is implemented as a directed kernel with column normalisers
-  (Proposition~\ref{prop:boltz}); the note's symmetric pair energy enforces reversibility and halves
-  the parameters. Is there a reason to prefer the undirected form in the paper's framing, beyond
-  physics taste? Both contain the truth; the directed one needs no chain-wide partition function.
+\item The morning's question (directed kernel or symmetric pair energy?) is answered by
+  Proposition~\ref{prop:rev}: they are one class. The remaining choice is the \emph{form} of the pair
+  energy. The Gaussian-bond-plus-site-energy form \eqref{eq:W} is the whole class of discretised
+  gradient SPDEs, and the quartic site energy is exactly specified for $\phi^4$ with five parameters;
+  a general symmetric $W(a,a')$ would also cover non-gradient couplings at the price of a
+  two-dimensional function to learn. Is that generality wanted for the paper, or is the site-energy
+  form the right level, with the tilt bases as the agnostic alternative?
 \item Gaussian closure of the messages is not well-posed on the field (\S\ref{sec:closure}); the
   closure arm is the covariance twin. Does that match what Marc had in mind by ``Gaussian closure''
   for this benchmark, or did he mean the Kalman smoother of the linearised dynamics?

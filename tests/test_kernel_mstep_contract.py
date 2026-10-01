@@ -22,6 +22,7 @@ import pytest
 from markov_score.bp_grid import make_grid
 from markov_score.em import e_step_multi, fit_em
 from markov_score.kernels import GaussianAR1Kernel, MDNKernel, MixtureInnovationKernel
+from markov_score.pair_energy_kernel import PairEnergyKernel
 from markov_score.tilted_kernel import TiltedWalkKernel
 from markov_score.noising import alpha_delta
 from markov_score.priors import LaplaceAR1
@@ -47,6 +48,7 @@ def _kernels():
         ("mdn", MDNKernel.init(3, 16, rng_for("k-mdn", 0))),
         ("tilted_legendre", TiltedWalkKernel.init("legendre", 4, make_grid(8.0, 201)[0], rho=0.3, var=0.8)),
         ("tilted_bspline", TiltedWalkKernel.init("bspline", 12, make_grid(8.0, 201)[0], rho=0.3, var=0.8)),
+        ("pair_energy", PairEnergyKernel.init(4, rho=0.3, var=0.8)),
     ]
 
 
