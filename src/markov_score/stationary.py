@@ -118,6 +118,48 @@ def invariant_log_density(
     return InvariantDensity(log_density=log_density, n_iter=n_iter, residual=residual)
 
 
+def invariant_log_density_eig(prior, grid: np.ndarray, weights: np.ndarray, tol: float = 1e-2) -> InvariantDensity:
+    """The invariant law by a direct eigensolve of the discretised operator K W.
+
+    Power iteration converges at the rate of the operator's second eigenvalue, which for a
+    FITTED kernel need not be the chain's correlation: a learned tilt can carry a slow pocket
+    far from the data (see `tilted_kernel.WALL_FRACTION`), and the first smoke run of E33
+    stalled at a residual of 1e-8 after 6,000 iterations. A dense eigensolve of the 401 x 401
+    matrix costs ~0.1 s, has no convergence question, and is what the learning experiments
+    use for the stationary initial law. The result is checked rather than trusted: the top
+    eigenvalue must be 1 to `tol` and the eigenvector non-negative up to round-off; otherwise
+    this raises, exactly as the power iteration does, so a kernel with no usable invariant
+    law cannot be fed to BP under a plausible-looking prior. `tol` is loose (1e-2) on purpose:
+    a kernel evaluated analytically on the grid (every `priors` family, the mixture kernel)
+    has column masses off by the quadrature's truncation, up to 1e-3 in the frozen
+    configuration, and that is not what this check is for; a wrong kernel is off by O(1).
+    """
+    from scipy.linalg import eig
+
+    K = np.exp(prior.log_transition_matrix(grid))
+    A = K * weights[None, :]                 # pi <- K (pi w)
+    vals, vecs = eig(A)
+    i = int(np.argmax(vals.real))
+    lam = vals[i]
+    if abs(lam.imag) > tol or abs(lam.real - 1.0) > tol:
+        raise RuntimeError(f"top eigenvalue {lam:.6g} is not 1 for {prior.name!r}: the kernel's "
+                           "columns are not densities under this quadrature.")
+    v = vecs[:, i].real
+    v = v * np.sign(v[np.argmax(np.abs(v))])
+    if v.min() < -tol * v.max():
+        raise RuntimeError(f"invariant eigenvector of {prior.name!r} has a negative component "
+                           f"({v.min():.3e} against max {v.max():.3e}).")
+    v = np.clip(v, 0.0, None)
+    v = v / float(v @ weights)
+    with np.errstate(divide="ignore"):
+        log_density = np.log(v)
+    # the residual of the NORMALISED iteration, as the power iteration defines it, so that an
+    # analytic kernel's quadrature mass (1 - O(1e-6)) does not read as a non-fixed point
+    nxt = A @ v
+    residual = float(np.abs(nxt / float(nxt @ weights) - v) @ weights)
+    return InvariantDensity(log_density=log_density, n_iter=0, residual=residual)
+
+
 def drifted_log_density(
     prior, grid: np.ndarray, weights: np.ndarray, n_steps: int
 ) -> np.ndarray:

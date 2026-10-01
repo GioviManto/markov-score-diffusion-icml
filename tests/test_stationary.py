@@ -321,3 +321,30 @@ def test_window_bp_matches_exact_gaussian_window_posterior(grid_pair):
     m_exact = np.stack([exact_gaussian_posterior_mean(x, sigma0, alpha, delta) for x in X])
 
     assert np.max(np.abs(m_bp - m_exact)) < 1e-9
+
+
+def test_eigen_invariant_law_matches_power_iteration():
+    """The direct eigensolve and the power iteration are two routes to one law."""
+    from markov_score.bp_grid import make_grid
+    from markov_score.priors import LaplaceAR1
+    from markov_score.stationary import invariant_log_density, invariant_log_density_eig
+    g, w = make_grid(8.0, 401)
+    prior = LaplaceAR1(0.85)
+    a = invariant_log_density(prior, g, w)
+    b = invariant_log_density_eig(prior, g, w)
+    pa, pb = np.exp(a.log_density), np.exp(b.log_density)
+    assert float(np.abs(pa - pb) @ w) < 1e-9
+    assert b.residual < 1e-10
+
+
+def test_eigen_invariant_law_of_the_tilted_kernel_is_in_the_bulk():
+    """With the soft wall, a learned tilt cannot park invariant mass at the grid edge."""
+    from markov_score.bp_grid import make_grid
+    from markov_score.stationary import invariant_log_density_eig
+    from markov_score.tilted_kernel import TiltedWalkKernel
+    g, w = make_grid(8.0, 401)
+    k = TiltedWalkKernel.init("legendre", 6, g, rho=0.3, var=0.8)
+    # push the free coefficients to an unphysical corner: a tilt rising at the edges
+    k = TiltedWalkKernel(k.log_gamma, k.coef + np.array([0, 0, 0, 0, 0, 40.0]), k.basis, k.half_width)
+    pi = np.exp(invariant_log_density_eig(k, g, w).log_density)
+    assert float(pi[np.abs(g) > 6.5] @ w[np.abs(g) > 6.5]) < 1e-6

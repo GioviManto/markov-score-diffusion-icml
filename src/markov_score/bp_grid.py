@@ -338,3 +338,123 @@ def grid_bp_batch(
         log_const = row_shift.sum(axis=1) + n * (-0.5 * xp.log(2.0 * xp.pi * delta))
         return means, variances, log_z_fwd + xp.log(tail) + log_const
     return means, variances
+
+
+def grid_bp_projected_batch(
+    grid: np.ndarray,
+    weights: np.ndarray,
+    log_K: np.ndarray,
+    X: np.ndarray,
+    alpha: float,
+    delta: float,
+    log_mu: np.ndarray | None = None,
+    chunk: int | None = 256,
+    *,
+    return_diagnostics: bool = False,
+    edge_frac: float = 0.05,
+) -> tuple:
+    """Moment-projected sum-product on the grid: Gaussian closure for ANY kernel.
+
+    The same recursion as `grid_bp_batch`, except that every message is replaced, after each
+    transition integral (and the initial law before the first), by the Gaussian on the grid
+    with the message's mean and variance -- the projection P_G of Proposition 1.
+
+    Why this exists (1 October 2026). Proposition 1 identifies this algorithm with the LMMSE
+    estimator of the covariance twin, but its proof uses the LINEAR transition a' = rho a + eps:
+    the first two moments of a convolution depend on the innovation only through its first two
+    moments. For a kernel whose conditional mean is nonlinear (the phi^4 chain, `field.py`),
+    the projected message after a transition depends on the incoming message beyond its mean
+    and variance, so the identity need not hold and "Gaussian closure" and "the linear floor"
+    become two different estimators. This routine measures the first; `theory.lmmse_posterior_mean`
+    is the second. On the linear-transition families the two agree to quadrature accuracy,
+    which is the test (tests/test_bp_projected.py).
+
+    Returns (means, variances) of the site beliefs L_i ell_i R_i formed from the PROJECTED
+    messages, each of shape (B, n); with `return_diagnostics=True` a third value, the largest
+    fraction of any projected message's mass in the outermost `edge_frac` of the grid.
+
+    THE GRID CAN DEFEAT THE PROJECTION, AND THE DIAGNOSTIC SAYS WHEN. Moment projection needs
+    the message's bulk ON the grid. Forward messages are prior-like and narrow, but a backward
+    message is a likelihood in the site variable: for a linear kernel it is centred at
+    x/(alpha rho), which at t = 1 and |x| = 2 is 6.5 for rho = 0.85 and leaves [-8, 8] at larger
+    t, so its grid moments describe a truncated stump and the projected Gaussian is wrong.
+    Found on 1 October 2026 as a 0.3 disagreement with exact BP on the GAUSSIAN chain, where
+    the two must coincide; on a grid wide enough for the messages (half-width 32 at t = 1)
+    they do, to 1e-8 (tests/test_bp_projected.py).
+
+    ON THE PHI^4 CHAIN THE PROJECTION IS NOT WELL-POSED AT ALL, for the opposite reason. Its
+    kernel is N(a'; a, gamma) g(a') / Z(a) with a super-Gaussian tilt g, so from a state far
+    outside the bulk the next state lands near a' ~ (a / 4 c gamma)^{1/3} -- it is pulled back
+    almost regardless of a. The backward message R(a) = E[ell(a_{i+1}) | a_i = a] is then nearly
+    constant across the whole grid (it decays only as exp(-c' a^{2/3}) far beyond it), and the
+    Gaussian with its moments is close to flat: the projection discards the backward
+    information. Measured: 28% of a projected message's mass in the outer 5% of the grid at
+    t = 0.47 on the (401, 8) grid. The "Gaussian closure" arm for this chain is therefore the
+    covariance twin (`theory.lmmse_posterior_mean` with the chain's true covariance), which is
+    what Proposition 1 proves the projected recursion computes on linear transitions; this
+    routine is kept as the DIAGNOSTIC that says so (E32, E33 record its edge mass per cell).
+    """
+    if chunk is not None and X.shape[0] > chunk:
+        parts = [grid_bp_projected_batch(grid, weights, log_K, X[s : s + chunk], alpha, delta,
+                                         log_mu, chunk=None, return_diagnostics=return_diagnostics,
+                                         edge_frac=edge_frac) for s in range(0, X.shape[0], chunk)]
+        out = [np.concatenate([pt[i] for pt in parts], axis=0) for i in range(2)]
+        if return_diagnostics:
+            out.append(max(pt[2] for pt in parts))
+        return tuple(out)
+    grid = np.asarray(grid, dtype=float)
+    weights = np.asarray(weights, dtype=float)
+    K = np.exp(np.asarray(log_K, dtype=float))
+    X = np.asarray(X, dtype=float)
+    b_size, n = X.shape
+    m = len(grid)
+    gw = grid * weights
+    g2w = grid**2 * weights
+    e = max(1, int(edge_frac * m))
+    edge_mass = 0.0
+
+    def project(msg):
+        """Replace each row by the grid Gaussian with the row's mean and variance."""
+        nonlocal edge_mass
+        mass = msg @ weights
+        if not np.all(np.isfinite(mass)) or np.any(mass <= 0.0):
+            raise FloatingPointError("Projected message lost all mass.")
+        edge_mass = max(edge_mass, float(np.max((msg[:, :e] @ weights[:e] + msg[:, -e:] @ weights[-e:]) / mass)))
+        mu = (msg @ gw) / mass
+        var = (msg @ g2w) / mass - mu**2
+        var = np.maximum(var, 1e-12)
+        out = np.exp(-0.5 * (grid[None, :] - mu[:, None]) ** 2 / var[:, None])
+        return out / (out @ weights)[:, None]
+
+    if log_mu is None:
+        log_mu = -0.5 * grid**2 - 0.5 * np.log(2.0 * np.pi)
+    z = X[:, :, None] - alpha * grid[None, None, :]
+    log_ell = -0.5 * z**2 / delta
+    ell = np.exp(log_ell - log_ell.max(axis=2, keepdims=True))
+
+    L = np.empty((n, b_size, m))
+    R = np.empty((n, b_size, m))
+    with np.errstate(divide="ignore"):
+        mu0 = np.exp(np.asarray(log_mu, dtype=float))
+    L[0] = project(np.broadcast_to(mu0, (b_size, m)).copy())
+    for i in range(n - 1):
+        incoming = L[i] * ell[:, i, :] * weights[None, :]
+        L[i + 1] = project((K @ incoming.T).T)
+    R[-1] = 1.0
+    for i in range(n - 1, 0, -1):
+        incoming = R[i] * ell[:, i, :] * weights[None, :]
+        R[i - 1] = project((K.T @ incoming.T).T)
+
+    means = np.empty((b_size, n))
+    variances = np.empty((b_size, n))
+    for i in range(n):
+        raw = L[i] * ell[:, i, :] * R[i]
+        mass = raw @ weights
+        if not np.all(np.isfinite(mass)) or np.any(mass <= 0.0):
+            raise FloatingPointError(f"Projected belief {i} lost mass.")
+        bel = raw / mass[:, None]
+        means[:, i] = bel @ gw
+        variances[:, i] = bel @ g2w - means[:, i] ** 2
+    if return_diagnostics:
+        return means, variances, edge_mass
+    return means, variances

@@ -1,0 +1,138 @@
+# The φ⁴ field as a second laboratory
+
+Written 1 October 2026 after Jerome's email (relaying a conversation with Marc): test the
+estimator on Markov data from a simple physical model, the stochastic Allen–Cahn / φ⁴
+equation, whose stationary states are a Gibbs measure. This note is the derivation the code
+rests on (`src/markov_score/field.py`, `src/markov_score/tilted_kernel.py`), what is proved,
+what is checked numerically, and one thing in the email that does not survive contact with
+the chain. Experiments: E32 (oracles, deterministic) and E33 (learning).
+
+## 1. The chain
+
+The SPDE ∂ₜφ = ∂ₓ²φ − V′(φ) + √(2T) η in one space dimension, V(φ) = (φ² − 1)²/4, is the
+gradient flow of E[φ] = ∫[½(∂ₓφ)² + V(φ)] dx at temperature T; its stationary law is
+exp(−E/T). On a lattice of spacing h,
+
+    E_h(φ) = Σᵢ [ (φᵢ₊₁ − φᵢ)² / 2h + h V(φᵢ) ],
+
+a nearest-neighbour energy, so a spatial snapshot is exactly a first-order Markov chain in
+the site index (Jerome's point, and the whole reason the machinery applies).
+
+**Transfer operator.** With the site terms split symmetrically,
+
+    T(φ, φ′) = e^{−hV(φ)/2T} e^{−(φ′−φ)²/2Th} e^{−hV(φ′)/2T},
+
+a symmetric, positive, Hilbert–Schmidt kernel. Its largest eigenvalue λ₀ is simple with a
+positive eigenfunction ψ₀ (Perron–Frobenius). The infinite-volume Gibbs measure is the
+stationary chain with marginal π = ψ₀² and kernel
+
+    K(φ′ | φ) = T(φ, φ′) ψ₀(φ′) / (λ₀ ψ₀(φ)),
+
+reversible with respect to π. The lag-k covariance is Σₙ (λₙ/λ₀)^k ⟨ψ₀|φ|ψₙ⟩², so
+ρ₁ := λ₁/λ₀ plays the role ρ plays for the AR(1) family and the correlation length in sites
+is 1/log(1/ρ₁). The chain exposed to the package is standardised, a = φ/s with
+s² = Var_π(φ).
+
+**The tilted-walk identity.** Rearranging the eigen-equation,
+
+    K(φ′ | φ) = N(φ′; φ, Th) g(φ′) / Z(φ),   g = ψ₀ e^{−hV/2T},   Z(φ) = ∫ N(φ′; φ, Th) g(φ′) dφ′,
+
+and Z(φ) = λ₀ ψ₀(φ) e^{+hV(φ)/2T}: the kernel is a Gaussian step tilted by a function of the
+*arrival* point, and the column normaliser is the h-transform. This is Jerome's "Gaussian
+increment tilted by ψ₀(φ′)e^{−hV/T}/ψ₀(φ)", written so that the normaliser is explicit.
+
+**Where the two laboratories meet.** A Gaussian AR(1) chain with 0 < ρ < 1 is the member of
+this family with log g quadratic (step variance q/ρ, tilt variance 1 + ρ). No other AR(1)
+member is (a Laplace innovation is not a Gaussian step times a function of φ′), and no
+other member of this family has a state-independent innovation. The two families intersect
+at the Gaussian chain and nowhere else. The mixture-innovation kernel is misspecified on the
+field chain through its *drift*, which is nonlinear (the small-h limit is the Euler step of
+dφ = T (log g)′ ds + √(2T) dW), not through its innovation shape, a different mechanism from
+every E08 axis.
+
+## 2. The estimator: the learned pair energy as a transition kernel
+
+Jerome proposed to parametrise a pair energy W_θ(φ, φ′) and learn it by Boltzmann learning,
+E_data[∇W] − E_model[∇W], with log Z from the transfer-matrix pass. Written as a transition
+kernel the same object is
+
+    K_θ(a′ | a) = N(a′; a, γ) exp(B(a′)θ) / Z_θ(a),
+
+with a linear basis B for log g (Legendre polynomials, or cubic B-splines) and the column
+normaliser computed on the grid. Then
+
+* the family contains the truth exactly (up to the basis), by the identity above;
+* the M-step objective Q(θ) = ⟨Ξ, log K_θ⟩ is concave in θ at fixed γ (linear minus a sum
+  of column log-partitions), solved by L-BFGS-B with the analytic gradient
+  Ξ̃ = Ξ − (column mass) × (model column distribution), which is exactly the
+  "posterior expectation minus model expectation" of Boltzmann learning, with no chain-wide
+  partition function because the model is a kernel;
+* the E-step is the existing exact BP; Fisher's identity is verified against finite
+  differences of the evidence (`tests/test_tilted_kernel.py`).
+
+Two capacities are run: Legendre degree 6 (7 parameters) and 24 B-splines (25 parameters,
+the mixture kernel's count), so the capacity comparison with the paper's estimator is at
+matched parameter count.
+
+Because the data are strictly stationary, every EM arm uses its *own* kernel's invariant
+density as the initial law (`em.fit_em` now accepts a callable `log_mu`); the M-step
+maximises the edge term only, and any decrease of the evidence is recorded, not hidden.
+
+## 3. What does not extend: Gaussian closure of the messages
+
+Proposition 1 identifies moment-projected sum-product with the LMMSE of the covariance twin,
+and its proof uses the linear transition. On the field chain the projected recursion is
+*not a well-posed estimator*, and for an unexpected reason. From a state far outside the
+bulk the kernel jumps to a′ ~ (a/4cγ)^{1/3}, almost regardless of a, so the backward
+message R(a) = E[ℓ(aᵢ₊₁) | aᵢ = a] is nearly flat across the whole operating grid (it decays
+only as exp(−c′a^{2/3}) far beyond it). Its moment projection is a near-uniform Gaussian that
+discards the backward information. Measured: 28% of a projected message's mass in the outer
+5% of the (401, 8) grid at t = 0.47 (`tests/test_bp_projected.py`). On a grid wide enough
+for the Gaussian and Laplace chains' backward messages the proposition's identity holds to
+10⁻⁸, so this is a property of the field chain, not of the implementation.
+
+Consequently "the Gaussian closure" of the field chain is its covariance twin, the LMMSE of
+the true covariance, by Proposition 1's identification; the projected recursion is kept as a
+diagnostic and its edge mass is recorded per cell (E32 P2). Jerome's expectation that closure
+"fails badly" by smearing across domain walls is then measured by the linear floor's error,
+which is what the floor has always measured.
+
+## 4. Numerics and what is exact
+
+ψ₀ is computed by a dense symmetric eigensolve of the trapezoid-discretised operator on a
+fine physical grid (2401 points on [−12, 12]). For this smooth, super-exponentially decaying
+kernel the trapezoid rule converges faster than any power of the spacing: halving the
+spacing and widening the domain move λ₀, ρ₁ and s by less than 10⁻¹⁰ (`tests/test_field.py`).
+The far tail where ψ₀ falls below 10⁻¹³ of its maximum (stationary mass below 10⁻²⁶) is
+carried as log ψ₀ = −∞; a kernel column leaving such a state is the normalised T column.
+
+Two samplers: continuum rejection (propose the Gaussian step, accept with g/max g, log ψ₀ by
+cubic spline; burn-in from the slowest mode's rate, as `stationary.py` does) and lattice
+inverse-CDF on the fine grid's finite-state chain (transfer-matrix sampling). They agree in
+variance, lag-one correlation and kurtosis within Monte Carlo error.
+
+The exact score is grid BP with the chain's kernel and stationary law on the operating
+grid; E32's refinement part measures its quadrature error against (1601, 8). The step width
+√(Th)/s is at least 8 grid cells on every cell used, so the usual resolution condition is met.
+
+## 5. Cells (E32 → E33)
+
+At h = 1 the iso-correlation line ρ₁ = 0.85 passes through T = 0.30 (ρ₁ = 0.848, marginal
+excess kurtosis −1.35). The temperature sweep keeps ρ₁ = 0.85 by solving h*(T) for
+T ∈ {0.3, 0.5, 1, 2}; the refinement sweep starts from the T = 0.3 cell and halves h twice
+with L ∝ 1/h, so the physical length (32 lattice units) is fixed and the correlation length
+in sites grows 6 → 12 → 24. This is the reading of Jerome's prediction that the advantage of
+structure grows under refinement because a fixed window's receptive field does not.
+
+## 6. What the email got right, and the two corrections
+
+Right: exactly Markov; the h-transform form of the kernel; the mixture kernel is
+misspecified and a learned kernel is needed (now a measured claim, E33 P1/P2); exact
+transfer-matrix sampling; per-step non-Gaussianity O(h) while the marginal is O(1)
+non-Gaussian; correlation length in sites ∝ 1/h; no transition in 1D.
+
+Corrections: (i) Gaussian closure of the messages is not well-posed on this chain (§3), so
+the closure arm is the covariance twin; (ii) BP is indifferent to the correlation length but
+not to the step width, so the fine-h end is bounded by the grid, which §4 checks rather than
+assumes. One addition: the receptive-field prediction is partly already measured along
+E14's ρ axis; the refinement cells give it a physical reading.

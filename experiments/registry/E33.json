@@ -1,0 +1,23 @@
+{
+ "id": "E33",
+ "script": "experiments/e33_field_learning.py",
+ "hypothesis": "On the phi^4 chain the paper's estimator (exact BP around a learned kernel) keeps its advantage over sequence denoisers, provided the kernel family can represent a nonlinear drift: the innovation mixture is misspecified here and the learned pair energy (tilted-walk kernel, markov_score.tilted_kernel) is exactly specified. This is Jerome's concrete test, with his four arms (learned pair energy, Gaussian closure, window CNN, exact score) and the arms that bracket them.",
+ "design": "Cells: E32's six (T sweep at lambda_1/lambda_0 = 0.85, refinement at fixed physical length). PROTOCOL sizes (32, 128, 512, 2048) for the kernel arms, (2048, 128) for the networks; confirmatory seeds 0-15; bundles keyed by (tag, seed, cell[, M]); one noised view per sequence split over the twelve levels (the matched interface) for every learned arm; validation 1024 and test 2048 chains per seed. Kernel arms, EM through exact BP, ladder to 1200 for all, the kernel's own invariant law as the initial law, selection by held-out BP risk (registered) and by held-out one-view evidence (oracle-free): em_mixture (C = 8, 25 par), em_tilted_poly (Legendre 6, 7 par), em_tilted_spline (24 B-splines, 25 par), em_mdn (4 comp, hidden 32, 1,516 par). Networks: E14's window head and transformer, re-screened per cell on dev seeds 10000-10001 (8k ISM steps), then ISM one-view and DSM one-corruption at 32k steps, imported from e14_regime_baselines. Oracles per (cell, seed): LMMSE of the true covariance (= Gaussian closure, Prop. 1), isotropic, and the projected recursion as a diagnostic with its edge mass.",
+ "predeclared_predictions": {
+  "P1": "em_mixture keeps an asymptotic bias on every cell: its risk at M = 2048 is above em_tilted_spline's in 16/16 seeds, and the gap does NOT close from M = 512 to 2048 (ratio at 2048 >= 0.9 x ratio at 512).",
+  "P2": "the learned pair energy beats the mixture at every M >= 128 on every cell (16/16 paired), and the parsimonious tilt (7 par) is within 20% of the flexible one (25 par) at M = 2048.",
+  "P3": "em_mdn improves relative to em_mixture compared with E30 (where it lost 2.1-2.9x on the AR(1) chain): on the field chain mdn/mixture at M = 2048 is below 1.5 on every cell. A state-dependent mean is what this chain needs and what the MDN has.",
+  "P4": "no network reaches em_tilted_spline at any M on any cell (16/16 paired) under either interface.",
+  "P5": "the window head's deficit relative to the exact score GROWS along the refinement cells (h = 1 -> 0.5 -> 0.25 at fixed physical length: its ISM risk at M = 2048 increases monotonically) while em_tilted_spline's does not increase.",
+  "P6": "the linear floor at the base cell (T = 0.3, marginal kurtosis -1.35) is above E14b's bimodal floor 0.082 (kurtosis -0.72) at the same correlation, and falls monotonically along the temperature sweep."
+ },
+ "predeclared_analysis": "kernels.csv joined to oracles.csv and nets.csv on (cell, seed, test_bundle). Per cell and M: paired ratios over seeds with the exact bootstrap (16 seeds), as make_regime_baselines does; at_cap and converged read together (E25/E30); the evidence-selected rows reported beside the risk-selected ones. The refinement reading (P5) is the window head's risk against the cell index with the exact score's own refinement error (E32) shown as the floor of what any arm can resolve.",
+ "seeds": {
+  "confirmatory": "0-15, split four ways for the kernels (E33k_s0..s12) and two ways for the networks (E33n_s0, E33n_s8), each job its own directory (N-27)",
+  "dev": "10000-10001 (screen only)"
+ },
+ "resources": "kernels: compute partition, 40 cpus, 3 days per shard (the L = 128 cells at M = 2048 are the long ones, ~5 h each); screen and nets: gpua100 with venv-cuda; oracles: minutes.",
+ "status": "REGISTERED 2026-10-01, PREDECLARED, smoke-tested (--quick).",
+ "registered": "2026-10-01",
+ "motivation": "Jerome, 1 Oct 2026: the four arms across T and h; 'a learned kernel is really needed' is here a measured statement (P1/P2) rather than an assertion; the refinement prediction is P5."
+}

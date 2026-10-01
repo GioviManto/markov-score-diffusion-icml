@@ -35,7 +35,7 @@ THREADS=${MSD_HPC_THREADS:-1}
 SERIAL_CPUS=${MSD_HPC_SERIAL_CPUS:-4}
 AFTER=""; WHAT=${1:-}; shift || true
 while [[ $# -gt 0 ]]; do case "$1" in --after) AFTER="$2"; shift 2;; *) echo "unknown arg $1" >&2; exit 2;; esac; done
-[[ -n "$WHAT" ]] || { echo "usage: $0 <e23|e24c-capacity|e26|e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
+[[ -n "$WHAT" ]] || { echo "usage: $0 <e32|e33-oracles|e33-k-s0..s12|e33-screen|e33-nets-s0|e33-nets-s8|e23|e24c-capacity|e26|e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
 
 partition() {
   if [[ -n "${MSD_HPC_PARTITION:-}" ]]; then echo "$MSD_HPC_PARTITION"; return; fi
@@ -175,6 +175,21 @@ cmd_for() {
     # E27 cost at LARGE batch, where E24 puts BP's crossover with the transformer (~12,600):
     # states the one-sweep speed-up where BP is launch-bound and cheapest, not just at B=128.
     e27-cost-big) echo "e27_direct_sampler.py --only cost --set 'cost_batch=(2048, 8192, 32768)' --set 'steps_ladder=(100, 400)' --output-dir {OUT}/E27big";;
+    # ================= 1 Oct: the phi^4 field, the second laboratory (Jerome and Marc) ==================
+    # E32 is deterministic and also runs on the laptop; the cluster copy is the registered one for
+    # the refinement part at (1601, 8) on the L = 128 cells. E33 is sharded by seed into its own
+    # directories (N-27): four kernel jobs on the CPU partition, the network screen and two
+    # network jobs on the A100 partition (MSD_HPC_GRES, MSD_HPC_VENV=venv-cuda), chained --after
+    # the screen. The oracles job is minutes.
+    e32)         echo "e32_field_oracles.py --output-dir {OUT}/E32";;
+    e33-oracles) echo "e33_field_learning.py --only oracles --output-dir {OUT}/E33o";;
+    e33-k-s0)    echo "e33_field_learning.py --only kernels --set 'seeds=(0, 1, 2, 3)' --output-dir {OUT}/E33k_s0";;
+    e33-k-s4)    echo "e33_field_learning.py --only kernels --set 'seeds=(4, 5, 6, 7)' --output-dir {OUT}/E33k_s4";;
+    e33-k-s8)    echo "e33_field_learning.py --only kernels --set 'seeds=(8, 9, 10, 11)' --output-dir {OUT}/E33k_s8";;
+    e33-k-s12)   echo "e33_field_learning.py --only kernels --set 'seeds=(12, 13, 14, 15)' --output-dir {OUT}/E33k_s12";;
+    e33-screen)  echo "e33_field_learning.py --only screen --output-dir {OUT}/E33n";;
+    e33-nets-s0) echo "e33_field_learning.py --only nets --set 'seeds=(0, 1, 2, 3, 4, 5, 6, 7)' --set winners=\"'auto:{OUT}/E33n/screening.csv'\" --output-dir {OUT}/E33n_s0";;
+    e33-nets-s8) echo "e33_field_learning.py --only nets --set 'seeds=(8, 9, 10, 11, 12, 13, 14, 15)' --set winners=\"'auto:{OUT}/E33n/screening.csv'\" --output-dir {OUT}/E33n_s8";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }

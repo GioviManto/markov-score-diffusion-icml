@@ -443,6 +443,16 @@ def fit_em(
     with its own batch of noisy chains. Every iteration is one exact BP E-step
     over the whole dataset followed by the kernel's own M-step.
 
+    `log_mu` is the initial law on the grid: an array, None for the standard normal
+    (the law every AR(1) prior starts from), or a CALLABLE `log_mu(kernel) -> array`
+    evaluated at the kernel about to be scored. The callable form is for a STATIONARY
+    model, where the initial law is the kernel's own invariant density and therefore
+    moves with theta (added 1 October 2026 for the phi^4 field chain, whose data are
+    strictly stationary; `stationary.invariant_log_density` supplies it). The M-step
+    still maximises the edge term only, so with a callable the step is a generalised
+    one with respect to the site-1 term; any resulting decrease is recorded in
+    `trace.monotone_violation` as before, never hidden.
+
     Stops early when the marginal log-likelihood increases by less than `tol`
     NATS PER TRANSITION on `patience` CONSECUTIVE iterations, and only if it increased
     each time. The consecutive requirement is what distinguishes a genuine fixed point
@@ -499,7 +509,8 @@ def fit_em(
         if checkpoints is not None and it in checkpoints:
             saved[it] = current
         log_k = current.log_transition_matrix(grid)
-        stats = e_step_multi(grid, weights, log_k, groups, log_mu, chunk)
+        mu = log_mu(current) if callable(log_mu) else log_mu
+        stats = e_step_multi(grid, weights, log_k, groups, mu, chunk)
         trace.log_evidence.append(stats.log_evidence)
         trace.theta.append(np.asarray(current.theta, dtype=float).copy())
         proposal = current.m_step(stats, grid)
@@ -545,8 +556,9 @@ def fit_em(
         # scored yet. Score it, so the returned kernel and the final trace entry agree here
         # too -- this is the branch the old code silently got wrong.
         log_k = current.log_transition_matrix(grid)
+        mu = log_mu(current) if callable(log_mu) else log_mu
         t0 = time.perf_counter()
-        stats = e_step_multi(grid, weights, log_k, groups, log_mu, chunk)
+        stats = e_step_multi(grid, weights, log_k, groups, mu, chunk)
         trace.log_evidence.append(stats.log_evidence)
         trace.theta.append(np.asarray(current.theta, dtype=float).copy())
         trace.seconds.append(time.perf_counter() - t0)
