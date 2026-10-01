@@ -17,7 +17,19 @@
   "dev": "10000-10001 (screen only)"
  },
  "resources": "kernels: compute partition, 40 cpus, 3 days per shard (the L = 128 cells at M = 2048 are the long ones, ~5 h each); screen and nets: gpua100 with venv-cuda; oracles: minutes.",
- "status": "REGISTERED 2026-10-01, PREDECLARED, smoke-tested (--quick).",
+ "status": "SUBMITTED 2026-10-01 (eight jobs, see hpc_runs); REGISTERED and PREDECLARED the same morning, smoke-tested (--quick, all four parts).",
  "registered": "2026-10-01",
- "motivation": "Jerome, 1 Oct 2026: the four arms across T and h; 'a learned kernel is really needed' is here a measured statement (P1/P2) rather than an assertion; the refinement prediction is P5."
+ "motivation": "Jerome, 1 Oct 2026: the four arms across T and h; 'a learned kernel is really needed' is here a measured statement (P1/P2) rather than an assertion; the refinement prediction is P5.",
+ "hpc_runs": {
+  "deployment": "9b1c940-20261001T084745Z (hpc/.deploy env written by icml_deploy.sh on 1 Oct 2026 08:47 UTC; host lnode02, user 3164542)",
+  "e33-oracles": "678084, medium_cpu, 24 cpus, 5:50 -> outputs/hpc_E33o",
+  "e33-k-s0": "678087, defq, 24 cpus, 23:50 -> outputs/hpc_E33k_s0 (seeds 0-3)",
+  "e33-k-s4": "678088, defq -> outputs/hpc_E33k_s4 (seeds 4-7)",
+  "e33-k-s8": "678089, defq -> outputs/hpc_E33k_s8 (seeds 8-11)",
+  "e33-k-s12": "678090, defq -> outputs/hpc_E33k_s12 (seeds 12-15)",
+  "e33-screen": "678091, long_gpuh200, gpu:1, venv-cuda, 16 workers -> outputs/hpc_E33n (gpua100 was in maintenance)",
+  "e33-nets-s0": "678092, long_gpuh200, afterok:678091 -> outputs/hpc_E33n_s0 (seeds 0-7)",
+  "e33-nets-s8": "678094, long_gpuh200, afterok:678091 -> outputs/hpc_E33n_s8 (seeds 8-15)",
+  "submitted": "2026-10-01 ~08:55 UTC, all eight at once; nothing read before submission"
+ }
 }

@@ -12,7 +12,7 @@
  "seeds": {
   "deterministic": "rng_for('e32-ladder' | 'e32-refine', T, h, L, rep), reps 0-1"
  },
- "status": "REGISTERED 2026-10-01, PREDECLARED; laptop run is the registered run for spectrum, ladder and theory; refinement at (1601, 8) on the L = 128 cells on the cluster (case e32) if the laptop run is too slow.",
+ "status": "REGISTERED 2026-10-01, PREDECLARED; the registered run is the laptop run started 1 Oct 09:50 local at commit 9b1c940 (outputs/E32, 4 workers), all four parts.",
  "registered": "2026-10-01",
  "cells": [
   {
