@@ -497,3 +497,18 @@ nothing, which is the failure mode of `registry.py --check` (silent for E22-E29)
 `audit_claims` (N-25), and it is not worth trading a loud 2 for a quiet 0. The general rule:
 **a cross-experiment gate belongs at the place where both experiments' outputs exist, which is
 after the fetch, not inside the job.**
+
+## N-31 — the sign-change density is not a physical observable under refinement (1 October 2026)
+
+E34's P1 predicted that the kink density per unit length stays within 20% across the
+refinement cells (h = 1, 0.5, 0.25 at fixed physical length), since they describe one physical
+system. Measured on 4096 exact chains per cell: 0.120, 0.175, 0.247 kinks per unit length —
+growing by 1.41 per halving of h, i.e. like 1/√h. A sign change between neighbours is not a
+kink: the field is rough and crosses the barrier inside a domain, and a finer lattice resolves
+more of those crossings (the continuum limit of a Brownian-like path has infinitely many zero
+crossings per unit length). The same is true of the mean domain length in physical units
+(5.09, 3.75, 2.72). The commit message of b33b362 claimed the opposite, written before the
+table was read; this entry corrects it. Replacement (registered as P1b before being computed):
+runs shorter than the kink width √2 (√2/h sites) are merged into their neighbours, and the
+coarse kink density is the statistic the refinement cells are predicted to share. The raw
+statistic stays in the table as what it is.
