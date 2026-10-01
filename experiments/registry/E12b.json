@@ -5,7 +5,7 @@
  "design": "E12 with levels (0.6, 0.7, 0.8, 0.9, 1.0) instead of (0.6, 0.8, 1.0), 16 seeds instead of 8, and em_checkpoints extended to 8000. rho = 0.5, M ladder 256-8192, C = 8, everything else at E12's settings.",
  "predeclared_analysis": "tools/make_sample_complexity.py: As E12: M* by log-linear interpolation of the seed-pooled RMSE curve between the bracketing rungs, OLS log-slope across levels with a seed bootstrap, and the PAIRED ratio M*_shape/M*_cov whose slope is the corollary's own statement and in which the common noise cancels. The at_cap and censoring rates are reported per (level, M) as a condition of the reading; a level whose cells are predominantly at the cap is reported as a bound, not a point. The bootstrap over seeds is ENUMERATED exactly (every multiset of n draws, multinomial weights) whenever that is feasible, so the interval carries no Monte Carlo error; the 18 Sep audit found the 97.5th percentile of the covariance slope moving between 7.7 and 8.2 across Monte Carlo streams at B = 4000, i.e. across the very prediction it tests.",
  "motivation": "E12 (frozen 2026-09-18) gave point estimates on the predictions -- 7.54 and 8.53 for the shape coordinate against 8, 5.40 [2.13, 7.57] for the covariance against 4, 4.44 for the ratio against 4 -- with bootstrap intervals too wide to exclude the alternatives, and, more seriously, a confound: at t = 1.0 every cell is censored by the 1200-iteration cap (stop_reason = censored in 40/40 cells, at_cap 1.00 at M >= 4096) and the fitted kurtosis scatters between 0 and 3.4 across seeds with no concentration. At that level the experiment measured the optimiser's budget, not the sample complexity. The binding constraint is the iteration ladder, not M.",
- "status": "FROZEN E12b 2026-10-01T11:41:11Z; PRE-REGISTERED 2026-09-18; SUBMITTED 2026-09-18 (job 662796); 662796 TIMEOUT at 478/480, resumed as 667192 (23 Sep)",
+ "status": "FROZEN E12b 2026-10-01T11:41:11Z; PRE-REGISTERED 2026-09-18; SUBMITTED 2026-09-18 (job 662796); 662796 TIMEOUT at 478/480, resumed as 667192 (23 Sep); 667192 COMPLETED (22:14:29); fetched and FROZEN 2026-10-01 (480 rows, 16 seeds x 6 sizes x 5 levels)",
  "registered": "2026-09-18",
  "hpc_runs": [
   {
@@ -42,5 +42,37 @@
   "E12b": [
    "92da540"
   ]
+ },
+ "outcome_2026-10-01": {
+  "reading": "tools/make_sample_complexity.py --src outputs/E12b (the registered analysis, run once into outputs/scratch/e12b_reading; the paper macros are NOT yet regenerated into paper/sections)",
+  "M_star": {
+   "0.6": {
+    "shape": 1093,
+    "cov": 783.8
+   },
+   "0.7": {
+    "shape": 1214,
+    "cov": 1446
+   },
+   "0.8": {
+    "shape": 3313,
+    "cov": 1685
+   },
+   "0.9": {
+    "shape": "unresolved up to 8192",
+    "cov": 4792
+   },
+   "1.0": {
+    "shape": "unresolved up to 8192",
+    "cov": 5113
+   }
+  },
+  "at_cap_fraction": "0.31-0.48 per level (budget gate <= 0.75 passed on all five levels; censored 0.19-0.24)",
+  "log_slopes": {
+   "cov": "4.95, 95% CI [3.09, 6.83]; predicted limit 4, CRB local slope 3.8-3.9 on these levels: consistent, excludes 8",
+   "shape": "5.55, 95% CI [0.83, 9.95] on the three resolved levels; predicted limit 8, CRB local slope 6.1-6.9: consistent, excludes nothing; one-sided from the unresolved levels d log M*/dt > 6.72 (t = 0.9) and > 5.04 (t = 1.0)",
+   "ratio": "1.72, 95% CI [-4.45, 6.63]; predicted 4: excludes 8, does not resolve 4 vs 0"
+  },
+  "verdict": "The covariance coordinate's sample complexity grows as the CRB curve predicts (slope ~4-5 on the swept levels). The shape coordinate is not resolvable at M <= 8192 beyond t = 0.8, so its slope is a one-sided bound (> 6.7) consistent with the predicted 6-7 and with 8; the ratio's interval is too wide to read. The reading stands as the amendment of 18 Sep framed it: the exact information curve is tracked where M* is resolvable; the asymptotic exponents are outside the identifiable window."
  }
 }
