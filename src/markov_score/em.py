@@ -274,12 +274,15 @@ def _e_step_chunk(
     _guard(xp, partition, "Pairwise belief lost all mass.")
     # Optional per-chain weights (responsibilities, markov_score.augmented): each chain's n-1
     # edges carry its weight. Without weights this is bit-for-bit the accumulation it was.
+    # The edge rows of f_all/g_all are SITE-major ((n-1, B, M) reshaped), so the weight vector
+    # is the chain vector tiled n-1 times, not repeated: `repeat` put every chain's weight on
+    # the wrong edges and was caught by the subset test (tests/test_augmented.py).
     if chain_weights is None:
         cw = None
         c_mat = (g_all / partition[:, None]).T @ f_all  # (M, M), C[k, j]
     else:
         cw = to_device(np.asarray(chain_weights, dtype=float), xp)
-        scale = xp.repeat(cw, n - 1) / partition
+        scale = xp.tile(cw, n - 1) / partition
         c_mat = (g_all * scale[:, None]).T @ f_all
     xi = c_mat * K
 

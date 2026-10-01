@@ -544,3 +544,13 @@ tilt are read with the at-bound flag (`tools/make_field_potential_figs.py`, `n_a
 the role of "the parsimonious exactly specified kernel" passes to the site-energy parametrisation
 (5 parameters, E33 amendment 1). Lesson: a tilt basis needs either local support or a penalty;
 "exactly specified up to the basis" says nothing about the MLE being finite.
+
+**N-33, addendum (1 October, evening; the first noisy preview cells).** The pressure is not a
+clean-data artefact. Through noise at the Θ = 2 cell, M = 512, the Legendre tilt's coefficients
+reached the ±200 bound on seed 1 (risk 0.041 against 0.011 on seed 0), and the spline's far
+coefficients sit at ±199 on both seeds with risks 0.028 and 0.056, the second ABOVE the Gaussian
+closure's 0.041 on that cell. At Θ = 2 the marginal is narrow, so more of the basis is
+unconstrained by arrivals and the push outside the data bends the fit inside it. The five-parameter
+site energy on the same cells: 0.011 and 0.020. The registered E33 arms run as registered; the
+remedy to register as a further amendment is a penalised tilt (a P-spline second-difference penalty
+on the B-spline coefficients, a ridge on the Legendre ones), which keeps the M-step concave.
