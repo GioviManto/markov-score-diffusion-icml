@@ -1,0 +1,17 @@
+{
+ "id": "E35",
+ "script": "experiments/e35_state_augmentation.py",
+ "hypothesis": "The consolidated note (30 Sep 2026, section 8 and figure 7 of its figures-first plan): a global latent makes the observed sequence non-Markov, a first-order kernel then keeps an asymptotic bias, and the repair is to enlarge the state (X_i, G). E08 measured the bias on a Gaussian rank-one latent against the window head; the repair was never run. Here the truth is X = G b 1 + U with G a fair sign per sequence and U the Gaussian AR(1) chain at rho = 0.85, the exact score in closed form (a mixture of two Gaussian chains), and the augmented arm is the SAME innovation-mixture kernel on the augmented state, the minus component tied to the plus one by reflection, the phase inferred per sequence from the two evidences (markov_score.augmented). Same parameter count as the first-order arm.",
+ "design": "Cells: offsets b in (0, 1, 2), sizes M in (512, 2048), seeds 0-1, L = 32, the registered interface (one noised view per sequence over the twelve levels, validation 1024 and test 2048 chains, the closed-form posterior mean of the truth as the reference, risk selection on the validation bundle over the ladder (10..400)). Arms: em_first_order (C = 8 mixture through exact BP, misspecified for b > 0), em_augmented (the repair), lmmse_true (linear floor of b^2 11^T + Sigma_U), isotropic. Laptop, 2 workers. The window head is not run (E08 covers it).",
+ "predeclared_predictions": {
+  "P1": "At b = 0 the augmented arm costs nothing: its risk is within 10% of the first-order arm's at every M (paired over seeds).",
+  "P2": "The first-order arm's deficit is a bias, not a data problem: at b = 2 its risk changes by less than 15% from M = 512 to M = 2048, while the augmented arm's falls by more than 30%.",
+  "P3": "The ratio first-order / augmented at M = 2048 rises monotonically with b over (0, 1, 2) and exceeds 2 at b = 2 in every seed; at b = 2 the augmented arm is below the linear floor by a factor of at least 3 at M = 2048."
+ },
+ "predeclared_analysis": "augmented.csv: per (b, M) the paired per-seed ratios first_order/augmented and arm/lmmse_true with the two-seed range (no bootstrap at two seeds; the cells are a laptop design and the reading is qualitative), at_cap and converged read beside the risk.",
+ "seeds": {"confirmatory": "0-1 (laptop)", "dev": "10000 (smoke only)"},
+ "resources": "laptop, 2 workers; the augmented E-step costs four BP sweeps per iteration (two components, responsibilities then weighted statistics)",
+ "status": "REGISTERED and PREDECLARED 2026-10-01 (evening), before any cell ran; approved by the user the same afternoon ('predeclare and run both on the laptop')",
+ "registered": "2026-10-01",
+ "motivation": "The note's figure 7 (misspecification appendix: irreducible bias under a global latent and its repair by state augmentation) and item 9 of its paper outline; the audit of 1 Oct found the repair half missing."
+}

@@ -142,6 +142,7 @@ def e_step(
     delta: float,
     log_mu: np.ndarray | None = None,
     chunk: int = 256,
+    chain_weights: np.ndarray | None = None,
 ) -> ExpectedStatistics:
     """Exact BP E-step over a batch of noisy chains observed at one noise level.
 
@@ -153,6 +154,10 @@ def e_step(
             `priors` when it draws a_1.
     chunk : batch rows processed at once (memory knob; results are exact and
             chunk-independent).
+    chain_weights : (B,) optional non-negative weight per chain, multiplying that chain's
+            contribution to `xi` and `site1` (a responsibility, for a model with a global
+            latent: `markov_score.augmented`). `log_evidence`, `n_edges` and `n_chains` are
+            NOT weighted: they describe the chains that were processed.
 
     Returns the accumulated `ExpectedStatistics`. The forward-backward pass is
     the same recursion as `bp_grid.grid_bp_batch`; the extra work is the rank-one
@@ -164,10 +169,15 @@ def e_step(
         log_mu = -0.5 * grid**2 - 0.5 * np.log(2.0 * np.pi)
     K = np.exp(log_K)
 
+    if chain_weights is not None:
+        chain_weights = np.asarray(chain_weights, dtype=float)
+        if chain_weights.shape != (X.shape[0],) or np.any(chain_weights < 0):
+            raise ValueError("chain_weights must be one non-negative weight per chain")
     total = None
     for start in range(0, X.shape[0], chunk):
         part = _e_step_chunk(
-            grid, weights, K, X[start : start + chunk], alpha, delta, log_mu, m
+            grid, weights, K, X[start : start + chunk], alpha, delta, log_mu, m,
+            None if chain_weights is None else chain_weights[start : start + chunk],
         )
         total = part if total is None else total + part
     if total is None:
@@ -184,6 +194,7 @@ def _e_step_chunk(
     delta: float,
     log_mu: np.ndarray,
     m: int,
+    chain_weights: np.ndarray | None = None,
 ) -> ExpectedStatistics:
     b_size, n = X.shape
     if n < 2:
@@ -261,13 +272,24 @@ def _e_step_chunk(
     # what the parity test exists to rule out.
     partition = (g_all * (f_all @ K.T)).sum(axis=1)
     _guard(xp, partition, "Pairwise belief lost all mass.")
-    c_mat = (g_all / partition[:, None]).T @ f_all  # (M, M), C[k, j]
+    # Optional per-chain weights (responsibilities, markov_score.augmented): each chain's n-1
+    # edges carry its weight. Without weights this is bit-for-bit the accumulation it was.
+    if chain_weights is None:
+        cw = None
+        c_mat = (g_all / partition[:, None]).T @ f_all  # (M, M), C[k, j]
+    else:
+        cw = to_device(np.asarray(chain_weights, dtype=float), xp)
+        scale = xp.repeat(cw, n - 1) / partition
+        c_mat = (g_all * scale[:, None]).T @ f_all
     xi = c_mat * K
 
     # Site-1 posterior mass (for a learnable initial density).
     raw1 = L[0] * ell[:, 0, :] * R[0]
     mass1 = raw1 @ weights
-    site1 = ((raw1 / mass1[:, None]) * weights[None, :]).sum(axis=0)
+    site_rows = (raw1 / mass1[:, None]) * weights[None, :]
+    if cw is not None:
+        site_rows = site_rows * cw[:, None]
+    site1 = site_rows.sum(axis=0)
 
     # Exact evidence: forward normalizers x tail integral x restored constants.
     tail = (L[-1] * ell[:, -1, :]) @ weights

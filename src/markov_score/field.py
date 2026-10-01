@@ -446,3 +446,80 @@ def h_for_correlation(T: float, rho_target: float, h_lo: float = 0.02, h_hi: flo
         else:
             hi = mid
     return float(np.exp(0.5 * (lo + hi)))
+
+
+@dataclass(frozen=True)
+class StridedChain:
+    """The fine chain observed every `stride`-th site: the subsampling protocol of the consolidated
+    note (section 21.1, "generate at fine resolution and subsample systematically").
+
+    Exactly Markov with the `stride`-step kernel K^s of the fine chain (Chapman-Kolmogorov on the
+    grid, K_s = K (W K)^{s-1} with W the quadrature weights), the same stationary law and marginal
+    scale, effective spacing s h and lambda_1/lambda_0 to the power s. One physical object at three
+    resolutions, as opposed to the registered refinement cells, which are three lattice models.
+    For s >= 2 the kernel is NOT a tilted walk: marginalising the intermediate sites destroys the
+    Gaussian-bond form, so the gradient-class kernels (tilted, pair energy) are misspecified on it
+    while a state-dependent mixture is not (E36)."""
+
+    fine: Phi4Chain
+    stride: int
+
+    def __post_init__(self):
+        if int(self.stride) < 1:
+            raise ValueError("stride must be a positive integer")
+
+    @property
+    def name(self) -> str:
+        return f"{self.fine.name}_stride{self.stride}"
+
+    @property
+    def T(self) -> float:
+        return self.fine.T
+
+    @property
+    def h(self) -> float:
+        """The effective spacing of the observed sites."""
+        return self.fine.h * self.stride
+
+    @property
+    def spectrum(self) -> FieldSpectrum:
+        return self.fine.spectrum
+
+    @property
+    def rho(self) -> float:
+        return self.fine.rho ** self.stride
+
+    @property
+    def scale(self) -> float:
+        return self.fine.scale
+
+    @property
+    def innovation_excess_kurtosis(self) -> float:
+        return self.fine.innovation_excess_kurtosis
+
+    def log_transition_matrix(self, grid: np.ndarray, grid_out: np.ndarray | None = None) -> np.ndarray:
+        if grid_out is not None:
+            raise NotImplementedError("the strided kernel lives on one grid")
+        lk = self.fine.log_transition_matrix(grid)
+        if self.stride == 1:
+            return lk
+        w = _trapezoid_weights(np.asarray(grid, dtype=float))
+        K = np.exp(lk)
+        step = w[:, None] * K                      # (W K)[m, j] = w_m K[m, j]
+        M = K
+        for _ in range(self.stride - 1):
+            M = M @ step                           # K_{s+1}[k, j] = sum_m K_s[k, m] w_m K[m, j]
+        with np.errstate(divide="ignore"):
+            return np.log(M)
+
+    def log_stationary(self, grid: np.ndarray) -> np.ndarray:
+        return self.fine.log_stationary(grid)
+
+    def covariance(self, L: int) -> np.ndarray:
+        return self.fine.covariance((L - 1) * self.stride + 1)[:: self.stride, :: self.stride]
+
+    def sample_batch(self, rng: np.random.Generator, n_chains: int, n_sites: int) -> np.ndarray:
+        return self.fine.sample_batch(rng, n_chains, (n_sites - 1) * self.stride + 1)[:, :: self.stride]
+
+    def sample(self, rng: np.random.Generator, n: int) -> np.ndarray:
+        return self.sample_batch(rng, 1, n)[0]

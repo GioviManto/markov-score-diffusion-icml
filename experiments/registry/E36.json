@@ -1,0 +1,17 @@
+{
+ "id": "E36",
+ "script": "experiments/e36_stride_protocol.py",
+ "hypothesis": "The consolidated note (section 21.1) recommends generating the field at fine resolution and subsampling systematically; the registered refinement cells are instead three lattice models at h = 1, 0.5, 0.25. field.StridedChain observes the fine chain (Theta = 0.3, h = 0.25, 128 sites) every s-th site, s in (1, 2, 4): exactly Markov with kernel K^s, the same stationary law, effective spacing 0.25, 0.5, 1. For s >= 2 the kernel is no longer a tilted walk (the Gaussian bond does not survive marginalising the intermediate sites), so the gradient-class kernels are misspecified on the subsampled chain and a state-dependent mixture is not: which kernel families survive subsampling is what the paper must know if the stride protocol is adopted.",
+ "design": "Parts: oracles (per stride and rep, 512 strided chains, exact BP with K^s, LMMSE of the strided covariance, isotropic, projected diagnostic), physics (per stride and rep, E34's statistics on 4096 strided chains in physical units), clean (per stride and seed 0-1, clean-data MLE of em_pair_quartic, em_tilted_spline, em_mixture, em_mdn on 2048 chains, E34's clean ladder, scored on a strided test bundle against exact BP with K^s). Laptop.",
+ "predeclared_predictions": {
+  "P1": "The coarse kink density per unit length and the coarse mean domain length in physical units agree across the three strides within 10% (one physical object; N-31's statistic).",
+  "P2": "The linear floor at stride 4 (effective spacing 1, 32 sites) is within 15% of E32's floor at the lattice cell T0.3_h1_L32 (0.269): the two refinement protocols agree at second order.",
+  "P3": "The gradient-class kernels are exactly specified at stride 1 (clean risk below 0.02 at M = 2048) and misspecified at stride 4: their clean risk at stride 4 is at least twice their stride-1 risk (both seeds, both kernels), while the MDN's clean risk at stride 4 is below the quartic site energy's."
+ },
+ "predeclared_analysis": "oracles.csv pooled rows (level = -1) per stride against E32's ladder at the matching lattice cell; physics.csv per stride; clean.csv per (stride, arm) with the two seeds, the at-bound flag of tools/make_field_potential_figs.py on the tilted rows.",
+ "seeds": {"confirmatory": "reps 0-1, seeds 0-1 (laptop)", "dev": "10000 (smoke only)"},
+ "resources": "laptop, 2 workers; the MDN clean ladder to 400 is the long pole",
+ "status": "REGISTERED and PREDECLARED 2026-10-01 (evening), before any cell ran; approved by the user the same afternoon ('predeclare and run both on the laptop')",
+ "registered": "2026-10-01",
+ "motivation": "The note's section 21 (discretisation caveats) and its 'sharp experimental prediction' on refinement; the audit of 1 Oct found the subsampling protocol unexplored. The noisy-EM version under strides is a follow-up for the cluster."
+}
