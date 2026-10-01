@@ -542,7 +542,11 @@ $\Th=0.3$ & spline tilt, clean & 2048 & $0.999\,(0.005)$ & $0.250\,(0.003)$ & $1
 
 Three readings. First, the temperature is identified to about a percent and the double well to
 $0.016$ RMS from noised data at $M=512$, with a score risk of $0.021$ against the Gaussian closure's
-$0.269$ on the same cell: a factor thirteen, by a kernel with five parameters. Second, at $\Th=2$
+$0.269$ on the same cell: a factor thirteen, by a kernel with five parameters. The same fitted
+kernels, sampled ancestrally from their own invariant law (E34 \code{physics\_learned} on the
+preview), reproduce the truth's kink density per bond ($0.123$ and $0.130$ against $0.123$ and
+$0.120$ on the two seeds) and its mean domain length ($5.1$ and $4.9$ sites against $5.1$ and $5.0$):
+the generated-sample quality the note asks for, in the note's own statistics. Second, at $\Th=2$
 the barrier is read high ($0.27$) and the wells inside ($0.95$): at that temperature the thermal
 energy exceeds the barrier and the marginal is near-Gaussian, so the data constrain $V$ weakly
 there, as P8 anticipated. Third, the clean-data fit of the spline tilt reads everything to

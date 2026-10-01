@@ -42,5 +42,6 @@
   "P1 second half": "FALSIFIED (N-31): raw kink density per unit length 0.120 / 0.175 / 0.247 at h = 1 / 0.5 / 0.25.",
   "P1b": "CONFIRMED: coarse kink density per unit length 0.066 / 0.073 / 0.068 at h = 1 / 0.5 / 0.25 (within 11%), coarse mean domain length in physical units within 20% (see physics.csv).",
   "frozen": "outputs/E34/physics.csv, laptop, commit 811eb06"
- }
+ },
+ "notes_clean_arm": "1 Oct pm, from the laptop preview (not confirmatory): em_tilted_poly fitted by clean MLE is ill-posed outside the data support (N-33): on seed 1 at the base cell, M = 2048, its risk was 1.79 (coefficients at the +-200 bound) while em_tilted_spline gave 0.007 and em_mixture 0.27. P2/P3 are read per arm with the at-bound flag (tools/make_field_potential_figs.py); the site-energy arm em_pair_quartic (E33 amendment 1) is immune by construction and is included in `clean` through cfg['arms'] when run with --set arms=(...). Preview of P4 on the pair arm at M = 512: kink density 0.123/0.130 vs truth 0.123/0.120 per bond, mean domain 5.1/4.9 vs 5.1/5.0 sites (outputs/E34_preview_laptop_learned)."
 }

@@ -227,7 +227,7 @@ def _clean_cell(args):
         t0 = time.time()
         k0 = e33._init_kernel(arm, cfg, grid, seed, cell_id, n)
         ck = tuple(int(c) for c in cfg["clean_checkpoints"])
-        if arm.startswith("em_tilted"):
+        if arm.startswith("em_tilted") or arm.startswith("em_pair"):
             ck = tuple(c for c in ck if c <= 4) or (1,)   # one L-BFGS solve is the maximiser; a few repeats for safety
         saved = _fit_clean_ladder(k0, grid, stats, set(ck))
         best, best_v, curve, mus = None, np.inf, {}, {}

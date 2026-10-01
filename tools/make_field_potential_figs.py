@@ -44,7 +44,7 @@ from frozen_config import FROZEN  # noqa: E402
 ARMS = {"em_pair_quartic": ("pair, 5", fs.CAT[0]), "em_tilted_poly": ("tilt, 7", fs.CAT[1]), "em_tilted_spline": ("tilt, 25", fs.CAT[2])}
 DEFAULT_KERNELS = ["outputs/E33_preview_laptop/kernels.csv", "outputs/E33_preview_laptop_pair/kernels.csv",
                    "outputs/E33_preview_laptop_M2048/kernels.csv", "outputs/E33_preview_laptop_pair_M2048/kernels.csv"]
-DEFAULT_CLEAN = ["outputs/E34_preview_laptop/clean.csv"]
+DEFAULT_CLEAN = ["outputs/E34_preview_laptop/clean.csv", "outputs/E34_preview_laptop_pairclean/clean.csv"]
 CELL_LABEL = {"T0.3_h1_L32": r"$\Theta{=}0.3$", "T2_iso_L32": r"$\Theta{=}2$", "T0.5_iso_L32": r"$\Theta{=}0.5$",
               "T1_iso_L32": r"$\Theta{=}1$", "T0.3_h0.5_L64": r"$h{=}0.5$", "T0.3_h0.25_L128": r"$h{=}0.25$"}
 
