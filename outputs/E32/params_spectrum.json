@@ -1,0 +1,150 @@
+{
+  "timestamp": "2026-10-01 09:51:52",
+  "git_commit": "9b1c940dd93bf2ad72183dd1f6c12949b0feb8b4",
+  "git_branch": "claude/phi4-field-2026-10-01",
+  "git_dirty": "?? outputs/E32/\n?? outputs/logs/e32_2026-10-01.log",
+  "source_archive_sha256": "",
+  "source_is_clean": false,
+  "revision_source": "git",
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "platform": "macOS-14.1.1-arm64-arm-64bit-Mach-O",
+  "hostname": "MacBook-Air-160.local",
+  "slurm_job_id": "",
+  "slurm_array_task_id": "",
+  "cpu_count": "8",
+  "blas_threads": "2",
+  "settings": {
+    "temperatures": [
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.7,
+      1.0,
+      1.5,
+      2.0
+    ],
+    "spacings": [
+      0.125,
+      0.25,
+      0.5,
+      1.0,
+      2.0
+    ],
+    "iso_temperatures": [
+      0.3,
+      0.5,
+      0.7,
+      1.0,
+      1.5,
+      2.0
+    ],
+    "cells": [
+      "T0.3_h1_L32",
+      "T0.5_iso_L32",
+      "T1_iso_L32",
+      "T2_iso_L32",
+      "T0.3_h0.5_L64",
+      "T0.3_h0.25_L128"
+    ],
+    "n_chains": 512,
+    "reps": [
+      0,
+      1
+    ],
+    "grid_size": 401,
+    "half_width": 8.0,
+    "refinement_grids": [
+      [
+        401,
+        8.0
+      ],
+      [
+        801,
+        8.0
+      ],
+      [
+        1601,
+        8.0
+      ]
+    ],
+    "theory_cells": [
+      "T0.3_h1_L32",
+      "T0.5_iso_L32",
+      "T1_iso_L32",
+      "T2_iso_L32"
+    ],
+    "theory_modes": 256
+  },
+  "cells": [
+    {
+      "cell": "T0.3_h1_L32",
+      "T": 0.3,
+      "h": 1.0,
+      "n_sites": 32,
+      "role": "base",
+      "rho1": 0.8484152418557108,
+      "corr_length_sites": 6.083276735551957,
+      "scale": 0.8207443286253951,
+      "excess_kurtosis": -1.3520905648554649
+    },
+    {
+      "cell": "T0.5_iso_L32",
+      "T": 0.5,
+      "h": 0.4186514282549087,
+      "n_sites": 32,
+      "role": "tsweep",
+      "rho1": 0.8499991939268088,
+      "corr_length_sites": 6.1530934764168235,
+      "scale": 0.7656070877292602,
+      "excess_kurtosis": -0.8810902157402327
+    },
+    {
+      "cell": "T1_iso_L32",
+      "T": 1.0,
+      "h": 0.22588550373104435,
+      "n_sites": 32,
+      "role": "tsweep",
+      "rho1": 0.8500011201175546,
+      "corr_length_sites": 6.153179273666719,
+      "scale": 0.8180063055091423,
+      "excess_kurtosis": -0.5879412818900516
+    },
+    {
+      "cell": "T2_iso_L32",
+      "T": 2.0,
+      "h": 0.1500690371555632,
+      "n_sites": 32,
+      "role": "tsweep",
+      "rho1": 0.8500022377450388,
+      "corr_length_sites": 6.1532290565378815,
+      "scale": 0.9496460067159037,
+      "excess_kurtosis": -0.46053858848481743
+    },
+    {
+      "cell": "T0.3_h0.5_L64",
+      "T": 0.3,
+      "h": 0.5,
+      "n_sites": 64,
+      "role": "refine",
+      "rho1": 0.9165137458845445,
+      "corr_length_sites": 11.470755811154403,
+      "scale": 0.8050972453999596,
+      "excess_kurtosis": -1.253209576266878
+    },
+    {
+      "cell": "T0.3_h0.25_L128",
+      "T": 0.3,
+      "h": 0.25,
+      "n_sites": 128,
+      "role": "refine",
+      "rho1": 0.9564905857464377,
+      "corr_length_sites": 22.479824754432723,
+      "scale": 0.8000918436020265,
+      "excess_kurtosis": -1.2184005049100557
+    }
+  ],
+  "quick": false,
+  "workers": 4
+}

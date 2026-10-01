@@ -12,7 +12,7 @@
  "seeds": {
   "deterministic": "rng_for('e32-ladder' | 'e32-refine', T, h, L, rep), reps 0-1"
  },
- "status": "REGISTERED 2026-10-01, PREDECLARED; the registered run is the laptop run started 1 Oct 09:50 local at commit 9b1c940 (outputs/E32, 4 workers), all four parts.",
+ "status": "FROZEN E32 2026-10-01T09:05:45Z; REGISTERED 2026-10-01, PREDECLARED; the registered run is the laptop run started 1 Oct 09:50 local at commit 9b1c940 (outputs/E32, 4 workers), all four parts.",
  "registered": "2026-10-01",
  "cells": [
   {
@@ -59,5 +59,28 @@
   }
  ],
  "motivation": "Jerome, 1 Oct 2026: 'if we manage to add to your current work a more concrete example than the AR(1) process we may be done with a paper'. Before any learning run: fix the cells on a measured map, validate the grid on the new family, and check the theorem's constant where nothing is fitted.",
- "tests": "tests/test_field.py (14), tests/test_bp_projected.py (6), tests/test_tilted_kernel.py (7), tests/test_kernel_mstep_contract.py (+4)"
+ "tests": "tests/test_field.py (14), tests/test_bp_projected.py (6), tests/test_tilted_kernel.py (7), tests/test_kernel_mstep_contract.py (+4)",
+ "frozen_outputs": {
+  "outputs/E32/iso.csv": "1756e93bc1112fdd8ca95fb8c30bc2f9d8bad6f81fe6911f898da9b16a85fd24",
+  "outputs/E32/ladder.csv": "a4b3b96e6b8e418bd6442b82225bab5f57093f05dc2c19669997090a2790c009",
+  "outputs/E32/refinement.csv": "8e4bdb6b28955dbd5bfe08a3635ba214b3ea85245346e08a68fd227d61b0c09b",
+  "outputs/E32/spectrum.csv": "7da7dc3cde59eb91ca69172b1ef75e84f50368e11432de2da7a1e4efde433413",
+  "outputs/E32/theory.csv": "58a05504fe5348f4b7dda53db6e20d7bed105738ea4981de7b328d9236a58643",
+  "outputs/E32/params_ladder.json": "dd20a1a087c08a2e8d20001b975daa29c3a704206170d656559e7917ebfdd3c1",
+  "outputs/E32/params_refinement.json": "2d6bc73b7927241bbb462fa46392d94755cd9ab4dc5e0b80f37b13d6d404dcf5",
+  "outputs/E32/params_spectrum.json": "1888acc0b63de0e8903d7ecf2d4877aa6a4c927d6ff1b3406632cfe5f3bbb89e",
+  "outputs/E32/params_theory.json": "42b0f53d6600c80d6d23cbfaea3a233cbe34264f4120ffe2a8e661936943b9f4"
+ },
+ "frozen_at": {
+  "E32": "2026-10-01T09:05:45Z"
+ },
+ "frozen_commit": {
+  "E32": "4c24b1f82b2bdf80610506f203c9f3ceb73253b6"
+ },
+ "frozen_run_commits": {
+  "E32": [
+   "4c24b1f",
+   "9b1c940"
+  ]
+ }
 }
