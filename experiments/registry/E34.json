@@ -15,11 +15,32 @@
   "confirmatory": "0-15 for clean; 0-3 for physics_learned; reps 0-1 for physics_truth",
   "streams": "e34-physics, e34-learned*, and E33's e33-train/val/test/em keys"
  },
- "status": "REGISTERED 2026-10-01, PREDECLARED, smoke-tested (--quick, all three parts); clean and physics_truth to be submitted/run; physics_learned waits for E33's kernels.csv.",
+ "status": "FROZEN E34 2026-10-01T09:40:39Z; REGISTERED 2026-10-01, PREDECLARED, smoke-tested (--quick, all three parts); clean and physics_truth to be submitted/run; physics_learned waits for E33's kernels.csv.",
  "registered": "2026-10-01",
  "outcome_physics_truth_first_run": {
   "P1 first half": "CONFIRMED: max |C_sample - C_spectral| over lags is 1.2-1.8 standard errors on all 12 (cell, rep) rows; sample kurtosis within 0.02 of the exact one.",
   "P1 second half": "FALSIFIED: raw kink density per unit length 0.120, 0.175, 0.247 at h = 1, 0.5, 0.25 (ratio 1.41 per halving: 1/sqrt(h)). A sign change is not a kink: a rough field crosses the barrier inside a domain, and finer lattices resolve more crossings. N-31. The statistic is replaced by the coarse one (P1b); the raw one stays in the table.",
   "numbers": "kinks per bond 0.120/0.088/0.062 (h = 1/0.5/0.25), mean domain in sites 5.09/7.51/10.88, i.e. 5.09/3.75/2.72 physical."
+ },
+ "frozen_outputs": {
+  "outputs/E34/physics.csv": "b0130a191fdcef7a1dd7a89f05004bab02142a98d7c4e380b867f746c4a3c92a",
+  "outputs/E34/params_physics_truth.json": "c41ea9c12956f61f9a6c73c27f3523a35bc8514dbbbb8ab3d083f99c8b44be3a"
+ },
+ "frozen_at": {
+  "E34": "2026-10-01T09:40:39Z"
+ },
+ "frozen_commit": {
+  "E34": "811eb060f24acca5ff53c0590a86a71c89056a3e"
+ },
+ "frozen_run_commits": {
+  "E34": [
+   "811eb06"
+  ]
+ },
+ "outcome_physics_truth": {
+  "P1 first half": "CONFIRMED on the rerun too: max |C_sample - C_spectral| over lags 1.2-1.8 standard errors on all 12 rows.",
+  "P1 second half": "FALSIFIED (N-31): raw kink density per unit length 0.120 / 0.175 / 0.247 at h = 1 / 0.5 / 0.25.",
+  "P1b": "CONFIRMED: coarse kink density per unit length 0.066 / 0.073 / 0.068 at h = 1 / 0.5 / 0.25 (within 11%), coarse mean domain length in physical units within 20% (see physics.csv).",
+  "frozen": "outputs/E34/physics.csv, laptop, commit 811eb06"
  }
 }
