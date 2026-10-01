@@ -231,7 +231,7 @@ ROW_DEFAULTS = dict(arm="", selection="", arch="", hp="", checkpoint=-1, at_cap=
 def _kernels_cell(args):
     cfg, cell_id, seed, n = args
     chain, grid, w, log_k, log_mu, sigma0, A, Av, val, test, base = _common(cfg, cell_id, seed, n)
-    L = chain and base["n_sites"]
+    L = base["n_sites"]
     groups = e14._one_view_groups(A, f"e33-em-{cell_id}-M{n}", seed, L)
     val_groups = e14._one_view_groups(Av, f"e33-emval-{cell_id}", seed, L)
     rows = []

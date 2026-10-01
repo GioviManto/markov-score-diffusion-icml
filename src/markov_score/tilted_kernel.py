@@ -94,7 +94,7 @@ def design_matrix(basis: str, n_basis: int, half_width: float, x: np.ndarray) ->
         # len(t) - k - 1 spline functions; we want n_basis + 1 of them (one is dropped below)
         n_inner = n_basis + 5 - 2 * k
         if n_inner < 2:
-            raise ValueError("bspline needs n_basis >= 4")
+            raise ValueError("bspline needs n_basis >= 3 (two interior knots)")
         inner = np.linspace(-half_width, half_width, n_inner)
         t = np.concatenate([np.full(k, -half_width), inner, np.full(k, half_width)])
         xc = np.clip(x, -half_width, half_width * (1 - 1e-12))
