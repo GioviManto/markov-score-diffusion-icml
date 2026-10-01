@@ -1,0 +1,128 @@
+\documentclass[10pt,a4paper]{article}
+
+% ---------------------------------------------------------------------------
+% From zero to the phi^4 laboratory: a self-contained primer.
+% Build: cd reports && tectonic -X compile theory-primer-2026-10-01.tex
+% Figures: python tools/make_primer_figs.py (primer-*.pdf); the closing chapter
+% also uses fig-field-potential.pdf and fig-field-sweep.pdf (tools/make_field_*.py).
+% Parts live in reports/primer/.
+% ---------------------------------------------------------------------------
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2.1cm,top=2.0cm,bottom=2.2cm]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+\setlength{\parskip}{0.3em}
+\setlength{\parindent}{0pt}
+\titleformat{\section}{\Large\bfseries}{\thesection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.2em}{0.5em}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
+\titlespacing*{\subsection}{0pt}{0.9em}{0.3em}
+\setlist{itemsep=0.15em,topsep=0.25em}
+
+\theoremstyle{plain}
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{lemma}[proposition]{Lemma}
+\newtheorem{corollary}[proposition]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[proposition]{Definition}
+\newtheorem{example}[proposition]{Example}
+
+\definecolor{keyc}{HTML}{1c5cab}
+\definecolor{projc}{HTML}{1a8a62}
+\definecolor{warnc}{HTML}{c24d1f}
+\newtcolorbox{keyidea}{enhanced,breakable,colback=keyc!4,colframe=keyc,boxrule=0.5pt,arc=1.5pt,
+  left=5pt,right=5pt,top=3pt,bottom=3pt,fonttitle=\bfseries\small,title=Key idea}
+\newtcolorbox{inproject}{enhanced,breakable,colback=projc!4,colframe=projc,boxrule=0.5pt,arc=1.5pt,
+  left=5pt,right=5pt,top=3pt,bottom=3pt,fonttitle=\bfseries\small,title=In our project}
+\newtcolorbox{caution}{enhanced,breakable,colback=warnc!4,colframe=warnc,boxrule=0.5pt,arc=1.5pt,
+  left=5pt,right=5pt,top=3pt,bottom=3pt,fonttitle=\bfseries\small,title=Careful}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\Th}{\Theta}
+\newcommand{\En}{\mathcal{E}}
+\newcommand{\Zp}{\mathcal{Z}}
+\newcommand{\fwd}{\overrightarrow{m}}
+\newcommand{\bwd}{\overleftarrow{m}}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\T}{^{\top}}
+
+\begin{document}
+
+\begin{titlepage}
+\vspace*{3cm}
+{\Huge\bfseries From Zero to the $\phi^4$ Laboratory\par}
+\vspace{0.6cm}
+{\Large A self-contained primer on the mathematics behind structured denoising\par}
+\vspace{1.2cm}
+{\large Kalman filtering and smoothing \textperiodcentered{} Fourier and Hermite analysis \textperiodcentered{}
+EM and its generalisations \textperiodcentered{} Fisher information and quasi-likelihood \textperiodcentered{}
+hidden Markov models, Markov random fields and belief propagation \textperiodcentered{}
+the Allen--Cahn equation and its stochastic version \textperiodcentered{} and how they meet\par}
+\vfill
+{\normalsize Prepared for Giovanni Mantovani \textperiodcentered{} 1 October 2026\\[0.2em]
+repository \code{markov-score-diffusion-icml}\\ branch \code{claude/phi4-field-2026-10-01}\par}
+\vspace{0.4cm}
+{\small Every figure is generated from the project's own code (\code{tools/make\_primer\_figs.py});
+every number quoted from an experiment names the experiment and says whether it is frozen or a preview.\par}
+\end{titlepage}
+
+\section*{How to read this primer}
+
+The project asks one question: given many noisy copies of sequences that come from a
+one-dimensional physical system, can we learn the system's local rule and then compute the
+\emph{exact} best denoiser? Answering it uses ten pieces of mathematics that are usually
+taught in ten different courses. This primer builds each of them from the ground up, in an
+order where every chapter only uses what came before.
+
+\begin{itemize}
+\item \textbf{Part I, foundations} (\S1--3). The calculus, linear algebra and probability you need,
+  including the one trick used everywhere (completing the square), conditional expectation as the
+  best predictor, and Markov chains.
+\item \textbf{Part II, inference on chains} (\S4--6). Noise, scores and Tweedie's formula; the Kalman
+  filter and smoother; hidden Markov models, Markov random fields and belief propagation.
+\item \textbf{Part III, spectral tools} (\S7--8). Fourier analysis (why noise erases fine detail) and
+  Hermite polynomials (why fourth-order structure fades like $e^{-4t}$).
+\item \textbf{Part IV, learning} (\S9--10). Maximum likelihood, the EM algorithm and its general forms;
+  Fisher information, the Cram\'er--Rao bound, quasi-likelihood.
+\item \textbf{Part V, physics} (\S11--12). From a ball rolling in a valley to the Allen--Cahn equation
+  and its stochastic version; the transfer operator that turns a field into a Markov chain.
+\item \textbf{Part VI, the new theory} (\S13). The tilted walk, reversibility, the learned pair energy,
+  and what the experiments have measured.
+\end{itemize}
+
+Three kinds of boxes recur. \emph{Key idea} boxes state the one thing to remember. \emph{In our
+project} boxes say where the idea lives in the code and experiments. \emph{Careful} boxes flag the
+traps that have cost us time. Proofs are given whenever they are short enough to be read in a
+minute; the longer ones are sketched with the step that matters.
+
+\tableofcontents
+\clearpage
+
+\input{primer/p1-foundations}
+\input{primer/p2-inference}
+\input{primer/p3-spectral}
+\input{primer/p4-learning}
+\input{primer/p5-physics}
+\input{primer/p6-synthesis}
+
+\end{document}

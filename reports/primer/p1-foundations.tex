@@ -1,0 +1,297 @@
+% Part I: foundations (sections 1-3)
+\addcontentsline{toc}{part}{Part I \quad Foundations}
+\section{The toolbox}\label{sec:toolbox}
+
+\subsection{Slopes, curvature, and the second difference}
+
+A function $f$ assigns a number $f(x)$ to every number $x$. Its \emph{derivative} $f'(x)$ is the slope of
+the graph at $x$: for a small step $h$,
+\[
+  f'(x)\approx\frac{f(x+h)-f(x)}{h}.
+\]
+The second derivative $f''(x)$ is the slope of the slope, which measures curvature: positive where the graph
+bends upwards like a cup, negative where it bends down like a cap. Taylor's formula says that near $x$ every
+smooth function looks like a parabola,
+\begin{equation}\label{eq:taylor}
+  f(x+h)=f(x)+h\,f'(x)+\tfrac{1}{2}h^2f''(x)+\tfrac16h^3f'''(x)+\dots
+\end{equation}
+
+Write \eqref{eq:taylor} once with $+h$ and once with $-h$ and add. The odd powers cancel, and
+\begin{equation}\label{eq:seconddiff}
+  \frac{f(x+h)-2f(x)+f(x-h)}{h^2}=f''(x)+O(h^2).
+\end{equation}
+The left side is the \emph{second difference}. Rewrite it as $\frac{2}{h^2}\big[\tfrac12(f(x+h)+f(x-h))-f(x)\big]$:
+it is the gap between the average of the two neighbours and the value at the point. It is positive when the
+point sits below its neighbours, negative when it sits above.
+
+\begin{keyidea}
+The second difference \eqref{eq:seconddiff} is all a \emph{Laplacian} is in one dimension. When physicists
+write $\partial_x^2\phi$ or $\nabla^2\phi$ for a quantity $\phi$ that varies along a line, they mean ``how far
+$\phi$ at a point is below the average of its neighbours'', in the limit of close neighbours. In more
+dimensions one adds the same quantity for each direction. We will meet it as the force of the springs that
+hold a string together (\S\ref{sec:allencahn}).
+\end{keyidea}
+
+A function of several variables $f(x_1,\dots,x_n)$ has \emph{partial derivatives} $\partial f/\partial x_i$:
+the slope in direction $i$ with the others held fixed. Collected in a vector they form the \emph{gradient}
+$\nabla f$, which points in the direction in which $f$ increases fastest.
+
+\subsection{Integrals as sums, and the grid}
+
+The integral $\int_a^b f(x)\dd x$ is the area under the graph. Chop $[a,b]$ into $N_g-1$ intervals of width
+$\delta$ with points $u_1,\dots,u_{N_g}$; then
+\begin{equation}\label{eq:trapezoid}
+  \int_a^b f(x)\dd x\approx\sum_{k=1}^{N_g}w_k\,f(u_k),\qquad w_k=\delta\ \text{except}\ w_1=w_{N_g}=\delta/2 .
+\end{equation}
+This is the \emph{trapezoid rule}; its error shrinks like $\delta^2$. Every integral in this project is done
+this way: on $N_g=401$ points spread over $[-8,8]$, so $\delta=0.04$.
+
+\subsection{Exponentials, logarithms, and why we compute in logs}
+
+The exponential turns sums into products, $e^{a+b}=e^ae^b$, and the logarithm turns products back into sums.
+Probabilities of long sequences are products of many numbers smaller than one, which underflow a computer
+(in double precision $e^{-800}$ is exactly zero). So we store logarithms, and to add numbers stored as logs
+we use the \emph{log-sum-exp} identity
+\[
+  \log\sum_k e^{y_k}=m+\log\sum_k e^{y_k-m},\qquad m=\max_k y_k,
+\]
+which never overflows because every exponent on the right is at most zero.
+
+\subsection{Vectors, matrices, eigenvectors}
+
+A vector is a list of numbers, a matrix a table. The product of two matrices is
+\begin{equation}\label{eq:matprod}
+  (AB)_{kj}=\sum_m A_{km}B_{mj},
+\end{equation}
+a sum over an intermediate index $m$. Remember this shape: ``sum over the state in the middle'' is the one
+operation that belief propagation repeats (\S\ref{sec:bp}). The transpose $A\T$ swaps rows and columns; $A$ is
+\emph{symmetric} if $A=A\T$. The inverse $A^{-1}$ undoes $A$.
+
+An \emph{eigenvector} $v$ of a square matrix $A$ is a direction that $A$ only stretches: $Av=\lambda v$, with
+\emph{eigenvalue} $\lambda$. Two facts carry most of the weight in this primer.
+\begin{itemize}
+\item A symmetric matrix has real eigenvalues $\lambda_0\ge\lambda_1\ge\dots$ and eigenvectors $v_0,v_1,\dots$ that
+  are mutually perpendicular and of unit length. It can be rebuilt from them, $A=\sum_n\lambda_nv_nv_n\T$, and so
+  $A^N=\sum_n\lambda_n^Nv_nv_n\T$. For large $N$ the largest $|\lambda_n|$ dominates: \emph{repeated multiplication
+  forgets everything except the leading eigenvector}. That is the power method, and it is the reason a long
+  chain ``forgets'' its start.
+\item \emph{Perron--Frobenius}: if every entry of $A$ is positive, the largest eigenvalue $\lambda_0$ is positive
+  and unrepeated, and its eigenvector can be chosen with every entry positive.
+\end{itemize}
+A symmetric $A$ is \emph{positive definite} if $v\T Av>0$ for every nonzero $v$, equivalently if all its
+eigenvalues are positive. Covariance matrices are of this kind.
+
+\subsection{The Gaussian integral and completing the square}
+
+The single most useful integral is
+\begin{equation}\label{eq:gaussint}
+  \int_{-\infty}^{\infty}e^{-x^2/2}\dd x=\sqrt{2\pi}.
+\end{equation}
+(Square it, read the square as an integral over the plane, and switch to polar coordinates; the angular
+integral gives $2\pi$ and the radial one gives $1$.) The single most useful trick is \emph{completing the
+square}:
+\begin{equation}\label{eq:complete}
+  -\tfrac{A}{2}x^2+Bx=-\tfrac{A}{2}\Big(x-\tfrac{B}{A}\Big)^2+\tfrac{B^2}{2A}\qquad(A>0).
+\end{equation}
+It says that any exponent that is quadratic in $x$ describes a bell curve centred at $B/A$ with width
+$1/\sqrt A$. Products of Gaussian bumps are Gaussian bumps because their exponents add, and the sum of two
+quadratics is a quadratic. The whole of the Kalman filter is this sentence applied repeatedly.
+
+\paragraph{Check yourself.}
+\begin{enumerate}[label=\thesection.\arabic*,leftmargin=2.2em]
+\item Show that the second difference of $f(x)=x^3$ equals $6x$ exactly, for every $h$. Why is there no error term?
+\item The matrix $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$ has positive entries. Find its eigenvalues and eigenvectors, and say in which
+  direction $A^Nv$ points for large $N$, whatever the starting vector $v$ (unless $v$ is special).
+\end{enumerate}
+
+\section{Probability from scratch}\label{sec:prob}
+
+\subsection{Random variables, densities, expectations}
+
+A random quantity $a$ is described by its \emph{density} $p(a)$: the probability that $a$ lands in a tiny
+interval $[u,u+\dd u]$ is $p(u)\dd u$, and $\int p=1$. The \emph{expectation} of any function of $a$ is the
+weighted average
+\[
+  \E[f(a)]=\int f(u)\,p(u)\dd u .
+\]
+The mean is $\mu=\E[a]$, the variance $\Var(a)=\E[(a-\mu)^2]$, the standard deviation its square root. For two
+quantities the covariance $\Cov(a,b)=\E[(a-\E a)(b-\E b)]$ measures whether they move together, and the
+correlation divides it by both standard deviations, landing in $[-1,1]$.
+
+Two random quantities have a \emph{joint} density $p(a,b)$. Integrating one away gives the \emph{marginal},
+$p(a)=\int p(a,b)\dd b$. Fixing one gives the \emph{conditional},
+\[
+  p(a\mid b)=\frac{p(a,b)}{p(b)},
+\]
+the law of $a$ once $b$ is known. They are independent when $p(a,b)=p(a)p(b)$. Writing the joint both ways,
+$p(a\mid x)p(x)=p(x\mid a)p(a)$, gives \emph{Bayes' rule}:
+\begin{equation}\label{eq:bayes}
+  \underbrace{p(a\mid x)}_{\text{posterior}}=\frac{\overbrace{p(x\mid a)}^{\text{likelihood}}\ \overbrace{p(a)}^{\text{prior}}}{\underbrace{p(x)}_{\text{evidence}}}
+  \;\propto\;p(x\mid a)\,p(a).
+\end{equation}
+The symbol $\propto$ (``proportional to'') means ``equal up to a factor that does not depend on $a$''; the factor
+is recovered at the end by requiring the density to integrate to one.
+
+\subsection{The Gaussian, in one and many dimensions}
+
+The Gaussian (normal) density with mean $m$ and variance $s^2$ is
+$\N(u;m,s^2)=\exp\!\big(-(u-m)^2/2s^2\big)/\sqrt{2\pi s^2}$; by \eqref{eq:gaussint} it integrates to one. A
+weighted sum of independent Gaussians is Gaussian, with means and variances combining as
+$\E[\alpha a+\beta z]=\alpha\E a+\beta\E z$ and $\Var(\alpha a+\beta z)=\alpha^2\Var a+\beta^2\Var z$.
+
+A vector $a=(a_1,\dots,a_n)$ is Gaussian with mean vector $m$ and covariance matrix $\Sigma$
+($\Sigma_{ij}=\Cov(a_i,a_j)$) if
+\begin{equation}\label{eq:mvn}
+  p(a)=\frac{1}{\sqrt{(2\pi)^n\det\Sigma}}\exp\!\Big(-\tfrac12(a-m)\T\Sigma^{-1}(a-m)\Big).
+\end{equation}
+The inverse $\Sigma^{-1}$ is the \emph{precision matrix}, and its zeros have a meaning that will matter: if
+$(\Sigma^{-1})_{ij}=0$, then $a_i$ and $a_j$ are independent \emph{once all the other coordinates are known}.
+
+\begin{example}[the Gaussian AR(1) chain has a tridiagonal precision]
+Let $a_1\sim\N(0,1)$ and $a_{i+1}=\rho a_i+\varepsilon_i$ with independent $\varepsilon_i\sim\N(0,1-\rho^2)$. The joint
+density is $p(a_1)\prod_i\N(a_{i+1};\rho a_i,1-\rho^2)$, whose exponent is
+$-\tfrac12a_1^2-\sum_i(a_{i+1}-\rho a_i)^2/2(1-\rho^2)$. Each term couples only neighbours, so the precision
+matrix has nonzeros only on the diagonal and the two adjacent diagonals, while the covariance
+$\Sigma_{ij}=\rho^{|i-j|}$ is full. \emph{Local in the precision, global in the covariance}: this is the whole
+reason inference on chains is cheap.
+\end{example}
+
+\subsection{Conditioning a Gaussian on a noisy observation}\label{sec:gausscond}
+
+Suppose $a\sim\N(m,P)$ and we observe $x=\alpha a+\sqrt\Delta\,z$ with independent noise $z\sim\N(0,1)$. By Bayes'
+rule the posterior is proportional to the prior times the likelihood:
+\[
+  p(a\mid x)\propto\exp\!\Big(-\frac{(a-m)^2}{2P}-\frac{(x-\alpha a)^2}{2\Delta}\Big).
+\]
+The exponent is quadratic in $a$. Collect the coefficient of $a^2$ (that is $-\tfrac12A$ with $A=1/P+\alpha^2/\Delta$)
+and of $a$ (that is $B=m/P+\alpha x/\Delta$) and complete the square \eqref{eq:complete}:
+\begin{equation}\label{eq:precadd}
+  \boxed{\;\frac{1}{P'}=\frac1P+\frac{\alpha^2}{\Delta},\qquad m'=P'\Big(\frac{m}{P}+\frac{\alpha x}{\Delta}\Big)\;}
+\end{equation}
+The posterior is Gaussian. \emph{Precisions add} (prior precision plus the information in the measurement),
+and the posterior mean is a precision-weighted average of what we believed and what we saw. The same result
+in ``gain'' form, which is how the Kalman filter is usually written, is
+\begin{equation}\label{eq:gain}
+  m'=m+k\,(x-\alpha m),\qquad P'=(1-k\alpha)P,\qquad k=\frac{\alpha P}{\alpha^2P+\Delta}.
+\end{equation}
+The \emph{innovation} $x-\alpha m$ is the surprise in the measurement; the gain $k$ says how much of it to
+believe. (Check: $(1-k\alpha)P=P\Delta/(\alpha^2P+\Delta)$, which is the reciprocal of $1/P+\alpha^2/\Delta$.)
+
+For vectors the statement is the same with matrices. If $(a,x)$ is jointly Gaussian with blocks
+$\Sigma_{aa},\Sigma_{ax},\Sigma_{xx}$, then
+\begin{equation}\label{eq:condmvn}
+  \E[a\mid x]=m_a+\Sigma_{ax}\Sigma_{xx}^{-1}(x-m_x),\qquad \Cov(a\mid x)=\Sigma_{aa}-\Sigma_{ax}\Sigma_{xx}^{-1}\Sigma_{xa}.
+\end{equation}
+Notice that the conditional mean is a \emph{linear} function of $x$. This is special to Gaussians.
+
+\subsection{The best predictor and the best linear predictor}\label{sec:mmse}
+
+Suppose we must guess $a$ from $x$ with a function $g(x)$ and pay the squared error. The best $g$ is the
+\emph{conditional mean} $g^\star(x)=\E[a\mid x]$. Proof: for any $g$,
+\[
+  \E\big[(a-g)^2\big]=\E\big[(a-g^\star)^2\big]+\E\big[(g^\star-g)^2\big],
+\]
+because the cross term $\E[(a-g^\star)(g^\star-g)]$ vanishes (given $x$, the second factor is fixed and the first
+has mean zero). The second term is never negative, so nothing beats $g^\star$. This is the
+\emph{minimum mean-square error} (MMSE) estimator, and it is what the word ``denoiser'' means in this primer.
+
+If we restrict ourselves to \emph{linear} guesses $g(x)=Gx$, the best one is
+$G=\Cov(a,x)\Var(x)^{-1}$, the LMMSE (linear MMSE) estimator. It depends only on covariances. For a Gaussian
+pair it coincides with $\E[a\mid x]$ by \eqref{eq:condmvn}; for anything else, the true conditional mean is
+nonlinear and strictly better.
+
+\begin{keyidea}
+Every law has a \emph{covariance twin}: the Gaussian with the same means and covariances. The twin's
+denoiser is the LMMSE estimator of the true law. The gap between the twin's denoiser and the true one is
+exactly what the non-Gaussian structure of the data is worth to a denoiser. Most of this project measures
+that gap.
+\end{keyidea}
+
+\subsection{Moments, cumulants, kurtosis}\label{sec:cumulants}
+
+For a standardised quantity (mean $0$, variance $1$) the third moment $\E a^3$ is the \emph{skewness}
+(asymmetry) and $\E a^4$ the \emph{kurtosis}, which is $3$ for a Gaussian. The \emph{excess kurtosis}
+$\E a^4-3$ is positive for heavy tails (a Laplace law has $+3$) and negative for laws with ``shoulders'' or
+two humps (the $\phi^4$ marginal at $\Th=0.3$ has $-1.35$).
+
+These are special cases of \emph{cumulants} $\kappa_n$, defined as the coefficients of
+$\log\E e^{sa}=\sum_n\kappa_ns^n/n!$. The first is the mean, the second the variance, and for a standardised
+law $\kappa_3$ and $\kappa_4$ are skewness and excess kurtosis. Two properties make cumulants the right
+language. For independent $a$ and $b$ they add, $\kappa_n(a+b)=\kappa_n(a)+\kappa_n(b)$, and they scale as
+$\kappa_n(ca)=c^n\kappa_n(a)$. A Gaussian has $\kappa_n=0$ for every $n\ge3$; this is what ``non-Gaussian'' will
+mean.
+
+A first look at the decay that organises the whole project: if $x=\alpha a+\sqrt\Delta z$ with Gaussian $z$
+independent of $a$, then for $n\ge3$
+\begin{equation}\label{eq:cumdecay}
+  \kappa_n(x)=\alpha^n\kappa_n(a)+\Delta^{n/2}\kappa_n(z)=\alpha^n\kappa_n(a).
+\end{equation}
+With $\alpha=e^{-t}$ (\S\ref{sec:noise}), the $n$-th cumulant fades like $e^{-nt}$: skewness like $e^{-3t}$,
+kurtosis like $e^{-4t}$, while the variance is held fixed. Chapter~\ref{sec:hermite} turns this into a
+statement about whole functions.
+
+\paragraph{Check yourself.}
+\begin{enumerate}[label=\thesection.\arabic*,leftmargin=2.2em]
+\item The prior is $a\sim\N(0,1)$ and we observe $x=a+z$ with $z\sim\N(0,1)$ ($\alpha=\Delta=1$). What is the posterior?
+\item A standardised law has excess kurtosis $-1.35$. What is the excess kurtosis of $x=e^{-t}a+\sqrt{1-e^{-2t}}\,z$ at $t=1$?
+\end{enumerate}
+
+\section{Markov chains}\label{sec:markov}
+
+\subsection{Definition}
+
+A sequence $a_1,a_2,\dots,a_L$ is a \emph{Markov chain} if the next value depends on the past only through the
+present: $p(a_{i+1}\mid a_1,\dots,a_i)=p(a_{i+1}\mid a_i)$. The joint density then factorises,
+\begin{equation}\label{eq:chain}
+  p(a_1,\dots,a_L)=\mu(a_1)\prod_{i=1}^{L-1}K(a_{i+1}\mid a_i),
+\end{equation}
+into an initial law $\mu$ and a \emph{transition kernel} $K(a'\mid a)$, which for each $a$ is a density in $a'$.
+On the grid of \eqref{eq:trapezoid} the kernel becomes a matrix $K_{kj}=K(u_k\mid u_j)$ whose columns satisfy
+$\sum_kw_kK_{kj}=1$, and pushing a distribution one step forward is a matrix--vector product:
+\[
+  p_{i+1}(a')=\int K(a'\mid a)\,p_i(a)\dd a\quad\leadsto\quad p_{i+1}(u_k)=\sum_jK_{kj}\,w_j\,p_i(u_j).
+\]
+
+\subsection{The AR(1) chain}
+
+The simplest continuous chain is the first-order autoregression
+\begin{equation}\label{eq:ar1}
+  a_{i+1}=\rho\,a_i+\varepsilon_i,\qquad \E\varepsilon_i=0,\ \Var\varepsilon_i=q,
+\end{equation}
+with innovations $\varepsilon_i$ independent of the past. If the variance is to stay at $v$ from site to site,
+$v=\rho^2v+q$, so $q=1-\rho^2$ keeps it at $1$. Iterating, $a_{i+k}=\rho^ka_i+(\text{noise independent of }a_i)$,
+so the correlation between sites $k$ apart is $\rho^k=e^{-k/\xi}$ with \emph{correlation length}
+$\xi=1/\log(1/\rho)$ sites. At the project's frozen $\rho=0.85$, $\xi\approx6.2$ sites.
+
+The innovation need not be Gaussian. A Laplace innovation, or a mixture of Gaussians, gives a chain with
+\emph{exactly the same covariance} as the Gaussian one and different higher-order structure. That was the
+project's first laboratory: hold the second-order structure fixed and vary the rest.
+
+\subsection{Stationarity and reversibility}
+
+A density $\pi$ is \emph{stationary} if one step of the chain leaves it unchanged,
+$\pi(a')=\int K(a'\mid a)\pi(a)\dd a$. On the grid, $\pi$ is an eigenvector of the matrix $KW$ ($W$ the diagonal
+of weights) with eigenvalue $1$. For the chains we use it is unique and the chain forgets its start
+geometrically fast (the power method again). A chain started from $\pi$ is \emph{stationary}: every site has
+law $\pi$.
+
+The chain is \emph{reversible} if it satisfies \emph{detailed balance},
+\begin{equation}\label{eq:detbal}
+  \pi(a)K(a'\mid a)=\pi(a')K(a\mid a'):
+\end{equation}
+the flow of probability from $a$ to $a'$ equals the flow back. A film of a reversible stationary chain looks
+statistically the same played backwards. Detailed balance implies stationarity (integrate both sides over $a$).
+
+\begin{inproject}
+The index $i$ need not be time. A snapshot of a one-dimensional field (the value of a physical quantity at
+each of $L$ equally spaced points along a line) is a sequence $\phi_1,\dots,\phi_L$. If the physics couples only
+neighbouring points, this sequence is a Markov chain \emph{in space}: the value at site $i+1$ depends on the
+values to its left only through site $i$. Chapters~\ref{sec:allencahn} and~\ref{sec:transfer} show that the
+stochastic Allen--Cahn field is exactly of this kind, and build its kernel $K$.
+\end{inproject}
+
+\paragraph{Check yourself.}
+\begin{enumerate}[label=\thesection.\arabic*,leftmargin=2.2em]
+\item For the AR(1) chain at $\rho=0.85$, what is the correlation between sites ten apart?
+\item Show that detailed balance \eqref{eq:detbal} implies that $\pi$ is stationary.
+\end{enumerate}
