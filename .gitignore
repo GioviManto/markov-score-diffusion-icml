@@ -37,3 +37,8 @@ reports/*.out
 
 # Third-party papers kept locally for reference (Jerome's ICML papers); not ours to redistribute
 icml-jerome/
+
+# Fetched cluster tables above GitHub's 100 MB limit (docs/COMMIT_MAP_2026-10-01.md, N-32).
+# They stay on the laptop and on the cluster; nothing is frozen against them.
+outputs/hpc_E22c/shapes.csv
+outputs/hpc_E23/representation.csv

@@ -110,3 +110,5 @@ laptop cores (see `docs/RESEARCH_PLAN.md`, compute budget).
    selection.
 4. `make check` fails if a regenerated fragment differs from the committed one or if a
    typed decimal in the `.tex` is not a generated macro.
+
+Commit hashes cited in the registry, the params files and the deployment tags up to 1 October 2026 refer to the heavy local history; `docs/COMMIT_MAP_2026-10-01.md` maps each to the pushed commit.

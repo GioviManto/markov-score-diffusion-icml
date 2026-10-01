@@ -512,3 +512,15 @@ table was read; this entry corrects it. Replacement (registered as P1b before be
 runs shorter than the kink width √2 (√2/h sites) are merged into their neighbours, and the
 coarse kink density is the statistic the refinement cells are predicted to share. The raw
 statistic stays in the table as what it is.
+
+## N-32 — a 1.28 GB table in the history kept the branch off GitHub for five days (1 October 2026)
+
+`outputs/hpc_E22c/shapes.csv` (1.28 GB) and `outputs/hpc_E23/representation.csv` (122 MB) were
+committed on 26 September (86c3f50) with the first HPC fetch, and every push since was refused
+by GitHub's 100 MB file limit, so twenty-six commits of post-call work existed only on one
+laptop and in the cluster deployments until today. The fix is a replay of the 24 commits from
+86c3f50 without the two files (`docs/COMMIT_MAP_2026-10-01.md` maps every heavy hash to its
+pushed twin); the files stay on disk, now git-ignored, and were never frozen. Lesson: a fetched
+cluster table is not a registered output until it is frozen, and a table that cannot be pushed
+must not be committed -- `hpc/icml_fetch.sh` should refuse files above the limit rather than
+leave the refusal to the remote five days later.
