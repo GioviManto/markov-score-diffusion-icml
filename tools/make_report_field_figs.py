@@ -70,7 +70,8 @@ def chain():
         ch = Phi4Chain(cells[cid]["T"], cells[cid]["h"])
         ax.plot(g, np.exp(ch.log_stationary(g)), color=fs.BLUE_RAMP[4 - j], lw=1.2, label=SHORT[cid])
     ax.set_xlabel("$a$"); ax.set_ylabel(r"$\pi(a)$"); fs.ygrid(ax); fs.panel_label(ax, "(a)")
-    ax.legend(fontsize=6.4, loc="upper left", handlelength=1.6, labelspacing=0.25)
+    # the trough between the wells is the one region every curve leaves empty
+    ax.legend(fontsize=6.4, loc="lower center", bbox_to_anchor=(0.5, 0.0), handlelength=1.4, labelspacing=0.2, ncol=2, columnspacing=0.7)
     base = Phi4Chain(cells["T0.3_h1_L32"]["T"], cells["T0.3_h1_L32"]["h"])
     lt = base.log_tilt(g); lt = lt - lt.max()
     bx.plot(g, lt, color=fs.CAT[0], lw=1.3, label=r"$\log g$")
