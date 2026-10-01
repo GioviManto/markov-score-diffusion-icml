@@ -14,7 +14,7 @@
  "seeds": {
   "deterministic": "rng_for('e32-ladder' | 'e32-refine', T, h, L, rep), reps 0-1"
  },
- "status": "FROZEN E32 2026-10-01T09:05:45Z; REGISTERED 2026-10-01, PREDECLARED; the registered run is the laptop run started 1 Oct 09:50 local at commit 9b1c940 (outputs/E32, 4 workers), all four parts.; AMENDMENT 1 (1 Oct pm): part fixed_h registered and predeclared (P4, P5), to run on the laptop",
+ "status": "FROZEN E32 2026-10-01T09:05:45Z; REGISTERED 2026-10-01, PREDECLARED; the registered run is the laptop run started 1 Oct 09:50 local at commit 9b1c940 (outputs/E32, 4 workers), all four parts.; AMENDMENT 1 (1 Oct pm): part fixed_h registered and predeclared (P4, P5), to run on the laptop; fixed_h RUN and FROZEN 1 Oct pm (P4 confirmed; P5 half falsified as written, see outcome_fixed_h)",
  "registered": "2026-10-01",
  "cells": [
   {
@@ -71,16 +71,19 @@
   "outputs/E32/params_ladder.json": "dd20a1a087c08a2e8d20001b975daa29c3a704206170d656559e7917ebfdd3c1",
   "outputs/E32/params_refinement.json": "2d6bc73b7927241bbb462fa46392d94755cd9ab4dc5e0b80f37b13d6d404dcf5",
   "outputs/E32/params_spectrum.json": "1888acc0b63de0e8903d7ecf2d4877aa6a4c927d6ff1b3406632cfe5f3bbb89e",
-  "outputs/E32/params_theory.json": "42b0f53d6600c80d6d23cbfaea3a233cbe34264f4120ffe2a8e661936943b9f4"
+  "outputs/E32/params_theory.json": "42b0f53d6600c80d6d23cbfaea3a233cbe34264f4120ffe2a8e661936943b9f4",
+  "outputs/E32/fixed_h.csv": "1151b19a4e8b5a740a963710674bd65859582083582924ab02ff2ff67667df5d",
+  "outputs/E32/params_fixed_h.json": "325a04975e75b5eba2cfa7b2430235cdebd02f50b625ab763c55a9f6a3d946fd"
  },
  "frozen_at": {
-  "E32": "2026-10-01T09:05:45Z"
+  "E32": "2026-10-01T12:41:37Z"
  },
  "frozen_commit": {
-  "E32": "4c24b1f82b2bdf80610506f203c9f3ceb73253b6"
+  "E32": "0c30a7bb029f6337822598c9232021460a5539b7"
  },
  "frozen_run_commits": {
   "E32": [
+   "0c30a7b",
    "4c24b1f",
    "9b1c940"
   ]
@@ -92,5 +95,10 @@
    "why": "The consolidated note's temperature sweep (sections 24 and 24.6, figure 5 of its figures-first plan) is at fixed spacing; the registered sweep is at matched correlation so the field could be compared with the AR(1) laboratory. Both axes are needed: the fixed-h axis is the physics reading (domains lengthen and bimodality sharpens together), the iso axis isolates non-Gaussianity at fixed second-order structure.",
    "unchanged": "P1-P3 and their frozen outputs."
   }
- ]
+ ],
+ "outcome_fixed_h": {
+  "P4": "CONFIRMED: pooled linear floor [0.2959, 0.2689, 0.2412, 0.2247, 0.2046, 0.1942, 0.1861, 0.1844] along Theta = [0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.5, 2.0] at h = 1 (monotone: True); 0.296 at Theta = 0.2 against 0.269 at the base cell. The fall is gentle (0.30 -> 0.18) compared with the iso line (0.27 -> 0.04): at fixed spacing a hot cell has xi ~ 1 site but a marginal with kurtosis -0.78, and the closure cannot denoise a non-Gaussian marginal even site by site.",
+  "P5": "HALF FALSIFIED AS WRITTEN: the coarse kink density per unit length RISES with Theta, [0.0158, 0.066, 0.0986, 0.1185, 0.1384, 0.1506, 0.1605, 0.1655] (Arrhenius-like, more kinks at higher temperature, which is the physics; the prediction's sign was mis-stated when it was written, and a mis-stated prediction is a falsified one). The bimodality coefficient falls monotonically, [0.734, 0.606, 0.542, 0.511, 0.481, 0.465, 0.455, 0.45] (CONFIRMED), the coarse mean domain length in physical units falls, [8.97, 7.79, 7.04, 6.47, 5.95, 5.66, 5.4, 5.31], and xi in sites is [19.47, 6.08, 3.66, 2.75, 1.98, 1.53, 1.21, 1.06]: above 6.08 only below Theta = 0.3 (CONFIRMED).",
+  "frozen": "outputs/E32/fixed_h.csv, laptop, commit 0c30a7b, 2 reps x 8 cells, 1 Oct 13:40 CEST"
+ }
 }

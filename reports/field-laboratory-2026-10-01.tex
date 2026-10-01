@@ -443,6 +443,64 @@ falls monotonically along the temperature sweep ($0.269\to0.041$), which is E33'
 refinement cells ($0.269\to0.162\to0.098$), because at finer $h$ the per-step kernel is closer to
 Gaussian while the chain is more correlated.
 
+\subsection{The temperature sweep on the note's own axis}\label{sec:fixedh}
+
+The registered sweep sits on the iso-correlation line, which holds $\xi$ in sites fixed by
+construction; the consolidated note (\S24.6, its figure~5) reads the temperature at fixed spacing,
+where lowering $\Th$ lengthens the domains and sharpens the bimodality together. Amendment~1 of E32
+adds that axis: eight cells at $h=1$, $L=32$, $\Th\in\{0.2,0.3,0.4,0.5,0.7,1,1.5,2\}$, the oracle
+ladder and E34's physical statistics on 4096 exact chains, two reps, frozen the same afternoon
+(Figure~\ref{fig:sweep}, Table~\ref{tab:sweep}). Two predictions were registered before it ran.
+P4, that the linear floor falls monotonically with $\Th$ at fixed $h$ and exceeds the base cell's
+$0.269$ at $\Th=0.2$, is confirmed: $0.296$ at $\Th=0.2$, then $0.269,0.241,0.225,0.205,0.194,0.186,
+0.184$. P5, as written, said that the coarse kink density and the bimodality coefficient both fall
+with $\Th$; the bimodality does ($0.73\to0.45$) and so does the domain length ($9.0\to5.3$ in
+physical units), but the kink density \emph{rises} ($0.016\to0.166$ per unit length), which is the
+physics (more kinks at higher temperature, roughly Arrhenius in $1/\Th$) and a sign error in the
+prediction's sentence. A mis-stated prediction counts as falsified; the registry says so.
+
+\begin{figure}[h]\centering
+\includegraphics{fig-field-sweep.pdf}
+\caption{The temperature sweep on both axes: fixed spacing $h=1$ (filled, solid) and matched
+correlation $\lambda_1/\lambda_0=0.85$ (open, dashed). (a) Correlation length in sites from the
+spectrum. (b) Coarse mean domain length in physical units. (c) Coarse kink density per unit length.
+(d) Pooled relative score error of the Gaussian closure and of the isotropic map. Two reps per cell.}
+\label{fig:sweep}
+\end{figure}
+
+\begin{table}[h]\centering\footnotesize
+\caption{The fixed-spacing sweep ($h=1$, $L=32$; mean of two reps). $\xi$ in sites, domain length and
+kink density in physical units after merging runs shorter than the kink width, $b$ the bimodality
+coefficient, $\kappa_4$ the marginal excess kurtosis, and the pooled score error of the two
+oracle arms.}
+\label{tab:sweep}
+\begin{tabular}{@{}rrrrrrrr@{}}
+\toprule
+$\Th$ & $\xi$ & $\bar\ell_{\rm dom}$ & $\rho_{\rm kink}$ & $b$ & $\kappa_4$ & closure & isotropic \\
+\midrule
+0.2 & 19.5 & 8.97 & 0.016 & 0.73 & $-1.64$ & 0.296 & 0.751 \\
+0.3 & 6.08 & 7.79 & 0.066 & 0.61 & $-1.35$ & 0.269 & 0.674 \\
+0.4 & 3.66 & 7.04 & 0.099 & 0.54 & $-1.16$ & 0.241 & 0.610 \\
+0.5 & 2.75 & 6.47 & 0.119 & 0.51 & $-1.04$ & 0.225 & 0.562 \\
+0.7 & 1.98 & 5.95 & 0.138 & 0.48 & $-0.92$ & 0.205 & 0.497 \\
+1   & 1.53 & 5.66 & 0.151 & 0.46 & $-0.85$ & 0.194 & 0.438 \\
+1.5 & 1.21 & 5.40 & 0.161 & 0.46 & $-0.80$ & 0.186 & 0.381 \\
+2   & 1.06 & 5.31 & 0.166 & 0.45 & $-0.78$ & 0.184 & 0.347 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The two axes answer different questions, and the comparison is the point. On the iso line the
+floor falls from $0.27$ to $0.04$ between $\Th=0.3$ and $2$: at fixed second-order structure, what
+the closure loses is the non-Gaussian shape, and that shape fades as the marginal approaches a
+Gaussian. At fixed spacing the floor falls only from $0.30$ to $0.18$: a hot cell has $\xi\approx1$
+site, so there is little sequence structure to lose, but its marginal still has kurtosis $-0.78$,
+and the closure cannot denoise a non-Gaussian marginal even site by site. The note's expectation
+that ``all methods come closer at high $\Th$'' is therefore true of the structured arms against
+each other, not of the linear closure against the exact score, which keeps a floor of $0.18$ at
+$\Th=2$ on this axis. For the learned arms the fixed-$h$ cells are not in E33; whether to add them
+is question~3 to Jérôme and Marc.
+
 \section{E33 and E34: what is in flight}\label{sec:e33}
 
 \subsection{E33, learning through noise}
