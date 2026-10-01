@@ -1,0 +1,2 @@
+data,prediction,cell,n_chains,statistic,value,k,n,extra,ok,verdict
+preview,P6,sweep,2048,"floor at base > 0.082 and monotone along Theta = 0.3, 0.5, 1, 2",0.2691,1,1,0.0412,True,CONFIRMED

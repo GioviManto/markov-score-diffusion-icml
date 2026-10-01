@@ -524,3 +524,23 @@ pushed twin); the files stay on disk, now git-ignored, and were never frozen. Le
 cluster table is not a registered output until it is frozen, and a table that cannot be pushed
 must not be committed -- `hpc/icml_fetch.sh` should refuse files above the limit rather than
 leave the refusal to the remote five days later.
+
+## N-33 — a global polynomial tilt fitted by clean maximum likelihood is ill-posed outside the data (1 October 2026)
+
+On the laptop preview of E34's clean arm (base cell, M = 2048), `em_tilted_poly` (Legendre degree 6)
+fitted by clean-data MLE gave a risk of 0.0047 on seed 0 and **1.79** on seed 1 — worse than the
+isotropic map — while `em_tilted_spline` gave 0.0041 and 0.0074 and the mixture 0.27 on both. Every
+tilted fit had coefficients at the optimiser's bound (±200). The mechanism: with clean data the
+statistic Ξ is a counting measure, so no mass arrives beyond |a| ≈ 3.5, and the likelihood
+increases without bound as log g → −∞ there (a smaller Z(a) for every source raises K at the
+observed arrivals). The MLE therefore drives the tilt down outside the data support until the
+bounds stop it. For a local basis (B-splines) the far coefficients go to −200 and the bulk is
+untouched, which is the correct limit (g = 0 where nothing arrives); for a global basis the same
+push bends the polynomial inside the bulk, and whether it does depends on the seed. The fixed soft
+wall −(a/5)^12 does not help: it is 0.07 at |a| = 4, where the push already acts. The quartic site
+energy (`em_pair_quartic`) is immune: g = ψ_f e^{−f} decays by construction. Under noisy EM the
+posterior Ξ is smoother, but the same pressure exists; the registered E33 rows of the polynomial
+tilt are read with the at-bound flag (`tools/make_field_potential_figs.py`, `n_at_bound`), and
+the role of "the parsimonious exactly specified kernel" passes to the site-energy parametrisation
+(5 parameters, E33 amendment 1). Lesson: a tilt basis needs either local support or a penalty;
+"exactly specified up to the basis" says nothing about the MLE being finite.

@@ -74,8 +74,12 @@ def _readings(df, grid):
         k = kernel_from_row(r, cfg, grid)
         f = k.site_energy(grid)
         rd = potential_readings(f, grid, k.gamma, float(r["scale"]), float(r["h"]))
+        # coefficients at the optimiser's bound (+-200): the tilt was pushed down where no data arrive
+        # (docs/NEGATIVE_RESULTS.md N-33); harmless for a local basis, a warning sign for a global one
+        coef = np.asarray(k.coef, dtype=float)
         rows.append({"source": r["source"], "cell": r["cell"], "arm": r["arm"], "n_chains": int(r["n_chains"]), "seed": int(r["seed"]),
-                     "T": float(r["T"]), "h": float(r["h"]), "risk": float(r["risk"]), "theta_ratio": rd["theta_hat"] / float(r["T"]), **rd})
+                     "T": float(r["T"]), "h": float(r["h"]), "risk": float(r["risk"]), "theta_ratio": rd["theta_hat"] / float(r["T"]),
+                     "n_at_bound": int((np.abs(coef) >= 199.9).sum()), **rd})
         from scipy.interpolate import CubicSpline
         fin = np.isfinite(f)
         v = (2.0 * rd["theta_hat"] / float(r["h"])) * CubicSpline(grid[fin], f[fin], extrapolate=False)(phi / float(r["scale"]))
@@ -108,7 +112,8 @@ def figure(tab, curves, out):
                     ax.plot(p, v, color=col, lw=0.7, ls=":", alpha=0.9)
         ax.set_xlabel(r"$\phi$"); ax.set_ylabel(r"$\hat V(\phi)$"); ax.set_ylim(-0.12, 0.75); ax.set_xlim(-2, 2)
         fs.ygrid(ax); fs.panel_label(ax, "(a)" if ax is axes[0] else "(b)")
-        fs.halo(ax.text(0.97, 0.95, CELL_LABEL.get(cell, cell) + f", $M{{=}}{M}$", transform=ax.transAxes, ha="right", va="top", fontsize=6.4))
+        ax.set_title(CELL_LABEL.get(cell, cell) + f", $M{{=}}{M}$", fontsize=6.6, pad=2.5)
+    # the region above the barrier, between the wells, is the one every curve leaves empty
     axes[0].legend(fontsize=6.0, loc="upper center", ncol=2, handlelength=1.5, columnspacing=0.8, labelspacing=0.2, borderpad=0.25)
     cx = axes[2]
     for j, cell in enumerate(cells):
@@ -133,7 +138,7 @@ def table(tab, out):
     keys = ["source", "cell", "arm", "n_chains"]
     agg = tab.groupby(keys).agg(n_seeds=("seed", "count"), theta_ratio=("theta_ratio", "mean"), theta_ratio_sd=("theta_ratio", "std"),
                                 barrier=("barrier_hat", "mean"), barrier_sd=("barrier_hat", "std"), well=("well_hat", "mean"),
-                                potential_rms=("potential_rms", "mean"), risk=("risk", "mean")).reset_index()
+                                potential_rms=("potential_rms", "mean"), risk=("risk", "mean"), n_at_bound=("n_at_bound", "max")).reset_index()
     out.parent.mkdir(parents=True, exist_ok=True)
     agg.to_csv(out, index=False, float_format="%.4f")
     return agg

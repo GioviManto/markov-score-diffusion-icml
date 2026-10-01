@@ -32,7 +32,13 @@
   "e33-screen": "678091, long_gpuh200, gpu:1, venv-cuda, 16 workers -> outputs/hpc_E33n (gpua100 was in maintenance)",
   "e33-nets-s0": "678092, long_gpuh200, afterok:678091 -> outputs/hpc_E33n_s0 (seeds 0-7)",
   "e33-nets-s8": "678094, long_gpuh200, afterok:678091 -> outputs/hpc_E33n_s8 (seeds 8-15)",
-  "submitted": "2026-10-01 ~08:55 UTC, all eight at once; nothing read before submission"
+  "submitted": "2026-10-01 ~08:55 UTC, all eight at once; nothing read before submission",
+  "deployment_amendment_1": "32448fe-20261001T112539Z (hpc/.last_deploy.env; commit 32448fe on the pushed history)",
+  "e33-q-s0": "678260, defq, 24 cpus, 23:50 -> outputs/hpc_E33q_s0 (em_pair_quartic only, seeds 0-3)",
+  "e33-q-s4": "678261, defq, 24 cpus, 23:50 -> outputs/hpc_E33q_s4 (em_pair_quartic only, seeds 4-7)",
+  "e33-q-s8": "678262, defq, 24 cpus, 23:50 -> outputs/hpc_E33q_s8 (em_pair_quartic only, seeds 8-11)",
+  "e33-q-s12": "678263, defq, 24 cpus, 23:50 -> outputs/hpc_E33q_s12 (em_pair_quartic only, seeds 12-15)",
+  "submitted_amendment_1": "2026-10-01 ~11:26 UTC, four shards at once; no E33 kernel or network result seen (the oracles only)"
  },
  "amendments": [
   {

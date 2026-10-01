@@ -36,7 +36,7 @@ CONFIRMATORY = dict(kernels="outputs/hpc_E33k_s*/kernels.csv", pair="outputs/hpc
                     clean="outputs/hpc_E34c/clean.csv", learned="outputs/hpc_E34*/learned.csv")
 PREVIEW = dict(kernels="outputs/E33_preview_laptop/kernels.csv", pair="outputs/E33_preview_laptop_pair/kernels.csv",
                oracles="outputs/hpc_E33o/oracles.csv", nets="outputs/E33_preview_nets/nets.csv",
-               clean="outputs/E34_preview_laptop/clean.csv", learned="outputs/E34_preview_laptop/learned.csv")
+               clean="outputs/E34_preview_laptop/clean.csv", learned="outputs/E34_preview_laptop_learned/learned.csv")
 
 
 def load(pattern):
