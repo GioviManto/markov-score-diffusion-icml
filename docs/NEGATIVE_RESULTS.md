@@ -577,3 +577,19 @@ are read as registered, with the parked count reported beside every verdict that
 (E33 amendment 2). (iii) Three remedies, any of which would be a new registered arm: a wall at the data
 edge rather than at 5; a penalty on the tilt (ridge or second differences); or an initial law
 estimated from the data instead of the kernel's invariant law.
+
+## N-34 — E35's "exact score" was wrong whenever the phase offset was nonzero (2 October 2026)
+
+E35's driver built its reference, the closed-form posterior mean of X = G b 1 + U, with the total
+covariance b² 11ᵀ + Σ_U where the formula needs the within-phase covariance Σ_U. The two coincide at
+b = 0, so the b = 0 cells were right; at b = 1 and 2 the reference was off by up to 1.08 in the
+posterior mean (checked against the grid posterior of the true component kernels, which matches the
+correct formula to 1e-9). The bug was visible in the first four cells as an impossibility: the
+augmented arm, which had recovered the truth (correlation 0.85, phase offset 1.00 and 2.01, variance
+1.01), scored 2-3 times worse than the linear floor. A model that has learned the truth cannot lose to
+a linear method; the yardstick had to be wrong. The selection of checkpoints used the same reference,
+so the two b > 0 cells were set aside whole (outputs/scratch/e35_invalid_reference) and are being
+recomputed; nothing from them was reported. The unit test of the posterior had passed because it
+built Σ_U itself; the new test (tests/test_augmented.py::test_e35_driver_reference_is_the_exact_posterior)
+goes through the driver's own bundle function and fails on the old code (error 0.17 at t = 0.22).
+Lesson, again: test the code path the experiment runs, not a reimplementation of it.

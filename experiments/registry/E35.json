@@ -9,9 +9,20 @@
   "P3": "The ratio first-order / augmented at M = 2048 rises monotonically with b over (0, 1, 2) and exceeds 2 at b = 2 in every seed; at b = 2 the augmented arm is below the linear floor by a factor of at least 3 at M = 2048."
  },
  "predeclared_analysis": "augmented.csv: per (b, M) the paired per-seed ratios first_order/augmented and arm/lmmse_true with the two-seed range (no bootstrap at two seeds; the cells are a laptop design and the reading is qualitative), at_cap and converged read beside the risk.",
- "seeds": {"confirmatory": "0-1 (laptop)", "dev": "10000 (smoke only)"},
+ "seeds": {
+  "confirmatory": "0-1 (laptop)",
+  "dev": "10000 (smoke only)"
+ },
  "resources": "laptop, 2 workers; the augmented E-step costs four BP sweeps per iteration (two components, responsibilities then weighted statistics)",
- "status": "REGISTERED and PREDECLARED 2026-10-01 (evening), before any cell ran; approved by the user the same afternoon ('predeclare and run both on the laptop')",
+ "status": "REGISTERED and PREDECLARED 2026-10-01 (evening), before any cell ran; approved by the user the same afternoon ('predeclare and run both on the laptop'); 2 Oct: reference bug fixed (N-34), b > 0 cells recomputed",
  "registered": "2026-10-01",
- "motivation": "The note's figure 7 (misspecification appendix: irreducible bias under a global latent and its repair by state augmentation) and item 9 of its paper outline; the audit of 1 Oct found the repair half missing."
+ "motivation": "The note's figure 7 (misspecification appendix: irreducible bias under a global latent and its repair by state augmentation) and item 9 of its paper outline; the audit of 1 Oct found the repair half missing.",
+ "amendments": [
+  {
+   "date": "2026-10-02 10:30 BST",
+   "what": "Bug fix (N-34): the reference posterior mean in _bundle took the total covariance instead of the within-phase one. Fixed in the driver; regression test through the driver's own bundle function. The two b = 0 cells are valid (the two covariances coincide) and kept; the two b > 0 cells computed before the fix (b = 1 and 2, seed 0, M = 2048) were moved to outputs/scratch/e35_invalid_reference and are recomputed with the same seeds and settings.",
+   "seen_before_the_fix": "four cells (b = 0 seeds 0-1, b = 1 and 2 seed 0, M = 2048); the b > 0 numbers are invalid and are not cited.",
+   "unchanged": "Design, arms, seeds, sizes, ladder, selection rule, and predictions P1-P3."
+  }
+ ]
 }

@@ -128,3 +128,21 @@ def test_augmented_em_beats_the_first_order_fit_on_two_phase_data():
     err_aug = np.sqrt(np.mean((m_aug - m_ref) ** 2)); err_first = np.sqrt(np.mean((m_first - m_ref) ** 2))
     assert err_aug < 0.5 * err_first, (err_aug, err_first)
     assert err_aug < 0.15, err_aug
+
+
+def test_e35_driver_reference_is_the_exact_posterior():
+    """N-34: the E35 driver's reference must be the exact two-phase posterior mean, i.e. agree with
+    the grid posterior of the TRUE component kernels at b > 0 (it once used the total covariance)."""
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments"))
+    import e35_state_augmentation as e35
+    g, w = make_grid(8.0, 401)
+    b, L = 1.0, 16
+    lk, lm = _true_component(g, w, b)
+    bundle = e35._bundle("test-e35-ref", 0, b, 48, L)
+    for t in (0.2216, 0.9821, 2.0676):
+        X, ref = bundle[t]
+        al, de = alpha_delta(t)
+        m, _, _ = augmented_posterior(g, w, lk, X, al, de, lm)
+        assert np.max(np.abs(m - ref)) < 1e-6, (t, np.max(np.abs(m - ref)))

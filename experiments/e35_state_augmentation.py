@@ -82,21 +82,31 @@ def _two_phase(rng, n_chains, L, b):
     return G[:, None] * b + U
 
 
-def _sigma_true(L, b):
+def _sigma_u(L):
+    """Covariance of U, the chain WITHIN one phase: what the two-phase posterior needs."""
     i = np.arange(L)
-    return b**2 * np.ones((L, L)) + RHO ** np.abs(i[:, None] - i[None, :])
+    return RHO ** np.abs(i[:, None] - i[None, :])
+
+
+def _sigma_true(L, b):
+    """Covariance of X = G b 1 + U across phases: what the LMMSE (linear floor) needs."""
+    return b**2 * np.ones((L, L)) + _sigma_u(L)
 
 
 def _bundle(tag, seed, b, n, L):
-    """Noised views with the CLOSED-FORM posterior mean of the truth as the reference."""
+    """Noised views with the CLOSED-FORM posterior mean of the truth as the reference.
+
+    The reference takes the WITHIN-phase covariance. Until 2 Oct 2026 it was given the total
+    covariance `_sigma_true`, which is the same thing only at b = 0: at b > 0 the "exact score"
+    was wrong by up to 1.08 in the posterior mean (N-34; tests/test_augmented.py pins it)."""
     rng = rng_for(tag, seed, b, L)
     A = _two_phase(rng, n, L, b)
-    sigma0 = _sigma_true(L, b)
+    sigma_u = _sigma_u(L)
     out = {}
     for t in T_SCHEDULE:
         al, de = alpha_delta(t)
         X = al * A + np.sqrt(de) * rng.standard_normal(A.shape)
-        out[t] = (X, two_phase_gaussian_posterior_mean(X, sigma0, b, t))
+        out[t] = (X, two_phase_gaussian_posterior_mean(X, sigma_u, b, t))
     return out
 
 
