@@ -554,3 +554,26 @@ unconstrained by arrivals and the push outside the data bends the fit inside it.
 site energy on the same cells: 0.011 and 0.020. The registered E33 arms run as registered; the
 remedy to register as a further amendment is a penalised tilt (a P-spline second-difference penalty
 on the B-spline coefficients, a ridge on the Legendre ones), which keeps the M-step concave.
+
+**N-33, correction (2 October, 01:30; all 18 preview fits of the Legendre tilt, 50 of the spline and
+site energy).** The mechanism written above is wrong in its key step, and so is its diagnostic. The
+failures are not a bending of the fit "inside the bulk", and the at-bound flag does not track them:
+the worst fit (risk 1.79) has no coefficient at the bound, while all five fits that do reach the
+bound are fine (risks 0.005 to 0.041). What separates them is **where the kernel's own invariant law sits**. In all five
+failed fits (risks 0.18, 0.20, 0.35, 0.48, 1.79; clean and noisy, base cell and Θ = 2) the invariant law
+puts essentially **all** its mass beyond |a| = 3.5, where no data lie; in the thirteen other Legendre
+fits that mass is below 4e-5, and in all 50 spline and site-energy fits below 1.1e-4. The estimator
+uses that invariant law as the law of the first site (the data are stationary), so a law parked
+outside the data drags every posterior with it. The likelihood cannot see it: no transition in Ξ
+starts or ends there. The soft wall −(a/5)^12 moved the pocket that the 1 October smoke run found at
+the grid edge (|a| ≈ 8) inward, to between the data edge and the wall; it did not remove it. A global
+basis can raise log g there through the same coefficients that shape the bulk; a local basis has no
+reason to, and the quartic site energy confines by construction.
+
+Consequences. (i) The diagnostic is the invariant mass beyond the data range, not the coefficient
+bound; the readers now report it (`invariant_mass_out`), and the at-bound column stays only as a
+record. (ii) The registered E33 rows of `em_tilted_poly` will contain parked fits on some seeds; they
+are read as registered, with the parked count reported beside every verdict that involves them
+(E33 amendment 2). (iii) Three remedies, any of which would be a new registered arm: a wall at the data
+edge rather than at 5; a penalty on the tilt (ridge or second differences); or an initial law
+estimated from the data instead of the kernel's invariant law.

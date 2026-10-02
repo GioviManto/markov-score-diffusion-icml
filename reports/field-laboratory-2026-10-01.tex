@@ -518,8 +518,32 @@ protocols agree at the fine end and part by $13\,\%$ at the coarse one, where th
 is the rougher object (marginal kurtosis $-1.35$ against the fine field's $-1.22$). The third
 prediction concerns learning: for $s\ge2$ the kernel $K^s$ is no longer a tilted walk (the Gaussian
 bond does not survive marginalising the intermediate sites), so the gradient-class kernels are
-misspecified on the subsampled chain while a state-dependent mixture is not; the clean fits that
-read P3 are running.
+misspecified on the subsampled chain while a state-dependent mixture is not.
+
+\begin{table}[h]\centering\footnotesize
+\caption{E36, clean-data fits on $2048$ strided chains (seeds 0 and 1), scored against exact BP with $K^s$.
+``Floor'' is the linear floor of the same strided chain.}
+\label{tab:stride}
+\begin{tabular}{@{}rrrrrr@{}}
+\toprule
+stride $s$ & site energy (5) & spline tilt (25) & mixture (25) & neural kernel (1{,}516) & floor \\
+\midrule
+1 & $0.0013,\ 0.0017$ & $0.0018,\ 0.0021$ & $0.100,\ 0.100$ & $0.016,\ 0.013$ & $0.098$ \\
+2 & $0.011,\ 0.012$ & $0.010,\ 0.011$ & $0.159,\ 0.159$ & $0.013,\ 0.034$ & $0.158$ \\
+4 & $0.040,\ 0.041$ & $0.036,\ 0.036$ & $0.238,\ 0.237$ & $0.023,\ 0.093$ & $0.235$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:stride} reads P3. Its first two parts hold: at stride 1 the gradient-class kernels are
+exactly specified (risk $0.0013$ to $0.0021$), and at stride 4 their risk is $18$ to $30$ times larger on both
+seeds. The third part, that the neural kernel beats the site energy at stride 4, holds on one seed of two
+($0.023$ against $0.040$, then $0.093$ against $0.041$); the neural kernel selected its last checkpoint in all six
+cells, so its numbers are limited by the iteration budget and the clause is unresolved rather than refuted.
+Two observations were not registered and are the more useful ones. The innovation mixture sits \emph{on}
+the linear floor at every stride (ratio $1.007$ to $1.026$): on the field, the paper's estimator is the Gaussian
+closure even with clean data, because its drift is linear. And subsampling costs the gradient-class
+kernels a factor of $20$ to $30$ in risk but not their advantage: at stride 4 they are still at $15$ to $17\,\%$ of the floor.
 
 \section{E33 and E34: what is in flight}\label{sec:e33}
 
@@ -640,13 +664,17 @@ because what the score needs there is the bond and the curvature, which are iden
 written to expect this. Third, the clean-data fits read everything to $0.5\,\%$ at the base cell:
 the price of the channel at $M=2048$ is a factor of a few in risk, not in the physics.
 
-One negative result came with the preview (N-33 in \code{docs/NEGATIVE\_RESULTS.md}): the
-\emph{polynomial} tilt fitted by clean maximum likelihood is ill-posed outside the data support. A
-counting-measure $\Xi$ puts no mass beyond $|a|\approx3.5$, the likelihood rises as $\log g\to-\infty$
-there, and a global basis bends inside the bulk when pushed down outside it; on seed 1 the clean
-fit of the degree-6 Legendre tilt reached a risk of $1.79$ while the spline gave $0.007$ and the
-site energy is immune by construction. The role of the parsimonious exactly specified kernel passes
-to the site energy; the polynomial tilt's registered rows are read with an at-bound flag.
+One negative result came with the preview (N-33 in \code{docs/NEGATIVE\_RESULTS.md}, corrected on
+2 October): the \emph{polynomial} tilt sometimes fails badly, with risks of $0.18$ to $1.79$ in five of its
+eighteen preview fits, clean and noisy. The cause is not where the fit puts its transitions but where
+it puts its \emph{invariant law}. The likelihood constrains $\log g$ only where data arrive
+($|a|\lesssim3.5$); beyond that, a global basis can raise the tilt and create a pocket, and in every failed fit
+the kernel's own invariant law sits entirely in that pocket. Since the estimator uses that law for the
+first site, every posterior is dragged outside the data. In the other thirteen Legendre fits, and in all
+fifty spline and site-energy fits, the mass beyond $|a|=3.5$ is below $1.1\times10^{-4}$. That mass, not the
+coefficient bound first suspected, is the diagnostic: E33's amendment~2 reports the number of such
+``parked'' fits beside every verdict, before any confirmatory row exists. The role of the parsimonious
+exactly specified kernel passes to the site energy, which confines by construction.
 
 \section{Alignment with the consolidated note}
 

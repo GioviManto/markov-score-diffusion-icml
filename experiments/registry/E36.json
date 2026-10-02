@@ -14,12 +14,42 @@
   "dev": "10000 (smoke only)"
  },
  "resources": "laptop, 2 workers; the MDN clean ladder to 400 is the long pole",
- "status": "REGISTERED and PREDECLARED 2026-10-01 (evening), before any cell ran; approved by the user the same afternoon ('predeclare and run both on the laptop')",
+ "status": "FROZEN E36 2026-10-02T09:03:34Z; REGISTERED and PREDECLARED 2026-10-01 (evening), before any cell ran; approved by the user the same afternoon ('predeclare and run both on the laptop'); clean part COMPLETE 1 Oct 22:02 (P3: parts 1-2 confirmed, MDN clause not confirmed, at_cap in every MDN cell)",
  "registered": "2026-10-01",
  "motivation": "The note's section 21 (discretisation caveats) and its 'sharp experimental prediction' on refinement; the audit of 1 Oct found the subsampling protocol unexplored. The noisy-EM version under strides is a follow-up for the cluster.",
  "outcome_oracles_physics": {
   "P1": "CONFIRMED: coarse kink density per unit length 0.0676 / 0.0727 / 0.0704 and coarse mean domain length 8.09 / 7.58 / 7.75 (physical units) at strides 1 / 2 / 4: spreads 7.5% and 6.7%. The RAW kink density per bond is 0.061 / 0.087 / 0.130 (N-31 again: not an observable under subsampling either).",
   "P2": "CONFIRMED: pooled linear floor 0.2347 at stride 4 (effective spacing 1, 32 sites) against 0.2691 at the lattice cell T0.3_h1_L32, ratio 0.872 (12.8%, within the predicted 15%). Floors by stride 0.0975 / 0.1578 / 0.2347 against the lattice models' 0.0982 / 0.1621 / 0.2689 at the same effective spacings: the two refinement protocols agree at the fine end and part by 13% at the coarse one (the h = 1 lattice model is rougher, marginal kurtosis -1.35 against the fine field's -1.22). Projected diagnostic edge mass 1.000 / 0.997 / 0.418.",
   "run": "laptop, 2 workers, 1 Oct evening, 512 chains x 2 reps (oracles), 4096 x 2 (physics); clean part still running"
- }
+ },
+ "outcome_clean": {
+  "P3, first and second parts": "CONFIRMED. Stride 1 (exactly specified): em_pair_quartic 0.0013 / 0.0017 and em_tilted_spline 0.0018 / 0.0021 (seeds 0 / 1), below 0.02. Stride 4 (misspecified): 0.0404 / 0.0405 and 0.0362 / 0.0362, i.e. 30.5x / 24.0x and 19.9x / 17.6x the stride-1 risk, both seeds, both kernels (predicted: at least 2x).",
+  "P3, third part": "NOT CONFIRMED (1 of 2 seeds): em_mdn at stride 4 is 0.0229 against the quartic's 0.0404 on seed 0, but 0.0933 against 0.0405 on seed 1. The MDN selected the LAST checkpoint (400) in all six cells (at_cap = 1), so its numbers are limited by the iteration budget, not by its model class; the clause is read as unresolved, and a longer MDN ladder is the follow-up, not a reinterpretation.",
+  "unregistered observations": [
+   "The innovation-mixture kernel lands on the linear floor at every stride: 0.100 / 0.159 / 0.237 against floors 0.098 / 0.158 / 0.235 (ratio 1.007-1.026). On the field, the paper's estimator IS the Gaussian closure, clean data or not: its linear drift captures exactly the second-order structure.",
+   "Misspecified or not, the gradient-class kernels stay far below the floor at stride 4: 0.036-0.040, i.e. 15-17% of the floor 0.235. Subsampling costs them a factor of 20-30 in risk but not the qualitative advantage.",
+   "At stride 2 every kernel except the mixture is between 0.010 and 0.034."
+  ],
+  "run": "laptop, 2 workers; the stride-1 cells under the first process (code at 3baa277), the stride-2 and stride-4 cells under the resumed process after the 1 Oct 21:08 restart (code at 32370aa). The only code difference between the two, em.e_step's weighted branch, is never reached by E36."
+ },
+ "frozen_outputs": {
+  "outputs/E36/clean.csv": "a448cd4efcac06e834168ebc2a35fcf73d785f6cb448f480b507325ceeddb76b",
+  "outputs/E36/oracles.csv": "3cb60994ed3c92ff0b45820d2fb61d91f983f3470dcfb782a8d174615b871ad9",
+  "outputs/E36/physics.csv": "ef7c1bf3fd61e62263922aee2c8309ef442ac830bba58a67e37ac02ed7977cca",
+  "outputs/E36/params_clean.json": "aba3c420972e4156052008786085a450c270e3e328ce7098abe26e4567a62a84",
+  "outputs/E36/params_oracles.json": "1fff192c0e4bf5727da4a1cad1a1b1fda7afa348dc3da2a9ee8d1d0a23c6caf8",
+  "outputs/E36/params_physics.json": "81bea59a1a44cd67aefffa25a76368a47e6949ba22ef162aa6727e2a0c7d0757"
+ },
+ "frozen_at": {
+  "E36": "2026-10-02T09:03:34Z"
+ },
+ "frozen_commit": {
+  "E36": "bfe0cfdbd82f18b088b916e659b1253020e22a5a"
+ },
+ "frozen_run_commits": {
+  "E36": [
+   "bfe0cfd"
+  ]
+ },
+ "provenance_note": "2 Oct 2026 01:40: the first params_oracles.json recorded an uncommitted change to src/markov_score/em.py (the weighted-E-step fix, a branch E36 never reaches), so the provenance gate refused to freeze. The two deterministic parts were rerun on the clean commit bfe0cfd into outputs/scratch/e36_rerun: oracles.csv and physics.csv came out byte-identical, and their params files replaced the originals (kept in outputs/scratch/e36_params_superseded). clean.csv is the original run's."
 }

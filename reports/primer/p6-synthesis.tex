@@ -115,11 +115,13 @@ detailed balance holds to $10^{-14}$, and the field's own site energy equals $\t
 \end{enumerate}
 
 \begin{caution}
-``Exactly specified up to the basis'' does not mean the maximum-likelihood fit exists. With clean data the
-expected transition counts $\Xi$ vanish beyond the data's range, and the likelihood keeps increasing as $\log g$ is
-pushed to $-\infty$ there. A local basis (splines) absorbs this harmlessly; a global one (Legendre) bends inside
-the bulk, and on one seed its clean fit ended with a risk of $1.79$ (N-33). The site energy is immune because
-$g=\psi_fe^{-f}$ decays by construction.
+``Exactly specified up to the basis'' does not mean every fit is usable. The expected transition counts $\Xi$
+vanish beyond the data's range ($|a|\gtrsim3.5$), so the likelihood says nothing about $\log g$ there. A global basis
+(Legendre) can raise the tilt in that empty region and create a pocket; the kernel's own invariant law, which the
+estimator uses for the first site, then sits in the pocket, and every posterior is dragged outside the data. In
+the previews this happened in five of eighteen Legendre fits (risks $0.18$ to $1.79$) and in none of fifty spline
+or site-energy fits. The check is the invariant law's mass beyond the data range (N-33). The site energy is
+immune because $g=\psi_fe^{-f}$ decays by construction.
 \end{caution}
 
 \begin{figure}[h]\centering
