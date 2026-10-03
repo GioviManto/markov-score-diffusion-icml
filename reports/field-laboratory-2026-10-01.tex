@@ -46,10 +46,10 @@
 
 \begin{center}
 {\Large\bfseries The $\phi^4$ field as a second laboratory}\\[0.25em]
-{\normalsize The derivation, the estimator, the first measurements, and the experiments in flight}\\[0.35em]
+{\normalsize The derivation, the estimator, the measurements, and the first confirmatory results}\\[0.35em]
 {\footnotesize Jérôme's email of 1 October 2026 (after Marc) \textperiodcentered\ this report 1 October 2026 \textperiodcentered\ branch
-\code{claude/phi4-field-2026-10-01} \textperiodcentered\ revised the same afternoon: reversibility, the
-physicist's parametrisation, E33's oracles in}
+\code{claude/phi4-field-2026-10-01} \textperiodcentered\ revised 1 October (reversibility, the
+physicist's parametrisation) and 3 October (first confirmatory results, E35, E33's amendment~3)}
 \end{center}
 
 \vspace{-0.4em}
@@ -61,8 +61,10 @@ snapshots of the one-dimensional stochastic Allen--Cahn ($\phi^4$) field, whose 
 nearest-neighbour Gibbs measure, with four arms tracked across temperature and lattice spacing (a
 learned pair energy, the Gaussian closure, the window CNN, the exact score), and the suggestion that
 with this concrete example the paper may be complete. Everything in this report was built, tested
-and registered on 1 October; the deterministic part (E32) has run and is frozen; the learning
-part (E33, eight cluster jobs) and the physics part (E34) are in flight.
+and registered on 1 October; the deterministic part (E32) has run and is frozen; on 3 October the
+site-energy arm of E33, the clean-data arm of E34 and the global-latent experiment E35 landed and were
+read against their registered predictions (\S\ref{sec:conf}); E33's other kernel arms and its networks
+are still in flight.
 
 \begin{enumerate}[leftmargin=1.4em,itemsep=0.15em]
 \item \st{The chain is exact and in the package} (\S\ref{sec:chain}). Its kernel is a Gaussian step
@@ -96,6 +98,15 @@ part (E33, eight cluster jobs) and the physics part (E34) are in flight.
   $0.114$, $0.059$, $0.041$ along $\Th=0.3,0.5,1,2$; sixteen seeds, spread below $0.001$). The
   pair-energy shards and E34's clean arm have landed; the four kernel shards failed on the finest
   lattice and are being rerun under amendment~3 (a failed fit is a row, never a crash); the networks are queued.
+\item \st{First confirmatory results} (\S\ref{sec:conf}). Through the noise, the five-parameter site energy
+  reads the temperature within $10\,\%$ in $96$ of $96$ fits (seed spread $0.3$--$2.3\,\%$) and the barrier
+  within $20\,\%$ in $78$ of $80$ (the prediction fails as written at $\Th=1$, two seeds); at the base cell its
+  score risk is $0.033$ of the linear floor at $M=2048$ and already $0.27$ of it at $M=32$; samples from the
+  learned kernels reproduce the truth's kink density and domain length within $5.3\,\%$ and $2.9\,\%$. On
+  clean data the mixture is $6.5$--$53$ times the spline's risk on every cell, while the Legendre tilt parks
+  its invariant law outside the data in $38$ of its $96$ fits at $M=2048$. Under a global sign latent (E35)
+  the paper's first-order kernel is worse than the linear floor, and the same kernel on the augmented state
+  is $8.6$ and $17.9$ times better than it.
 \end{enumerate}
 
 Notation. $\Th$ is the physical temperature (the code and the cell names call it \code{T}), $h$ the lattice spacing,
@@ -546,7 +557,7 @@ the linear floor at every stride (ratio $1.007$ to $1.026$): on the field, the p
 closure even with clean data, because its drift is linear. And subsampling costs the gradient-class
 kernels a factor of $20$ to $30$ in risk but not their advantage: at stride 4 they are still at $15$ to $17\,\%$ of the floor.
 
-\section{E33 and E34: what is in flight}\label{sec:e33}
+\section{E33 and E34: the design}\label{sec:e33}
 
 \subsection{E33, learning through noise}
 
@@ -677,6 +688,99 @@ coefficient bound first suspected, is the diagnostic: E33's amendment~2 reports 
 ``parked'' fits beside every verdict, before any confirmatory row exists. The role of the parsimonious
 exactly specified kernel passes to the site energy, which confines by construction.
 
+\section{Confirmatory results, 3 October}\label{sec:conf}
+
+Three sets of confirmatory runs have landed: E33's site-energy shards (the arm of amendment~1; $768$ rows,
+six cells, sixteen seeds, four sizes; jobs 678260--678263), E34's clean-data arm ($1536$ rows; job
+678166) and, on the laptop, E35. Each was read by the registered analysis (\code{tools/make\_field\_numbers.py},
+with the parked count of amendment~2 and the failure rule of amendment~3 beside every verdict); the
+tables below are generated from the same files by \code{tools/make\_field\_confirmatory\_tables.py}.
+
+\subsection{The site energy through the noise (E33, P8)}
+
+\begin{table}[h]\centering\footnotesize
+\caption{\code{em\_pair\_quartic}, risk-selected fits through one noised view per sequence. Middle columns:
+$M=2048$, mean over sixteen seeds with the seed spread in brackets; ``band'' counts barriers within
+$20\,\%$ of $1/4$ (registered for $\Th\le1$). Right: the score risk as a fraction of the linear floor (E33's
+oracles) at each $M$.}
+\label{tab:conf-pair}
+\input{field-tables/conf-pair.tex}
+\end{table}
+
+The temperature clause of P8 holds for this arm in every one of the $96$ fits; its spline half waits for
+the kernel shards. The barrier clause fails as written on one cell: at $\Th=1$ two of sixteen barriers
+($0.163$ and $0.313$) leave the $20\,\%$ band, although the mean is $0.248$. At $\Th=1$ the barrier is a
+quarter of the thermal energy and its reading spreads three to five times more than at $\Th\le0.5$;
+the registered exclusion stopped at $\Th=2$, where the reading is indeed unresolved ($0.277\pm0.083$).
+The right half of Table~\ref{tab:conf-pair} is the result the email asked for in its simplest form: at
+$\Th=0.3$ five parameters learned from $32$ noised sequences already carry a quarter of the closure's risk,
+and from $2048$ a thirtieth of it; at $\Th\ge1$, where the marginal is nearly Gaussian, $32$ sequences are
+not enough to beat the closure and $128$ are.
+
+Sampled ancestrally from their own invariant law (E34's \code{physics\_learned}, unchanged, on the $24$
+fits it selects; unregistered for this arm, whose P4 names the spline and the mixture), the same kernels
+reproduce the field (Table~\ref{tab:conf-samples}).
+
+\begin{table}[h]\centering\footnotesize
+\caption{Generated over true statistic, $2048$ chains from each of the $24$ site-energy fits ($M=2048$,
+seeds 0--3); mean over the seeds and, in brackets, the largest deviation from one.}
+\label{tab:conf-samples}
+\input{field-tables/conf-samples.tex}
+\end{table}
+
+\subsection{The clean-data interface (E34, P2 and P3)}
+
+\begin{table}[h]\centering\footnotesize
+\caption{E34's clean-data fits at $M=2048$, sixteen seeds. ``parked'': fits whose first-site law has more
+than half its mass beyond $|a|=3.5$ (amendment~2); ``eig.'': fits whose invariant law the eigensolve could
+not return (the estimator then used $\Nn(0,1)$).}
+\label{tab:conf-clean}
+\input{field-tables/conf-clean.tex}
+\end{table}
+
+P3 holds on every cell and every seed: with the channel removed, the mixture still sits $6.5$ to $53$
+times above the spline, so what limits it is the linear drift, not the noise. P2's clean clause (tilted
+kernels below $0.02$) holds for the spline everywhere and fails for the Legendre tilt on four cells, the
+failure of N-33 at scale: $38$ of its $96$ fits at $M=2048$ park their law outside the data, and $186$ of
+$384$ over all sizes. Reading the failures turned up a second face of the same pathology: some fitted
+Legendre kernels are \emph{reducible} on the grid, a bulk and a pocket with no transition between them, so
+that two different laws are exactly invariant; the eigensolve then cannot return a unique one, and on
+$20$ of the $384$ it raised. The spline (clean, $384$ fits) and the site energy (through noise, $384$) show
+neither in any confirmatory fit.
+
+\subsection{Why E33's kernel shards failed, and amendment 3}
+
+All four kernel jobs died on 2--3 October on the same cell, $\Th=0.3$, $h=0.25$, $L=128$ at $M=2048$.
+Reproduced on the deployed code, the culprit is one Legendre fit, parked in the extreme: from $a=3$ the
+kernel steps to the grid edge with spread $0.002$, $\log K$ spans $1133$ nats, $3.9\,\%$ of its entries
+underflow to zero in the E-step, and the forward and backward beliefs stop overlapping. The mixture and
+the spline complete the same cell. Before any kernel row was read, amendment~3 fixed the rule: a fit that
+raises in EM is a failed row, counted against every prediction it touches and never for one; the harness
+now records it instead of stopping. The rerun reuses the $76$ cells that had finished (the new code gives
+bit-for-bit the same rows on a test cell) and is queued for 6 October.
+
+\subsection{E35: a global latent and its repair}
+
+The consolidated note's section 8 predicts that a latent shared by a whole sequence leaves a first-order
+kernel with a bias that data do not remove, and that enlarging the state removes it. E35 tests both on a
+case with a closed-form exact score: $X_i=Gb+U_i$, with $G=\pm1$ a fair sign per sequence and $U$ the
+Gaussian AR(1) chain at $\rho=0.85$. The repair is the same mixture kernel on the state $(X_i,G)$, the two
+phases tied by reflection, with the same number of parameters (\code{markov\_score/augmented.py}).
+
+\begin{table}[h]\centering\footnotesize
+\caption{E35, score risk against the closed-form exact score (seed 0 / seed 1). The linear floor is the
+LMMSE of the true covariance $b^2\mathbf 1\mathbf 1^\top+\Sigma_U$; at $b=0$ it is the exact score.}
+\label{tab:conf-e35}
+\input{field-tables/conf-e35.tex}
+\end{table}
+
+P2 and P3 hold: at $b=2$ the first-order risk moves by $+6\,\%$ and $+3\,\%$ when $M$ quadruples while
+the augmented arm's falls by $58\,\%$ and $73\,\%$, and the ratio climbs with $b$ to $8.6$ and $17.9$,
+the augmented arm sitting $5.4$ and $11.5$ times below the linear floor. P1 fails as written: at $b=0$ the
+two arms agree on average, but at this small risk either one moves by a factor of three between seeds, and
+a $10\,\%$ band cannot hold at two seeds. Not predicted, and the sharpest number: under the latent the
+paper's first-order estimator is $1.5$--$1.7$ times \emph{worse} than the linear floor at both sizes.
+
 \section{Alignment with the consolidated note}
 
 \begin{table}[h]\centering\footnotesize
@@ -696,6 +800,8 @@ $\Th$ read from the data & Corollary~\ref{cor:read}: $\hat\Th=\hat\gamma s^2/h$ 
 Fourier BP for the SPDE (\S23) & not pursued: E24 found BP memory-bound (23.8\,\% of a sweep is the matmul), so a spectral step caps at $1.3\times$ \\
 ``minimal decisive experiment'' & E32 (floor across $\Th$, $h$) plus E33's window arm \\
 figures-first (\S28) & figs.~5 and 6 of the note are E32/E33's; the summary figure is pending the E33 data \\
+global latent and its repair (\S8, fig.~7) & E35 (\S\ref{sec:conf}): bias measured, repair by state augmentation confirmed (P2, P3) \\
+subsampling a fine lattice & E36 (\S\ref{sec:stride}): kernel $K^s$ exact; P1, P2 confirmed \\
 \bottomrule
 \end{tabular}
 \end{table}
