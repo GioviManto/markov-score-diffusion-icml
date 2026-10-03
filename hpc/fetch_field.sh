@@ -7,7 +7,8 @@
 #   hpc/fetch_field.sh            # needs the Bocconi VPN
 #
 # Where each job ran (experiments/registry/E33.json and E34.json):
-#   9b1c940-20261001T084745Z  E33o (678084), E33k_s0..s12 (678087-678090), E33n (678091), E33n_s0/s8 (678092/678094)
+#   9b1c940-20261001T084745Z  E33o (678084), E33n (678091), E33n_s0/s8 (678092/678094); E33k_s0..s12 (678087-678090) FAILED
+#   ce5aef4-20261003T161410Z  E33k_s0..s12 rerun under amendment 3 (681261-681263, 681265), 76 old cells reused
 #   52cf980-20261001T094107Z  E34c (678166)
 #   32448fe-20261001T112539Z  E33q_s0..s12 (678260-678263)
 set -uo pipefail
@@ -21,7 +22,8 @@ fetch() {  # env remote_dir
 ssh -o BatchMode=yes -o ConnectTimeout=15 3164542@lnode02-da.hpc.unibocconi.it true 2>/dev/null \
   || { echo "cluster unreachable: connect the Bocconi VPN (GlobalProtect) first" >&2; exit 2; }
 echo "--- fetching"
-for s in E33o E33k_s0 E33k_s4 E33k_s8 E33k_s12 E33n E33n_s0 E33n_s8; do fetch 9b1c940 "$s"; done
+for s in E33o E33n E33n_s0 E33n_s8; do fetch 9b1c940 "$s"; done
+for s in E33k_s0 E33k_s4 E33k_s8 E33k_s12; do fetch ce5aef4 "$s"; done
 for s in E33q_s0 E33q_s4 E33q_s8 E33q_s12; do fetch 32448fe "$s"; done
 fetch 52cf980 E34c
 rm -f /tmp/msd_fetch_$$.log
