@@ -57,7 +57,7 @@
   "P4": "pending (physics_learned, after E33's kernels)."
  },
  "reading_learned_pair": {
-  "read": "2026-10-03 ~18:55 BST. physics_learned (the registered part, unchanged) run on the laptop at 51b36a7 on the 24 confirmatory em_pair_quartic fits it selects (hpc_E33q_s0: risk-selected, M = 2048, seeds 0-3, six cells); outputs/E34_learned_pair. UNREGISTERED for this arm: P4 names the spline and the mixture, whose fits wait for E33's kernel shards.",
+  "read": "2026-10-03 ~18:55 BST. physics_learned (the registered part, unchanged) run on the laptop at 3590719 (code path clean; params_physics_learned.json) on the 24 confirmatory em_pair_quartic fits it selects (hpc_E33q_s0: risk-selected, M = 2048, seeds 0-3, six cells); outputs/E34_learned_pair. UNREGISTERED for this arm: P4 names the spline and the mixture, whose fits wait for E33's kernel shards.",
   "result": "Samples from the pair kernels learned through noise reproduce the truth on all 24 fits within P4's 15% band, every statistic: kink density worst 5.3%, mean domain 2.9%, coarse kink density 13.3% (T = 2; 8.5% or better elsewhere), coarse mean domain 5.4%, bimodality coefficient 2.9%, variance 4.0%, mass above the barrier 3.2%. Cell means within 2.2% of the truth for every statistic."
  }
 }
