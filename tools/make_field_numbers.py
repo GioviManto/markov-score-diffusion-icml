@@ -152,7 +152,8 @@ def main() -> int:
         sub = pk_src[(pk_src.selection == "risk") & pk_src.arm.isin(["em_tilted_poly", "em_tilted_spline", "em_pair_quartic"])]
         if not sub.empty:
             parked = annotate(sub, gpk, wpk).groupby(["source", "arm", "cell", "n_chains"]).agg(
-                n=("parked", "size"), parked=("parked", "sum"), max_mass_out=("invariant_mass_out", "max")).reset_index()
+                n=("parked", "size"), parked=("parked", "sum"), max_mass_out=("invariant_mass_out", "max"),
+                eig_failed=("eig_failed", "sum"), max_gz_mass_out=("gz_mass_out", "max")).reset_index()
 
     # ---- P1: mixture / spline at 2048 above 1 in every seed; gap not closing from 512 to 2048
     j = pair(mix, spl); pairs += summarise(j, "em_mixture/em_tilted_spline")
@@ -269,8 +270,8 @@ def main() -> int:
     if not parked.empty:
         parked.insert(0, "data", tag)
         parked.to_csv(out / f"field_parked{'_preview' if args.preview else ''}.csv", index=False, float_format="%.3g")
-        tot = parked.groupby(["source", "arm"])[["n", "parked"]].sum()
-        print("\nparked fits (own invariant law beyond |a| = 3.5), per source and arm:")
+        tot = parked.groupby(["source", "arm"])[["n", "parked", "eig_failed"]].sum()
+        print("\nparked fits (first-site law beyond |a| = 3.5), and fits whose eigensolve failed (estimator used N(0, 1)), per source and arm:")
         print(tot.to_string())
     fails = pk_src[pk_src.get("failed", pd.Series(0, index=pk_src.index)) == 1] if not pk_src.empty else pd.DataFrame()
     print(f"\nfailed fits (E33 amendment 3): {0 if fails.empty else len(fails[fails.selection == 'risk'])} risk-selected rows")
