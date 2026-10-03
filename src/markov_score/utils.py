@@ -83,7 +83,10 @@ def write_csv(path: Path | str, rows: Iterable[Mapping[str, Any]]) -> None:
         raise ValueError(f"No rows to write to {path}.")
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    headers = list(rows[0].keys())
+    # The union of the keys in first-seen order, a missing value blank: a resumed run mixes cell
+    # files from before and after a column was added (E33's rerun, 3 Oct 2026), and taking the
+    # first row's keys raised on the first newer row. Uniform rows are written exactly as before.
+    headers = list(dict.fromkeys(k for row in rows for k in row))
     with p.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()

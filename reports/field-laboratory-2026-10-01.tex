@@ -94,7 +94,8 @@ part (E33, eight cluster jobs) and the physics part (E34) are in flight.
   asks for; the clean-data interface. Eleven predictions were registered before any confirmatory
   cell ran. The oracles have landed: P6 is confirmed on the per-seed test bundles (floor $0.269$,
   $0.114$, $0.059$, $0.041$ along $\Th=0.3,0.5,1,2$; sixteen seeds, spread below $0.001$). The
-  kernel and network jobs are queued; a laptop preview on two cells and two seeds is running.
+  pair-energy shards and E34's clean arm have landed; the four kernel shards failed on the finest
+  lattice and are being rerun under amendment~3 (a failed fit is a row, never a crash); the networks are queued.
 \end{enumerate}
 
 Notation. $\Th$ is the physical temperature (the code and the cell names call it \code{T}), $h$ the lattice spacing,
@@ -666,12 +667,12 @@ the price of the channel at $M=2048$ is a factor of a few in risk, not in the ph
 
 One negative result came with the preview (N-33 in \code{docs/NEGATIVE\_RESULTS.md}, corrected on
 2 October): the \emph{polynomial} tilt sometimes fails badly, with risks of $0.18$ to $1.79$ in five of its
-eighteen preview fits, clean and noisy. The cause is not where the fit puts its transitions but where
+twenty preview fits, clean and noisy. The cause is not where the fit puts its transitions but where
 it puts its \emph{invariant law}. The likelihood constrains $\log g$ only where data arrive
 ($|a|\lesssim3.5$); beyond that, a global basis can raise the tilt and create a pocket, and in every failed fit
 the kernel's own invariant law sits entirely in that pocket. Since the estimator uses that law for the
-first site, every posterior is dragged outside the data. In the other thirteen Legendre fits, and in all
-fifty spline and site-energy fits, the mass beyond $|a|=3.5$ is below $1.1\times10^{-4}$. That mass, not the
+first site, every posterior is dragged outside the data. In the other fifteen Legendre fits, and in all
+fifty-two spline and site-energy fits (the previews and E36), the mass beyond $|a|=3.5$ is at most $1.1\times10^{-4}$. That mass, not the
 coefficient bound first suspected, is the diagnostic: E33's amendment~2 reports the number of such
 ``parked'' fits beside every verdict, before any confirmatory row exists. The role of the parsimonious
 exactly specified kernel passes to the site energy, which confines by construction.

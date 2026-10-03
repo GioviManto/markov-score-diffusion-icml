@@ -43,7 +43,33 @@ def load(pattern):
     paths = sorted(glob.glob(str(ROOT / pattern)))
     if not paths:
         return pd.DataFrame()
-    return pd.concat([pd.read_csv(p) for p in paths], ignore_index=True)
+    df = pd.concat([pd.read_csv(p) for p in paths], ignore_index=True)
+    return mark_failed(df)
+
+
+def mark_failed(df):
+    """E33 amendment 3: a FAILED fit is a row with failed = 1 and risk NaN (shards written before
+    the amendment carry no column and no NaN risk, so nothing in them is failed)."""
+    if df.empty or "risk" not in df:
+        return df
+    df = df.copy()
+    prior = df["failed"].fillna(0).astype(int) if "failed" in df else 0
+    df["failed"] = ((prior == 1) | df["risk"].isna()).astype(int)
+    return df
+
+
+def nf(g, col="ratio"):
+    """Failed fits in a group: a NaN ratio (either side failed) or a NaN risk."""
+    return int(g[col].isna().sum())
+
+
+def finalize_ok(R):
+    """Amendment 3 (b): a failure can falsify a clause and never confirm one. A clause whose group
+    holds a failed fit is not confirmed, whatever its mean says; pending stays pending."""
+    R = R.copy()
+    R["ok"] = [None if ok is None or (isinstance(ok, float) and np.isnan(ok)) else bool(ok and n == 0)
+               for ok, n in zip(R["ok"], R["n_failed"])]
+    return R
 
 
 def paired_ci(values):
@@ -76,7 +102,7 @@ def pair(a, b, keys=("cell", "seed", "n_chains", "test_bundle")):
         return EMPTY_PAIR.copy()
     keys = [k for k in keys if k in a and k in b]
     j = a[keys + ["risk"]].merge(b[keys + ["risk"]], on=keys, suffixes=("_a", "_b"))
-    j["ratio"] = j.risk_a / j.risk_b
+    j["ratio"] = j.risk_a / j.risk_b  # NaN when either fit failed (amendment 3): counted, never a success
     return j
 
 
@@ -85,8 +111,8 @@ def summarise(j, label):
     if j.empty:
         return out
     for (cell, n), g in j.groupby(["cell", "n_chains"]):
-        lo, hi = paired_ci(g.ratio.values)
-        out.append(dict(pair=label, cell=cell, n_chains=int(n), n_seeds=len(g), ratio=float(g.ratio.mean()), ci_lo=lo, ci_hi=hi,
+        lo, hi = paired_ci(g.ratio.dropna().values)
+        out.append(dict(pair=label, cell=cell, n_chains=int(n), n_seeds=len(g), n_failed=nf(g), ratio=float(g.ratio.mean()), ci_lo=lo, ci_hi=hi,
                         k_below=int((g.ratio < 1).sum()), risk_a=float(g.risk_a.mean()), risk_b=float(g.risk_b.mean())))
     return out
 
@@ -138,21 +164,21 @@ def main() -> int:
             k, n = int((g48.ratio > 1).sum()), len(g48)
             nc = (g48.ratio.mean() >= 0.9 * g512.ratio.mean()) if not g512.empty else None
             rows.append(dict(prediction="P1", cell=cell, n_chains=2048, statistic="mixture/spline ratio; k(>1)/n; gap ratio 2048 vs 512",
-                             value=float(g48.ratio.mean()), k=k, n=n, extra=float(g48.ratio.mean() / g512.ratio.mean()) if not g512.empty else np.nan,
+                             value=float(g48.ratio.mean()), k=k, n=n, n_failed=nf(g48) + (nf(g512) if not g512.empty else 0), extra=float(g48.ratio.mean() / g512.ratio.mean()) if not g512.empty else np.nan,
                              ok=(k == n) and (nc if nc is not None else True)))
     # ---- P2: pair energy beats the mixture at every M >= 128; poly within 20% of spline at 2048
     for arm, d in (("em_tilted_poly", poly), ("em_tilted_spline", spl)):
         j = pair(d, mix); pairs += summarise(j, f"{arm}/em_mixture")
         for (cell, n), g in j[j.n_chains >= 128].groupby(["cell", "n_chains"]):
             k = int((g.ratio < 1).sum())
-            rows.append(dict(prediction="P2", cell=cell, n_chains=int(n), statistic=f"{arm}/mixture; k(<1)/n", value=float(g.ratio.mean()), k=k, n=len(g), extra=np.nan, ok=(k == len(g))))
+            rows.append(dict(prediction="P2", cell=cell, n_chains=int(n), statistic=f"{arm}/mixture; k(<1)/n", value=float(g.ratio.mean()), k=k, n=len(g), n_failed=nf(g), extra=np.nan, ok=(k == len(g))))
     j = pair(poly, spl); pairs += summarise(j, "em_tilted_poly/em_tilted_spline")
     for cell, g in j[j.n_chains == 2048].groupby("cell"):
-        rows.append(dict(prediction="P2b", cell=cell, n_chains=2048, statistic="poly/spline at 2048 <= 1.2", value=float(g.ratio.mean()), k=int((g.ratio <= 1.2).sum()), n=len(g), extra=np.nan, ok=bool(g.ratio.mean() <= 1.2)))
+        rows.append(dict(prediction="P2b", cell=cell, n_chains=2048, statistic="poly/spline at 2048 <= 1.2", value=float(g.ratio.mean()), k=int((g.ratio <= 1.2).sum()), n=len(g), n_failed=nf(g), extra=np.nan, ok=bool(g.ratio.mean() <= 1.2)))
     # ---- P3: mdn / mixture below 1.5 at 2048
     j = pair(mdn, mix); pairs += summarise(j, "em_mdn/em_mixture")
     for cell, g in j[j.n_chains == 2048].groupby("cell"):
-        rows.append(dict(prediction="P3", cell=cell, n_chains=2048, statistic="mdn/mixture at 2048 < 1.5", value=float(g.ratio.mean()), k=int((g.ratio < 1.5).sum()), n=len(g), extra=np.nan, ok=bool(g.ratio.mean() < 1.5)))
+        rows.append(dict(prediction="P3", cell=cell, n_chains=2048, statistic="mdn/mixture at 2048 < 1.5", value=float(g.ratio.mean()), k=int((g.ratio < 1.5).sum()), n=len(g), n_failed=nf(g), extra=np.nan, ok=bool(g.ratio.mean() < 1.5)))
     # ---- P4: no network reaches the spline at any M under either interface
     if not N.empty:
         for arm in ("ism_one_view", "dsm_one_corruption"):
@@ -161,15 +187,16 @@ def main() -> int:
                 j = pair(nn, spl); pairs += summarise(j, f"{arm}:{arch}/em_tilted_spline")
                 for (cell, n), g in j.groupby(["cell", "n_chains"]):
                     k = int((g.ratio > 1).sum())
-                    rows.append(dict(prediction="P4", cell=cell, n_chains=int(n), statistic=f"{arm}:{arch}/spline; k(>1)/n", value=float(g.ratio.mean()), k=k, n=len(g), extra=np.nan, ok=(k == len(g))))
+                    rows.append(dict(prediction="P4", cell=cell, n_chains=int(n), statistic=f"{arm}:{arch}/spline; k(>1)/n", value=float(g.ratio.mean()), k=k, n=len(g), n_failed=nf(g), extra=np.nan, ok=(k == len(g))))
         # ---- P5: the window head's ISM risk at 2048 increases along the refinement cells; the spline's does not
         win = N[(N.arm == "ism_one_view") & (N.arch == "window") & (N.n_chains == 2048)].groupby("cell").risk.mean()
         sp = spl[spl.n_chains == 2048].groupby("cell").risk.mean()
+        p5_failed = nf(spl[(spl.n_chains == 2048) & spl.cell.isin(REFINE)], "risk") if not spl.empty else 0
         if all(c in win.index for c in REFINE):
             w = [float(win[c]) for c in REFINE]
             s = [float(sp[c]) for c in REFINE] if all(c in sp.index for c in REFINE) else None
             rows.append(dict(prediction="P5", cell="refinement", n_chains=2048, statistic="window ISM risk h=1,0.5,0.25 increasing; spline not increasing",
-                             value=w[-1] / w[0], k=int(all(a < b for a, b in zip(w, w[1:]))), n=1, extra=(s[-1] / s[0]) if s else np.nan,
+                             value=w[-1] / w[0], k=int(all(a < b for a, b in zip(w, w[1:]))), n=1, n_failed=p5_failed, extra=(s[-1] / s[0]) if s else np.nan,
                              ok=bool(all(a < b for a, b in zip(w, w[1:])) and (s is None or not all(a < b for a, b in zip(s, s[1:]))))))
     # ---- P6: the floor at the base cell above 0.082, falling along the sweep
     if not O.empty:
@@ -177,15 +204,15 @@ def main() -> int:
         if all(c in fl.index for c in TSWEEP):
             v = [float(fl[c]) for c in TSWEEP]
             rows.append(dict(prediction="P6", cell="sweep", n_chains=2048, statistic="floor at base > 0.082 and monotone along Theta = 0.3, 0.5, 1, 2",
-                             value=v[0], k=int(all(a > b for a, b in zip(v, v[1:]))), n=1, extra=v[-1], ok=bool(v[0] > 0.082 and all(a > b for a, b in zip(v, v[1:])))))
+                             value=v[0], k=int(all(a > b for a, b in zip(v, v[1:]))), n=1, n_failed=0, extra=v[-1], ok=bool(v[0] > 0.082 and all(a > b for a, b in zip(v, v[1:])))))
     # ---- P7: pair energy within 10% of the spline at 2048; below it at 32 and 128
     j = pair(pq, spl); pairs += summarise(j, "em_pair_quartic/em_tilted_spline")
     for (cell, n), g in j.groupby(["cell", "n_chains"]):
         if n == 2048:
-            rows.append(dict(prediction="P7", cell=cell, n_chains=2048, statistic="pair/spline at 2048 <= 1.1", value=float(g.ratio.mean()), k=int((g.ratio <= 1.1).sum()), n=len(g), extra=np.nan, ok=bool(g.ratio.mean() <= 1.1)))
+            rows.append(dict(prediction="P7", cell=cell, n_chains=2048, statistic="pair/spline at 2048 <= 1.1", value=float(g.ratio.mean()), k=int((g.ratio <= 1.1).sum()), n=len(g), n_failed=nf(g), extra=np.nan, ok=bool(g.ratio.mean() <= 1.1)))
         elif n in (32, 128):
             k = int((g.ratio < 1).sum())
-            rows.append(dict(prediction="P7", cell=cell, n_chains=int(n), statistic="pair/spline; k(<1)/n", value=float(g.ratio.mean()), k=k, n=len(g), extra=np.nan, ok=(k == len(g))))
+            rows.append(dict(prediction="P7", cell=cell, n_chains=int(n), statistic="pair/spline; k(<1)/n", value=float(g.ratio.mean()), k=k, n=len(g), n_failed=nf(g), extra=np.nan, ok=(k == len(g))))
     # ---- P8: the temperature within 10% at 2048 (pair and spline); the barrier within 20% (pair, Theta <= 1)
     gc = pd.concat([d for d in (pq, spl) if not d.empty], ignore_index=True) if not (pq.empty and spl.empty) else pd.DataFrame()
     if not gc.empty and (gc.n_chains == 2048).any():
@@ -194,28 +221,29 @@ def main() -> int:
         sys.path.insert(0, str(ROOT / "experiments")); from frozen_config import FROZEN
         grid, _ = make_grid(FROZEN.half_width, FROZEN.n_grid)
         g48 = gc[gc.n_chains == 2048].copy(); g48["source"] = "noisy"
-        tab, _ = _readings(g48, grid)
+        failed48 = g48[g48.failed == 1].groupby(["cell", "arm"]).size()
+        tab, _ = _readings(g48[g48.failed == 0], grid)
         for (cell, arm), g in tab.groupby(["cell", "arm"]):
-            k = int((np.abs(g.theta_ratio - 1) <= 0.1).sum())
-            rows.append(dict(prediction="P8", cell=cell, n_chains=2048, statistic=f"{arm}: |Theta_hat/Theta - 1| <= 0.1; k/n", value=float(g.theta_ratio.mean()), k=k, n=len(g), extra=float(g.theta_ratio.std()) if len(g) > 1 else np.nan, ok=(k == len(g))))
+            k = int((np.abs(g.theta_ratio - 1) <= 0.1).sum()); f8 = int(failed48.get((cell, arm), 0))
+            rows.append(dict(prediction="P8", cell=cell, n_chains=2048, statistic=f"{arm}: |Theta_hat/Theta - 1| <= 0.1; k/n", value=float(g.theta_ratio.mean()), k=k, n=len(g) + f8, n_failed=f8, extra=float(g.theta_ratio.std()) if len(g) > 1 else np.nan, ok=(k == len(g))))
             if arm == "em_pair_quartic" and float(g["T"].iloc[0]) <= 1.0:
                 k = int((np.abs(g.barrier_hat - 0.25) <= 0.05).sum())
-                rows.append(dict(prediction="P8b", cell=cell, n_chains=2048, statistic="pair: |barrier - 1/4| <= 0.05; k/n", value=float(g.barrier_hat.mean()), k=k, n=len(g), extra=float(g.well_hat.mean()), ok=(k == len(g))))
+                rows.append(dict(prediction="P8b", cell=cell, n_chains=2048, statistic="pair: |barrier - 1/4| <= 0.05; k/n", value=float(g.barrier_hat.mean()), k=k, n=len(g) + f8, n_failed=f8, extra=float(g.well_hat.mean()), ok=(k == len(g))))
     # ---- E34 P2/P3: the clean-data interface
     if not C.empty and not allk.empty:
         for arm in sorted(set(C.arm) & set(allk.arm)):
             j = pair(risk_rows(C, arm), risk_rows(allk, arm)); pairs += summarise(j, f"clean:{arm}/noisy:{arm}")
             for (cell, n), g in j.groupby(["cell", "n_chains"]):
                 k = int((g.ratio < 1).sum())
-                rows.append(dict(prediction="E34-P2", cell=cell, n_chains=int(n), statistic=f"clean/noisy {arm}; k(<1)/n", value=float(g.ratio.mean()), k=k, n=len(g), extra=float(g.risk_a.mean()), ok=(k == len(g))))
+                rows.append(dict(prediction="E34-P2", cell=cell, n_chains=int(n), statistic=f"clean/noisy {arm}; k(<1)/n", value=float(g.ratio.mean()), k=k, n=len(g), n_failed=nf(g), extra=float(g.risk_a.mean()), ok=(k == len(g))))
         for arm in ("em_tilted_poly", "em_tilted_spline", "em_pair_quartic"):
             c48 = risk_rows(C, arm); c48 = c48[c48.n_chains == 2048]
             for cell, g in c48.groupby("cell"):
-                rows.append(dict(prediction="E34-P2b", cell=cell, n_chains=2048, statistic=f"clean {arm} at 2048 < 0.02", value=float(g.risk.mean()), k=int((g.risk < 0.02).sum()), n=len(g), extra=np.nan, ok=bool(g.risk.mean() < 0.02)))
+                rows.append(dict(prediction="E34-P2b", cell=cell, n_chains=2048, statistic=f"clean {arm} at 2048 < 0.02", value=float(g.risk.mean()), k=int((g.risk < 0.02).sum()), n=len(g), n_failed=nf(g, "risk"), extra=np.nan, ok=bool(g.risk.mean() < 0.02)))
         j = pair(risk_rows(C, "em_mixture"), risk_rows(C, "em_tilted_spline")); pairs += summarise(j, "clean:em_mixture/clean:em_tilted_spline")
         for cell, g in j[j.n_chains == 2048].groupby("cell"):
             k = int((g.ratio > 1).sum())
-            rows.append(dict(prediction="E34-P3", cell=cell, n_chains=2048, statistic="clean mixture/spline at 2048; k(>1)/n", value=float(g.ratio.mean()), k=k, n=len(g), extra=np.nan, ok=(k == len(g))))
+            rows.append(dict(prediction="E34-P3", cell=cell, n_chains=2048, statistic="clean mixture/spline at 2048; k(>1)/n", value=float(g.ratio.mean()), k=k, n=len(g), n_failed=nf(g), extra=np.nan, ok=(k == len(g))))
     # ---- E34 P4: generated samples' kink density and mean domain within 15% (spline); mixture overshoots
     if not Ld.empty:
         tr = Ld[Ld.arm == "truth"].set_index(["cell", "seed"])
@@ -227,10 +255,11 @@ def main() -> int:
                 rk = np.array([float(r.kink_density) / float(tr.loc[(cell, r.seed)].kink_density) for r in g.itertuples()])
                 rd = np.array([float(r.mean_domain) / float(tr.loc[(cell, r.seed)].mean_domain) for r in g.itertuples()])
                 ok = bool(np.all(np.abs(rk - 1) <= 0.15) and np.all(np.abs(rd - 1) <= 0.15)) if arm == "em_tilted_spline" else (bool(np.all(rk > 1)) if arm == "em_mixture" else None)
-                rows.append(dict(prediction="E34-P4", cell=cell, n_chains=int(g.n_chains.iloc[0]), statistic=f"{arm}: kink ratio, domain ratio to truth", value=float(rk.mean()), k=len(g), n=len(g), extra=float(rd.mean()), ok=ok))
+                rows.append(dict(prediction="E34-P4", cell=cell, n_chains=int(g.n_chains.iloc[0]), statistic=f"{arm}: kink ratio, domain ratio to truth", value=float(rk.mean()), k=len(g), n=len(g), n_failed=0, extra=float(rd.mean()), ok=ok))
     out = ROOT / args.out; out.mkdir(parents=True, exist_ok=True)
     R = pd.DataFrame(rows)
     if not R.empty:
+        R = finalize_ok(R)
         R.insert(0, "data", tag)
         R["verdict"] = R.ok.map(lambda v: "pending" if v is None else ("CONFIRMED" if v else "FALSIFIED"))
         R.to_csv(out / f"field_predictions{'_preview' if args.preview else ''}.csv", index=False, float_format="%.4f")
@@ -243,6 +272,13 @@ def main() -> int:
         tot = parked.groupby(["source", "arm"])[["n", "parked"]].sum()
         print("\nparked fits (own invariant law beyond |a| = 3.5), per source and arm:")
         print(tot.to_string())
+    fails = pk_src[pk_src.get("failed", pd.Series(0, index=pk_src.index)) == 1] if not pk_src.empty else pd.DataFrame()
+    print(f"\nfailed fits (E33 amendment 3): {0 if fails.empty else len(fails[fails.selection == 'risk'])} risk-selected rows")
+    if not fails.empty:
+        ft = fails[fails.selection == "risk"].groupby(["source", "arm", "cell", "n_chains"]).size().rename("failed").reset_index()
+        ft.insert(0, "data", tag)
+        ft.to_csv(out / f"field_failed{'_preview' if args.preview else ''}.csv", index=False)
+        print(ft.to_string(index=False))
     P = pd.DataFrame(pairs)
     if not P.empty:
         P.insert(0, "data", tag)

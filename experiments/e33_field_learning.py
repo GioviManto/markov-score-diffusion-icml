@@ -192,6 +192,14 @@ def _kernel_diagnostics(kernel, grid):
     return d
 
 
+def _failed_row(arm, selection, k0, wall, why):
+    """E33 amendment 3: a fit that failed is a row, not a crash. Risk NaN, failed = 1, the
+    reason in stop_reason; read against the prediction whichever arm it is."""
+    return dict(arm=arm, selection=selection, risk=np.nan, failed=1, checkpoint=-1, at_cap=0,
+                val_selected=np.nan, n_params=int(len(np.asarray(k0.theta))), wall=wall,
+                converged=False, stop_reason=f"failed: {why}")
+
+
 def _fit_arm(cfg, arm, grid, w, groups, val, val_groups, test, seed, cell_id, L, n):
     gs = [(X, *alpha_delta(t)) for X, t in groups]
     held = [(X, *alpha_delta(t)) for X, t in val_groups]
@@ -200,16 +208,30 @@ def _fit_arm(cfg, arm, grid, w, groups, val, val_groups, test, seed, cell_id, L,
     k0 = _init_kernel(arm, cfg, grid, seed, cell_id, n)
     ck = set(int(c) for c in cfg["em_checkpoints"])
     t0 = time.time()
-    _, trace, saved = fit_em(k0, grid, w, gs, n_iters=max(ck), tol=FROZEN.em_loglik_tol,
-                             checkpoints=ck, log_mu=mu_fn)
+    # Amendment 3 (3 Oct 2026): a FloatingPointError inside EM -- the E-step's lost-mass guards --
+    # fails THIS fit only. Until then one such fit (L128, M = 2048) stopped all four kernel jobs.
+    # Any other exception is a bug and still propagates.
+    try:
+        _, trace, saved = fit_em(k0, grid, w, gs, n_iters=max(ck), tol=FROZEN.em_loglik_tol,
+                                 checkpoints=ck, log_mu=mu_fn)
+    except FloatingPointError as exc:
+        why = f"FloatingPointError: {exc}"
+        return [_failed_row(arm, sel, k0, time.time() - t0, why) for sel in ("risk", "evidence")]
     wall = time.time() - t0
     curve, mus = {}, {}
     best, best_v, best_e, best_ev = None, np.inf, None, -np.inf
     for it in sorted(saved):
         mu = mu_fn(saved[it]); mus[it] = mu
         lk = saved[it].log_transition_matrix(grid)
-        v = e14._pooled(lambda X, t, lk=lk, mu=mu: grid_bp_batch(grid, w, lk, X, *alpha_delta(t), log_mu=mu)[0], val)
-        ev = float(e_step_multi(grid, w, lk, held, mu).log_evidence) / n_edges
+        # a checkpoint that cannot be scored is not selectable (amendment 3)
+        try:
+            v = e14._pooled(lambda X, t, lk=lk, mu=mu: grid_bp_batch(grid, w, lk, X, *alpha_delta(t), log_mu=mu)[0], val)
+        except FloatingPointError:
+            v = np.inf
+        try:
+            ev = float(e_step_multi(grid, w, lk, held, mu).log_evidence) / n_edges
+        except FloatingPointError:
+            ev = -np.inf
         curve[it] = (v, ev)
         if v < best_v:
             best, best_v = it, v
@@ -217,10 +239,17 @@ def _fit_arm(cfg, arm, grid, w, groups, val, val_groups, test, seed, cell_id, L,
             best_e, best_ev = it, ev
     rows = []
     for selection, it, sel in (("risk", best, best_v), ("evidence", best_e, best_ev)):
+        if it is None:
+            rows.append(_failed_row(arm, selection, k0, wall, "no checkpoint of the ladder could be scored"))
+            continue
         kb = saved[it]
         lk = kb.log_transition_matrix(grid)
-        risk = e14._pooled(lambda X, t, lk=lk, mu=mus[it]: grid_bp_batch(grid, w, lk, X, *alpha_delta(t), log_mu=mu)[0], test)
-        rows.append(dict(arm=arm, selection=selection, risk=risk, checkpoint=it, at_cap=int(it == max(saved)),
+        try:
+            risk = e14._pooled(lambda X, t, lk=lk, mu=mus[it]: grid_bp_batch(grid, w, lk, X, *alpha_delta(t), log_mu=mu)[0], test)
+        except FloatingPointError as exc:
+            rows.append(_failed_row(arm, selection, k0, wall, f"test scoring of checkpoint {it}: FloatingPointError: {exc}"))
+            continue
+        rows.append(dict(arm=arm, selection=selection, risk=risk, failed=0, checkpoint=it, at_cap=int(it == max(saved)),
                          val_selected=sel, n_params=int(len(np.asarray(kb.theta))), wall=wall,
                          converged=bool(trace.converged), stop_reason=trace.stop_reason,
                          monotone_violation=float(trace.monotone_violation),
@@ -230,7 +259,7 @@ def _fit_arm(cfg, arm, grid, w, groups, val, val_groups, test, seed, cell_id, L,
     return rows
 
 
-ROW_DEFAULTS = dict(arm="", selection="", arch="", hp="", checkpoint=-1, at_cap=0, val_selected=np.nan,
+ROW_DEFAULTS = dict(arm="", selection="", arch="", hp="", failed=0, checkpoint=-1, at_cap=0, val_selected=np.nan,
                     wall=np.nan, n_params=0, converged=False, stop_reason="", monotone_violation=np.nan,
                     n_iters=0, fit_rho=np.nan, fit_kurt=np.nan, inner_converged=False, fit_gamma=np.nan,
                     tilt_range=np.nan, step_resolved=False, theta="", val_curve="", edge_mass=np.nan)

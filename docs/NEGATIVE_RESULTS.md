@@ -570,6 +570,8 @@ the grid edge (|a| ≈ 8) inward, to between the data edge and the wall; it did 
 basis can raise log g there through the same coefficients that shape the bulk; a local basis has no
 reason to, and the quartic site energy confines by construction.
 
+**N-33, count updated (3 October).** With the three-arm preview complete the counts are 20 Legendre fits, five parked (the same five), the other fifteen below 8.1e-5; and 52 spline and site-energy fits (previews and E36), every one at most 1.1e-4 (largest 1.101e-4, a noisy spline fit, so "below 1.1e-4" above was a rounding too far). Nothing else changes.
+
 Consequences. (i) The diagnostic is the invariant mass beyond the data range, not the coefficient
 bound; the readers now report it (`invariant_mass_out`), and the at-bound column stays only as a
 record. (ii) The registered E33 rows of `em_tilted_poly` will contain parked fits on some seeds; they
