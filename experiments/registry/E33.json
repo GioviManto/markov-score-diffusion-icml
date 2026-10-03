@@ -134,5 +134,13 @@
    ]
   },
   "note": "The projected recursion is a diagnostic only (not well-posed on this chain, E32 P2): 38-43% edge mass at the base cell and 98-100% on every other cell."
+ },
+ "interim_reading_pair_arm": {
+  "read": "2026-10-03 ~18:40 BST, tools/make_field_numbers.py at 51b36a7 on hpc_E33q_s0-s12 (768 rows, deployment 32448fe, jobs 678260-678263), after amendment 3; reports/numbers/field_predictions.csv",
+  "P8, em_pair_quartic half": "CONFIRMED: Theta_hat/Theta within 10% in 16/16 seeds on all six cells at M = 2048 (96/96); means 0.9995-1.0068, seed spread 0.3% (L128) to 2.3% (base cell). The em_tilted_spline half waits for the kernel shards.",
+  "P8, barrier clause (em_pair_quartic, T <= 1)": "FALSIFIED AS WRITTEN on one cell of five: within 20% of 1/4 in 16/16 seeds at T0.3_h1, T0.3_h0.5, T0.3_h0.25 and T0.5, but 14/16 at T = 1 (barriers 0.163 and 0.313 outside [0.20, 0.30]; mean 0.248, sd 0.036). 78 of 80 fits inside the band. At T = 1 the barrier is a quarter of the thermal energy and its reading spreads 3-5x more than at T <= 0.5; the registered exclusion stopped at T = 2.",
+  "P8, T = 2 clause": "As written (not expected to resolve): barrier 0.277, sd 0.083, range 0.10-0.37.",
+  "parked / failed": "em_pair_quartic: 0 of 384 parked, 0 eigensolve failures, 0 failed fits.",
+  "unregistered": "The pair kernel's risk against the linear floor (E33 oracles): 0.27/0.14/0.067/0.033 of it at M = 32/128/512/2048 on the base cell; at T = 2, 1.43/0.63/0.41/0.17. Five parameters beat the Gaussian closure from 32 noised sequences at T <= 0.5."
  }
 }

@@ -48,5 +48,12 @@
   "e34-clean": "678166, defq, 24 cpus, 23:50 -> outputs/hpc_E34c (fetch from deployment 52cf980-20261001T094107Z, env hpc/.deploy_52cf980.env)",
   "deployment": "52cf980-20261001T094107Z (heavy-history commit 52cf980; its pushed twin is listed in docs/COMMIT_MAP_2026-10-01.md)",
   "provenance_note": "Recovered on 1 Oct 2026 21:20 BST from the session transcript: the job was submitted immediately after this deployment and before the 32448fe one; the registry had not recorded it."
+ },
+ "outcome_clean": {
+  "read": "2026-10-03 ~18:40 BST, tools/make_field_numbers.py at 51b36a7 on hpc_E34c (1536 rows, deployment 52cf980, job 678166; arms mixture, Legendre, spline, MDN), amendments 2 and 3 applied; reports/numbers/field_predictions.csv",
+  "P2, clean half (tilted kernels below 0.02 pooled at M = 2048 on every cell)": "MIXED. em_tilted_spline CONFIRMED on all six cells (0.0027-0.0072, 16/16 below 0.02 everywhere). em_tilted_poly FALSIFIED on four of six: 0.103 (base), 0.145 (L64), 0.146 (L128), 0.245 (T = 0.5); confirmed at T = 1 (0.0146) and T = 2 (0.0051). Parked (first-site law beyond |a| = 3.5): 186 of 384 clean Legendre fits; the eigensolve failed on 20 more (estimator used N(0, 1)). Spline: 0 of 384 parked. N-33 at scale: under clean MLE a global basis builds a basin where no data arrive in half of its fits.",
+  "P2, clean-beats-noisy clause": "pending: joins E33's kernel shards (rerun under amendment 3).",
+  "P3": "CONFIRMED on all six cells, 16/16 seeds: clean mixture/spline at M = 2048 = 53.4 (base), 46.7 (L64), 38.7 (L128), 20.2 (T = 0.5), 8.4 (T = 1), 6.5 (T = 2). Misspecification, not the channel, limits the mixture.",
+  "P4": "pending (physics_learned, after E33's kernels)."
  }
 }

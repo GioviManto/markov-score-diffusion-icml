@@ -1,0 +1,31 @@
+data,prediction,cell,n_chains,statistic,value,k,n,n_failed,extra,ok,verdict
+confirmatory,P6,sweep,2048,"floor at base > 0.082 and monotone along Theta = 0.3, 0.5, 1, 2",0.2691,1,1,0,0.0412,True,CONFIRMED
+confirmatory,P8,T0.3_h0.25_L128,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0013,16,16,0,0.0034,True,CONFIRMED
+confirmatory,P8b,T0.3_h0.25_L128,2048,pair: |barrier - 1/4| <= 0.05; k/n,0.2503,16,16,0,0.9984,True,CONFIRMED
+confirmatory,P8,T0.3_h0.5_L64,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0068,16,16,0,0.0080,True,CONFIRMED
+confirmatory,P8b,T0.3_h0.5_L64,2048,pair: |barrier - 1/4| <= 0.05; k/n,0.2543,16,16,0,1.0022,True,CONFIRMED
+confirmatory,P8,T0.3_h1_L32,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,0.9998,16,16,0,0.0226,True,CONFIRMED
+confirmatory,P8b,T0.3_h1_L32,2048,pair: |barrier - 1/4| <= 0.05; k/n,0.2475,16,16,0,1.0000,True,CONFIRMED
+confirmatory,P8,T0.5_iso_L32,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0051,16,16,0,0.0124,True,CONFIRMED
+confirmatory,P8b,T0.5_iso_L32,2048,pair: |barrier - 1/4| <= 0.05; k/n,0.2459,16,16,0,1.0028,True,CONFIRMED
+confirmatory,P8,T1_iso_L32,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0047,16,16,0,0.0212,True,CONFIRMED
+confirmatory,P8b,T1_iso_L32,2048,pair: |barrier - 1/4| <= 0.05; k/n,0.2477,14,16,0,0.9981,False,FALSIFIED
+confirmatory,P8,T2_iso_L32,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,0.9995,16,16,0,0.0135,True,CONFIRMED
+confirmatory,E34-P2b,T0.3_h0.25_L128,2048,clean em_tilted_poly at 2048 < 0.02,0.1458,0,16,0,,False,FALSIFIED
+confirmatory,E34-P2b,T0.3_h0.5_L64,2048,clean em_tilted_poly at 2048 < 0.02,0.1451,0,16,0,,False,FALSIFIED
+confirmatory,E34-P2b,T0.3_h1_L32,2048,clean em_tilted_poly at 2048 < 0.02,0.1026,11,16,0,,False,FALSIFIED
+confirmatory,E34-P2b,T0.5_iso_L32,2048,clean em_tilted_poly at 2048 < 0.02,0.2455,9,16,0,,False,FALSIFIED
+confirmatory,E34-P2b,T1_iso_L32,2048,clean em_tilted_poly at 2048 < 0.02,0.0146,14,16,0,,True,CONFIRMED
+confirmatory,E34-P2b,T2_iso_L32,2048,clean em_tilted_poly at 2048 < 0.02,0.0051,16,16,0,,True,CONFIRMED
+confirmatory,E34-P2b,T0.3_h0.25_L128,2048,clean em_tilted_spline at 2048 < 0.02,0.0027,16,16,0,,True,CONFIRMED
+confirmatory,E34-P2b,T0.3_h0.5_L64,2048,clean em_tilted_spline at 2048 < 0.02,0.0039,16,16,0,,True,CONFIRMED
+confirmatory,E34-P2b,T0.3_h1_L32,2048,clean em_tilted_spline at 2048 < 0.02,0.0054,16,16,0,,True,CONFIRMED
+confirmatory,E34-P2b,T0.5_iso_L32,2048,clean em_tilted_spline at 2048 < 0.02,0.0062,16,16,0,,True,CONFIRMED
+confirmatory,E34-P2b,T1_iso_L32,2048,clean em_tilted_spline at 2048 < 0.02,0.0072,16,16,0,,True,CONFIRMED
+confirmatory,E34-P2b,T2_iso_L32,2048,clean em_tilted_spline at 2048 < 0.02,0.0065,16,16,0,,True,CONFIRMED
+confirmatory,E34-P3,T0.3_h0.25_L128,2048,clean mixture/spline at 2048; k(>1)/n,38.6518,16,16,0,,True,CONFIRMED
+confirmatory,E34-P3,T0.3_h0.5_L64,2048,clean mixture/spline at 2048; k(>1)/n,46.7323,16,16,0,,True,CONFIRMED
+confirmatory,E34-P3,T0.3_h1_L32,2048,clean mixture/spline at 2048; k(>1)/n,53.4157,16,16,0,,True,CONFIRMED
+confirmatory,E34-P3,T0.5_iso_L32,2048,clean mixture/spline at 2048; k(>1)/n,20.2338,16,16,0,,True,CONFIRMED
+confirmatory,E34-P3,T1_iso_L32,2048,clean mixture/spline at 2048; k(>1)/n,8.4102,16,16,0,,True,CONFIRMED
+confirmatory,E34-P3,T2_iso_L32,2048,clean mixture/spline at 2048; k(>1)/n,6.5448,16,16,0,,True,CONFIRMED
