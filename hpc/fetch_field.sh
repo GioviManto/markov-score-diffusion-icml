@@ -5,6 +5,7 @@
 # shard is reported as such rather than read.
 #
 #   hpc/fetch_field.sh            # needs the Bocconi VPN
+#   hpc/fetch_field.sh --learned  # and, once the kernel shards are complete, E34's physics_learned (laptop, ~1-2 h)
 #
 # Where each job ran (experiments/registry/E33.json and E34.json):
 #   9b1c940-20261001T084745Z  E33o (678084), E33n (678091), E33n_s0/s8 (678092/678094); E33k_s0..s12 (678087-678090) FAILED
@@ -29,6 +30,17 @@ fetch 52cf980 E34c
 rm -f /tmp/msd_fetch_$$.log
 echo "--- coverage"
 .venv/bin/python tools/check_field_coverage.py || status=1
+# E34 physics_learned (laptop; no cluster case): once all four kernel shards are complete, sample the
+# fitted kernels of the four registered arms. The site-energy arm was sampled on 3 Oct (outputs/E34_learned_pair).
+if [[ "${1:-}" == "--learned" ]]; then
+  if .venv/bin/python tools/check_field_coverage.py 2>/dev/null | grep -E "hpc_E33k_s(0|4|8|12) " | grep -qv COMPLETE; then
+    echo "--- physics_learned: kernel shards not all complete; skipped"
+  else
+    echo "--- physics_learned on the four kernel arms (laptop, outputs/E34_learned)"
+    OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 .venv/bin/python experiments/e34_field_physics.py --only physics_learned --workers 4 \
+      --set "kernels_csv=('outputs/hpc_E33k_s0/kernels.csv',)" --output-dir outputs/E34_learned || status=1
+  fi
+fi
 echo "--- predictions (confirmatory shards present so far)"
 .venv/bin/python tools/make_field_numbers.py 2>&1 | grep -v "timestamp seems" | tail -40
 exit $status

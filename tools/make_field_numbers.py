@@ -33,7 +33,7 @@ REFINE = ["T0.3_h1_L32", "T0.3_h0.5_L64", "T0.3_h0.25_L128"]
 
 CONFIRMATORY = dict(kernels="outputs/hpc_E33k_s*/kernels.csv", pair="outputs/hpc_E33q_s*/kernels.csv",
                     oracles="outputs/hpc_E33o/oracles.csv", nets="outputs/hpc_E33n_s*/nets.csv",
-                    clean="outputs/hpc_E34c/clean.csv", learned="outputs/hpc_E34*/learned.csv")
+                    clean="outputs/hpc_E34c/clean.csv", learned="outputs/E34_learned*/learned.csv")  # physics_learned runs on the laptop
 PREVIEW = dict(kernels="outputs/E33_preview_laptop/kernels.csv", pair="outputs/E33_preview_laptop_pair/kernels.csv",
                oracles="outputs/hpc_E33o/oracles.csv", nets="outputs/E33_preview_nets/nets.csv",
                clean="outputs/E34_preview_laptop*/clean.csv", learned="outputs/E34_preview_laptop_learned/learned.csv")
@@ -247,6 +247,13 @@ def main() -> int:
             rows.append(dict(prediction="E34-P3", cell=cell, n_chains=2048, statistic="clean mixture/spline at 2048; k(>1)/n", value=float(g.ratio.mean()), k=k, n=len(g), n_failed=nf(g), extra=np.nan, ok=(k == len(g))))
     # ---- E34 P4: generated samples' kink density and mean domain within 15% (spline); mixture overshoots
     if not Ld.empty:
+        # several physics_learned runs (the pair arm first, the kernel arms after) each carry the same
+        # deterministic truth rows: keep one per (cell, seed), after checking that they agree
+        T = Ld[Ld.arm == "truth"]
+        spread = T.groupby(["cell", "seed"]).kink_density.agg(lambda v: float(v.max() - v.min()))
+        if (spread > 1e-12).any():
+            raise SystemExit(f"physics_learned runs disagree on the truth rows: {spread[spread > 1e-12].to_dict()}")
+        Ld = pd.concat([Ld[Ld.arm != "truth"], T.drop_duplicates(["cell", "seed"])], ignore_index=True)
         tr = Ld[Ld.arm == "truth"].set_index(["cell", "seed"])
         for arm in ("em_tilted_spline", "em_mixture", "em_pair_quartic", "em_tilted_poly", "em_mdn"):
             a = Ld[(Ld.arm == arm) & (Ld.selection == "risk")]
@@ -256,7 +263,8 @@ def main() -> int:
                 rk = np.array([float(r.kink_density) / float(tr.loc[(cell, r.seed)].kink_density) for r in g.itertuples()])
                 rd = np.array([float(r.mean_domain) / float(tr.loc[(cell, r.seed)].mean_domain) for r in g.itertuples()])
                 ok = bool(np.all(np.abs(rk - 1) <= 0.15) and np.all(np.abs(rd - 1) <= 0.15)) if arm == "em_tilted_spline" else (bool(np.all(rk > 1)) if arm == "em_mixture" else None)
-                rows.append(dict(prediction="E34-P4", cell=cell, n_chains=int(g.n_chains.iloc[0]), statistic=f"{arm}: kink ratio, domain ratio to truth", value=float(rk.mean()), k=len(g), n=len(g), n_failed=0, extra=float(rd.mean()), ok=ok))
+                rows.append(dict(prediction="E34-P4", cell=cell, n_chains=int(g.n_chains.iloc[0]), statistic=f"{arm}: kink ratio, domain ratio to truth", value=float(np.nanmean(rk)) if np.isfinite(rk).any() else np.nan, k=int(np.isfinite(rk).sum()), n=len(g),
+                                 n_failed=int(np.isnan(rk).sum()), extra=float(np.nanmean(rd)) if np.isfinite(rd).any() else np.nan, ok=ok))
     out = ROOT / args.out; out.mkdir(parents=True, exist_ok=True)
     R = pd.DataFrame(rows)
     if not R.empty:

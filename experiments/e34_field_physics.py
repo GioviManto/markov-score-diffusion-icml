@@ -292,17 +292,25 @@ def _learned_cell(args):
     import e27_direct_sampler as e27
     e27.N_SITES = L
     truth = physical_statistics(chain.sample_batch(rng_for("e34-learned-truth", cell_id, seed), cfg["n_learned"], L), chain.scale, L, info["h"])
-    out = [{**info, "seed": seed, "n_chains": n, "arm": "truth", "selection": "", **truth,
+    out = [{**info, "seed": seed, "n_chains": n, "arm": "truth", "selection": "", "failed": 0, **truth,
             "kink_density_physical": truth["kink_density"] / info["h"], "mean_domain_physical": truth["mean_domain"] * info["h"]}]
     mu_fn = e33._stationary_mu(grid, w)
     for row in rows_for_cell:
+        # E33 amendment 3: a failed fit has no kernel to sample. It stays a row (NaN statistics,
+        # failed = 1) so that P4 counts it against the prediction. Rows written before the
+        # amendment carry no `failed` value (NaN when read back): those are ordinary fits.
+        theta = row.get("theta")
+        if row.get("failed") == 1 or not isinstance(theta, str) or not theta:
+            out.append({**info, "seed": seed, "n_chains": n, "arm": row["arm"], "selection": row["selection"], "failed": 1,
+                        **{k: np.nan for k in truth}, "kink_density_physical": np.nan, "mean_domain_physical": np.nan})
+            continue
         k = kernel_from_row(row, cfg, grid)
         K = np.exp(k.log_transition_matrix(grid))
         mu = mu_fn(k)
         S = e27.ancestral_grid(K, grid, w, cfg["n_learned"], rng_for("e34-learned", cell_id, seed, row["arm"]),
                                rng_for("e34-learned-jit", cell_id, seed, row["arm"]), jitter=True, log_mu=mu)
         st = physical_statistics(S, chain.scale, L, info["h"])
-        out.append({**info, "seed": seed, "n_chains": n, "arm": row["arm"], "selection": row["selection"], **st,
+        out.append({**info, "seed": seed, "n_chains": n, "arm": row["arm"], "selection": row["selection"], "failed": 0, **st,
                     "kink_density_physical": st["kink_density"] / info["h"], "mean_domain_physical": st["mean_domain"] * info["h"]})
     print(f"  [E34 learned] {cell_id} seed={seed} M={n}: " + " ".join(
         f"{r['arm']}:kinks={r['kink_density']:.4f}/dom={r['mean_domain']:.1f}" for r in out), flush=True)
