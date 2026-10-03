@@ -222,7 +222,9 @@ submit_one() {
   # cancel in the ratio -- it flatters us. See NEGATIVE_RESULTS N-29.
   local excl_line=''; [[ -n "${MSD_HPC_EXCLUSIVE:-}" ]] && excl_line='#SBATCH --exclusive'
   # MSD_HPC_QOS=stud: the student partition (gnode01-04) admits only its own QoS (AllowQos=stud);
-  # without the flag sbatch rejects the job there. Added 3 Oct 2026 for E33's rerun.
+  # without the flag sbatch rejects the job there. Added 3 Oct 2026 for E33's rerun, and found
+  # useless for it: the stud QoS caps a user at 8 cpus, 2 jobs and 24 h (sacctmgr show qos stud),
+  # so a 96-cell shard does not fit. Fine for small jobs.
   local qos_line=''; [[ -n "${MSD_HPC_QOS:-}" ]] && qos_line="#SBATCH --qos=$MSD_HPC_QOS"
   local gpu_env_line=''; [[ -n "$GRES" ]] && gpu_env_line="source \$HOME/$MSD_SRC/hpc/icml_gpu_env.sh"
   local jid
