@@ -9,6 +9,7 @@
 # Env (from hpc/.last_deploy.env, written by icml_deploy.sh) plus optional
 #   MSD_HPC_PARTITION  (default: first non-GPU partition sinfo lists)
 #   MSD_HPC_CPUS       (default 32)   MSD_HPC_MEM (default 64G)   MSD_HPC_TIME (default 12:00:00)
+#   MSD_HPC_QOS        (optional; `stud` for the student partition)
 # Every job: one node, --workers = $SLURM_CPUS_PER_TASK, single-threaded BLAS, outputs under
 # $MSD_OUT/<E>/ (outside the source tree), logs under $MSD_HPC_ROOT/logs/. Resumable: a
 # resubmitted job skips the cells whose files exist (experiments/common.py: run_cells).
@@ -220,6 +221,9 @@ submit_one() {
   # sequential network evaluations far harder than a handful of BLAS calls, so it does not
   # cancel in the ratio -- it flatters us. See NEGATIVE_RESULTS N-29.
   local excl_line=''; [[ -n "${MSD_HPC_EXCLUSIVE:-}" ]] && excl_line='#SBATCH --exclusive'
+  # MSD_HPC_QOS=stud: the student partition (gnode01-04) admits only its own QoS (AllowQos=stud);
+  # without the flag sbatch rejects the job there. Added 3 Oct 2026 for E33's rerun.
+  local qos_line=''; [[ -n "${MSD_HPC_QOS:-}" ]] && qos_line="#SBATCH --qos=$MSD_HPC_QOS"
   local gpu_env_line=''; [[ -n "$GRES" ]] && gpu_env_line="source \$HOME/$MSD_SRC/hpc/icml_gpu_env.sh"
   local jid
   jid=$(ssh -o BatchMode=yes "$MSD_HPC_HOST" "sbatch --parsable $depflag" <<SB
@@ -229,6 +233,7 @@ submit_one() {
 #SBATCH --nodes=1 --ntasks=1 --cpus-per-task=$cpus --mem=$MEM --time=$TIME
 #SBATCH --propagate=NONE
 $excl_line
+$qos_line
 $gres_line
 #SBATCH --output=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.out --error=$RHOME/$MSD_HPC_ROOT/logs/%x_%j.err
 set -euo pipefail
