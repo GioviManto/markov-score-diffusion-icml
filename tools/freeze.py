@@ -41,11 +41,20 @@ def _sha(p: Path) -> str:
     return h.hexdigest()
 
 
+# Directories whose name the patterns below do not cover, owned explicitly (5 Oct 2026): E33's
+# oracles and screen carry a one-letter part, E34's physics_learned ran on the laptop under its
+# own names. Explicit, not a wider pattern: a wider one also accepted the PREVIEW directories
+# (E33_preview_laptop, ...) into the confirmatory entry (tests/test_freeze_owners.py).
+EXTRA_OWNERS = {"hpc_E33o": "E33", "hpc_E33n": "E33", "E34_learned": "E34", "E34_learned_pair": "E34"}
+
+
 def _registry_file(out_id: str) -> Path:
     """The registry entry that owns an output directory. One entry can own several directories
     (E02.json registers both the capacity part in outputs/E02a and the family part in
     outputs/E02b), so a direct map is tried first and then the id with its trailing part
     letter removed."""
+    if out_id in EXTRA_OWNERS:
+        return REG / f"{EXTRA_OWNERS[out_id]}.json"
     for rid, d in OUTPUT_DIRS.items():
         if d == out_id and (REG / f"{rid}.json").exists():
             return REG / f"{rid}.json"

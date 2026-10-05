@@ -19,7 +19,7 @@
   "dev": "10000-10001 (screen only)"
  },
  "resources": "kernels: compute partition, 40 cpus, 3 days per shard (the L = 128 cells at M = 2048 are the long ones, ~5 h each); screen and nets: gpua100 with venv-cuda; oracles: minutes.",
- "status": "SUBMITTED 2026-10-01 (eight jobs, see hpc_runs); REGISTERED and PREDECLARED the same morning, smoke-tested (--quick, all four parts).",
+ "status": "FROZEN hpc_E33k_s0 2026-10-05T19:46:14Z; SUBMITTED 2026-10-01 (eight jobs, see hpc_runs); REGISTERED and PREDECLARED the same morning, smoke-tested (--quick, all four parts).; COMPLETE 2026-10-05 (all shards landed), read the same evening: P1, P3, P4, P6 confirmed; P8 temperature confirmed, barrier 78/80; P2, P5, P7 falsified as written",
  "registered": "2026-10-01",
  "motivation": "Jerome, 1 Oct 2026: the four arms across T and h; 'a learned kernel is really needed' is here a measured statement (P1/P2) rather than an assertion; the refinement prediction is P5.",
  "hpc_runs": {
@@ -143,5 +143,113 @@
   "P8, T = 2 clause": "As written (not expected to resolve): barrier 0.277, sd 0.083, range 0.10-0.37.",
   "parked / failed": "em_pair_quartic: 0 of 384 parked, 0 eigensolve failures, 0 failed fits.",
   "unregistered": "The pair kernel's risk against the linear floor (E33 oracles): 0.27/0.14/0.067/0.033 of it at M = 32/128/512/2048 on the base cell; at T = 2, 1.43/0.63/0.41/0.17. Five parameters beat the Gaussian closure from 32 noised sequences at T <= 0.5."
+ },
+ "outcome": {
+  "read": "2026-10-05 ~20:45 BST, tools/make_field_numbers.py at 1755a29 on every confirmatory shard (kernels 3072 rows from ce5aef4, jobs 681261-681263/681265; pair 768 from 32448fe; oracles 288; nets 768 from 9b1c940, jobs 678092/678094), amendments 1-3 applied; reports/numbers/field_predictions.csv. Sixteen seeds per (cell, M); paired per-seed counts as predeclared.",
+  "P1": "CONFIRMED on all six cells: mixture/spline at M = 2048 above 1 in 16/16 seeds (means 18.2 base, 7.8 T = 0.5, 3.9 T = 1, 2.5 T = 2, 14.6 h = 0.5, 16.0 h = 0.25), and the gap does not close: the ratio at 2048 is 1.54-2.22 times the ratio at 512 (predicted at least 0.9). The mixture sits on the linear floor at every cell and size (risk/floor 0.99-1.02 at M = 2048).",
+  "P2": "FALSIFIED AS WRITTEN. Spline beats the mixture 16/16 at every M >= 128 on the four cells with T <= 0.5, but not at T = 1, M = 128 (12/16) and T = 2, M = 128 (4/16) and M = 512 (15/16): with little data at high temperature the near-Gaussian marginal leaves the linear drift competitive. Legendre: fails on the h = 0.25 cell at every M (failed fits 6, 14, 16 of 16 at M = 128, 512, 2048, amendment 3) and on 5 further (cell, M) by one or two seeds. Second clause (Legendre within 20% of the spline at 2048): as written, two-sided, within 20% only on the base cell (mean 1.105, 6/16 seeds inside); the Legendre is 29-43% BETTER than the spline at T = 0.5, 1, 2, 53% worse at h = 0.5, and failed at h = 0.25. The tool's one-sided reading (ratio <= 1.2, coded 1 Oct) passes four cells. Unregistered: the site energy (amendment 1) beats the mixture 16/16 at every M >= 128 on every cell except T = 2, M = 128 (15/16).",
+  "P3": "CONFIRMED on all six cells: mdn/mixture at M = 2048 = 0.23 (base), 0.42 (T = 0.5), 0.73 (T = 1), 0.82 (T = 2), 0.31 (h = 0.5), 0.41 (h = 0.25), every mean below 1.5 and 15-16/16 seeds below it. The state-dependent mean is what this chain needs; the MDN is still 2.0-6.2x the spline (ratio of seed means). It selected its last checkpoint in 140 of 384 fits and converged in 39: its risks are upper bounds.",
+  "P4": "CONFIRMED: no network reaches the spline, 16/16 seeds on every cell, at both sizes, both interfaces, both architectures: network/spline = 4.1-26.8. Unregistered and sharper: at M = 2048 every network is WORSE than the linear floor on the T = 0.5, 1, 2 cells (e.g. T = 2: 0.125-0.147 against 0.041) and only some of them beat it on the T = 0.3 cells (the ISM transformer never does; at h = 0.25 only the DSM transformer does).",
+  "P5": "FALSIFIED: the window head's ISM risk at M = 2048 FALLS along the refinement (0.149, 0.127, 0.118 at h = 1, 0.5, 0.25), it does not grow; the spline's falls faster (0.016, 0.012, 0.007). What grows is the window's risk relative to the spline (9.2x, 10.7x, 17.6x, ratio of seed means) and to the linear floor (0.55, 0.78, 1.20): on the finest lattice the window head is worse than the Gaussian closure. As written, falsified.",
+  "P6": "CONFIRMED (outcome_oracles, 1 Oct).",
+  "P7": "FALSIFIED AS WRITTEN, in the favourable direction. The site energy is not within 10% of the spline at M = 2048: it is BETTER by 43-59% (pair/spline 0.41-0.57, 0-1 of 16 seeds within a two-sided 10% band). Below the spline at M = 32 and 128: 16/16 on every cell except the base cell at M = 32 (15/16). The tool's one-sided reading (ratio <= 1.1) passes the 2048 clause on all six cells. Five parameters beat twenty-five at every size, not only the small ones.",
+  "P8": "Temperature clause CONFIRMED for BOTH arms on all six cells, 16/16: Theta_hat/Theta means 0.9995-1.0068 (site energy) and 0.9994-1.0089 (spline). Barrier clause (site energy, T <= 1) FALSIFIED AS WRITTEN on one cell of five: T = 1 has 14/16 within 20% (78/80 fits overall). T = 2 not resolved, as written (interim_reading_pair_arm).",
+  "failed_and_parked": "Failed fits (amendment 3): 39, all em_tilted_poly on T0.3_h0.25_L128 (3, 6, 14, 16 of 16 at M = 32, 128, 512, 2048); no other arm failed anywhere. Parked (amendment 2): em_tilted_poly 20 of 384 noisy fits (eigensolve failed on 7 more); em_tilted_spline 0 of 384; em_pair_quartic 0 of 384.",
+  "ranking_at_2048 (mean risk / linear floor over the six cells)": "site energy 0.03-0.17; spline 0.06-0.43; Legendre 0.07-0.24 where it did not fail; MDN 0.23-0.84; mixture 1.00-1.02; networks 0.48-3.6.",
+  "verdict_summary": "P1, P3, P4, P6 confirmed; P8 confirmed for temperature (both arms), barrier 78/80; P2, P5, P7 falsified as written (P7 in the direction of a stronger result)."
+ },
+ "frozen_outputs": {
+  "outputs/hpc_E33k_s0/kernels.csv": "6b83603b51bab45259f513212ae87e289e6b12cff49b62b63dc9c2afe0da263b",
+  "outputs/hpc_E33k_s0/params_kernels.json": "c0ead624ee34b554b9593378b19d826ac716647ca3f6e93a4961c33bd7491c28",
+  "outputs/hpc_E33k_s4/kernels.csv": "9a857d60d614023ce2607533f656338328be9d4fd9d9ba0b7a05efb56b3eda89",
+  "outputs/hpc_E33k_s4/params_kernels.json": "b56e5ee284909c5d2f50a462a9aad85f94e92efd517517242a443d221c9738ce",
+  "outputs/hpc_E33k_s8/kernels.csv": "ff6ab367c1798bd1231c084b78fbcb0126e7f717af93a32227d4a1b4e903b398",
+  "outputs/hpc_E33k_s8/params_kernels.json": "9341a1ed6014d8862917cc589b20733a8f742eedc7d5d8d610f2bd071c6748af",
+  "outputs/hpc_E33k_s12/kernels.csv": "914cef538400cb621333bf0025ee5b59dee776d9bba5615a0e717944171c2a12",
+  "outputs/hpc_E33k_s12/params_kernels.json": "2f26cc26f3cdfad0994e84bac3cbc82320909bd076a94a0b04729dd643e50cfb",
+  "outputs/hpc_E33q_s0/kernels.csv": "286a18f34b4cfea0cb9b6216bc91e104a7d6a8c0e268994268dc6d5bb4eaacc8",
+  "outputs/hpc_E33q_s0/params_kernels.json": "e03bd3d999ad0c2cba489e7c7187e163056b98275555b08ab0dd838d15bc5004",
+  "outputs/hpc_E33q_s4/kernels.csv": "caeadbf13f012f182b7974d40a52ee84ec25410c81f5f5a59a16f1b33f769dfe",
+  "outputs/hpc_E33q_s4/params_kernels.json": "1c81de711ad351261f3ad031bc1574a2a22a844acccc51b70e65d007596f66a0",
+  "outputs/hpc_E33q_s8/kernels.csv": "deed61ab6b29b87804dffd64222cffe9f5a61060b2ee700aef7b8e555451fa3a",
+  "outputs/hpc_E33q_s8/params_kernels.json": "266436329da0ca9e51c52b8bbaece4e36e5dc55190cac3903b2d3135890cdb75",
+  "outputs/hpc_E33q_s12/kernels.csv": "b70f7a99bfcb35d2fd0ae752ba3490604adb4dc7b3c2309c1d9fafce80096c8a",
+  "outputs/hpc_E33q_s12/params_kernels.json": "02576703d2ce2b1420e810309abc0cff974d82bc7236eedba30106f1e6dc2f1f",
+  "outputs/hpc_E33n_s0/nets.csv": "d191b49d0bb97823f4dd7d12a4956ef0a3cbc17aa36b366398b617ec2c5853b5",
+  "outputs/hpc_E33n_s0/params_nets.json": "07d7ba34b297718e92adf5e37ad02552f4cdb117a159a26fb590fe256107ecd7",
+  "outputs/hpc_E33n_s0/winners.json": "950b519e6a565ae93d43a8244522749bd15219e4c0fdaa4b5692cac27cc35b14",
+  "outputs/hpc_E33n_s8/nets.csv": "d112119735b3da0fe1dddbbc4455d9af3d25cc73e3d50e0ee0860dc840a5799b",
+  "outputs/hpc_E33n_s8/params_nets.json": "926020980753136f5cef0119fc9c531a0dfd32b4f4fc62a947563dcfc9c02bae",
+  "outputs/hpc_E33n_s8/winners.json": "950b519e6a565ae93d43a8244522749bd15219e4c0fdaa4b5692cac27cc35b14",
+  "outputs/hpc_E33o/oracles.csv": "72bf9d2c9542c3612f475704f9239d8d792d3b113cb0d0a2b16fdbab11794abe",
+  "outputs/hpc_E33o/params_oracles.json": "1c0206555a56954ebaec5fa42d08b663f921cb36806839d5844b8a646a8a09f1",
+  "outputs/hpc_E33n/screening.csv": "53089de50873f48fbda785f181ebdaa402c52a9a39d89ec6fe21438708a161c9",
+  "outputs/hpc_E33n/params_screen.json": "030a25303c26e31e3ab86f3934306c6266cd2dad5273659d19f0b16edfba6f39"
+ },
+ "frozen_at": {
+  "hpc_E33k_s0": "2026-10-05T19:46:14Z",
+  "hpc_E33k_s4": "2026-10-05T19:46:14Z",
+  "hpc_E33k_s8": "2026-10-05T19:46:15Z",
+  "hpc_E33k_s12": "2026-10-05T19:46:15Z",
+  "hpc_E33q_s0": "2026-10-05T19:46:15Z",
+  "hpc_E33q_s4": "2026-10-05T19:46:15Z",
+  "hpc_E33q_s8": "2026-10-05T19:46:15Z",
+  "hpc_E33q_s12": "2026-10-05T19:46:15Z",
+  "hpc_E33n_s0": "2026-10-05T19:46:15Z",
+  "hpc_E33n_s8": "2026-10-05T19:46:16Z",
+  "hpc_E33o": "2026-10-05T19:47:03Z",
+  "hpc_E33n": "2026-10-05T19:47:03Z"
+ },
+ "frozen_commit": {
+  "hpc_E33k_s0": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "hpc_E33k_s4": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "hpc_E33k_s8": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "hpc_E33k_s12": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "hpc_E33q_s0": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "hpc_E33q_s4": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "hpc_E33q_s8": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "hpc_E33q_s12": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "hpc_E33n_s0": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "hpc_E33n_s8": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "hpc_E33o": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "hpc_E33n": "1755a29a82523b796445b5fe7267312a06fcf627"
+ },
+ "frozen_run_commits": {
+  "hpc_E33k_s0": [
+   "ce5aef4"
+  ],
+  "hpc_E33k_s4": [
+   "ce5aef4"
+  ],
+  "hpc_E33k_s8": [
+   "ce5aef4"
+  ],
+  "hpc_E33k_s12": [
+   "ce5aef4"
+  ],
+  "hpc_E33q_s0": [
+   "32448fe"
+  ],
+  "hpc_E33q_s4": [
+   "32448fe"
+  ],
+  "hpc_E33q_s8": [
+   "32448fe"
+  ],
+  "hpc_E33q_s12": [
+   "32448fe"
+  ],
+  "hpc_E33n_s0": [
+   "9b1c940"
+  ],
+  "hpc_E33n_s8": [
+   "9b1c940"
+  ],
+  "hpc_E33o": [
+   "9b1c940"
+  ],
+  "hpc_E33n": [
+   "9b1c940"
+  ]
  }
 }

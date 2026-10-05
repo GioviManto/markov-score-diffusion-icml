@@ -1,0 +1,92 @@
+{
+  "T0.3_h0.25_L128|transformer": {
+    "hp": {
+      "d": 32,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.09300265175536834
+  },
+  "T0.3_h0.25_L128|window": {
+    "hp": {
+      "radius": 8,
+      "width": 64
+    },
+    "screen_risk": 0.11524467176747244
+  },
+  "T0.3_h0.5_L64|transformer": {
+    "hp": {
+      "d": 32,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.12683101256393614
+  },
+  "T0.3_h0.5_L64|window": {
+    "hp": {
+      "radius": 4,
+      "width": 64
+    },
+    "screen_risk": 0.1285379636345966
+  },
+  "T0.3_h1_L32|transformer": {
+    "hp": {
+      "d": 64,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.189311804094939
+  },
+  "T0.3_h1_L32|window": {
+    "hp": {
+      "radius": 2,
+      "width": 64
+    },
+    "screen_risk": 0.14786755649993255
+  },
+  "T0.5_iso_L32|transformer": {
+    "hp": {
+      "d": 64,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.1488678922303995
+  },
+  "T0.5_iso_L32|window": {
+    "hp": {
+      "radius": 4,
+      "width": 128
+    },
+    "screen_risk": 0.1452592871812958
+  },
+  "T1_iso_L32|transformer": {
+    "hp": {
+      "d": 32,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.1329117655264474
+  },
+  "T1_iso_L32|window": {
+    "hp": {
+      "radius": 4,
+      "width": 64
+    },
+    "screen_risk": 0.13800498616032975
+  },
+  "T2_iso_L32|transformer": {
+    "hp": {
+      "d": 64,
+      "heads": 4,
+      "layers": 2
+    },
+    "screen_risk": 0.14219912432461673
+  },
+  "T2_iso_L32|window": {
+    "hp": {
+      "radius": 4,
+      "width": 64
+    },
+    "screen_risk": 0.14240268909249149
+  }
+}

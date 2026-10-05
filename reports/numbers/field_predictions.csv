@@ -1,16 +1,239 @@
 data,prediction,cell,n_chains,statistic,value,k,n,n_failed,extra,ok,verdict
+confirmatory,P1,T0.3_h0.25_L128,2048,mixture/spline ratio; k(>1)/n; gap ratio 2048 vs 512,16.0232,16,16,0,1.6530,True,CONFIRMED
+confirmatory,P1,T0.3_h0.5_L64,2048,mixture/spline ratio; k(>1)/n; gap ratio 2048 vs 512,14.6410,16,16,0,1.5435,True,CONFIRMED
+confirmatory,P1,T0.3_h1_L32,2048,mixture/spline ratio; k(>1)/n; gap ratio 2048 vs 512,18.2317,16,16,0,1.9230,True,CONFIRMED
+confirmatory,P1,T0.5_iso_L32,2048,mixture/spline ratio; k(>1)/n; gap ratio 2048 vs 512,7.7841,16,16,0,2.2191,True,CONFIRMED
+confirmatory,P1,T1_iso_L32,2048,mixture/spline ratio; k(>1)/n; gap ratio 2048 vs 512,3.9212,16,16,0,2.1657,True,CONFIRMED
+confirmatory,P1,T2_iso_L32,2048,mixture/spline ratio; k(>1)/n; gap ratio 2048 vs 512,2.5242,16,16,0,1.8055,True,CONFIRMED
+confirmatory,P2,T0.3_h0.25_L128,128,em_tilted_poly/mixture; k(<1)/n,0.3802,10,16,6,,False,FALSIFIED
+confirmatory,P2,T0.3_h0.25_L128,512,em_tilted_poly/mixture; k(<1)/n,0.2890,2,16,14,,False,FALSIFIED
+confirmatory,P2,T0.3_h0.25_L128,2048,em_tilted_poly/mixture; k(<1)/n,,0,16,16,,False,FALSIFIED
+confirmatory,P2,T0.3_h0.5_L64,128,em_tilted_poly/mixture; k(<1)/n,0.3249,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h0.5_L64,512,em_tilted_poly/mixture; k(<1)/n,0.1328,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h0.5_L64,2048,em_tilted_poly/mixture; k(<1)/n,0.1095,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h1_L32,128,em_tilted_poly/mixture; k(<1)/n,0.3887,14,16,0,,False,FALSIFIED
+confirmatory,P2,T0.3_h1_L32,512,em_tilted_poly/mixture; k(<1)/n,0.2447,14,16,0,,False,FALSIFIED
+confirmatory,P2,T0.3_h1_L32,2048,em_tilted_poly/mixture; k(<1)/n,0.0736,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.5_iso_L32,128,em_tilted_poly/mixture; k(<1)/n,0.3405,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.5_iso_L32,512,em_tilted_poly/mixture; k(<1)/n,0.2820,15,16,0,,False,FALSIFIED
+confirmatory,P2,T0.5_iso_L32,2048,em_tilted_poly/mixture; k(<1)/n,0.0913,16,16,0,,True,CONFIRMED
+confirmatory,P2,T1_iso_L32,128,em_tilted_poly/mixture; k(<1)/n,0.5338,15,16,0,,False,FALSIFIED
+confirmatory,P2,T1_iso_L32,512,em_tilted_poly/mixture; k(<1)/n,0.3335,16,16,0,,True,CONFIRMED
+confirmatory,P2,T1_iso_L32,2048,em_tilted_poly/mixture; k(<1)/n,0.1617,16,16,0,,True,CONFIRMED
+confirmatory,P2,T2_iso_L32,128,em_tilted_poly/mixture; k(<1)/n,0.6351,15,16,0,,False,FALSIFIED
+confirmatory,P2,T2_iso_L32,512,em_tilted_poly/mixture; k(<1)/n,0.4458,16,16,0,,True,CONFIRMED
+confirmatory,P2,T2_iso_L32,2048,em_tilted_poly/mixture; k(<1)/n,0.2379,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h0.25_L128,128,em_tilted_spline/mixture; k(<1)/n,0.2305,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h0.25_L128,512,em_tilted_spline/mixture; k(<1)/n,0.1134,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h0.25_L128,2048,em_tilted_spline/mixture; k(<1)/n,0.0669,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h0.5_L64,128,em_tilted_spline/mixture; k(<1)/n,0.2279,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h0.5_L64,512,em_tilted_spline/mixture; k(<1)/n,0.1115,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h0.5_L64,2048,em_tilted_spline/mixture; k(<1)/n,0.0718,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h1_L32,128,em_tilted_spline/mixture; k(<1)/n,0.2144,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h1_L32,512,em_tilted_spline/mixture; k(<1)/n,0.1197,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.3_h1_L32,2048,em_tilted_spline/mixture; k(<1)/n,0.0599,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.5_iso_L32,128,em_tilted_spline/mixture; k(<1)/n,0.4357,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.5_iso_L32,512,em_tilted_spline/mixture; k(<1)/n,0.2959,16,16,0,,True,CONFIRMED
+confirmatory,P2,T0.5_iso_L32,2048,em_tilted_spline/mixture; k(<1)/n,0.1339,16,16,0,,True,CONFIRMED
+confirmatory,P2,T1_iso_L32,128,em_tilted_spline/mixture; k(<1)/n,0.9334,12,16,0,,False,FALSIFIED
+confirmatory,P2,T1_iso_L32,512,em_tilted_spline/mixture; k(<1)/n,0.5875,16,16,0,,True,CONFIRMED
+confirmatory,P2,T1_iso_L32,2048,em_tilted_spline/mixture; k(<1)/n,0.2757,16,16,0,,True,CONFIRMED
+confirmatory,P2,T2_iso_L32,128,em_tilted_spline/mixture; k(<1)/n,1.1682,4,16,0,,False,FALSIFIED
+confirmatory,P2,T2_iso_L32,512,em_tilted_spline/mixture; k(<1)/n,0.7517,15,16,0,,False,FALSIFIED
+confirmatory,P2,T2_iso_L32,2048,em_tilted_spline/mixture; k(<1)/n,0.4196,16,16,0,,True,CONFIRMED
+confirmatory,P2b,T0.3_h0.25_L128,2048,poly/spline at 2048 <= 1.2,,0,16,16,,False,FALSIFIED
+confirmatory,P2b,T0.3_h0.5_L64,2048,poly/spline at 2048 <= 1.2,1.5263,6,16,0,,False,FALSIFIED
+confirmatory,P2b,T0.3_h1_L32,2048,poly/spline at 2048 <= 1.2,1.1050,13,16,0,,True,CONFIRMED
+confirmatory,P2b,T0.5_iso_L32,2048,poly/spline at 2048 <= 1.2,0.7056,16,16,0,,True,CONFIRMED
+confirmatory,P2b,T1_iso_L32,2048,poly/spline at 2048 <= 1.2,0.5959,16,16,0,,True,CONFIRMED
+confirmatory,P2b,T2_iso_L32,2048,poly/spline at 2048 <= 1.2,0.5741,16,16,0,,True,CONFIRMED
+confirmatory,P3,T0.3_h0.25_L128,2048,mdn/mixture at 2048 < 1.5,0.4135,16,16,0,,True,CONFIRMED
+confirmatory,P3,T0.3_h0.5_L64,2048,mdn/mixture at 2048 < 1.5,0.3064,16,16,0,,True,CONFIRMED
+confirmatory,P3,T0.3_h1_L32,2048,mdn/mixture at 2048 < 1.5,0.2265,16,16,0,,True,CONFIRMED
+confirmatory,P3,T0.5_iso_L32,2048,mdn/mixture at 2048 < 1.5,0.4203,16,16,0,,True,CONFIRMED
+confirmatory,P3,T1_iso_L32,2048,mdn/mixture at 2048 < 1.5,0.7289,15,16,0,,True,CONFIRMED
+confirmatory,P3,T2_iso_L32,2048,mdn/mixture at 2048 < 1.5,0.8206,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.25_L128,128,ism_one_view:transformer/spline; k(>1)/n,22.1239,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.25_L128,2048,ism_one_view:transformer/spline; k(>1)/n,16.2166,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.5_L64,128,ism_one_view:transformer/spline; k(>1)/n,15.9734,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.5_L64,2048,ism_one_view:transformer/spline; k(>1)/n,20.2944,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h1_L32,128,ism_one_view:transformer/spline; k(>1)/n,18.1596,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h1_L32,2048,ism_one_view:transformer/spline; k(>1)/n,26.7883,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.5_iso_L32,128,ism_one_view:transformer/spline; k(>1)/n,22.8466,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.5_iso_L32,2048,ism_one_view:transformer/spline; k(>1)/n,17.9123,16,16,0,,True,CONFIRMED
+confirmatory,P4,T1_iso_L32,128,ism_one_view:transformer/spline; k(>1)/n,8.5984,16,16,0,,True,CONFIRMED
+confirmatory,P4,T1_iso_L32,2048,ism_one_view:transformer/spline; k(>1)/n,9.4720,16,16,0,,True,CONFIRMED
+confirmatory,P4,T2_iso_L32,128,ism_one_view:transformer/spline; k(>1)/n,10.7521,16,16,0,,True,CONFIRMED
+confirmatory,P4,T2_iso_L32,2048,ism_one_view:transformer/spline; k(>1)/n,7.9670,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.25_L128,128,ism_one_view:window/spline; k(>1)/n,10.8280,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.25_L128,2048,ism_one_view:window/spline; k(>1)/n,18.8025,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.5_L64,128,ism_one_view:window/spline; k(>1)/n,6.8159,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.5_L64,2048,ism_one_view:window/spline; k(>1)/n,11.2350,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h1_L32,128,ism_one_view:window/spline; k(>1)/n,5.1062,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h1_L32,2048,ism_one_view:window/spline; k(>1)/n,10.0512,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.5_iso_L32,128,ism_one_view:window/spline; k(>1)/n,10.4896,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.5_iso_L32,2048,ism_one_view:window/spline; k(>1)/n,9.9771,16,16,0,,True,CONFIRMED
+confirmatory,P4,T1_iso_L32,128,ism_one_view:window/spline; k(>1)/n,6.2088,16,16,0,,True,CONFIRMED
+confirmatory,P4,T1_iso_L32,2048,ism_one_view:window/spline; k(>1)/n,9.4884,16,16,0,,True,CONFIRMED
+confirmatory,P4,T2_iso_L32,128,ism_one_view:window/spline; k(>1)/n,6.3394,16,16,0,,True,CONFIRMED
+confirmatory,P4,T2_iso_L32,2048,ism_one_view:window/spline; k(>1)/n,8.7993,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.25_L128,128,dsm_one_corruption:transformer/spline; k(>1)/n,10.1796,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.25_L128,2048,dsm_one_corruption:transformer/spline; k(>1)/n,12.1985,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.5_L64,128,dsm_one_corruption:transformer/spline; k(>1)/n,8.4871,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.5_L64,2048,dsm_one_corruption:transformer/spline; k(>1)/n,8.9878,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h1_L32,128,dsm_one_corruption:transformer/spline; k(>1)/n,8.9182,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h1_L32,2048,dsm_one_corruption:transformer/spline; k(>1)/n,9.7092,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.5_iso_L32,128,dsm_one_corruption:transformer/spline; k(>1)/n,10.4227,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.5_iso_L32,2048,dsm_one_corruption:transformer/spline; k(>1)/n,9.5189,16,16,0,,True,CONFIRMED
+confirmatory,P4,T1_iso_L32,128,dsm_one_corruption:transformer/spline; k(>1)/n,7.8919,16,16,0,,True,CONFIRMED
+confirmatory,P4,T1_iso_L32,2048,dsm_one_corruption:transformer/spline; k(>1)/n,8.3766,16,16,0,,True,CONFIRMED
+confirmatory,P4,T2_iso_L32,128,dsm_one_corruption:transformer/spline; k(>1)/n,8.2677,16,16,0,,True,CONFIRMED
+confirmatory,P4,T2_iso_L32,2048,dsm_one_corruption:transformer/spline; k(>1)/n,7.4778,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.25_L128,128,dsm_one_corruption:window/spline; k(>1)/n,7.7342,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.25_L128,2048,dsm_one_corruption:window/spline; k(>1)/n,16.2093,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.5_L64,128,dsm_one_corruption:window/spline; k(>1)/n,5.0925,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h0.5_L64,2048,dsm_one_corruption:window/spline; k(>1)/n,10.1660,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h1_L32,128,dsm_one_corruption:window/spline; k(>1)/n,4.1191,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.3_h1_L32,2048,dsm_one_corruption:window/spline; k(>1)/n,8.7440,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.5_iso_L32,128,dsm_one_corruption:window/spline; k(>1)/n,5.5900,16,16,0,,True,CONFIRMED
+confirmatory,P4,T0.5_iso_L32,2048,dsm_one_corruption:window/spline; k(>1)/n,9.0985,16,16,0,,True,CONFIRMED
+confirmatory,P4,T1_iso_L32,128,dsm_one_corruption:window/spline; k(>1)/n,4.1107,16,16,0,,True,CONFIRMED
+confirmatory,P4,T1_iso_L32,2048,dsm_one_corruption:window/spline; k(>1)/n,8.8698,16,16,0,,True,CONFIRMED
+confirmatory,P4,T2_iso_L32,128,dsm_one_corruption:window/spline; k(>1)/n,4.1749,16,16,0,,True,CONFIRMED
+confirmatory,P4,T2_iso_L32,2048,dsm_one_corruption:window/spline; k(>1)/n,8.2403,16,16,0,,True,CONFIRMED
+confirmatory,P5,refinement,2048,"window ISM risk h=1,0.5,0.25 increasing; spline not increasing",0.7911,0,1,0,0.4133,False,FALSIFIED
 confirmatory,P6,sweep,2048,"floor at base > 0.082 and monotone along Theta = 0.3, 0.5, 1, 2",0.2691,1,1,0,0.0412,True,CONFIRMED
+confirmatory,P7,T0.3_h0.25_L128,32,pair/spline; k(<1)/n,0.4687,16,16,0,,True,CONFIRMED
+confirmatory,P7,T0.3_h0.25_L128,128,pair/spline; k(<1)/n,0.5572,16,16,0,,True,CONFIRMED
+confirmatory,P7,T0.3_h0.25_L128,2048,pair/spline at 2048 <= 1.1,0.4989,16,16,0,,True,CONFIRMED
+confirmatory,P7,T0.3_h0.5_L64,32,pair/spline; k(<1)/n,0.6126,16,16,0,,True,CONFIRMED
+confirmatory,P7,T0.3_h0.5_L64,128,pair/spline; k(<1)/n,0.5937,16,16,0,,True,CONFIRMED
+confirmatory,P7,T0.3_h0.5_L64,2048,pair/spline at 2048 <= 1.1,0.5593,16,16,0,,True,CONFIRMED
+confirmatory,P7,T0.3_h1_L32,32,pair/spline; k(<1)/n,0.7758,15,16,0,,False,FALSIFIED
+confirmatory,P7,T0.3_h1_L32,128,pair/spline; k(<1)/n,0.6400,16,16,0,,True,CONFIRMED
+confirmatory,P7,T0.3_h1_L32,2048,pair/spline at 2048 <= 1.1,0.5702,16,16,0,,True,CONFIRMED
+confirmatory,P7,T0.5_iso_L32,32,pair/spline; k(<1)/n,0.6639,16,16,0,,True,CONFIRMED
+confirmatory,P7,T0.5_iso_L32,128,pair/spline; k(<1)/n,0.5836,16,16,0,,True,CONFIRMED
+confirmatory,P7,T0.5_iso_L32,2048,pair/spline at 2048 <= 1.1,0.5567,16,16,0,,True,CONFIRMED
+confirmatory,P7,T1_iso_L32,32,pair/spline; k(<1)/n,0.6586,16,16,0,,True,CONFIRMED
+confirmatory,P7,T1_iso_L32,128,pair/spline; k(<1)/n,0.4722,16,16,0,,True,CONFIRMED
+confirmatory,P7,T1_iso_L32,2048,pair/spline at 2048 <= 1.1,0.4988,16,16,0,,True,CONFIRMED
+confirmatory,P7,T2_iso_L32,32,pair/spline; k(<1)/n,0.5488,16,16,0,,True,CONFIRMED
+confirmatory,P7,T2_iso_L32,128,pair/spline; k(<1)/n,0.4384,16,16,0,,True,CONFIRMED
+confirmatory,P7,T2_iso_L32,2048,pair/spline at 2048 <= 1.1,0.4080,16,16,0,,True,CONFIRMED
 confirmatory,P8,T0.3_h0.25_L128,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0013,16,16,0,0.0034,True,CONFIRMED
 confirmatory,P8b,T0.3_h0.25_L128,2048,pair: |barrier - 1/4| <= 0.05; k/n,0.2503,16,16,0,0.9984,True,CONFIRMED
+confirmatory,P8,T0.3_h0.25_L128,2048,em_tilted_spline: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0021,16,16,0,0.0036,True,CONFIRMED
 confirmatory,P8,T0.3_h0.5_L64,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0068,16,16,0,0.0080,True,CONFIRMED
 confirmatory,P8b,T0.3_h0.5_L64,2048,pair: |barrier - 1/4| <= 0.05; k/n,0.2543,16,16,0,1.0022,True,CONFIRMED
+confirmatory,P8,T0.3_h0.5_L64,2048,em_tilted_spline: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0049,16,16,0,0.0122,True,CONFIRMED
 confirmatory,P8,T0.3_h1_L32,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,0.9998,16,16,0,0.0226,True,CONFIRMED
 confirmatory,P8b,T0.3_h1_L32,2048,pair: |barrier - 1/4| <= 0.05; k/n,0.2475,16,16,0,1.0000,True,CONFIRMED
+confirmatory,P8,T0.3_h1_L32,2048,em_tilted_spline: |Theta_hat/Theta - 1| <= 0.1; k/n,0.9994,16,16,0,0.0226,True,CONFIRMED
 confirmatory,P8,T0.5_iso_L32,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0051,16,16,0,0.0124,True,CONFIRMED
 confirmatory,P8b,T0.5_iso_L32,2048,pair: |barrier - 1/4| <= 0.05; k/n,0.2459,16,16,0,1.0028,True,CONFIRMED
+confirmatory,P8,T0.5_iso_L32,2048,em_tilted_spline: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0085,16,16,0,0.0145,True,CONFIRMED
 confirmatory,P8,T1_iso_L32,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0047,16,16,0,0.0212,True,CONFIRMED
 confirmatory,P8b,T1_iso_L32,2048,pair: |barrier - 1/4| <= 0.05; k/n,0.2477,14,16,0,0.9981,False,FALSIFIED
+confirmatory,P8,T1_iso_L32,2048,em_tilted_spline: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0089,16,16,0,0.0212,True,CONFIRMED
 confirmatory,P8,T2_iso_L32,2048,em_pair_quartic: |Theta_hat/Theta - 1| <= 0.1; k/n,0.9995,16,16,0,0.0135,True,CONFIRMED
+confirmatory,P8,T2_iso_L32,2048,em_tilted_spline: |Theta_hat/Theta - 1| <= 0.1; k/n,1.0039,16,16,0,0.0156,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.25_L128,32,clean/noisy em_mdn; k(<1)/n,0.2861,16,16,0,0.0260,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.25_L128,128,clean/noisy em_mdn; k(<1)/n,0.3577,16,16,0,0.0202,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.25_L128,512,clean/noisy em_mdn; k(<1)/n,0.3719,16,16,0,0.0152,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.25_L128,2048,clean/noisy em_mdn; k(<1)/n,0.4211,16,16,0,0.0153,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.5_L64,32,clean/noisy em_mdn; k(<1)/n,0.4662,16,16,0,0.0543,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.5_L64,128,clean/noisy em_mdn; k(<1)/n,0.4012,16,16,0,0.0311,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.5_L64,512,clean/noisy em_mdn; k(<1)/n,0.4457,16,16,0,0.0257,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.5_L64,2048,clean/noisy em_mdn; k(<1)/n,0.5942,13,16,0,0.0286,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h1_L32,32,clean/noisy em_mdn; k(<1)/n,0.4980,16,16,0,0.0921,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h1_L32,128,clean/noisy em_mdn; k(<1)/n,0.3669,16,16,0,0.0449,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h1_L32,512,clean/noisy em_mdn; k(<1)/n,0.4717,16,16,0,0.0380,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h1_L32,2048,clean/noisy em_mdn; k(<1)/n,0.6483,15,16,0,0.0375,False,FALSIFIED
+confirmatory,E34-P2,T0.5_iso_L32,32,clean/noisy em_mdn; k(<1)/n,0.5256,16,16,0,0.0767,True,CONFIRMED
+confirmatory,E34-P2,T0.5_iso_L32,128,clean/noisy em_mdn; k(<1)/n,0.4598,16,16,0,0.0460,True,CONFIRMED
+confirmatory,E34-P2,T0.5_iso_L32,512,clean/noisy em_mdn; k(<1)/n,0.4295,16,16,0,0.0306,True,CONFIRMED
+confirmatory,E34-P2,T0.5_iso_L32,2048,clean/noisy em_mdn; k(<1)/n,0.4705,15,16,0,0.0224,False,FALSIFIED
+confirmatory,E34-P2,T1_iso_L32,32,clean/noisy em_mdn; k(<1)/n,0.4229,16,16,0,0.0684,True,CONFIRMED
+confirmatory,E34-P2,T1_iso_L32,128,clean/noisy em_mdn; k(<1)/n,0.3661,16,16,0,0.0363,True,CONFIRMED
+confirmatory,E34-P2,T1_iso_L32,512,clean/noisy em_mdn; k(<1)/n,0.3573,16,16,0,0.0234,True,CONFIRMED
+confirmatory,E34-P2,T1_iso_L32,2048,clean/noisy em_mdn; k(<1)/n,0.5079,16,16,0,0.0202,True,CONFIRMED
+confirmatory,E34-P2,T2_iso_L32,32,clean/noisy em_mdn; k(<1)/n,0.4700,16,16,0,0.0719,True,CONFIRMED
+confirmatory,E34-P2,T2_iso_L32,128,clean/noisy em_mdn; k(<1)/n,0.3873,16,16,0,0.0373,True,CONFIRMED
+confirmatory,E34-P2,T2_iso_L32,512,clean/noisy em_mdn; k(<1)/n,0.3537,16,16,0,0.0212,True,CONFIRMED
+confirmatory,E34-P2,T2_iso_L32,2048,clean/noisy em_mdn; k(<1)/n,0.4603,16,16,0,0.0155,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.25_L128,32,clean/noisy em_mixture; k(<1)/n,0.9736,15,16,0,0.1001,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.25_L128,128,clean/noisy em_mixture; k(<1)/n,0.9996,8,16,0,0.1000,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.25_L128,512,clean/noisy em_mixture; k(<1)/n,1.0012,4,16,0,0.1000,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.25_L128,2048,clean/noisy em_mixture; k(<1)/n,1.0005,6,16,0,0.1000,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.5_L64,32,clean/noisy em_mixture; k(<1)/n,0.9701,16,16,0,0.1657,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.5_L64,128,clean/noisy em_mixture; k(<1)/n,0.9941,13,16,0,0.1652,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.5_L64,512,clean/noisy em_mixture; k(<1)/n,0.9977,12,16,0,0.1650,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.5_L64,2048,clean/noisy em_mixture; k(<1)/n,0.9983,12,16,0,0.1650,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h1_L32,32,clean/noisy em_mixture; k(<1)/n,0.9724,15,16,0,0.2713,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h1_L32,128,clean/noisy em_mixture; k(<1)/n,0.9844,16,16,0,0.2696,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h1_L32,512,clean/noisy em_mixture; k(<1)/n,0.9951,16,16,0,0.2693,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h1_L32,2048,clean/noisy em_mixture; k(<1)/n,0.9957,16,16,0,0.2692,True,CONFIRMED
+confirmatory,E34-P2,T0.5_iso_L32,32,clean/noisy em_mixture; k(<1)/n,0.9339,14,16,0,0.1172,False,FALSIFIED
+confirmatory,E34-P2,T0.5_iso_L32,128,clean/noisy em_mixture; k(<1)/n,0.9710,15,16,0,0.1145,False,FALSIFIED
+confirmatory,E34-P2,T0.5_iso_L32,512,clean/noisy em_mixture; k(<1)/n,0.9898,16,16,0,0.1138,True,CONFIRMED
+confirmatory,E34-P2,T0.5_iso_L32,2048,clean/noisy em_mixture; k(<1)/n,0.9969,13,16,0,0.1136,False,FALSIFIED
+confirmatory,E34-P2,T1_iso_L32,32,clean/noisy em_mixture; k(<1)/n,0.7715,15,16,0,0.0659,False,FALSIFIED
+confirmatory,E34-P2,T1_iso_L32,128,clean/noisy em_mixture; k(<1)/n,0.8724,16,16,0,0.0599,True,CONFIRMED
+confirmatory,E34-P2,T1_iso_L32,512,clean/noisy em_mixture; k(<1)/n,0.9624,16,16,0,0.0588,True,CONFIRMED
+confirmatory,E34-P2,T1_iso_L32,2048,clean/noisy em_mixture; k(<1)/n,0.9861,13,16,0,0.0586,False,FALSIFIED
+confirmatory,E34-P2,T2_iso_L32,32,clean/noisy em_mixture; k(<1)/n,0.7852,14,16,0,0.0520,False,FALSIFIED
+confirmatory,E34-P2,T2_iso_L32,128,clean/noisy em_mixture; k(<1)/n,0.8471,15,16,0,0.0438,False,FALSIFIED
+confirmatory,E34-P2,T2_iso_L32,512,clean/noisy em_mixture; k(<1)/n,0.9299,14,16,0,0.0417,False,FALSIFIED
+confirmatory,E34-P2,T2_iso_L32,2048,clean/noisy em_mixture; k(<1)/n,0.9794,13,16,0,0.0411,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.25_L128,32,clean/noisy em_tilted_poly; k(<1)/n,5.2640,2,16,3,0.2013,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.25_L128,128,clean/noisy em_tilted_poly; k(<1)/n,5.1139,0,16,6,0.2105,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.25_L128,512,clean/noisy em_tilted_poly; k(<1)/n,2.6379,0,16,14,0.1693,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.25_L128,2048,clean/noisy em_tilted_poly; k(<1)/n,,0,16,16,0.1458,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.5_L64,32,clean/noisy em_tilted_poly; k(<1)/n,12.8437,6,16,0,0.4051,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.5_L64,128,clean/noisy em_tilted_poly; k(<1)/n,7.6410,3,16,0,0.3426,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.5_L64,512,clean/noisy em_tilted_poly; k(<1)/n,16.1866,1,16,0,0.2941,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.5_L64,2048,clean/noisy em_tilted_poly; k(<1)/n,8.5141,0,16,0,0.1451,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h1_L32,32,clean/noisy em_tilted_poly; k(<1)/n,4.4890,3,16,0,0.3353,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h1_L32,128,clean/noisy em_tilted_poly; k(<1)/n,11.8301,4,16,0,0.5868,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h1_L32,512,clean/noisy em_tilted_poly; k(<1)/n,22.0930,6,16,0,0.4123,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h1_L32,2048,clean/noisy em_tilted_poly; k(<1)/n,8.1354,11,16,0,0.1026,False,FALSIFIED
+confirmatory,E34-P2,T0.5_iso_L32,32,clean/noisy em_tilted_poly; k(<1)/n,2.1414,9,16,0,0.1414,False,FALSIFIED
+confirmatory,E34-P2,T0.5_iso_L32,128,clean/noisy em_tilted_poly; k(<1)/n,4.4122,12,16,0,0.1983,False,FALSIFIED
+confirmatory,E34-P2,T0.5_iso_L32,512,clean/noisy em_tilted_poly; k(<1)/n,2.6230,11,16,0,0.0645,False,FALSIFIED
+confirmatory,E34-P2,T0.5_iso_L32,2048,clean/noisy em_tilted_poly; k(<1)/n,24.5675,9,16,0,0.2455,False,FALSIFIED
+confirmatory,E34-P2,T1_iso_L32,32,clean/noisy em_tilted_poly; k(<1)/n,1.0800,13,16,0,0.0768,False,FALSIFIED
+confirmatory,E34-P2,T1_iso_L32,128,clean/noisy em_tilted_poly; k(<1)/n,1.7754,10,16,0,0.0669,False,FALSIFIED
+confirmatory,E34-P2,T1_iso_L32,512,clean/noisy em_tilted_poly; k(<1)/n,2.9457,13,16,0,0.0467,False,FALSIFIED
+confirmatory,E34-P2,T1_iso_L32,2048,clean/noisy em_tilted_poly; k(<1)/n,1.8723,13,16,0,0.0146,False,FALSIFIED
+confirmatory,E34-P2,T2_iso_L32,32,clean/noisy em_tilted_poly; k(<1)/n,2.1401,10,16,0,0.1883,False,FALSIFIED
+confirmatory,E34-P2,T2_iso_L32,128,clean/noisy em_tilted_poly; k(<1)/n,1.7037,12,16,0,0.0466,False,FALSIFIED
+confirmatory,E34-P2,T2_iso_L32,512,clean/noisy em_tilted_poly; k(<1)/n,1.0072,15,16,0,0.0142,False,FALSIFIED
+confirmatory,E34-P2,T2_iso_L32,2048,clean/noisy em_tilted_poly; k(<1)/n,0.5617,16,16,0,0.0051,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.25_L128,32,clean/noisy em_tilted_spline; k(<1)/n,0.3456,16,16,0,0.0165,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.25_L128,128,clean/noisy em_tilted_spline; k(<1)/n,0.4678,15,16,0,0.0100,False,FALSIFIED
+confirmatory,E34-P2,T0.3_h0.25_L128,512,clean/noisy em_tilted_spline; k(<1)/n,0.4835,16,16,0,0.0051,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.25_L128,2048,clean/noisy em_tilted_spline; k(<1)/n,0.4309,16,16,0,0.0027,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.5_L64,32,clean/noisy em_tilted_spline; k(<1)/n,0.4536,16,16,0,0.0302,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.5_L64,128,clean/noisy em_tilted_spline; k(<1)/n,0.3889,16,16,0,0.0138,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.5_L64,512,clean/noisy em_tilted_spline; k(<1)/n,0.4332,16,16,0,0.0076,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h0.5_L64,2048,clean/noisy em_tilted_spline; k(<1)/n,0.3456,16,16,0,0.0039,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h1_L32,32,clean/noisy em_tilted_spline; k(<1)/n,0.5307,16,16,0,0.0484,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h1_L32,128,clean/noisy em_tilted_spline; k(<1)/n,0.3868,16,16,0,0.0216,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h1_L32,512,clean/noisy em_tilted_spline; k(<1)/n,0.3953,16,16,0,0.0115,True,CONFIRMED
+confirmatory,E34-P2,T0.3_h1_L32,2048,clean/noisy em_tilted_spline; k(<1)/n,0.3546,16,16,0,0.0054,True,CONFIRMED
+confirmatory,E34-P2,T0.5_iso_L32,32,clean/noisy em_tilted_spline; k(<1)/n,0.5257,16,16,0,0.0559,True,CONFIRMED
+confirmatory,E34-P2,T0.5_iso_L32,128,clean/noisy em_tilted_spline; k(<1)/n,0.4934,16,16,0,0.0237,True,CONFIRMED
+confirmatory,E34-P2,T0.5_iso_L32,512,clean/noisy em_tilted_spline; k(<1)/n,0.4340,16,16,0,0.0142,True,CONFIRMED
+confirmatory,E34-P2,T0.5_iso_L32,2048,clean/noisy em_tilted_spline; k(<1)/n,0.4230,16,16,0,0.0062,True,CONFIRMED
+confirmatory,E34-P2,T1_iso_L32,32,clean/noisy em_tilted_spline; k(<1)/n,0.5329,16,16,0,0.0607,True,CONFIRMED
+confirmatory,E34-P2,T1_iso_L32,128,clean/noisy em_tilted_spline; k(<1)/n,0.4581,16,16,0,0.0272,True,CONFIRMED
+confirmatory,E34-P2,T1_iso_L32,512,clean/noisy em_tilted_spline; k(<1)/n,0.4096,16,16,0,0.0138,True,CONFIRMED
+confirmatory,E34-P2,T1_iso_L32,2048,clean/noisy em_tilted_spline; k(<1)/n,0.4780,16,16,0,0.0072,True,CONFIRMED
+confirmatory,E34-P2,T2_iso_L32,32,clean/noisy em_tilted_spline; k(<1)/n,0.6634,14,16,0,0.0644,False,FALSIFIED
+confirmatory,E34-P2,T2_iso_L32,128,clean/noisy em_tilted_spline; k(<1)/n,0.5485,15,16,0,0.0317,False,FALSIFIED
+confirmatory,E34-P2,T2_iso_L32,512,clean/noisy em_tilted_spline; k(<1)/n,0.4145,16,16,0,0.0136,True,CONFIRMED
+confirmatory,E34-P2,T2_iso_L32,2048,clean/noisy em_tilted_spline; k(<1)/n,0.3942,16,16,0,0.0065,True,CONFIRMED
 confirmatory,E34-P2b,T0.3_h0.25_L128,2048,clean em_tilted_poly at 2048 < 0.02,0.1458,0,16,0,,False,FALSIFIED
 confirmatory,E34-P2b,T0.3_h0.5_L64,2048,clean em_tilted_poly at 2048 < 0.02,0.1451,0,16,0,,False,FALSIFIED
 confirmatory,E34-P2b,T0.3_h1_L32,2048,clean em_tilted_poly at 2048 < 0.02,0.1026,11,16,0,,False,FALSIFIED
@@ -29,3 +252,33 @@ confirmatory,E34-P3,T0.3_h1_L32,2048,clean mixture/spline at 2048; k(>1)/n,53.41
 confirmatory,E34-P3,T0.5_iso_L32,2048,clean mixture/spline at 2048; k(>1)/n,20.2338,16,16,0,,True,CONFIRMED
 confirmatory,E34-P3,T1_iso_L32,2048,clean mixture/spline at 2048; k(>1)/n,8.4102,16,16,0,,True,CONFIRMED
 confirmatory,E34-P3,T2_iso_L32,2048,clean mixture/spline at 2048; k(>1)/n,6.5448,16,16,0,,True,CONFIRMED
+confirmatory,E34-P4,T0.3_h0.25_L128,2048,"em_tilted_spline: kink ratio, domain ratio to truth",1.0107,4,4,0,0.9817,True,CONFIRMED
+confirmatory,E34-P4,T0.3_h0.5_L64,2048,"em_tilted_spline: kink ratio, domain ratio to truth",1.0059,4,4,0,0.9968,True,CONFIRMED
+confirmatory,E34-P4,T0.3_h1_L32,2048,"em_tilted_spline: kink ratio, domain ratio to truth",1.0080,4,4,0,1.0008,True,CONFIRMED
+confirmatory,E34-P4,T0.5_iso_L32,2048,"em_tilted_spline: kink ratio, domain ratio to truth",1.0084,4,4,0,1.0007,True,CONFIRMED
+confirmatory,E34-P4,T1_iso_L32,2048,"em_tilted_spline: kink ratio, domain ratio to truth",1.0014,4,4,0,1.0076,True,CONFIRMED
+confirmatory,E34-P4,T2_iso_L32,2048,"em_tilted_spline: kink ratio, domain ratio to truth",1.0113,4,4,0,0.9939,True,CONFIRMED
+confirmatory,E34-P4,T0.3_h0.25_L128,2048,"em_mixture: kink ratio, domain ratio to truth",1.7042,4,4,0,0.6922,True,CONFIRMED
+confirmatory,E34-P4,T0.3_h0.5_L64,2048,"em_mixture: kink ratio, domain ratio to truth",1.6236,4,4,0,0.7219,True,CONFIRMED
+confirmatory,E34-P4,T0.3_h1_L32,2048,"em_mixture: kink ratio, domain ratio to truth",1.5294,4,4,0,0.7662,True,CONFIRMED
+confirmatory,E34-P4,T0.5_iso_L32,2048,"em_mixture: kink ratio, domain ratio to truth",1.2153,4,4,0,0.9041,True,CONFIRMED
+confirmatory,E34-P4,T1_iso_L32,2048,"em_mixture: kink ratio, domain ratio to truth",1.1152,4,4,0,0.9584,True,CONFIRMED
+confirmatory,E34-P4,T2_iso_L32,2048,"em_mixture: kink ratio, domain ratio to truth",1.0830,4,4,0,0.9613,True,CONFIRMED
+confirmatory,E34-P4,T0.3_h0.25_L128,2048,"em_pair_quartic: kink ratio, domain ratio to truth",1.0019,4,4,0,0.9858,,pending
+confirmatory,E34-P4,T0.3_h0.5_L64,2048,"em_pair_quartic: kink ratio, domain ratio to truth",1.0162,4,4,0,0.9963,,pending
+confirmatory,E34-P4,T0.3_h1_L32,2048,"em_pair_quartic: kink ratio, domain ratio to truth",1.0026,4,4,0,1.0026,,pending
+confirmatory,E34-P4,T0.5_iso_L32,2048,"em_pair_quartic: kink ratio, domain ratio to truth",1.0079,4,4,0,1.0006,,pending
+confirmatory,E34-P4,T1_iso_L32,2048,"em_pair_quartic: kink ratio, domain ratio to truth",0.9781,4,4,0,1.0148,,pending
+confirmatory,E34-P4,T2_iso_L32,2048,"em_pair_quartic: kink ratio, domain ratio to truth",1.0040,4,4,0,0.9990,,pending
+confirmatory,E34-P4,T0.3_h0.25_L128,2048,"em_tilted_poly: kink ratio, domain ratio to truth",,0,4,4,,,pending
+confirmatory,E34-P4,T0.3_h0.5_L64,2048,"em_tilted_poly: kink ratio, domain ratio to truth",0.9691,4,4,0,0.9872,,pending
+confirmatory,E34-P4,T0.3_h1_L32,2048,"em_tilted_poly: kink ratio, domain ratio to truth",1.0157,4,4,0,0.9830,,pending
+confirmatory,E34-P4,T0.5_iso_L32,2048,"em_tilted_poly: kink ratio, domain ratio to truth",1.0095,4,4,0,0.9960,,pending
+confirmatory,E34-P4,T1_iso_L32,2048,"em_tilted_poly: kink ratio, domain ratio to truth",0.9953,4,4,0,1.0056,,pending
+confirmatory,E34-P4,T2_iso_L32,2048,"em_tilted_poly: kink ratio, domain ratio to truth",1.0036,4,4,0,1.0119,,pending
+confirmatory,E34-P4,T0.3_h0.25_L128,2048,"em_mdn: kink ratio, domain ratio to truth",1.0499,4,4,0,0.9710,,pending
+confirmatory,E34-P4,T0.3_h0.5_L64,2048,"em_mdn: kink ratio, domain ratio to truth",1.0177,4,4,0,0.9797,,pending
+confirmatory,E34-P4,T0.3_h1_L32,2048,"em_mdn: kink ratio, domain ratio to truth",1.0036,4,4,0,0.9992,,pending
+confirmatory,E34-P4,T0.5_iso_L32,2048,"em_mdn: kink ratio, domain ratio to truth",1.0088,4,4,0,0.9964,,pending
+confirmatory,E34-P4,T1_iso_L32,2048,"em_mdn: kink ratio, domain ratio to truth",0.9919,4,4,0,1.0113,,pending
+confirmatory,E34-P4,T2_iso_L32,2048,"em_mdn: kink ratio, domain ratio to truth",1.0091,4,4,0,0.9877,,pending

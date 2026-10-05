@@ -1,0 +1,5 @@
+data,source,arm,cell,n_chains,failed
+confirmatory,noisy,em_tilted_poly,T0.3_h0.25_L128,32,3
+confirmatory,noisy,em_tilted_poly,T0.3_h0.25_L128,128,6
+confirmatory,noisy,em_tilted_poly,T0.3_h0.25_L128,512,14
+confirmatory,noisy,em_tilted_poly,T0.3_h0.25_L128,2048,16

@@ -15,7 +15,7 @@
   "confirmatory": "0-15 for clean; 0-3 for physics_learned; reps 0-1 for physics_truth",
   "streams": "e34-physics, e34-learned*, and E33's e33-train/val/test/em keys"
  },
- "status": "FROZEN E34 2026-10-01T09:40:39Z; REGISTERED 2026-10-01, PREDECLARED, smoke-tested (--quick, all three parts); clean and physics_truth to be submitted/run; physics_learned waits for E33's kernels.csv.",
+ "status": "FROZEN E34 2026-10-01T09:40:39Z; REGISTERED 2026-10-01, PREDECLARED, smoke-tested (--quick, all three parts); clean and physics_truth to be submitted/run; physics_learned waits for E33's kernels.csv.; COMPLETE 2026-10-05: P1b, P3, P4 confirmed; P2 falsified as written (clean beats noisy for spline and MDN, not for the mixture or the Legendre; the gap does not shrink)",
  "registered": "2026-10-01",
  "outcome_physics_truth_first_run": {
   "P1 first half": "CONFIRMED: max |C_sample - C_spectral| over lags is 1.2-1.8 standard errors on all 12 (cell, rep) rows; sample kurtosis within 0.02 of the exact one.",
@@ -24,17 +24,38 @@
  },
  "frozen_outputs": {
   "outputs/E34/physics.csv": "b0130a191fdcef7a1dd7a89f05004bab02142a98d7c4e380b867f746c4a3c92a",
-  "outputs/E34/params_physics_truth.json": "c41ea9c12956f61f9a6c73c27f3523a35bc8514dbbbb8ab3d083f99c8b44be3a"
+  "outputs/E34/params_physics_truth.json": "c41ea9c12956f61f9a6c73c27f3523a35bc8514dbbbb8ab3d083f99c8b44be3a",
+  "outputs/hpc_E34c/clean.csv": "49a55ac0556c71a0bae0a95ca13b1ac55787c905b2b32140562ce474a6775cd1",
+  "outputs/hpc_E34c/params_clean.json": "e51d513b0635b610ac3dc42437cd1913fe26e9e4070755c538c19d237939a908",
+  "outputs/E34_learned/learned.csv": "ef25aaca77d6426514780c2f58767bf6ab524488ca141f68923d0d71f723c2a5",
+  "outputs/E34_learned/params_physics_learned.json": "ca6f00a1c62987fea098fa5808c965e2ad6dc97316926db73bda285cd2679b61",
+  "outputs/E34_learned_pair/learned.csv": "d6d0a2078f87cd5f535d9e0795d4af6e69829cf38326c556c89b4e8f83f7654f",
+  "outputs/E34_learned_pair/params_physics_learned.json": "5fc2c2e422c16d2f5e1932e73b1432192dc99f880be884328d4e73245e9b761f"
  },
  "frozen_at": {
-  "E34": "2026-10-01T09:40:39Z"
+  "E34": "2026-10-01T09:40:39Z",
+  "hpc_E34c": "2026-10-05T19:46:16Z",
+  "E34_learned": "2026-10-05T19:47:03Z",
+  "E34_learned_pair": "2026-10-05T19:47:03Z"
  },
  "frozen_commit": {
-  "E34": "811eb060f24acca5ff53c0590a86a71c89056a3e"
+  "E34": "811eb060f24acca5ff53c0590a86a71c89056a3e",
+  "hpc_E34c": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "E34_learned": "1755a29a82523b796445b5fe7267312a06fcf627",
+  "E34_learned_pair": "1755a29a82523b796445b5fe7267312a06fcf627"
  },
  "frozen_run_commits": {
   "E34": [
    "811eb06"
+  ],
+  "hpc_E34c": [
+   "52cf980"
+  ],
+  "E34_learned": [
+   "1755a29"
+  ],
+  "E34_learned_pair": [
+   "3590719"
   ]
  },
  "outcome_physics_truth": {
@@ -52,12 +73,17 @@
  "outcome_clean": {
   "read": "2026-10-03 ~18:40 BST, tools/make_field_numbers.py at 51b36a7 on hpc_E34c (1536 rows, deployment 52cf980, job 678166; arms mixture, Legendre, spline, MDN), amendments 2 and 3 applied; reports/numbers/field_predictions.csv",
   "P2, clean half (tilted kernels below 0.02 pooled at M = 2048 on every cell)": "MIXED. em_tilted_spline CONFIRMED on all six cells (0.0027-0.0072, 16/16 below 0.02 everywhere). em_tilted_poly FALSIFIED on four of six: 0.103 (base), 0.145 (L64), 0.146 (L128), 0.245 (T = 0.5); confirmed at T = 1 (0.0146) and T = 2 (0.0051). Parked (first-site law beyond |a| = 3.5): 186 of 384 clean Legendre fits; the eigensolve failed on 20 more (estimator used N(0, 1)). Spline: 0 of 384 parked. N-33 at scale: under clean MLE a global basis builds a basin where no data arrive in half of its fits.",
-  "P2, clean-beats-noisy clause": "pending: joins E33's kernel shards (rerun under amendment 3).",
+  "P2, clean-beats-noisy clause": "FALSIFIED AS WRITTEN (read 2026-10-05 against E33's complete kernel shards). Clean/noisy risk, pooled over cells, at M = 32/128/512/2048: spline 0.51/0.46/0.43/0.40 (16/16 everywhere except h = 0.25 at M = 128, 15/16, and T = 2 at M = 32 and 128, 14 and 15/16); MDN 0.45/0.39/0.41/0.52 (13-15/16 on three cells at 2048); mixture 0.90/0.95/0.98/0.99 (clean data do not help a kernel that is on the linear floor: 4-16/16 by cell); Legendre 4.6/5.4/8.8/8.7 (clean MLE is WORSE, the parking of N-33). The gap does NOT shrink with M for the spline: the one-view channel costs it a factor 2-2.5 in risk that grows slightly with M. It shrinks only for the mixture, whose two fits share one biased limit.",
   "P3": "CONFIRMED on all six cells, 16/16 seeds: clean mixture/spline at M = 2048 = 53.4 (base), 46.7 (L64), 38.7 (L128), 20.2 (T = 0.5), 8.4 (T = 1), 6.5 (T = 2). Misspecification, not the channel, limits the mixture.",
   "P4": "pending (physics_learned, after E33's kernels)."
  },
  "reading_learned_pair": {
   "read": "2026-10-03 ~18:55 BST. physics_learned (the registered part, unchanged) run on the laptop at 3590719 (code path clean; params_physics_learned.json) on the 24 confirmatory em_pair_quartic fits it selects (hpc_E33q_s0: risk-selected, M = 2048, seeds 0-3, six cells); outputs/E34_learned_pair. UNREGISTERED for this arm: P4 names the spline and the mixture, whose fits wait for E33's kernel shards.",
   "result": "Samples from the pair kernels learned through noise reproduce the truth on all 24 fits within P4's 15% band, every statistic: kink density worst 5.3%, mean domain 2.9%, coarse kink density 13.3% (T = 2; 8.5% or better elsewhere), coarse mean domain 5.4%, bimodality coefficient 2.9%, variance 4.0%, mass above the barrier 3.2%. Cell means within 2.2% of the truth for every statistic."
+ },
+ "outcome_learned": {
+  "read": "2026-10-05 ~20:40 BST. physics_learned (registered part) on the laptop at 1755a29 (code path clean; reports/numbers modified, not code) on the 96 risk-selected E33 kernel fits it selects (M = 2048, seeds 0-3, six cells, four arms; outputs/E34_learned) plus the 24 site-energy fits sampled on 3 Oct (outputs/E34_learned_pair); amendment 3's failed fits enter as failed rows.",
+  "P4": "CONFIRMED on all six cells. Spline samples: kink density / truth 1.001-1.011 (worst seed 0.974-1.045), mean domain / truth 0.982-1.008, all within 15%. Mixture samples overshoot the kink density on every cell and seed: 1.53 (base), 1.62 (h = 0.5), 1.70 (h = 0.25), 1.22 (T = 0.5), 1.12 (T = 1), 1.08 (T = 2), with domains 0.69-0.96 of the truth's.",
+  "unregistered": "Site-energy samples within 5.3% of the kink density and 2.9% of the domain length (reading_learned_pair); MDN within 5% on cell means (worst seed 1.21 at h = 0.25); Legendre within 3.1% on cell means where it fitted (worst seed 0.77 at h = 0.5), its four h = 0.25 fits failed."
  }
 }
