@@ -1,0 +1,19 @@
+{
+ "id": "E37",
+ "script": "experiments/e37_domain_distribution.py",
+ "hypothesis": "The consolidated note (30 Sep 2026, section 24.5) asks to 'report at least' the domain-length DISTRIBUTION among the physical statistics; E34 reported only its mean and median. E37 compares the whole distribution of coarse domain lengths (N-31's observable: runs shorter than one kink width merged) between exact samples and samples from the learned kernels.",
+ "design": "The 24 (cell, seed) pairs of E34's physics_learned (six cells, seeds 0-3, M = 2048), the same frozen E33 fits (risk-selected; hpc_E33k_s0 for mixture, Legendre, spline, MDN; hpc_E33q_s0 for the site energy) and the SAME random streams as E34 (rng tags e34-learned-truth / e34-learned / e34-learned-jit), so the samples are E34's own: 2048 chains per arm, ancestral on the grid from each kernel's invariant law. Per (cell, seed, arm): the interior coarse domain lengths in physical units, their 10/50/90% quantiles, the two-sample Kolmogorov-Smirnov distance to the truth's, and histogram counts on common bins. Failed fits (E33 amendment 3) are failed rows. Laptop, 4 workers.",
+ "predeclared_predictions": {
+  "P1": "Samples from the spline and from the site energy reproduce the distribution: on every cell the seed means of their 10%, 50% and 90% quantiles are within 10% of the truth's, and the seed-mean KS distance to the truth is below 0.05.",
+  "P2": "The mixture's domain-length distribution is too short where the wells are deep: on the three T = 0.3 cells its seed-mean KS distance exceeds 0.05 and its 90% quantile is more than 15% below the truth's."
+ },
+ "predeclared_analysis": "distribution.csv: per (cell, arm) the seed means of q10, q50, q90 over the truth's (paired by seed) and of the KS distance; MDN and Legendre rows unregistered; failed fits counted beside. domains.csv: histogram counts for the figure.",
+ "seeds": {
+  "confirmatory": "0-3 (the seeds of E34's physics_learned)",
+  "dev": "10000 (smoke only)"
+ },
+ "provenance_note": "Written knowing E34's means (spline and site energy within 2% of the truth's domain length on cell means; the mixture's domains 0.69-0.96 of the truth's). The thresholds are set with that knowledge; the quantiles and KS distances have not been computed before this registration.",
+ "resources": "laptop, 4 workers; sampling only (no fitting), minutes per cell",
+ "status": "REGISTERED and PREDECLARED 2026-10-05 (evening), before any cell ran; the user asked that every job Jerome asked for be sent, and the note's section 24.5 lists the domain-length distribution",
+ "registered": "2026-10-05"
+}
