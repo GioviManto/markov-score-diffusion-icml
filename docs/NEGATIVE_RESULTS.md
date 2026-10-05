@@ -599,3 +599,5 @@ recomputed; nothing from them was reported. The unit test of the posterior had p
 built Σ_U itself; the new test (tests/test_augmented.py::test_e35_driver_reference_is_the_exact_posterior)
 goes through the driver's own bundle function and fails on the old code (error 0.17 at t = 0.22).
 Lesson, again: test the code path the experiment runs, not a reimplementation of it.
+
+**N-29, resolved (5 October).** The exclusive reruns landed (sacct AllocCPUS = the whole node in all four). E24's Q7 ratio is unchanged: bp_grid / transformer = 12.5x on CPU (two different nodes) and 15.1x on the H200, against the contaminated 12.6x and 14.6x; contention moved the absolute times, not the ratio. E27's reverse_sde_400 / ancestral_true at B = 2048 is 1465x with 8 BLAS threads and 2343x single-threaded: two exclusive runs of the same cell differ by 1.8x because the SDE's network evaluations use the threads and the grid sampler barely does. The variable that matters is the declared thread count, which every cost citation must now carry.

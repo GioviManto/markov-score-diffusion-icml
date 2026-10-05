@@ -1,0 +1,69 @@
+{
+  "n_sites": 32,
+  "quick": false,
+  "parts": [
+    "cost"
+  ],
+  "overrides": [
+    "cost_batch=(2048, 8192, 32768)",
+    "steps_ladder=(100, 400)"
+  ],
+  "sizes": [
+    128,
+    2048
+  ],
+  "components": 8,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "n_generate": 2000,
+  "n_reference": 4000,
+  "t_max": 3.0,
+  "t_min": 0.02,
+  "steps_ladder": [
+    100,
+    400
+  ],
+  "n_steps_reference": 400,
+  "grid_size": 401,
+  "half_width": 8.0,
+  "em_source": "outputs/E02a/capacity.csv",
+  "jitter": true,
+  "cost_batch": [
+    2048,
+    8192,
+    32768
+  ],
+  "cost_repeat": 5,
+  "timestamp": "2026-10-01 12:50:56",
+  "git_commit": "4aa497e452af75e16a5760a43e5c5ef32fd312a1",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "cb62d43f92a28fc394dea34c545c99641e0fd8209ed819236d52b9299b73639e",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode06",
+  "slurm_job_id": "676603",
+  "slurm_array_task_id": "",
+  "cpu_count": "40",
+  "blas_threads": "1",
+  "resolved_config_hash": "a592d7fe3734"
+}

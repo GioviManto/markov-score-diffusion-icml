@@ -22,7 +22,8 @@ import registry
 
 
 @pytest.mark.parametrize("out_id,owner", [("hpc_E33o", "E33"), ("hpc_E33n", "E33"), ("hpc_E33k_s4", "E33"),
-                                           ("hpc_E34c", "E34"), ("E34_learned", "E34"), ("E34_learned_pair", "E34")])
+                                           ("hpc_E34c", "E34"), ("E34_learned", "E34"), ("E34_learned_pair", "E34"),
+                                           ("hpc_E24x", "E24"), ("hpc_E24x_gpu", "E24"), ("hpc_E27x", "E27"), ("hpc_E27big_excl", "E27")])
 def test_confirmatory_field_directories_have_an_owner(out_id, owner):
     assert freeze._registry_file(out_id).name == f"{owner}.json"
 

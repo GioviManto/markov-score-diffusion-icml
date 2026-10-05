@@ -45,7 +45,8 @@ def _sha(p: Path) -> str:
 # oracles and screen carry a one-letter part, E34's physics_learned ran on the laptop under its
 # own names. Explicit, not a wider pattern: a wider one also accepted the PREVIEW directories
 # (E33_preview_laptop, ...) into the confirmatory entry (tests/test_freeze_owners.py).
-EXTRA_OWNERS = {"hpc_E33o": "E33", "hpc_E33n": "E33", "E34_learned": "E34", "E34_learned_pair": "E34"}
+EXTRA_OWNERS = {"hpc_E33o": "E33", "hpc_E33n": "E33", "E34_learned": "E34", "E34_learned_pair": "E34",
+                "hpc_E24x": "E24", "hpc_E24x_gpu": "E24", "hpc_E27x": "E27", "hpc_E27big_excl": "E27"}
 
 
 def _registry_file(out_id: str) -> Path:

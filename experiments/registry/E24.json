@@ -7,14 +7,54 @@
  "seeds": {
   "confirmatory": "deterministic given the bundle tags 'e24-cost' and 'e24-scale'; timing is a property of the machine, not of the draw, and the same bundle is reused across arms so every arm denoises identical data"
  },
- "status": "REGISTERED 2026-09-25 (after the Jerome call). Laptop CPU run EXPLORATORY -- the scaling predictions were fixed in the script before it was executed, but the machine was not quiet and OMP_NUM_THREADS was 4 of 8. The citable run is the HPC one: `hpc/icml_submit.sh e24-cpu` with MSD_HPC_THREADS set and the node uncontended, and `hpc/icml_submit.sh e24-gpu` (MSD_HPC_GRES, MSD_HPC_VENV=venv-cuda) for the cross-device row.",
+ "status": "FROZEN hpc_E24x 2026-10-05T20:25:05Z; REGISTERED 2026-09-25 (after the Jerome call). Laptop CPU run EXPLORATORY -- the scaling predictions were fixed in the script before it was executed, but the machine was not quiet and OMP_NUM_THREADS was 4 of 8. The citable run is the HPC one: `hpc/icml_submit.sh e24-cpu` with MSD_HPC_THREADS set and the node uncontended, and `hpc/icml_submit.sh e24-gpu` (MSD_HPC_GRES, MSD_HPC_VENV=venv-cuda) for the cross-device row.",
  "registered": "2026-09-25",
  "script_sha256": "630b895ff1245f33c9d663d67486617e4e09b5b7f3cd5ff9bac5b84800ad7cdb",
  "motivation": "Jerome, 25 September 2026: 'If I give you a noisy sequence and I want the posterior mean, how long does it take for a neural network and how long does it take for BP? ... This is a big question to me.' No cost number existed anywhere in this project; every experiment reported error only. The headline the project is moving towards -- one small kernel inside exact BP instead of one large score network -- is a claim about cost as much as accuracy.",
- "frozen_outputs": {},
- "frozen_at": {},
- "frozen_commit": {},
- "frozen_run_commits": {},
+ "frozen_outputs": {
+  "outputs/hpc_E24x/anatomy.csv": "d7d9639eedba4d2e912444166b95d806d0a7b1366b791f2f148a0ea74775a3cc",
+  "outputs/hpc_E24x/capacity.csv": "ea250ae04d37b1c956e30f88753f65f635e0dcfb81c190a5bbf89c4db9c44a11",
+  "outputs/hpc_E24x/capacity_slopes.csv": "45a113509624837875e88014938f435490103ff398d73734c211df8ec7d65e85",
+  "outputs/hpc_E24x/cost.csv": "5fcdca5d6b548b5722f96b8273ff276effe4204f8bc2491c2eded9fccb977438",
+  "outputs/hpc_E24x/scaling.csv": "98cd9e795e5dc8538a7bb0ba12d9999d559a2cea2a88dfbccccbf83cafeb4c02",
+  "outputs/hpc_E24x/slopes.csv": "78aac703242d705ce25baf7e394ba2b4b30b91152a1338dafeb0f9a0cd372e94",
+  "outputs/hpc_E24x/training.csv": "049f34f430f70a894d2795afe17ca0d23fbdff7980a9a8f260391806cc832372",
+  "outputs/hpc_E24x/training_slopes.csv": "aeb3960056c9b78489c8683394655a5dde63dcaa8460eaa71620579e19521310",
+  "outputs/hpc_E24x/params_anatomy.json": "36c07684b37db1342e45272be64a1eaca80b25c7d028260a6335a74f03e2c646",
+  "outputs/hpc_E24x/params_capacity.json": "9df416bd4d1fdea824386a9a7c80ab94e8b593d2ead98b944eb03badfe6d3bf9",
+  "outputs/hpc_E24x/params_cost.json": "c95a19dce7b42a4bbe51e37ba715669553bee0fc82aa94b5caa70ad39b12bdc5",
+  "outputs/hpc_E24x/params_scaling.json": "8c9c9db9d6a58abc34c6a2a9650ffb9065fd1a7cd4cc00d0e843081ba61b2b78",
+  "outputs/hpc_E24x/params_training.json": "b0b53bb0869eebfa2dd49f96d62100fe8a0cc44889ccbab8bf7a4afb38bc9cee",
+  "outputs/hpc_E24x_gpu/anatomy.csv": "3fff53bbb21c8b05035a09b69eda8d1289c5123cee8d08312a43a3a722eae076",
+  "outputs/hpc_E24x_gpu/capacity.csv": "6277d4250be6479e423ce3a1049450c0d31506fd71ea09d82c4e41c03f206bb7",
+  "outputs/hpc_E24x_gpu/capacity_slopes.csv": "50835c6c3e786609714f6e909089c28982913dd113e95577d55fdc980e95147c",
+  "outputs/hpc_E24x_gpu/cost.csv": "3a9ec899ca2c0d7e26d54bbf530ddac9356b1fdb1d6bb6298eac547321ce7b3f",
+  "outputs/hpc_E24x_gpu/scaling.csv": "efdc4707eb7291d77bde5c4cca96676c7aa51a9ffe5ec8dce4c623fd93f08c65",
+  "outputs/hpc_E24x_gpu/slopes.csv": "207fb02b4128107a324a21aec58e697b9cef9b4cb8ae3177810ec81bbea6a4a1",
+  "outputs/hpc_E24x_gpu/training.csv": "84003378bef1d0f778f397e929f1fddf25d1627a40b231eb8d2a9bc44c63ab74",
+  "outputs/hpc_E24x_gpu/training_slopes.csv": "903da82af3d67da91e6b5cab48cfb8545f30f0f695ff1f20b72fbc0c7018bd3d",
+  "outputs/hpc_E24x_gpu/params_anatomy.json": "48914656013bc9ab18d62653f92b6fd8ff05e3d401fcbcd96d90f84d5eddeea2",
+  "outputs/hpc_E24x_gpu/params_capacity.json": "1f50f3b2bd32e70f35171bd17cba93624af4030a1bd1d3244041c208668f7858",
+  "outputs/hpc_E24x_gpu/params_cost.json": "38b9987350f168e8882bf02cfa5f9cc6b4689c962424b6b55e3856c7772c4f7a",
+  "outputs/hpc_E24x_gpu/params_scaling.json": "cc5d313b4d569cc73274454cc1f0d330c17d1babd99cf93821867a0ab490ce8d",
+  "outputs/hpc_E24x_gpu/params_training.json": "5fcfe3ab319d226f61d8ccce48aafed0b2e2f7432909976d7a27d93138ff6b54"
+ },
+ "frozen_at": {
+  "hpc_E24x": "2026-10-05T20:25:05Z",
+  "hpc_E24x_gpu": "2026-10-05T20:25:05Z"
+ },
+ "frozen_commit": {
+  "hpc_E24x": "57af1704c13a51d33ed4a110f29b13350328f325",
+  "hpc_E24x_gpu": "57af1704c13a51d33ed4a110f29b13350328f325"
+ },
+ "frozen_run_commits": {
+  "hpc_E24x": [
+   "9a55030"
+  ],
+  "hpc_E24x_gpu": [
+   "9a55030"
+  ]
+ },
  "outcome": {
   "Q7": "ANSWERED on CPU. At the frozen operating point exact grid BP costs 0.330 ms per posterior mean per sequence, against 0.151 ms for the transformer and 0.018 ms for the window head: BP is 2.2x SLOWER than the transformer, not faster as the call guessed. bp_gaussian (closed form) is 0.036 ms.",
   "Q11": "The call's answer is corrected: slope in the number of sequences is +1.04 (full range) / +1.19 (top half), i.e. LINEAR, not quadratic; slope in L is +1.12/+1.13, linear as predicted.",
@@ -29,5 +69,10 @@
   "defect": "Every timing number this experiment has produced was measured on a SHARED node. sacct for 25-26 Sep puts e24c-cpu (669327) and e24c-capacity (669376) on cnode02 and e24c-gpu (670404) on gnode16; my own jobs did not overlap each other there, but nothing excluded other users, and no run requested exclusivity. This entry's own status field already required 'the node uncontended' and that condition was never enforced by anything -- it was a sentence, not a flag.",
   "why_it_matters": "E27's sibling measurement shows the size of the effect: the SAME cell reads 430.8 ms/seq contended against 200.1 ms/seq quiet, while ancestral_true barely moves (0.1801 vs 0.1758). Contention does not cancel in a ratio and it does not merely add noise: work with many sequential kernel launches suffers far more than work that is a few large BLAS calls, so the error moves the BP-vs-network comparison in whichever direction the contended arm happens to be. The Q7 claim ('BP is ~15x slower on both devices') is a ratio of exactly that kind.",
   "action": "Cases e24x-cpu and e24x-gpu, to be submitted ONLY with MSD_HPC_EXCLUSIVE=1 (verified by `scontrol show job <id> | grep OverSubscribe` reporting NO). Until they land, the Q7 numbers stand as reported but are known to be measured under an unstated node occupancy. If the uncontended ratio differs materially, the reported one is replaced, not averaged with it."
+ },
+ "outcome_uncontended": {
+  "read": "2026-10-05 ~21:30 BST. Fetched e24x-cpu (676663, cnode07) and e24x-gpu (676680, gnode16, H200), deployment 9a55030, both EXCLUSIVE (sacct AllocCPUS = the whole node: 40 and 32 against 16 and 8 requested); 8 BLAS threads. Reading as predeclared: median over the twelve levels at batch 512, N_g = 401, L = 32.",
+  "Q7": "STANDS. bp_grid / transformer per posterior mean = 12.5x on CPU in both exclusive runs (0.519 / 0.042 ms on cnode07; 0.356 / 0.029 ms on gnode16's CPU) and 15.1x on the H200 (0.0405 / 0.0027 ms). The contaminated values were 12.6x and 14.6x: N-29's contamination moved the absolute times, not the ratio. bp_grid / window = 126-145x on CPU, 43x on GPU.",
+  "N-29 status": "resolved for E24: the Q7 ratio is citable from hpc_E24x / hpc_E24x_gpu with the node and thread count stated."
  }
 }

@@ -28,17 +28,31 @@
   "outputs/hpc_E27/direct.csv": "0901eee78ef66351fd0de752b26ad20b82262288c24655eaf07bf0671803e890",
   "outputs/hpc_E27/steps.csv": "280a729808d71bf21067b5d726e70ef3a8c978ddd2f2250baa38a4bfdf712164",
   "outputs/hpc_E27/params_cost.json": "dccef8084e4588d2749a98740941edfb078e1ba051d09fd4a32c7cfee991f87f",
-  "outputs/hpc_E27/params_sample_steps.json": "5d5fe46bdcf3d144de15b57ff31fbf541dc7bbe6750d6a0672906ea68e58cb95"
+  "outputs/hpc_E27/params_sample_steps.json": "5d5fe46bdcf3d144de15b57ff31fbf541dc7bbe6750d6a0672906ea68e58cb95",
+  "outputs/hpc_E27x/cost.csv": "76dc0d796aa418e5ab0c123812c540c9919f3ee5040a6172192db2d93c55cbb2",
+  "outputs/hpc_E27x/params_cost.json": "feca2421f8370eb966c3a4880d9f0e63b69212a8d967de65d255b9882391aedd",
+  "outputs/hpc_E27big_excl/cost.csv": "07e48c37eeb4c82266f6a06ec9cea0480e9210b5328eecaa98ba22a381e37113",
+  "outputs/hpc_E27big_excl/params_cost.json": "898f8e3b5586084927178f0ff5c12d88ae240aa30969089898ed7d0dd04aad94"
  },
  "frozen_at": {
-  "hpc_E27": "2026-09-28T19:52:13Z"
+  "hpc_E27": "2026-09-28T19:52:13Z",
+  "hpc_E27x": "2026-10-05T20:25:05Z",
+  "hpc_E27big_excl": "2026-10-05T20:25:05Z"
  },
  "frozen_commit": {
-  "hpc_E27": "7908703c96daf3729cdd8be17feb6a0c581e2ece"
+  "hpc_E27": "7908703c96daf3729cdd8be17feb6a0c581e2ece",
+  "hpc_E27x": "57af1704c13a51d33ed4a110f29b13350328f325",
+  "hpc_E27big_excl": "57af1704c13a51d33ed4a110f29b13350328f325"
  },
  "frozen_run_commits": {
   "hpc_E27": [
    "9af53fb"
+  ],
+  "hpc_E27x": [
+   "9a55030"
+  ],
+  "hpc_E27big_excl": [
+   "4aa497e"
   ]
  },
  "amendment_N29_uncontended_rerun": {
@@ -47,5 +61,11 @@
   "measured_size_of_the_effect": "Between the two e27-cost-big runs the same cell (B=2048, reverse_sde_400) reads 200.1 ms/seq and 430.8 ms/seq, a factor of 2.15, while ancestral_true moves 0.1758 -> 0.1801. The headline ratio therefore ranges 1,138x to 2,392x depending on who else was on the node. Contention FLATTERS this claim.",
   "affected_claims": "'725x cheaper at equal error' and '1,436x against the 400-step SDE', which appear in reports/jerome-followup-2026-09-27.pdf and in the Q8 section of docs/JEROME_CALL_2026-09-25.md. The ERROR results (part sample, part steps: one sweep generates at the Monte Carlo floor, KL 0.00074) are unaffected -- contention changes wall-clock, not KL.",
   "action": "Case e27x-cost with MSD_HPC_EXCLUSIVE=1, plus e27-cost-big already resubmitted exclusively as job 676603. No cost number from E27 is citable until one of them lands."
+ },
+ "outcome_uncontended": {
+  "read": "2026-10-05 ~21:30 BST. Fetched e27x-cost (676664, cnode07, deployment 9a55030, 8 BLAS threads) and the exclusive e27-cost-big (676603, cnode06, deployment 4aa497e, 1 BLAS thread); both EXCLUSIVE (AllocCPUS 40 = the whole node). cost.csv: sec_per_seq per (batch, arm).",
+  "ratio reverse_sde_400 / ancestral_true": "8 threads (hpc_E27x): 1510x at B = 128, 1446x at 512, 1465x at 2048. 1 thread (hpc_E27big_excl): 2343x at 2048, 2066x at 8192, 1843x at 32768. The ancestral sampler costs 0.15-0.21 ms/seq in every configuration; the 400-step reverse SDE costs 216-227 ms/seq at 8 threads and 389-395 at 1 thread, so the ratio depends on the declared thread count, not on contention: two exclusive runs of the same cell differ by 1.8x for exactly this reason.",
+  "citable": "1465x at B = 2048 with 8 BLAS threads (the cited contaminated 1436x is within 2% of it); 1843-2343x single-threaded. Any citation states the thread count.",
+  "N-29 status": "resolved for E27's cost table."
  }
 }
