@@ -36,7 +36,7 @@ THREADS=${MSD_HPC_THREADS:-1}
 SERIAL_CPUS=${MSD_HPC_SERIAL_CPUS:-4}
 AFTER=""; WHAT=${1:-}; shift || true
 while [[ $# -gt 0 ]]; do case "$1" in --after) AFTER="$2"; shift 2;; *) echo "unknown arg $1" >&2; exit 2;; esac; done
-[[ -n "$WHAT" ]] || { echo "usage: $0 <e32|e33-q-s0..s12|e34-clean|e34-physics|e33-oracles|e33-k-s0..s12|e33-screen|e33-nets-s0|e33-nets-s8|e23|e24c-capacity|e26|e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
+[[ -n "$WHAT" ]] || { echo "usage: $0 <e35x-s0|e35x-s8|e36x-s0|e36x-s8|e32|e33-q-s0..s12|e34-clean|e34-physics|e33-oracles|e33-k-s0..s12|e33-screen|e33-nets-s0|e33-nets-s8|e23|e24c-capacity|e26|e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
 
 partition() {
   if [[ -n "${MSD_HPC_PARTITION:-}" ]]; then echo "$MSD_HPC_PARTITION"; return; fi
@@ -200,6 +200,12 @@ cmd_for() {
     # E34: the physics of the field and the clean-data interface (Jerome's note, sections 16.1 and
     # 24.5). `clean` has no E-step and is one job; `physics_learned` waits for E33's kernels.
     e34-clean)   echo "e34_field_physics.py --only clean --output-dir {OUT}/E34c";;
+    # --- 5 Oct: E35x and E36x, the two laptop designs at the protocol's sixteen seeds (registry E35x.json,
+    # E36x.json); E36x runs only the clean part, with the MDN's ladder extended to 2000 (its E36 clause was at cap).
+    e35x-s0)     echo "e35_state_augmentation.py --set 'seeds=(0, 1, 2, 3, 4, 5, 6, 7)' --output-dir {OUT}/E35x_s0";;
+    e35x-s8)     echo "e35_state_augmentation.py --set 'seeds=(8, 9, 10, 11, 12, 13, 14, 15)' --output-dir {OUT}/E35x_s8";;
+    e36x-s0)     echo "e36_stride_protocol.py --only clean --set 'seeds=(0, 1, 2, 3, 4, 5, 6, 7)' --set 'clean_checkpoints=(1, 2, 4, 8, 16, 32, 64, 120, 220, 400, 700, 1200, 2000)' --output-dir {OUT}/E36x_s0";;
+    e36x-s8)     echo "e36_stride_protocol.py --only clean --set 'seeds=(8, 9, 10, 11, 12, 13, 14, 15)' --set 'clean_checkpoints=(1, 2, 4, 8, 16, 32, 64, 120, 220, 400, 700, 1200, 2000)' --output-dir {OUT}/E36x_s8";;
     e34-physics) echo "e34_field_physics.py --only physics_truth --output-dir {OUT}/E34p";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac

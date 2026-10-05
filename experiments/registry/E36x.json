@@ -1,0 +1,20 @@
+{
+ "id": "E36x",
+ "script": "experiments/e36_stride_protocol.py",
+ "hypothesis": "E36's clean part (frozen 2 Oct, two seeds) at sixteen seeds, with the MDN's ladder extended so that its clause can be read: E36's P3 third clause (the MDN beats the site energy at stride 4) was UNRESOLVED because the MDN selected its last checkpoint (400) in all six cells.",
+ "design": "part `clean` only (the oracles and physics parts are exact and already frozen in E36): T = 0.3, h_fine = 0.25, L_fine = 128, strides (1, 2, 4), seeds 0-15, 2048 clean chains, arms em_pair_quartic, em_tilted_spline, em_mixture, em_mdn, clean_checkpoints extended to (1, 2, 4, 8, 16, 32, 64, 120, 220, 400, 700, 1200, 2000); the tilted and site-energy arms keep their checkpoints <= 4 as the driver fixes them. Scored on the strided test bundle against exact BP with K^s, risk selection on the validation bundle. Two shards (e36x-s0, e36x-s8), 24 workers each, defq.",
+ "predeclared_predictions": {
+  "P1": "E36 P3's first two clauses at sixteen seeds: em_pair_quartic and em_tilted_spline have clean risk below 0.02 at stride 1 in 16/16 seeds, and their stride-4 risk is at least twice their stride-1 risk in 16/16 seeds.",
+  "P2": "E36 P3's third clause, resolved by the longer ladder: at stride 4 the MDN's clean risk is below em_pair_quartic's in at least 12 of 16 seeds. FALSIFIED if fewer; UNRESOLVED again if the MDN selects its last checkpoint (2000) in more than 4 of the 16 stride-4 fits.",
+  "P3": "The mixture sits on the linear floor at every stride: its seed-mean clean risk is within 3% of E36's frozen floor for that stride (0.0975, 0.1578, 0.2347 at strides 1, 2, 4)."
+ },
+ "predeclared_analysis": "clean.csv merged over the two shards: per (stride, arm) the sixteen per-seed risks; paired counts for P1 and P2; P3 against outputs/E36/oracles.csv (pooled lmmse_true per stride); at_cap and converged read beside every clause.",
+ "seeds": {
+  "confirmatory": "0-15",
+  "dev": "10000 (smoke only)"
+ },
+ "provenance_note": "NOT a pre-data registration in the strict sense: E36's two seeds are frozen and known (MDN 0.0229 against the site energy's 0.0404 on seed 0, 0.0933 against 0.0405 on seed 1). The 12/16 threshold and the at-cap rule for P2 are written with that knowledge; registered before any E36x cell ran.",
+ "resources": "cluster, defq, 2 x 24 cpus, 64G, 23:50; the stride-1 cell with the MDN and the mixture to 2000 iterations is the longest, about 8 laptop-hours",
+ "status": "REGISTERED and PREDECLARED 2026-10-05 (evening), before submission; the user asked to 'send all the jobs we need'",
+ "registered": "2026-10-05"
+}

@@ -1,0 +1,21 @@
+{
+ "id": "E35x",
+ "script": "experiments/e35_state_augmentation.py",
+ "hypothesis": "E35 (frozen 3 Oct, two seeds, a laptop design read qualitatively) at the protocol's sixteen seeds: a global sign latent leaves the paper's first-order kernel with a bias that data do not remove, and the same kernel on the augmented state (X, G) removes it. Same driver, arms, cells, ladder and reference as E35; only the seed count and the machine change.",
+ "design": "offsets b in (0, 1, 2), sizes M in (512, 2048), seeds 0-15 (all sixteen run fresh on the cluster, including 0-1), L = 32, rho = 0.85, the registered one-view interface, validation 1024 and test 2048 chains, risk selection over the ladder (10..400), the closed-form two-phase posterior mean as the reference. Arms: em_first_order, em_augmented, lmmse_true, isotropic. Two shards of eight seeds (e35x-s0, e35x-s8), 24 workers each, defq.",
+ "predeclared_predictions": {
+  "P1": "At b = 0 augmentation has no systematic cost: the paired mean of log(augmented / first-order) over the sixteen seeds has a 95% bootstrap interval containing 0 at both M. (Replaces E35's 10% band, which two seeds could not hold.)",
+  "P2": "At b = 2 the first-order arm's deficit is a bias: its seed-mean risk changes by less than 15% from M = 512 to 2048, while the augmented arm's seed-mean risk falls by more than 30% and falls in at least 14 of 16 seeds.",
+  "P3": "At M = 2048 first-order / augmented exceeds 2 in 16/16 seeds at b = 1 and at b = 2, and its seed mean rises with b over (0, 1, 2); at b = 2 the augmented arm's seed-mean risk is below the linear floor's by a factor of at least 3.",
+  "P4": "Under the latent the first-order arm is WORSE than the linear floor: first-order / lmmse_true > 1 in 16/16 seeds at b = 1 and b = 2, both M (E35's unregistered observation, 1.5-1.7 at two seeds)."
+ },
+ "predeclared_analysis": "augmented.csv merged over the two shards: per (b, M) the paired per-seed ratios with sixteen seeds; bootstrap intervals by Monte Carlo (200,000 draws, seed 20260912) on the mean of the per-seed log ratio, since 16 seeds cannot be enumerated; at_cap and converged read beside every risk (an augmented arm at cap is an upper bound).",
+ "seeds": {
+  "confirmatory": "0-15",
+  "dev": "10000 (smoke only)"
+ },
+ "provenance_note": "NOT a pre-data registration in the strict sense: E35's two-seed result is frozen and known, and P1 and P4 are written with that knowledge (P1 because E35's band was too tight for two seeds, P4 because E35 showed it unregistered). It is an extension of the seed count on the same driver, cells, arms and analysis; registered before any E35x cell ran.",
+ "resources": "cluster, defq, 2 x 24 cpus, 64G, 12 h; per cell about 1.5-2 laptop-hours for the two EM arms",
+ "status": "REGISTERED and PREDECLARED 2026-10-05 (evening), before submission; the user asked to 'send all the jobs we need'",
+ "registered": "2026-10-05"
+}
