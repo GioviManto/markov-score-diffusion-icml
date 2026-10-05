@@ -46,10 +46,10 @@
 
 \begin{center}
 {\Large\bfseries The $\phi^4$ field as a second laboratory}\\[0.25em]
-{\normalsize The derivation, the estimator, the measurements, and the first confirmatory results}\\[0.35em]
+{\normalsize The derivation, the estimator, the measurements, and the confirmatory results}\\[0.35em]
 {\footnotesize Jérôme's email of 1 October 2026 (after Marc) \textperiodcentered\ this report 1 October 2026 \textperiodcentered\ branch
 \code{claude/phi4-field-2026-10-01} \textperiodcentered\ revised 1 October (reversibility, the
-physicist's parametrisation) and 3 October (first confirmatory results, E35, E33's amendment~3)}
+physicist's parametrisation) and 3--5 October (every confirmatory result, E35, E33's amendment~3)}
 \end{center}
 
 \vspace{-0.4em}
@@ -61,10 +61,8 @@ snapshots of the one-dimensional stochastic Allen--Cahn ($\phi^4$) field, whose 
 nearest-neighbour Gibbs measure, with four arms tracked across temperature and lattice spacing (a
 learned pair energy, the Gaussian closure, the window CNN, the exact score), and the suggestion that
 with this concrete example the paper may be complete. Everything in this report was built, tested
-and registered on 1 October; the deterministic part (E32) has run and is frozen; on 3 October the
-site-energy arm of E33, the clean-data arm of E34 and the global-latent experiment E35 landed and were
-read against their registered predictions (\S\ref{sec:conf}); E33's other kernel arms and its networks
-are still in flight.
+and registered on 1 October; by 5 October every registered run had landed, been read against its
+predictions and been frozen (\S\ref{sec:conf}).
 
 \begin{enumerate}[leftmargin=1.4em,itemsep=0.15em]
 \item \st{The chain is exact and in the package} (\S\ref{sec:chain}). Its kernel is a Gaussian step
@@ -94,19 +92,21 @@ are still in flight.
 \item \st{E33 and E34} (\S\ref{sec:e33}): five kernel arms through exact BP, the window head and the
   transformer under both interfaces, the oracles; the physical statistics the consolidated note
   asks for; the clean-data interface. Eleven predictions were registered before any confirmatory
-  cell ran. The oracles have landed: P6 is confirmed on the per-seed test bundles (floor $0.269$,
-  $0.114$, $0.059$, $0.041$ along $\Th=0.3,0.5,1,2$; sixteen seeds, spread below $0.001$). The
-  pair-energy shards and E34's clean arm have landed; the four kernel shards failed on the finest
-  lattice and are being rerun under amendment~3 (a failed fit is a row, never a crash); the networks are queued.
-\item \st{First confirmatory results} (\S\ref{sec:conf}). Through the noise, the five-parameter site energy
-  reads the temperature within $10\,\%$ in $96$ of $96$ fits (seed spread $0.3$--$2.3\,\%$) and the barrier
-  within $20\,\%$ in $78$ of $80$ (the prediction fails as written at $\Th=1$, two seeds); at the base cell its
-  score risk is $0.033$ of the linear floor at $M=2048$ and already $0.27$ of it at $M=32$; samples from the
-  learned kernels reproduce the truth's kink density and domain length within $5.3\,\%$ and $2.9\,\%$. On
-  clean data the mixture is $6.5$--$53$ times the spline's risk on every cell, while the Legendre tilt parks
-  its invariant law outside the data in $38$ of its $96$ fits at $M=2048$. Under a global sign latent (E35)
-  the paper's first-order kernel is worse than the linear floor, and the same kernel on the augmented state
-  is $8.6$ and $17.9$ times better than it.
+  cell ran; one Legendre fit crashed the kernel jobs on the finest lattice, and amendment~3 (a failed fit
+  is a row counted against the prediction, never a crash) was registered before any kernel row was read.
+\item \st{The confirmatory results} (\S\ref{sec:conf}). The five-parameter site energy is the best
+  estimator on every cell at every size: through the noise it reaches $0.03$--$0.17$ of the linear floor at
+  $M=2048$ and beats the $25$-parameter spline by $43$--$59\,\%$; it reads the temperature within $10\,\%$
+  in $96/96$ fits (spread $0.3$--$2.3\,\%$) and the barrier within $20\,\%$ in $78/80$; its samples reproduce
+  the kink density and domain length within $5.3\,\%$ and $2.9\,\%$. The paper's mixture kernel converges onto
+  the linear floor (within $2\,\%$ at $M=2048$ on every cell), and its samples have up to $1.7$ times too many
+  kinks. The window head and the transformer are $4$ to $27$ times the spline's risk on every cell and, at
+  $\Th\ge0.5$, worse than the linear floor. The Legendre tilt is unreliable: it parks its invariant law
+  outside the data, is sometimes reducible on the grid, and failed $39$ fits on the finest lattice. Under a
+  global sign latent (E35) the first-order kernel is worse than the linear floor and the same kernel on the
+  augmented state is $8.6$ and $17.9$ times better. Of E33's eight predictions, P1, P3, P4 and P6 are
+  confirmed, P8 holds for the temperature and misses the barrier on one cell, and P2, P5 and P7 are falsified
+  as written, P7 because the site energy did better than predicted.
 \end{enumerate}
 
 Notation. $\Th$ is the physical temperature (the code and the cell names call it \code{T}), $h$ the lattice spacing,
@@ -688,15 +688,57 @@ coefficient bound first suspected, is the diagnostic: E33's amendment~2 reports 
 ``parked'' fits beside every verdict, before any confirmatory row exists. The role of the parsimonious
 exactly specified kernel passes to the site energy, which confines by construction.
 
-\section{Confirmatory results, 3 October}\label{sec:conf}
+\section{Confirmatory results}\label{sec:conf}
 
-Three sets of confirmatory runs have landed: E33's site-energy shards (the arm of amendment~1; $768$ rows,
-six cells, sixteen seeds, four sizes; jobs 678260--678263), E34's clean-data arm ($1536$ rows; job
-678166) and, on the laptop, E35. Each was read by the registered analysis (\code{tools/make\_field\_numbers.py},
-with the parked count of amendment~2 and the failure rule of amendment~3 beside every verdict); the
-tables below are generated from the same files by \code{tools/make\_field\_confirmatory\_tables.py}.
+{\sloppy Every registered run of the field laboratory has landed. E33: the four kernel arms ($3072$ rows, jobs
+681261--681265, rerun under amendment~3), the site energy of amendment~1 ($768$ rows, jobs
+678260--678263), the oracles and the two networks under both interfaces ($768$ rows, jobs 678092 and
+678094); six cells, sixteen seeds, sizes $M\in\{32,128,512,2048\}$ (the networks at $128$ and $2048$).
+E34: the clean-data arm ($1536$ rows, job 678166) and \code{physics\_learned} on the laptop. E35 on the
+laptop. Each was read by the registered analysis (\code{tools/make\_field\_numbers.py}, with the parked count
+of amendment~2 and the failure rule of amendment~3 beside every verdict) and frozen. Every table below is
+generated from the frozen files, by \code{tools/make\_field\_confirmatory\_tables.py}; none is typed by hand.\par}
 
-\subsection{The site energy through the noise (E33, P8)}
+\subsection{The scoreboard}
+
+\begin{table}[h]\centering\footnotesize
+\caption{E33, score risk over the linear floor (the covariance twin, E33's oracles), mean over sixteen seeds,
+through one noised view per sequence. Below one beats the Gaussian closure. Kernel arms by EM through exact
+BP, parameter counts in brackets; networks under the two interfaces. A superscript counts failed fits
+(amendment~3), excluded from the mean; ``failed'': all sixteen.}
+\label{tab:conf-score}
+\input{field-tables/conf-score.tex}
+\end{table}
+
+Table~\ref{tab:conf-score} is the answer to the email in one table. The five-parameter site energy is the best
+estimator on every cell at every size; at the base cell it reaches a thirtieth of the closure's risk from
+$2048$ sequences. The paper's mixture kernel converges \emph{onto} the linear floor from above, $1.00$ to $1.02$
+times it at $M=2048$ on every cell: on this chain its linear drift learns exactly the second-order structure
+and nothing else, and more data only remove its variance. The MDN, whose mean is state-dependent, beats the
+mixture everywhere but stays two to six times above the spline at $M=2048$. The networks are four to twenty-seven times above the spline at every cell and
+size, and at $\Th\ge0.5$ they do not reach even the linear floor at $M=2048$. The registered verdicts:
+\begin{itemize}[leftmargin=1.2em,itemsep=0.1em]
+\item \st{P1 confirmed}: mixture/spline above one in $16/16$ seeds on every cell ($2.5$ to $18$ at $M=2048$), the
+  gap widening, not closing, from $512$ to $2048$ (by $1.5$--$2.2$).
+\item \st{P2 falsified as written}: the spline beats the mixture $16/16$ at every $M\ge128$ on the four cells with
+  $\Th\le0.5$, not at $\Th=1$, $M=128$ ($12/16$) or $\Th=2$, $M=128$ and $512$ ($4/16$, $15/16$), where the
+  near-Gaussian marginal keeps the linear drift competitive; the Legendre tilt fails on the finest lattice. Its
+  second clause, Legendre within $20\,\%$ of the spline, holds only at the base cell: elsewhere the Legendre is
+  $29$--$43\,\%$ better ($\Th\ge0.5$) or $53\,\%$ worse ($h=0.5$).
+\item \st{P3 confirmed}: MDN/mixture $0.23$--$0.82$ at $M=2048$ on every cell.
+\item \st{P4 confirmed}: no network reaches the spline, $16/16$ everywhere.
+\item \st{P5 falsified}: the window head's risk at $M=2048$ \emph{falls} along the refinement ($0.149$, $0.127$, $0.118$);
+  what grows is its ratio to the spline ($9$, $11$, $18$) and to the floor ($0.55$, $0.78$, $1.20$): on the finest
+  lattice the window head is worse than the Gaussian closure.
+\item \st{P6 confirmed} (\S\ref{sec:e33}).
+\item \st{P7 falsified as written, favourably}: the site energy is not within $10\,\%$ of the spline at $M=2048$ but
+  $43$--$59\,\%$ below it, and below it at $M=32$ and $128$ on every cell (one seed short at the base cell, $M=32$).
+\item \st{P8}: the temperature within $10\,\%$ for both arms in all $192$ fits; the barrier in $78$ of $80$
+  (\S\ref{sec:conf-site}).
+\item \st{E34}: P3 and P4 confirmed, P2 falsified as written (\S\ref{sec:conf-clean}).
+\end{itemize}
+
+\subsection{The site energy through the noise (E33, P8)}\label{sec:conf-site}
 
 \begin{table}[h]\centering\footnotesize
 \caption{\code{em\_pair\_quartic}, risk-selected fits through one noised view per sequence. Middle columns:
@@ -707,28 +749,34 @@ oracles) at each $M$.}
 \input{field-tables/conf-pair.tex}
 \end{table}
 
-The temperature clause of P8 holds for this arm in every one of the $96$ fits; its spline half waits for
-the kernel shards. The barrier clause fails as written on one cell: at $\Th=1$ two of sixteen barriers
+The temperature clause of P8 holds in all $96$ site-energy fits and all $96$ spline fits ($\hat\Th/\Th$ means
+$0.999$--$1.009$). The barrier clause fails as written on one cell: at $\Th=1$ two of sixteen barriers
 ($0.163$ and $0.313$) leave the $20\,\%$ band, although the mean is $0.248$. At $\Th=1$ the barrier is a
 quarter of the thermal energy and its reading spreads three to five times more than at $\Th\le0.5$;
 the registered exclusion stopped at $\Th=2$, where the reading is indeed unresolved ($0.277\pm0.083$).
-The right half of Table~\ref{tab:conf-pair} is the result the email asked for in its simplest form: at
-$\Th=0.3$ five parameters learned from $32$ noised sequences already carry a quarter of the closure's risk,
-and from $2048$ a thirtieth of it; at $\Th\ge1$, where the marginal is nearly Gaussian, $32$ sequences are
-not enough to beat the closure and $128$ are.
+At $\Th=0.3$ five parameters learned from $32$ noised sequences already carry a quarter of the closure's
+risk; at $\Th\ge1$, where the marginal is nearly Gaussian, $32$ sequences are not enough to beat the closure
+and $128$ are.
 
-Sampled ancestrally from their own invariant law (E34's \code{physics\_learned}, unchanged, on the $24$
-fits it selects; unregistered for this arm, whose P4 names the spline and the mixture), the same kernels
-reproduce the field (Table~\ref{tab:conf-samples}).
+\subsection{Generated samples (E34, P4)}
 
 \begin{table}[h]\centering\footnotesize
-\caption{Generated over true statistic, $2048$ chains from each of the $24$ site-energy fits ($M=2048$,
-seeds 0--3); mean over the seeds and, in brackets, the largest deviation from one.}
-\label{tab:conf-samples}
-\input{field-tables/conf-samples.tex}
+\caption{Generated over true kink density and mean domain length, $2048$ chains sampled ancestrally from
+each risk-selected fit at $M=2048$ (seeds 0--3), mean over the seeds. P4 names the spline (within $15\,\%$) and
+the mixture (overshoots the kinks); the other rows are unregistered.}
+\label{tab:conf-p4}
+\input{field-tables/conf-p4.tex}
 \end{table}
 
-\subsection{The clean-data interface (E34, P2 and P3)}
+P4 holds on every cell: samples from the spline kernels reproduce the kink density and the domain length
+within $2\,\%$ on every cell mean, and samples from the mixture create $1.08$ to $1.70$ times too many kinks, with domains up to
+$31\,\%$ too short, worst where the wells are deepest. A linear drift cannot hold a domain. The site energy,
+the MDN and (where it fitted) the Legendre tilt reproduce both statistics within $5\,\%$ on every cell mean;
+for the site energy, fit by fit, the kink density is within $5.3\,\%$ and the domain length within $2.9\,\%$
+in all $24$ fits, and the coarse kinks, bimodality and variance within $13.3\,\%$, $2.9\,\%$ and $4.0\,\%$
+(\code{outputs/E34\_learned\_pair}).
+
+\subsection{The clean-data interface (E34, P2 and P3)}\label{sec:conf-clean}
 
 \begin{table}[h]\centering\footnotesize
 \caption{E34's clean-data fits at $M=2048$, sixteen seeds. ``parked'': fits whose first-site law has more
@@ -739,14 +787,16 @@ not return (the estimator then used $\Nn(0,1)$).}
 \end{table}
 
 P3 holds on every cell and every seed: with the channel removed, the mixture still sits $6.5$ to $53$
-times above the spline, so what limits it is the linear drift, not the noise. P2's clean clause (tilted
-kernels below $0.02$) holds for the spline everywhere and fails for the Legendre tilt on four cells, the
-failure of N-33 at scale: $38$ of its $96$ fits at $M=2048$ park their law outside the data, and $186$ of
-$384$ over all sizes. Reading the failures turned up a second face of the same pathology: some fitted
-Legendre kernels are \emph{reducible} on the grid, a bulk and a pocket with no transition between them, so
-that two different laws are exactly invariant; the eigensolve then cannot return a unique one, and on
-$20$ of the $384$ it raised. The spline (clean, $384$ fits) and the site energy (through noise, $384$) show
-neither in any confirmatory fit.
+times above the spline, so what limits it is the linear drift, not the noise. P2 fails as written. Clean data
+help the spline and the MDN (clean over noisy risk about $0.4$--$0.5$, nearly $16/16$), but not the mixture
+($0.90$--$0.99$: both fits share one biased limit) and not the Legendre tilt, whose clean fits are four to nine
+times \emph{worse}: $38$ of its $96$ clean fits at $M=2048$ park their law outside the data ($186$ of $384$
+over all sizes), the failure of N-33 at scale. Nor does the gap shrink with $M$ for the spline: the one-view
+channel costs it a factor of two to two and a half in risk at every size. Reading the failures turned up a second
+face of the parking: some fitted Legendre kernels are \emph{reducible} on the grid, a bulk and a pocket with no
+transition between them, so that two different laws are exactly invariant; the eigensolve then cannot return a
+unique one, and on $20$ of the $384$ clean fits it raised. The spline ($768$ fits, clean and noisy) and the site
+energy ($384$) show neither in any confirmatory fit.
 
 \subsection{Why E33's kernel shards failed, and amendment 3}
 
@@ -756,8 +806,10 @@ kernel steps to the grid edge with spread $0.002$, $\log K$ spans $1133$ nats, $
 underflow to zero in the E-step, and the forward and backward beliefs stop overlapping. The mixture and
 the spline complete the same cell. Before any kernel row was read, amendment~3 fixed the rule: a fit that
 raises in EM is a failed row, counted against every prediction it touches and never for one; the harness
-now records it instead of stopping. The rerun reuses the $76$ cells that had finished (the new code gives
-bit-for-bit the same rows on a test cell) and is queued for 6 October.
+now records it instead of stopping. The rerun reused the $76$ cells that had finished (the new code gives
+bit-for-bit the same rows on a test cell) and completed on 4--5 October. It recorded $39$ failed fits, every one
+the Legendre tilt on that cell ($3$, $6$, $14$ and $16$ of $16$ at $M=32$, $128$, $512$, $2048$); no other arm
+failed anywhere.
 
 \subsection{E35: a global latent and its repair}
 
@@ -799,7 +851,7 @@ symmetric $W_\theta$, reversibility & by construction: every tilted walk is reve
 $\Th$ read from the data & Corollary~\ref{cor:read}: $\hat\Th=\hat\gamma s^2/h$ from any kernel of the class; P8 \\
 Fourier BP for the SPDE (\S23) & not pursued: E24 found BP memory-bound (23.8\,\% of a sweep is the matmul), so a spectral step caps at $1.3\times$ \\
 ``minimal decisive experiment'' & E32 (floor across $\Th$, $h$) plus E33's window arm \\
-figures-first (\S28) & figs.~5 and 6 of the note are E32/E33's; the summary figure is pending the E33 data \\
+figures-first (\S28) & figs.~5 and 6 of the note are E32/E33's; Table~\ref{tab:conf-score} is the summary, the figure is not yet drawn \\
 global latent and its repair (\S8, fig.~7) & E35 (\S\ref{sec:conf}): bias measured, repair by state augmentation confirmed (P2, P3) \\
 subsampling a fine lattice & E36 (\S\ref{sec:stride}): kernel $K^s$ exact; P1, P2 confirmed \\
 \bottomrule

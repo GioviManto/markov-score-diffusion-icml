@@ -8,6 +8,10 @@ Writes complete tabular environments (no captions; the report carries those) to 
                       clean half) and the parked and eigensolve-failure counts (amendment 2)
     conf-samples.tex  E34 physics_learned on the pair fits (E34_learned_pair): generated / true statistics
     conf-e35.tex      E35 (E35/augmented.csv): the global latent and the augmented state, per seed
+    conf-score.tex    E33 complete (hpc_E33k_s*, hpc_E33q_s*, hpc_E33n_s*): every arm's risk over the linear floor,
+                      per cell, at M = 128 and M = 2048 (failed fits excluded from the mean and counted)
+    conf-p4.tex       E34 physics_learned on every arm (E34_learned, E34_learned_pair): generated / true kink
+                      density and mean domain length, cell means over the four seeds
 
 Every number in the report's confirmatory section comes from here; nothing is typed by hand.
 """
@@ -49,6 +53,10 @@ HEAD = {
                        r"& \multicolumn{2}{c}{mixture / spline} & spline & \multicolumn{3}{c}{Legendre tilt} \\",
                        r"\cmidrule(lr){2-3}\cmidrule(l){5-7}",
                        r"cell & ratio & $>1$ & risk & risk & parked & eig. \\", r"\midrule"],
+    "conf-score.tex": [r"\begin{tabular}{@{}l l r r r r r r@{}}", r"\toprule",
+                       r"$M$ & arm & $\Th=0.3$ & $\Th=0.5$ & $\Th=1$ & $\Th=2$ & $h=0.5$ & $h=0.25$ \\", r"\midrule"],
+    "conf-p4.tex": [r"\begin{tabular}{@{}l c c c c c c@{}}", r"\toprule",
+                    r"arm & $\Th=0.3$ & $\Th=0.5$ & $\Th=1$ & $\Th=2$ & $h=0.5$ & $h=0.25$ \\", r"\midrule"],
     "conf-e35.tex": [r"\begin{tabular}{@{}r r c c c c@{}}", r"\toprule",
                      r"$b$ & $M$ & first-order & augmented & linear floor & first / augmented \\", r"\midrule"],
 }
@@ -129,8 +137,55 @@ def e35_table():
     _write("conf-e35.tex", lines)
 
 
+ARM_LABEL = [("em_pair_quartic", "site energy (5)"), ("em_tilted_spline", "spline tilt (25)"), ("em_tilted_poly", "Legendre tilt (7)"),
+             ("em_mdn", "MDN"), ("em_mixture", "mixture (paper)"), ("ism:window", "window, ISM"), ("ism:transformer", "transformer, ISM"),
+             ("dsm:window", "window, DSM"), ("dsm:transformer", "transformer, DSM")]
+
+
+def score_table():
+    K = pd.concat([_load("outputs/hpc_E33k_s*/kernels.csv"), _load("outputs/hpc_E33q_s*/kernels.csv")], ignore_index=True)
+    K = K[K.selection == "risk"][["cell", "n_chains", "arm", "risk"]]
+    N = _load("outputs/hpc_E33n_s*/nets.csv")
+    N = N.assign(arm=N.arm.str.replace("ism_one_view", "ism").str.replace("dsm_one_corruption", "dsm") + ":" + N.arch)[["cell", "n_chains", "arm", "risk"]]
+    A = pd.concat([K, N], ignore_index=True)
+    floor = _load("outputs/hpc_E33o/oracles.csv").query("arm == 'lmmse_true'").groupby("cell").risk.mean()
+    mean = A.groupby(["n_chains", "arm", "cell"]).risk.mean()
+    nfail = A.groupby(["n_chains", "arm", "cell"]).risk.apply(lambda r: int(r.isna().sum()))
+    lines = []
+    for m in (128, 2048):
+        for i, (arm, lab) in enumerate(ARM_LABEL):
+            vals = []
+            for c in ORDER:
+                f = nfail.get((m, arm, c), 0)
+                v = mean.get((m, arm, c), np.nan)
+                vals.append("failed" if f == 16 else (f"{v / floor[c]:.3f}" + (f"$^{{{f}}}$" if f else "")))
+            lines.append(f"{m if i == 0 else ''} & {lab} & " + " & ".join(vals) + r" \\")
+        if m == 128:
+            lines.append(r"\midrule")
+    _write("conf-score.tex", lines)
+
+
+def p4_table():
+    d = pd.concat([_load("outputs/E34_learned/learned.csv"), _load("outputs/E34_learned_pair/learned.csv")], ignore_index=True)
+    t = d[d.arm == "truth"].drop_duplicates(["cell", "seed"]).set_index(["cell", "seed"])
+    a = d[d.arm != "truth"].copy()
+    for c in ("kink_density", "mean_domain"):
+        a[c] = [r[c] / t.loc[(r.cell, r.seed), c] for _, r in a.iterrows()]
+    lines = []
+    for arm, lab in ARM_LABEL[:5]:
+        for stat, sl in (("kink_density", "kinks"), ("mean_domain", "domain")):
+            vals = []
+            for c in ORDER:
+                v = a[(a.arm == arm) & (a.cell == c)][stat]
+                vals.append("failed" if v.isna().all() else f"{v.mean():.3f}")
+            lines.append(f"{lab}, {sl} & " + " & ".join(vals) + r" \\")
+    _write("conf-p4.tex", lines)
+
+
 if __name__ == "__main__":
     pair_table()
     clean_table()
     samples_table()
     e35_table()
+    score_table()
+    p4_table()
