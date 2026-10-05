@@ -15,6 +15,13 @@
  },
  "provenance_note": "NOT a pre-data registration in the strict sense: E36's two seeds are frozen and known (MDN 0.0229 against the site energy's 0.0404 on seed 0, 0.0933 against 0.0405 on seed 1). The 12/16 threshold and the at-cap rule for P2 are written with that knowledge; registered before any E36x cell ran.",
  "resources": "cluster, defq, 2 x 24 cpus, 64G, 23:50; the stride-1 cell with the MDN and the mixture to 2000 iterations is the longest, about 8 laptop-hours",
- "status": "REGISTERED and PREDECLARED 2026-10-05 (evening), before submission; the user asked to 'send all the jobs we need'",
- "registered": "2026-10-05"
+ "status": "REGISTERED and PREDECLARED 2026-10-05 (evening), before submission; the user asked to 'send all the jobs we need'; SUBMITTED 2026-10-05 (684971, 684972)",
+ "registered": "2026-10-05",
+ "hpc_runs": {
+  "deployment": "7e850ba-20261005T203204Z (hpc/.deploy_7e850ba.env)",
+  "submitted": "2026-10-05 ~21:35 BST",
+  "e36x-s0": "684971, defq, 24 cpus, 64G, 23:50 -> outputs/hpc_E36x_s0",
+  "e36x-s8": "684972, defq, 24 cpus, 64G, 23:50 -> outputs/hpc_E36x_s8",
+  "smoke": "both argument strings run on the laptop at --quick before deployment (E35x: 8 seeds, exit 0; E36x: one complete cell, then stopped)"
+ }
 }

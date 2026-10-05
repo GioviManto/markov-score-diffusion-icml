@@ -42,6 +42,13 @@ SHARDS = {
                            for a in ("ism_one_view", "dsm_one_corruption") for arch in ARCHS}) for k in (0, 8)},
     "hpc_E34c": ("clean.csv", ["cell", "seed", "n_chains", "arm"],
                  {(c, s, n, a) for c in CELLS for s in range(16) for n in SIZES for a in e34.SETTINGS["arms"]}),
+    # E35x / E36x (registered 5 Oct): the two laptop designs at sixteen seeds, two shards of eight each
+    **{f"hpc_E35x_s{k}": ("augmented.csv", ["b", "seed", "n_chains", "arm"],
+                          {(b, s, n, a) for b in (0.0, 1.0, 2.0) for s in range(k, k + 8) for n in (512, 2048)
+                           for a in ("em_first_order", "em_augmented", "lmmse_true", "isotropic")}) for k in (0, 8)},
+    **{f"hpc_E36x_s{k}": ("clean.csv", ["stride", "seed", "arm"],
+                          {(st, s, a) for st in (1, 2, 4) for s in range(k, k + 8)
+                           for a in ("em_pair_quartic", "em_tilted_spline", "em_mixture", "em_mdn")}) for k in (0, 8)},
 }
 
 

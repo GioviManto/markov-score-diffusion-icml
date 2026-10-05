@@ -16,6 +16,13 @@
  },
  "provenance_note": "NOT a pre-data registration in the strict sense: E35's two-seed result is frozen and known, and P1 and P4 are written with that knowledge (P1 because E35's band was too tight for two seeds, P4 because E35 showed it unregistered). It is an extension of the seed count on the same driver, cells, arms and analysis; registered before any E35x cell ran.",
  "resources": "cluster, defq, 2 x 24 cpus, 64G, 12 h; per cell about 1.5-2 laptop-hours for the two EM arms",
- "status": "REGISTERED and PREDECLARED 2026-10-05 (evening), before submission; the user asked to 'send all the jobs we need'",
- "registered": "2026-10-05"
+ "status": "REGISTERED and PREDECLARED 2026-10-05 (evening), before submission; the user asked to 'send all the jobs we need'; SUBMITTED 2026-10-05 (684969, 684970)",
+ "registered": "2026-10-05",
+ "hpc_runs": {
+  "deployment": "7e850ba-20261005T203204Z (hpc/.deploy_7e850ba.env)",
+  "submitted": "2026-10-05 ~21:35 BST",
+  "e35x-s0": "684969, defq, 24 cpus, 64G, 12:00 -> outputs/hpc_E35x_s0",
+  "e35x-s8": "684970, defq, 24 cpus, 64G, 12:00 -> outputs/hpc_E35x_s8",
+  "smoke": "both argument strings run on the laptop at --quick before deployment (E35x: 8 seeds, exit 0; E36x: one complete cell, then stopped)"
+ }
 }
