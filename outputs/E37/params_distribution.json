@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-10-05 22:03:21",
+  "git_commit": "db53da107c1336c5fcffbc94df313aedd0afcbb2",
+  "git_branch": "claude/phi4-field-2026-10-01",
+  "git_dirty": "?? outputs/E33_preview_laptop/\n?? outputs/E33_preview_laptop_pair/\n?? outputs/E34_preview_laptop/\n?? outputs/E34_preview_laptop_learned/\n?? outputs/E34_preview_laptop_pairclean/\n?? outputs/E37/\n?? outputs/logs/e32_2026-10-01.log\n?? outputs/logs/e32_fixed_h_2026-10-01.log\n?? outputs/logs/e33_preview_2026-10-01.log\n?? outputs/logs/e33_preview_M2048_2026-10-01.log\n?? outputs/logs/e33_preview_pair_2026-10-01.log\n?? outputs/logs/e33_preview_pair_M2048_2026-10-01.log\n?? outputs/logs/e34_clean_preview_2026-10-01.log\n?? outputs/logs/e34_learned_2026-10-05.log\n?? outputs/logs/e34_learned_pair_2026-10-03.log\n?? outputs/logs/e34_learned_preview_2026-10-01.log\n?? outputs/logs/e34_pairclean_preview_2026-10-01.log\n?? outputs/logs/e34_physics_2026-10-01.log\n?? outputs/logs/e35_2026-10-01.log\n?? outputs/logs/e36_2026-10-01.log\n?? outputs/logs/e36_rerun_2026-10-02.log\n?? outputs/logs/e37_2026-10-05.log\n?? reports/figures/fig-field-potential.png\n?? reports/figures/fig-field-sweep.png\n?? reports/figures/primer-em.png\n?? reports/figures/primer-field.png\n?? reports/figures/primer-fourier.png\n?? reports/figures/primer-hermite.png\n?? reports/figures/primer-kalman.png\n?? reports/figures/primer-langevin.png",
+  "source_archive_sha256": "",
+  "source_is_clean": false,
+  "revision_source": "git",
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "platform": "macOS-14.1.1-arm64-arm-64bit-Mach-O",
+  "hostname": "MacBook-Air-160.local",
+  "slurm_job_id": "",
+  "slurm_array_task_id": "",
+  "cpu_count": "8",
+  "blas_threads": "1",
+  "settings": {
+    "cells": [
+      "T0.3_h1_L32",
+      "T0.5_iso_L32",
+      "T1_iso_L32",
+      "T2_iso_L32",
+      "T0.3_h0.5_L64",
+      "T0.3_h0.25_L128"
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "n_chains": 2048,
+    "n_learned": 2048,
+    "grid_size": 401,
+    "half_width": 8.0,
+    "components": 8,
+    "mdn_components": 4,
+    "mdn_hidden": 32,
+    "kernels_csv": [
+      "outputs/hpc_E33k_s0/kernels.csv",
+      "outputs/hpc_E33q_s0/kernels.csv"
+    ]
+  },
+  "quick": false,
+  "workers": 4
+}

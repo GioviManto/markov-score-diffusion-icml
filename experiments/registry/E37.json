@@ -14,6 +14,29 @@
  },
  "provenance_note": "Written knowing E34's means (spline and site energy within 2% of the truth's domain length on cell means; the mixture's domains 0.69-0.96 of the truth's). The thresholds are set with that knowledge; the quantiles and KS distances have not been computed before this registration.",
  "resources": "laptop, 4 workers; sampling only (no fitting), minutes per cell",
- "status": "REGISTERED and PREDECLARED 2026-10-05 (evening), before any cell ran; the user asked that every job Jerome asked for be sent, and the note's section 24.5 lists the domain-length distribution",
- "registered": "2026-10-05"
+ "status": "FROZEN E37 2026-10-05T21:05:29Z; REGISTERED and PREDECLARED 2026-10-05 (evening), before any cell ran; the user asked that every job Jerome asked for be sent, and the note's section 24.5 lists the domain-length distribution; COMPLETE and read 2026-10-05: P1 and P2 falsified as written (P1 by a KS threshold below the sampling noise at T >= 1; P2 by the size of the tail deficit)",
+ "registered": "2026-10-05",
+ "outcome": {
+  "read": "2026-10-05 ~22:20 BST, outputs/E37/distribution.csv (24 cells, 120 fitted kernels; run at db53da1, laptop, 4 workers); seed means over seeds 0-3, quantiles relative to the truth's paired by seed.",
+  "P1": "FALSIFIED AS WRITTEN, by a miscalibrated threshold. Quantiles: spline and site energy within 10% of the truth's q10, q50, q90 on every cell except the spline's q10 at h = 0.5 (1.104; one lattice step of 0.5 on a q10 of about 5). KS below 0.05 on the four cells with T <= 0.5, but not at T = 1 (site energy 0.053) and T = 2 (spline 0.065, site energy 0.073). Those cells have only ~675 and ~350 domains per sample, and the KS between two INDEPENDENT EXACT samples of the same size is 0.036 (max 0.060) at T = 1 and 0.057 (max 0.080) at T = 2 (unregistered calibration, 4 replicate pairs per cell): the 0.05 band sat below the sampling noise. Every two-sample KS p-value of the spline and site-energy rows is 0.36-0.88. Reading: their domain-length distributions are statistically indistinguishable from exact sampling on every cell.",
+  "P2": "FALSIFIED AS WRITTEN on its second clause. The mixture's KS distance exceeds 0.05 on all three T = 0.3 cells (0.079-0.085, four to five times the exact-vs-exact 0.017-0.019), but its q90 is 12-13% below the truth's (0.874-0.885), not more than 15%; its MEDIAN is 14-18% short (0.82-0.86). The direction is right, the size of the tail deficit was overstated.",
+  "unregistered": "MDN (quantiles within 6%) and Legendre where it fitted (within 9%; q10 1.083 at h = 0.5) reproduce the distribution with KS inside the exact-vs-exact range. Away from the deep wells the mixture is close too: at T = 0.5 and T = 2 its KS is inside the exact-vs-exact range (0.021, 0.069), at T = 1 marginally above it (0.062 against a reference maximum of 0.060). Its clear failure is confined to the T = 0.3 cells, where the linear drift cannot hold a domain."
+ },
+ "frozen_outputs": {
+  "outputs/E37/all.csv": "1f1c4f02debb1b2205042130b1b8130c464f9dfc7d35f4526a2a9506a070b533",
+  "outputs/E37/distribution.csv": "79d629ecdc204e8d2beb2b10641613d7508cad4c3742f2afda3630a1ed53487d",
+  "outputs/E37/domains.csv": "d9a6802bd9a207a5e43e38037db839d252936819bb33db7ebe2d3fdd09fa7abb",
+  "outputs/E37/params_distribution.json": "198932cd87b7f9385ce1673a16321d9dfee6bbb442348a15184f53ca5cf7e81c"
+ },
+ "frozen_at": {
+  "E37": "2026-10-05T21:05:29Z"
+ },
+ "frozen_commit": {
+  "E37": "db53da107c1336c5fcffbc94df313aedd0afcbb2"
+ },
+ "frozen_run_commits": {
+  "E37": [
+   "db53da1"
+  ]
+ }
 }

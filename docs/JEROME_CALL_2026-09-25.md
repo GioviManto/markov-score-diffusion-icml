@@ -1199,3 +1199,5 @@ one lookup away.
   cells and then exited 2 on a comparison impossible on the cluster; it is a post-fetch step
   and is no longer run inside the job — but it is still not allowed to pass when its references
   are missing.
+
+- **2026-10-05** — N-29 resolved for the two cost answers: the exclusive-node reruns landed (sacct AllocCPUS = the whole node). **Q7** stands: BP / transformer = 12.5x on CPU (two different nodes) and 15.1x on the H200 (hpc_E24x, hpc_E24x_gpu). **Q8** stands: the ancestral sampler is 731x cheaper than the reverse SDE at equal error (200 steps, B = 2048, 8 BLAS threads; was 725x) and 1465x cheaper than the 400-step SDE (hpc_E27x); single-threaded the 400-step ratio is 2343x, so every cost citation carries its thread count. From the consolidated note: the domain-length distribution (section 24.5) is E37; the global-latent repair and the subsampling protocol at sixteen seeds are E35x and E36x (submitted).

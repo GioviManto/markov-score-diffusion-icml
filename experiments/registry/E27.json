@@ -66,6 +66,7 @@
   "read": "2026-10-05 ~21:30 BST. Fetched e27x-cost (676664, cnode07, deployment 9a55030, 8 BLAS threads) and the exclusive e27-cost-big (676603, cnode06, deployment 4aa497e, 1 BLAS thread); both EXCLUSIVE (AllocCPUS 40 = the whole node). cost.csv: sec_per_seq per (batch, arm).",
   "ratio reverse_sde_400 / ancestral_true": "8 threads (hpc_E27x): 1510x at B = 128, 1446x at 512, 1465x at 2048. 1 thread (hpc_E27big_excl): 2343x at 2048, 2066x at 8192, 1843x at 32768. The ancestral sampler costs 0.15-0.21 ms/seq in every configuration; the 400-step reverse SDE costs 216-227 ms/seq at 8 threads and 389-395 at 1 thread, so the ratio depends on the declared thread count, not on contention: two exclusive runs of the same cell differ by 1.8x for exactly this reason.",
   "citable": "1465x at B = 2048 with 8 BLAS threads (the cited contaminated 1436x is within 2% of it); 1843-2343x single-threaded. Any citation states the thread count.",
-  "N-29 status": "resolved for E27's cost table."
+  "N-29 status": "resolved for E27's cost table.",
+  "Q8 equal-error ratio (200 SDE steps, the resolution at which the reverse SDE first matches the ancestral sampler)": "731x at B = 2048 with 8 BLAS threads on the exclusive node (contaminated: 725x); 751x at 128, 722x at 512. The call ledger's '725x cheaper at equal error' stands to within 1%."
  }
 }
