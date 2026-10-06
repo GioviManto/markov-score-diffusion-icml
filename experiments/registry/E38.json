@@ -12,7 +12,7 @@
   "confirmatory": "deterministic inputs (E24's rng tags)",
   "dev": "--quick"
  },
- "resources": "cluster, medium_cpu, 2 cpus, 32G, 2 h (one measurement at a time)",
+ "resources": "laptop (primary, task_info-sampled) and cluster job 686874 (cross-check, statm-sampled)",
  "status": "REGISTERED and PREDECLARED 2026-10-06, before any measurement; the last quantity in the note's section 9.8 not yet measured; SUBMITTED 2026-10-06 (686874)",
  "registered": "2026-10-06",
  "design_refinement": "2026-10-06, before any measurement: the method first written (ru_maxrss before and after) is a high-water mark and read +0.0 MB for a small transformer in the laptop smoke run, because the import had peaked higher; replaced by sampling the current RSS, which needs Linux's /proc/self/statm, hence a small cluster job instead of the laptop. Predictions unchanged.",
@@ -20,5 +20,6 @@
   "deployment": "b3e9b34-20261006T202119Z (hpc/.deploy_b3e9b34.env)",
   "e38-memory": "686874, medium_cpu, 2 cpus, 32G, 2:00 -> outputs/hpc_E38",
   "submitted": "2026-10-06 ~22:20 BST"
- }
+ },
+ "design_refinement_2": "2026-10-06 ~22:45 BST, before any measurement: the cluster job waits for priority (estimated start 8 Oct 05:52), and macOS exposes the current resident size through task_info (MACH_TASK_BASIC_INFO; verified: +128.0 MB for a 128 MB array, 1.4 us per reading). The same sampling therefore runs on the laptop now, method 'task_info-sampled', and that run is the one read against P1 and P2. Job 686874 (Linux, statm) stays queued as a cross-platform check; the two allocators may differ, and the comparison is reported, not used to choose. Predictions unchanged."
 }

@@ -11,8 +11,9 @@ sequences is made, then the measured call runs while a background thread samples
 /proc/self/statm every 0.5 ms (Linux; numpy and torch release the GIL inside their kernels, so the sampler runs);
 the reading is the sampled peak minus the resident memory just before the call. ru_maxrss alone would not do: it is
 a high-water mark, and an import or warm-up that peaked higher hides a smaller call entirely (it read +0.0 MB for a
-small transformer in the smoke run). On macOS, which has no statm, the worker falls back to the ru_maxrss increment
-and says so in the `method` column; the registered numbers come from the Linux run.
+small transformer in the smoke run). On macOS, which has no statm, the same sampling reads the current resident size
+from the kernel's task_info (MACH_TASK_BASIC_INFO, through ctypes); the `method` column says which reader produced each
+row, and only a system with neither falls back to the ru_maxrss increment.
 
 PREDECLARED (registry E38.json, written before any measurement):
   P1  grid BP's peak inference memory is linear in the batch and in the length: log-log slope in [0.8, 1.2] over
@@ -48,17 +49,45 @@ def _maxrss_mb() -> float:
     return r / 2**20 if sys.platform == "darwin" else r / 2**10   # bytes on macOS, kilobytes on Linux
 
 
+def _mach_rss():
+    """The current resident size (MB) on macOS, from the kernel's task_info (MACH_TASK_BASIC_INFO), or None."""
+    import ctypes
+    import ctypes.util
+    try:
+        libc = ctypes.CDLL(ctypes.util.find_library("c"))
+        task = ctypes.c_uint.in_dll(libc, "mach_task_self_")
+    except (OSError, ValueError):
+        return None
+
+    class _TV(ctypes.Structure):
+        _fields_ = [("seconds", ctypes.c_int), ("microseconds", ctypes.c_int)]
+
+    class _Info(ctypes.Structure):
+        _fields_ = [("virtual_size", ctypes.c_uint64), ("resident_size", ctypes.c_uint64), ("resident_size_max", ctypes.c_uint64),
+                    ("user_time", _TV), ("system_time", _TV), ("policy", ctypes.c_int), ("suspend_count", ctypes.c_int)]
+
+    def read() -> float:
+        info, cnt = _Info(), ctypes.c_uint(ctypes.sizeof(_Info) // 4)
+        if libc.task_info(task, 20, ctypes.byref(info), ctypes.byref(cnt)) != 0:
+            raise OSError("task_info failed")
+        return info.resident_size / 2**20
+    return read
+
+
 class _PeakSampler:
-    """Samples the current RSS (MB) from /proc/self/statm in a thread; `peak` after stop()."""
+    """Samples the current RSS (MB) in a thread -- /proc/self/statm on Linux, task_info on macOS; `peak` after stop()."""
 
     def __init__(self, period: float = 5e-4):
         import os
         import threading
         self._page = os.sysconf("SC_PAGE_SIZE") / 2**20
+        self._mach = None if Path("/proc/self/statm").exists() else _mach_rss()
         self.period, self.peak, self._stop = period, 0.0, threading.Event()
         self._t = threading.Thread(target=self._loop, daemon=True)
 
     def now(self) -> float:
+        if self._mach is not None:
+            return self._mach()
         with open("/proc/self/statm") as f:
             return int(f.read().split()[1]) * self._page
 
@@ -77,12 +106,13 @@ class _PeakSampler:
 def _measure(call) -> dict:
     """Peak extra memory of call(): statm sampling on Linux, the ru_maxrss increment elsewhere."""
     gc.collect()
-    if Path("/proc/self/statm").exists():
+    if Path("/proc/self/statm").exists() or _mach_rss() is not None:
         s = _PeakSampler()
         before = s.now()
         with s:
             call()
-        return dict(method="statm-sampled", base_mb=before, peak_mb=s.peak, increment_mb=max(s.peak - before, 0.0))
+        method = "task_info-sampled" if s._mach is not None else "statm-sampled"
+        return dict(method=method, base_mb=before, peak_mb=s.peak, increment_mb=max(s.peak - before, 0.0))
     before = _maxrss_mb()
     call()
     after = _maxrss_mb()
