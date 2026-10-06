@@ -1,0 +1,19 @@
+{
+ "id": "E38",
+ "script": "experiments/e38_memory.py",
+ "hypothesis": "The consolidated note (section 9.8) lists memory use among what a fair runtime comparison must report; E24 measured time only. E38 measures the peak resident memory of one posterior-mean call for exact grid BP and for the six networks of E24 (the same constructors, the same LaplaceAR1 inputs), and of one training step for each family, at the field's refinement lengths.",
+ "design": "Each measurement in a FRESH subprocess: inputs built and a warm-up call on a tiny batch made first, then the measured call runs while a background thread samples the CURRENT resident memory from /proc/self/statm every 0.5 ms; the reading is the sampled peak minus the resident memory just before the call. Inference: arms bp_grid (N_g = 401, chunk = None, i.e. one pass, as E24 times it) and E24's NET_ARMS; L in (32, 64, 128), B in (128, 512, 2048); bp_grid also at N_g in (201, 801) for L = 32, B = 512. Training: one EM E-step of the mixture kernel (chunk 256, the protocol's) over M in (512, 2048) chains at L = 32, and one optimiser step of each network at the protocol's batch size 64. CPU, on a Linux cluster node, one measurement at a time (memory, unlike time, is not perturbed by other processes).",
+ "predeclared_predictions": {
+  "P1": "Grid BP's peak inference memory grows linearly in the batch and in the length: the log-log slope over B = 128 -> 2048 (L = 32) and over L = 32 -> 128 (B = 512) lies in [0.8, 1.2]; that is, it stores O(B L N_g) messages and nothing larger.",
+  "P2": "At the operating point (B = 512, L = 32, N_g = 401) exact grid BP needs more peak memory per posterior-mean call than every one of the six networks."
+ },
+ "predeclared_analysis": "memory.csv: per (kind, arm, L, B, N_g) the peak increment in MB; slopes by ordinary least squares on log-log; the operating-point comparison as ratios bp_grid / network.",
+ "seeds": {
+  "confirmatory": "deterministic inputs (E24's rng tags)",
+  "dev": "--quick"
+ },
+ "resources": "cluster, medium_cpu, 2 cpus, 32G, 2 h (one measurement at a time)",
+ "status": "REGISTERED and PREDECLARED 2026-10-06, before any measurement; the last quantity in the note's section 9.8 not yet measured",
+ "registered": "2026-10-06",
+ "design_refinement": "2026-10-06, before any measurement: the method first written (ru_maxrss before and after) is a high-water mark and read +0.0 MB for a small transformer in the laptop smoke run, because the import had peaked higher; replaced by sampling the current RSS, which needs Linux's /proc/self/statm, hence a small cluster job instead of the laptop. Predictions unchanged."
+}
