@@ -112,11 +112,12 @@ def main():
     ax.set_ylabel("efficient information per sequence")
     # These two labels used to be placed by hand above their curves and landed on them. Ride
     # the curve instead, on the near-flat small-t section where the two series are three
-    # decades apart; the guide lines carry the degree, so the names can stay short.
+    # decades apart. Named by statistical order first (the note's appendix F item 3: label
+    # information by second- and fourth-order mode, not only by model parameter).
     lab_rho = m_lab["rho"]; lab_beta = m_lab["beta"]
-    fs.label_on_curve(ax, lab_rho[0], lab_rho[1], r"$\rho$ (correlation)", at_x=0.16,
+    fs.label_on_curve(ax, lab_rho[0], lab_rho[1], r"second order, $\rho$", at_x=0.16,
                       color=fs.CAT[0], fontsize=7.5, offset=5.0, zorder=6)
-    fs.label_on_curve(ax, lab_beta[0], lab_beta[1], r"$\beta$ (shape)", at_x=0.16,
+    fs.label_on_curve(ax, lab_beta[0], lab_beta[1], r"fourth order, $\beta$", at_x=0.16,
                       color=fs.CAT[1], fontsize=7.5, offset=5.0, zorder=6)
     # the line-style key is a legend with real handles, not a sentence in the panel
     from matplotlib.lines import Line2D
