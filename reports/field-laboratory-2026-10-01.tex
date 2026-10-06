@@ -807,7 +807,12 @@ is at $48\,\%$ and the window head climbs to the floor as $h$ falls, as the note
 runtime--accuracy frontier therefore has two ends and nothing between them: the networks own the cheap end, the
 structured kernels the accurate one, and the mixture sits on the floor at BP's cost. The note guessed that EM-BP
 might be cheaper to train though slower per sample; on training the guess does not hold here: at $M=2048$ a network
-trained in $9$ to $22$ minutes on these nodes and an EM fit took $35$ minutes to five hours.
+trained in $9$ to $22$ minutes on these nodes and an EM fit took $35$ minutes to five hours. Memory, the last item on the
+note's list, was measured by E38 (peak resident memory of one call, sampled during the call, each in a fresh
+process): grid BP needs about five message-sized arrays, $266$\,MB per posterior-mean call at $B=512$, $L=32$,
+$N_g=401$, linear in $B$, $L$ and $N_g$ (slopes $0.96$, $0.86$, $0.99$; both predictions confirmed), against
+$2$ to $147$\,MB for the six networks; an EM E-step stays at about $250$\,MB whatever $M$, because it runs in
+chunks of $256$ chains, while a network training step takes $2$ to $66$\,MB.
 
 \subsection{The clean-data interface (E34, P2 and P3)}\label{sec:conf-clean}
 
