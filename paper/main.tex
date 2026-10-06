@@ -38,6 +38,8 @@
 \newtheorem{corollary}[theorem]{Corollary}
 \theoremstyle{definition}
 \newtheorem{assumption}[theorem]{Assumption}
+% cleveref on Overleaf (TeX Live 2025) has no default name for this type; without it every \cref{ass:...} warns
+\crefname{assumption}{Assumption}{Assumptions}
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 

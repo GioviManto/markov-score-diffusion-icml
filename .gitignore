@@ -42,3 +42,4 @@ icml-jerome/
 # They stay on the laptop and on the cluster; nothing is frozen against them.
 outputs/hpc_E22c/shapes.csv
 outputs/hpc_E23/representation.csv
+.overleaf-paper/
