@@ -1,0 +1,19 @@
+cell,L,arm,label,risk_over_floor,infer_ms_per_seq,train_sec,n
+T0.3_h1_L32,32,em_pair_quartic,site energy,0.033469,0.51035,2084.1,16
+T0.3_h1_L32,32,em_tilted_spline,spline tilt,0.060146,0.51035,2304.1,16
+T0.3_h1_L32,32,em_mdn,MDN,0.22753,0.51035,3734,16
+T0.3_h1_L32,32,em_mixture,mixture,1.0045,0.51035,3759.1,16
+T0.3_h1_L32,32,dsm:window,window,0.48421,0.0041928,550.16,16
+T0.3_h1_L32,32,dsm:transformer,transformer,0.53346,0.034109,755.98,16
+T0.3_h0.5_L64,64,em_pair_quartic,site energy,0.039946,1.0093,2854,16
+T0.3_h0.5_L64,64,em_tilted_spline,spline tilt,0.07254,1.0093,2610.4,16
+T0.3_h0.5_L64,64,em_mdn,MDN,0.3095,1.0093,7161.6,16
+T0.3_h0.5_L64,64,em_mixture,mixture,1.01,1.0093,7663.5,16
+T0.3_h0.5_L64,64,dsm:window,window,0.70078,0.010043,1076.7,16
+T0.3_h0.5_L64,64,dsm:transformer,transformer,0.62177,0.10176,1293.2,16
+T0.3_h0.25_L128,128,em_pair_quartic,site energy,0.032309,2.0158,4835.7,16
+T0.3_h0.25_L128,128,em_tilted_spline,spline tilt,0.068032,2.0158,4578.6,16
+T0.3_h0.25_L128,128,em_mdn,MDN,0.41969,2.0158,12323,16
+T0.3_h0.25_L128,128,em_mixture,mixture,1.0162,2.0158,18033,16
+T0.3_h0.25_L128,128,dsm:window,window,1.0305,0.029267,772.28,16
+T0.3_h0.25_L128,128,dsm:transformer,transformer,0.77996,0.32073,1246.4,16
