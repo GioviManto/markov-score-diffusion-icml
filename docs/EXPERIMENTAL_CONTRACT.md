@@ -1,5 +1,8 @@
 # Experimental contract: one frozen protocol, one varied factor, frozen outputs
 
+Every reported metric is defined, with its formula and the code that computes it, in `docs/METRICS.md`; every symbol in
+`docs/NOTATION.md`.
+
 This document states how a number gets into the paper. It is enforced by code
 (`experiments/protocol.py`, `tools/freeze.py`, `tools/registry.py --check`,
 `tools/check_manuscript.py`) and by CI; the prose here is the rationale.
