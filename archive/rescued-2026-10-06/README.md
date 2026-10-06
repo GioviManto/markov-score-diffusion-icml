@@ -31,7 +31,6 @@ originals (each copy re-checked against the Trash).
 | `overleaf-bundle-2026-09-02/thesis/chapters/appJ-aggregation.tex` | an earlier draft appendix found nowhere else |
 | `overleaf-bundle-2026-09-02/thesis/main.tex`, `preamble.tex` | the 2 September thesis driver and preamble (86 and 134 lines from the submitted ones) |
 | `overleaf-bundle-2026-09-02/compendium/main.tex` | the 2 September compendium driver |
-
 | `thesis-worktree-2026-09-13/chapters/appA-reproducibility.tex`, `preamble.tex`, `uncommitted.patch` | an UNCOMMITTED rewrite of the thesis's Appendix A (13 Sep, 20:32; 100 lines added, 91 removed, only 2 of the added lines in the submitted thesis) and a one-line preamble change, left in the thesis repo's Claude worktree `claude/thesis-compression-concise-76c12d` (base 96722dc). Kept here rather than pushed because the thesis repository is public; the patch applies to that base. |
 
 These are records: nothing in the build reads them.
