@@ -39,6 +39,7 @@ from markov_score.utils import ensure_dir, rng_for, write_csv, write_json  # noq
 SETTINGS = dict(
     lengths=(32, 64, 128), batches=(128, 512, 2048), grids=(201, 401, 801), base_grid=401, base_batch=512, base_length=32,
     em_sizes=(512, 2048), net_train_steps=20, level_index=6,
+    skip=(),                     # (L, B) inference cells left out, e.g. ((64, 2048), (128, 2048)) on an 8 GB laptop
 )
 QUICK = dict(lengths=(16,), batches=(32,), grids=(101,), base_grid=101, base_batch=32, base_length=16, em_sizes=(64,),
              net_train_steps=2)
@@ -184,6 +185,8 @@ def part_memory(cfg, out, workers):
     specs = []
     for L in cfg["lengths"]:
         for B in cfg["batches"]:
+            if (L, B) in {tuple(x) for x in cfg["skip"]}:
+                continue
             for arm in ["bp_grid", *nets]:
                 specs.append(dict(kind="infer", arm=arm, L=L, B=B, N_g=cfg["base_grid"], level_index=lv))
     for ng in cfg["grids"]:
@@ -196,7 +199,10 @@ def part_memory(cfg, out, workers):
                           level_index=lv, steps=cfg["net_train_steps"]))
     rows = []
     for i, s in enumerate(specs):
-        r = _run(s)
+        try:
+            r = _run(s)
+        except RuntimeError as exc:                     # a worker that died (out of memory, say) is a row, not the end
+            r = dict(s, method="failed", base_mb=float("nan"), peak_mb=float("nan"), increment_mb=float("nan"), error=str(exc)[-300:])
         rows.append(r)
         print(f"  [E38] {i + 1}/{len(specs)} {r['kind']:5s} {r['arm']:11s} L={r['L']:3d} B={r['B']:4d} N_g={r['N_g']}: "
               f"+{r['increment_mb']:8.1f} MB (base {r['base_mb']:.0f}, {r['method']})", flush=True)
