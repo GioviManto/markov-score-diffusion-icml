@@ -10,8 +10,35 @@
   "P3": "Speed under refinement: the speed-up (dense time / FFT time) increases monotonically over N_g = 201, 401, 801, 1601, 3201 and exceeds 1 at N_g = 3201."
  },
  "predeclared_analysis": "fft.csv: per (part, N_g, t) the errors; per (N_g, method) the median wall time. Read by tools/make_fft_numbers.py (verdicts, reports/numbers/fft_predictions.csv).",
- "seeds": {"confirmatory": "deterministic inputs (rng tags e40-truth, e40-noise)", "dev": "--quick"},
+ "seeds": {
+  "confirmatory": "deterministic inputs (rng tags e40-truth, e40-noise)",
+  "dev": "--quick"
+ },
  "resources": "laptop, single-threaded, minutes",
- "status": "REGISTERED and PREDECLARED 2026-10-06, after the accuracy pilot recorded above and before any timing or confirmatory run",
- "registered": "2026-10-06"
+ "status": "FROZEN E40 2026-10-06T21:40:10Z; REGISTERED and PREDECLARED 2026-10-06, after the accuracy pilot and before any timing; COMPLETE and read 2026-10-06 (laptop, single core): P1, P2 confirmed; P3 confirmed for monotone growth, FALSIFIED for 'exceeds 1 at N_g = 3201'",
+ "registered": "2026-10-06",
+ "outcome": {
+  "read": "2026-10-06 ~22:50 BST, outputs/E40/fft.csv (laptop at c3528c2, single-threaded, otherwise idle), tools/make_fft_numbers.py",
+  "P1": "CONFIRMED: at (401, 8) FFT-BP's pooled score error against dense grid BP is 6.7e-4 at the worst level (t = 0.05) and 4.9e-6 at t = 3; second order: 401 -> 1601 divides it by 16.0 at every level (smallest ratio 15.98). For scale, dense grid BP at (401, 8) is within 1.1e-5 of the (1601, 8) reference at the worst level: the FFT path's interpolation error is about 60 times the dense recursion's own grid error, and the FFT path needs N_g = 3201 (1.0e-5) to match dense BP at 401.",
+  "P2": "CONFIRMED: at N_g = 401 FFT-BP takes 0.979 s against dense grid BP's 0.168 s for 512 chains of 32 sites: speed-up 0.17, i.e. 5.8 times SLOWER, inside the predicted cap (<= 1.3).",
+  "P3": "Monotone growth CONFIRMED (0.15, 0.17, 0.22, 0.29, 0.45 at N_g = 201, 401, 801, 1601, 3201); 'exceeds 1 at N_g = 3201' FALSIFIED (0.45: dense 4.82 s, FFT 10.72 s).",
+  "followup_unregistered": "tools/e40_followup_tuned.py -> outputs/E40_followup/tuned.csv, run after the read and labelled information only: the registered FFT length was the next power of two >= 3 N_g - 2, twice what wrap-around needs (2 N_g - 1), and the interpolation a fancy-indexed gather. With scipy.fft.next_fast_len(2 N_g - 1) and a sparse gather the same posterior means (to 1.3e-12) come 2.4-2.7 times faster: speed-up 0.41, 0.45, 0.55, 0.76, 1.03 over the same grids. So even tuned, the FFT transition is 2.2 times slower than the dense one at the operating grid and breaks even near N_g = 3200; at equal accuracy (it needs a grid about eight times finer, second order, against the dense recursion's factor of about 29 per doubling of N_g on this chain (3.2e-4 at 201, 1.1e-5 at 401)) it loses at every size measured.",
+  "why": "Not the note's operation count, which is right (O(N_g log N_g) against O(N_g^2) per step): at these sizes the dense transition is one matrix product in the machine's BLAS (Apple Accelerate on this laptop), the fastest operation the hardware has, while the FFT path is two real FFTs and an interpolation per step. E24's anatomy had already shown the transition is 24% of a sweep at N_g = 401. What the FFT would pay for is a grid of thousands of points; E32 and E39 show 401 is already at the quadrature floor for every chain used."
+ },
+ "frozen_outputs": {
+  "outputs/E40/fft.csv": "80b1cfff7544d456ce2fb73db4b38df2143aa57257024586f3cc065531ca31f1",
+  "outputs/E40/params_accuracy.json": "5806ebe46b0f3ac6a90a3c49f2c214c6e6e1d20f6fcecdbbcf5d350e7206c891",
+  "outputs/E40/params_timing.json": "8b469b579612b329c10d466e50cf333dcd993f81fe8d7ef25b309d0ba160bc59"
+ },
+ "frozen_at": {
+  "E40": "2026-10-06T21:40:10Z"
+ },
+ "frozen_commit": {
+  "E40": "c3528c24873ab29fc500eefc8e979760aadcea67"
+ },
+ "frozen_run_commits": {
+  "E40": [
+   "c3528c2"
+  ]
+ }
 }
