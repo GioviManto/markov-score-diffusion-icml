@@ -1,0 +1,392 @@
+% ============================================================
+% Chapter 10 --- Learning the innovation law: EM for non-Gaussian chains
+%
+% Original work of this thesis. Builds directly on the grid-BP machinery
+% of Chapter~\ref{ch:laplace} (\ref{sec:l-grid}), where the innovation law
+% was assumed known. Here it is estimated. Numerical values are those of
+% research/nongaussian-bp; full derivations and the complete experiment
+% suite (27 experiments) are in that package's compendium and paper.
+% ============================================================
+
+\chapter{Learning the Innovation Law: EM for Non-Gaussian Chains}
+\label{ch:em-method}
+
+Chapters~\ref{ch:gaussian} and~\ref{ch:laplace} treated the transition law of
+the clean chain as given: Gaussian in the first case, a fixed non-Gaussian
+family in the second. Belief propagation then computed the diffusion score
+exactly, in the Gaussian case, or against a validated numerical reference, in
+the Laplace case. Neither chapter asked where the transition law itself comes
+from. This chapter does. The clean data generating process is the same
+first-order Markov chain of \eqref{eq:l-chain-prior}, but the innovation law
+is now a member of an estimated family, and the question is how much the
+Markov structure this thesis has exploited throughout still helps once part of
+the model must be learned rather than assumed, and what breaks first when the
+assumptions themselves are wrong.
+
+\begin{quote}
+How much does known Markov structure reduce the statistical and computational
+burden of learning a diffusion score, and what is lost when the transition law
+or the continuous messages must be approximated?
+\end{quote}
+
+The chapter answers the \emph{how} --- the estimator, what is exact in it and
+what is numerical, and what the implementation was checked against.
+Chapter~\ref{ch:em-results} answers the \emph{how much}.
+
+\section{Model: an estimated mixture innovation}\label{sec:em-model}
+
+The clean chain is the one of \eqref{eq:l-chain-prior}, in the index
+convention of this chapter,
+\begin{equation}
+  a_1 \sim \Nd(0,1), \qquad a_i = \alpha\, a_{i-1} + \varepsilon_i,
+  \qquad i = 2,\dots,n,
+  \label{eq:em-chain}
+\end{equation}
+with innovations $\varepsilon_i$ i.i.d., mean zero, variance
+$\ivar = 1-\alpha^2$ --- the same Gaussian initial state and the same
+variance-matching that Chapter~\ref{ch:laplace} used --- but now drawn from
+a member of a \emph{parametric family} rather than a fixed law. Forward noising is the coordinatewise
+Ornstein--Uhlenbeck channel of Section~\ref{sec:ou},
+$x = e^{-t} a + \sqrt{\Deltat}\,\xi$, unchanged from every earlier chapter.
+
+The estimated family is a $C$-component Gaussian mixture on the innovation.
+It is the transition kernel written $M(a' \mid a)$ in
+Chapters~\ref{ch:background} and~\ref{ch:laplace}, carrying its parameters
+explicitly because they are now what is being estimated:
+\begin{equation}
+  K_\theta(a' \mid a) = \sum_{c=1}^{C} \pi_c \,
+    \Nd\!\big(a' - \alpha a;\ \nu_c,\ s_c^2\big),
+  \qquad \theta = \{\alpha, (\pi_c,\nu_c,s_c)_{c=1}^C\},
+  \label{eq:em-mixture-kernel}
+\end{equation}
+so both the autoregressive coefficient $\alpha$ and the shape of the
+innovation density are free parameters, estimated jointly by maximum marginal
+likelihood from noised data alone. At $C=1$ this collapses to a single
+Gaussian, recovering the model of Chapter~\ref{ch:gaussian}; larger $C$ can
+represent skew, heavy tails, and multimodality to the resolution of the
+grid. The initial law $a_1 \sim \Nd(0,1)$ is \emph{held fixed} at
+estimation time --- it is the value used to generate every family compared in
+Chapter~\ref{ch:em-results}, so there is no misspecification in it, but
+neither is there direct evidence it could itself be recovered from noised
+data; that question is not addressed here.
+
+Two assumptions carry the argument and, consistent with the practice of this
+thesis, are stated rather than tested by the estimator itself: the clean
+process is exactly first-order Markov, and the forward noise is exactly
+coordinatewise. Section~\ref{sec:em-nonmarkov} in the next chapter measures
+what happens when the first of these is false by a controlled amount; the
+second is never relaxed anywhere in this thesis.
+
+\begin{remark}[Covariance-stationary, not strictly stationary]
+Choosing $\ivar=1-\alpha^2$ makes the chain covariance-stationary --- $\operatorname{Var}(a_i)=1$
+and $\operatorname{Cov}(a_i,a_j)=\alpha^{|i-j|}$ hold exactly for \emph{every} innovation
+law, by the same second-moment recursion as the Gaussian case. It does not
+make the chain strictly stationary: for a non-Gaussian innovation the
+invariant marginal law of the chain is not $\Nd(0,1)$, so fixing $a_1\sim
+\Nd(0,1)$ starts every family off its own invariant distribution. Nothing
+compared in this or the next chapter depends on the distinction, because every
+family compared shares the same $a_1$ and the same covariance structure. The
+claim available here is covariance-stationarity, and it is the one used.
+\end{remark}
+
+\section{What remains exact}\label{sec:em-exact}
+
+Two facts from Section~\ref{sec:l-grid} carry over unchanged, and everything
+the estimator does rests on them, so they are worth restating here.
+
+\begin{proposition}[The posterior factor graph is still the prior's chain]
+\label{prop:em-unary}
+Coordinatewise forward noising contributes exactly one \emph{unary} factor per
+site, $x_i \mapsto \phi_i(a_i) \propto \exp\!\big(-(x_i-e^{-t}a_i)^2/2\Deltat\big)$.
+It reweights node potentials and creates no new edges among the latent
+$a_i$, for any innovation law, mixture or otherwise. The posterior over the
+clean chain given the noised observation therefore factorises on exactly the
+same chain graph as the prior.
+\end{proposition}
+
+\begin{proposition}[The E-step is exact]\label{prop:em-estep}
+Since the posterior graph is a tree, one forward and one backward
+sum--product sweep return the exact single-site and pairwise marginals of the
+posterior, at the level of functional messages, for \emph{any} innovation
+law. Consequently the E-step of an EM procedure for $\theta$ requires no
+variational approximation and no sampling: the sufficient statistics EM needs
+are exact conditional expectations under the true posterior, mixture label
+included.
+\end{proposition}
+
+Both are consequences of the chain being a tree (Theorem~\ref{thm:tree-exact})
+and hold independently of whether the innovation law admits a closed-form
+message update. What is \emph{not} exact is the representation of a functional
+message on a computer, which is where Section~\ref{sec:em-numerical} and the
+grid-BP machinery of Section~\ref{sec:l-grid} enter.
+
+\section{The EM algorithm}\label{sec:em-algorithm}
+
+Write $\Xi(\theta)$ for the vector of exact posterior sufficient statistics
+that BP supplies given the current parameter $\theta$ --- the conditional
+expectations of the pairwise sums, mixture-label indicators, and second
+moments that the mixture kernel's complete-data log-likelihood needs. The
+gradient of the \emph{marginal} log-likelihood $\mathcal L(\theta)$ is given
+by Fisher's identity,
+\begin{equation}
+  \nabla_\theta \mathcal L(\theta)
+  = \big\langle \Xi(\theta),\ \nabla_\theta \log K_\theta \big\rangle .
+  \label{eq:em-fisher}
+\end{equation}
+The practical content of \eqref{eq:em-fisher} is that belief propagation is
+never differentiated through: BP supplies the conditional expectation
+$\Xi(\theta)$ at the current parameter, and the gradient with respect to
+$\theta$ is then an ordinary derivative of the kernel's log-density. This
+is what makes the E-step of Proposition~\ref{prop:em-estep} directly usable
+inside an optimiser.
+
+The M-step for the mixture kernel is \emph{not} an exact maximisation. Given
+$\Xi(\theta^{(k)})$, updating $(\pi_c,\nu_c,s_c)_{c=1}^C$ exactly would
+require solving a mixture-likelihood problem with its own latent label, so
+the implementation alternates closed-form \emph{conditional} maximisers ---
+the mixture block and $\alpha$ --- until the per-edge gain in $Q$ falls below
+a tolerance or a cap of sixteen sweeps is reached, recording on the returned
+kernel which of the two occurred. The algorithm is therefore generalised EM,
+or ECM \citep{meng1993maximum}, rather than exact EM: a sweep ascends $Q$
+without maximising it.
+
+The cap of sixteen is set by measurement, not convention. Varying only this
+budget at $C=8$, $n=256$, and a fixed outer count of $40$, the fitted
+innovation excess kurtosis moves by $28\%$ between four sweeps and sixteen
+($1.68 \to 2.14$, against a true value of $3.0$) while $\alpha$ moves in the
+fourth decimal --- the same rate asymmetry between shape and correlation that
+Section~\ref{sec:em-convergence} finds in the outer loop, appearing one level
+down. The effect is confined to short outer runs: by $60$ outer iterations
+the two loops substitute for one another and the inner budget stops
+mattering. Sixteen removes the interaction rather than requiring a reader to
+establish which regime a given cell is in.
+
+Monotone ascent of $\mathcal L$ is guaranteed by the standard EM argument
+applied to the surrogate $Q(\theta \mid \theta^{(k)}) = \langle
+\Xi(\theta^{(k)}), \log K_\theta\rangle$ --- ascending $Q$ is all
+monotonicity requires --- and is checked directly: across an executable audit
+of the implementation, the minimum increase in $Q$ over twelve consecutive
+steps was $+2.61$ for a Gaussian kernel, $+4.34$ for Laplace, and $+4.18$
+for an eight-component mixture, with zero decreases recorded in any logged
+run. The returned kernel's evidence equals
+\texttt{trace.log\_evidence[-1]} by construction, with a regression test
+asserting it, so the reported convergence trace always describes the model
+actually returned.
+
+\section{The numerical representation: grid BP, again}\label{sec:em-numerical}
+
+Messages remain functions on $\R$, so they are represented exactly as in
+Section~\ref{sec:l-grid}: values on $\ngrid$ equispaced points in $[-A,A]$, updates
+by trapezoidal quadrature. Two error sources are tracked separately here as
+well. Truncation error --- the probability mass the finite domain $[-A,A]$
+misses --- is diagnosed by the maximum boundary mass over the sites of a chain.
+That is a statistic of a sampled trajectory rather than a bound, so it is
+recorded over $256$ chains per configuration: the worst chain falls from
+$2.3\times10^{-3}$ at $A=4$ to $1.2\times10^{-6}$ at $A=8$, the $90$th
+percentile from $2.7\times10^{-4}$ to $1.5\times10^{-8}$, and neither depends on
+the grid resolution $\ngrid$. The gap between the two rows matters, because a figure
+read off a single trajectory sits near the median and so understates the tail by
+two orders of magnitude. Quadrature error, from the
+finite spacing $h=2A/(\ngrid-1)$ --- the grid holds $\ngrid$ points including both
+endpoints --- on an otherwise exact interior update, falls as
+$O(h^2)$: a factor of four per halving of $h$, matching the trapezoidal
+rate on a smooth integrand. At the working configuration used for every
+experiment in this and the next chapter, $\ngrid=401$, $A=8$, both sources sit far
+below any effect subsequently measured: the discretised recursion reproduces
+the closed-form Gaussian posterior mean to $9.2\times10^{-15}$, and agrees
+with an independently coded brute-force enumeration --- sharing no code with
+the BP recursion --- to $1.6\times10^{-14}$ on posterior means and
+$1.8\times10^{-15}$ on the log-evidence.
+
+\paragraph{Which finite-grid model is being optimised.} ``Exact for the
+discretised chain'' needs one more specification than it has been given so far,
+because there are two conventions available and they lead to different
+objectives. The transition array used here is the continuum density
+$K_\theta(a' \mid a)$ evaluated at the grid points and combined with the
+trapezoidal weights, with \emph{no} per-column renormalisation. BP is therefore
+exact --- up to floating point --- for the chain-shaped \emph{factor model} that
+array defines, and that model is not literally a normalised finite-state
+transition kernel on the truncated domain. The distance between the two is
+precisely the column-mass residual already reported as the quadrature
+diagnostic. At the working configuration, the worst column with $|a| \le A/2$
+departs from unit mass by $\gdinterior$; such a column sits far enough inside
+the domain that its transition density has no tail outside the grid, so its
+residual measures quadrature alone. The worst column anywhere departs by
+$\gdedge$, at the domain edge where the density is truncated.
+
+The alternative convention --- renormalising each parent-conditioned column
+under the quadrature weights --- would make the array a genuine finite-state
+kernel. Its normaliser would then depend on $\theta$, most strongly near the
+boundary, and that dependence would have to be carried: the derivative of
+$\log Z_\theta$ would enter both Fisher's identity and the M-step, and the
+surrogate could no longer be written as
+$Q(\theta \mid \theta^{(k)}) = \langle \Xi(\theta^{(k)}), \log K_\theta\rangle$
+with $K_\theta$ the raw density. Because no renormalisation is applied, that
+term is absent by construction rather than by oversight, and the surrogate above
+is the correct one for the model actually fitted. The price is that the fitted
+object is the continuum kernel read through a quadrature rule, which is what the
+column-mass residual measures and what the resolution gate of
+Section~\ref{sec:em-numerical} bounds.
+
+Figure~\ref{fig:em-grid-domain} separates the two error sources the paragraphs
+above keep apart: resolution and truncation are refined one at a time, so that
+neither diagnostic can be mistaken for a certificate of the other.
+
+\begin{figure}[t]\centering
+\includegraphics[width=1.0\linewidth]{fig_grid_domain.pdf}
+\caption[Grid and domain control, separated]{Grid and domain control on a Laplace chain ($\alpha=0.85$, $\nsites=32$
+sites), four panels. (a) Relative score error against a high-resolution
+reference as grid resolution $\ngrid$ grows at fixed half-width $A=8$; (b) the same
+as $A$ grows at fixed $\ngrid=401$ --- both saturate at the floating-point floor
+well inside the working configuration. (c) Forward-message boundary mass
+against $A$, the truncation diagnostic, drawn as \emph{both} the maximum and
+the $90$th percentile over $256$ chains, which differ by roughly two orders of
+magnitude for the reason given in Remark~\ref{rmk:em-boundary}. (d) Interior
+column-mass residual against spacing at $A=8$, the quadrature diagnostic, with
+an $O(h^2)$ reference. Neither diagnostic alone certifies convergence. Source:
+\texttt{outputs/frozen/exp\_01/} and \texttt{outputs/frozen/exp\_18/}.}
+\label{fig:em-grid-domain}
+\end{figure}
+
+\begin{remark}[The boundary-mass diagnostic is empirical, not a bound]
+\label{rmk:em-boundary}
+A boundary-mass figure computed from one sampled chain does not bound the
+truncation error for every run, and the gap is large enough to matter. Running
+the same recursion on one chain and on $\gdchains$ of them, at the working
+configuration and over all $\gdlevels$ noise levels, the batch maximum exceeds
+the single-chain reading by a median factor of $\gdboundmed$ and by as much as
+$\gdboundhi$; at the mildest level it is only $\gdboundlo$. A single draw
+therefore lands somewhere in the body of a distribution with a very long tail,
+and where it lands is not knowable from the draw. This is why the figures above
+are reported as a maximum and a $90$th percentile over chains rather than as one
+number. The diagnostic is an empirical estimate of typical truncation
+loss, not a certified bound. What it does \emph{not} affect is the separation of truncation from
+quadrature error reported above, which is a pure function of $(A,\ngrid)$ and the
+prior and involves no sampled chain at all --- that comparison reproduces
+to $0.000$ relative difference under reseeding and is exactly the result
+Section~\ref{sec:l-grid} already relies on.
+\end{remark}
+
+One further identity is worth restating from Section~\ref{sec:l-grid} because
+it governs every result in the next chapter exactly as it governed
+Chapter~\ref{ch:laplace}: whatever an approximation --- Gaussian closure, grid
+truncation, or an under-converged fit --- does to the posterior mean is
+amplified by $e^{-t}/\Deltat \sim 1/2t$ in the score, so small diffusion times
+remain the regime where any deficiency is most visible.
+
+Figure~\ref{fig:em-diagnostics} collects the optimisation-side checks:
+monotone ascent of the marginal likelihood, recovery of $\alpha$ from
+initialisations far from the truth, and the $n^{-1/2}$ decay of the recovery
+error. The first two are what make the procedure an EM rather than a heuristic;
+the third is what makes it an estimator.
+
+\begin{figure}[t]\centering
+\includegraphics[width=1.0\linewidth]{fig_em_diagnostics.pdf}
+\caption[Optimisation diagnostics for the EM procedure]{Optimisation diagnostics for the EM procedure of
+Section~\ref{sec:em-algorithm}. Left: marginal log-likelihood by iteration
+from four initialisations of $\alpha$; the largest decrease across
+iterations is zero in every run. Centre: the estimated $\alpha$ over the
+same runs, converging to $[0.8517,0.8520]$ against a truth of $0.85$ from
+initialisations spanning $[-0.4,0.6]$ --- direct evidence that $\alpha$ is
+estimated, not supplied. Right: RMSE of the recovered $\alpha$ and
+innovation variance against the number of training sequences, with an
+$n^{-1/2}$ reference line, at the same truth of $0.85$ and over $16$ seeds.
+Appendix~\ref{app:repro} maps every panel to the run that produced it.}
+\label{fig:em-diagnostics}
+\end{figure}
+
+\section{What convergence actually costs}\label{sec:em-convergence}
+
+The last piece of machinery this chapter reports is not a theorem but a
+measurement, and it is the one that most directly qualifies the results of
+Chapter~\ref{ch:em-results}: how many EM iterations the algorithm of
+Section~\ref{sec:em-algorithm} actually needs.
+
+Table~\ref{tab:em-convergence} shows what the channel costs, in two parts: the
+through-channel fit at four updates, and where a clean and a channel arm each
+finish.
+
+\input{sections/tab-convergence}
+
+\noindent The two halves say different things. The trace shows the coordinates
+separating: the correlation is essentially in place by thirty updates while the
+innovation shape is still climbing at a hundred and twenty, because the mixture
+label is a latent variable of its own and the channel compounds the missing
+information --- the mechanism of \citet{dempster1977maximum} appearing in the
+convergence rate, where the theory places it.
+
+The channel has two distinct effects, and they should not be collapsed into
+one. First, it changes the local rate of EM through the fraction of missing
+information, which is the effect the trace above displays. Second, at finite
+sample size it reduces the observed Fisher information and can therefore
+increase estimation uncertainty --- an effect measured directly, by coordinate,
+in Section~\ref{sec:em-information}. Under identifiability and correct
+specification it need not move the population optimum, and that is the limited
+sense in which the clean and channel arms may approach the same endpoint while
+doing so at different rates. The endpoints here are consistent with that
+reading: the two arms finish within $0.002$ of each other on the correlation
+and within a fifth of a unit on excess kurtosis, both close to the generating
+values. This is evidence of similar fitted endpoints in this configuration, not
+of an absent information or accuracy penalty.
+
+That is one configuration. A dedicated sweep measured the cost across sixteen
+seeds, recording for each fit the first update after which a coordinate stays
+within a fixed relative tolerance of its value at the end of the run. At
+$\nseq = \convsize$, $C = \convcomps$ and the \convdesign{} noise design, over
+$\convseeds$ seeds run to $\convcap$ updates, the correlation coefficient
+settles at a median of $\convrhomed$ updates and the innovation shape at
+$\convshapemed$, the largest observed value being $\convshapemax$. Forming the
+ratio within each fit and then taking the median over fits gives $\convratio$;
+the quotient of the two medians is $\convratioofmedians$, and the paired figure
+is the one reported, because both coordinates are measured on the same fit.
+
+Two things about what that measures. ``Settled'' is trace stability --- the
+first update after which a coordinate stays within $10^{-3}$ of its end-of-run
+value for $\alpha$, or $2\times10^{-2}$ for the excess kurtosis --- and not
+distance to an optimiser; a coordinate can sit still while the density it
+belongs to moves along a shallow direction. And the run has to be long enough
+for the statistic to mean anything: the sweep was run at two lengths, and these
+medians come from the $\convcap$-update shard, the only one in which no
+configuration settles near its own cap. Against them, the fixed budget of
+$\convbudget$ iterations that several experiments in
+Chapter~\ref{ch:em-results} used as a default
+falls short of the shape coordinate's median by about a factor of six and
+leaves $\convunsettled$ of the sweep's $\convunsettledof$ configurations ---
+both shards, since censoring can only shorten a settling time and so cannot
+inflate this count --- unsettled in it.
+
+\begin{remark}[Fixed budgets compare convergence rates, not estimators]
+\label{rmk:em-fixed-budget}
+This is the single methodological lesson of the chapter, and it recurs
+throughout the next one. Whatever coordinate of a fit converges slower looks
+worse under a fixed iteration count, and a slower-converging configuration
+under-iterated by the same budget produces what looks like a genuine deficit
+rather than symmetric noise --- which is precisely the signature that makes it
+easy to mistake for a real effect. Compared correctly, at eight seeds and a
+fixed budget of 200 updates, no channel penalty is resolved in the reported
+shape summary: the paired clean $-$ noised difference at that operating point
+is $-0.052\pm0.217$, consistent with zero. The operating point is not a
+converged one --- the chapter's own median settling time for the shape
+coordinate is $\convshapemed$ updates --- so this is a statement about the
+paired difference at $200$ updates, not about the converged estimators. A single non-converged draw would
+not have supported that comparison in either direction. Where Chapter~\ref{ch:em-results}
+reports a result obtained at a fixed, possibly insufficient budget, it says so
+explicitly and states which quantities are and are not affected.
+\end{remark}
+
+\section{Summary}
+
+The estimator combines two facts that hold for any innovation law ---
+Proposition~\ref{prop:em-unary} and Proposition~\ref{prop:em-estep} --- with a
+generalised M-step and Fisher's identity to turn exact BP conditional
+expectations into a marginal-likelihood gradient. Everything about the
+\emph{posterior inference} step is exact up to the grid discretisation of
+Section~\ref{sec:em-numerical}, which is controlled to far below any effect
+measured. What is not free is optimisation time. Observing the chain only
+through the channel costs the autoregressive coefficient about an order of
+magnitude in iterations, and the innovation shape then settles some three times
+slower again, with a tail several times longer than its own median.
+Chapter~\ref{ch:em-results} quantifies pointwise accuracy, capacity and
+robustness to controlled misspecification, and leaves the reverse-generation
+comparison open, because its fitted shape coordinates were not sufficiently
+settled under the available budget.

@@ -1,0 +1,97 @@
+% ============================================================
+% MSc Research Thesis — DSBA, Bocconi University, A.Y. 2025-2026
+%
+% Format per "Guide to the University" §10.3:
+%   - no title page and no abstract in this file (added by the university system)
+%   - first four pages: blank / blank / acknowledgements / blank
+%   - content starts at page 5 (numbering includes the preliminary pages)
+%   - no personal information of the author anywhere in the document
+%
+% Build:  tectonic main.tex   (runs bibtex automatically)
+% ============================================================
+\documentclass[12pt,a4paper,openany]{report}
+\input{preamble}
+% Efficiency figures come from the generator, not from typing. Without this the
+% conclusion carried 7.3/12.6/15.7 against a table reading 7.0/12.5/15.5 -- the
+% same drift the paper had, surviving in the one document that was not wired up.
+\input{sections/efficiency-numbers}
+\input{sections/structured-numbers}
+\input{sections/screening-numbers}
+\input{sections/capacity-numbers}
+\input{sections/convergence-numbers}
+\input{sections/structured-aggregation-numbers}
+\input{sections/nonmarkov-numbers}
+\input{sections/grid-diagnostics-numbers}
+
+\begin{document}
+
+% ------------------------------------------------------------
+% Four preliminary pages required by the university (§10.3.1)
+% ------------------------------------------------------------
+\thispagestyle{empty}\null\clearpage                 % page 1: blank
+\thispagestyle{empty}\null\clearpage                 % page 2: blank
+\thispagestyle{empty}                                 % page 3: acknowledgements
+\vspace*{0.35\textheight}
+\begin{center}
+\itshape
+To my family.
+\end{center}
+\clearpage
+\thispagestyle{empty}\null\clearpage                 % page 4: blank
+
+% ------------------------------------------------------------
+% Content starts here (page 5, odd/right page)
+% ------------------------------------------------------------
+\setcounter{page}{5}
+\tableofcontents
+\clearpage
+% Both lists earn their place at this length: the results chapters are read out
+% of order, and a reader chasing one number should not have to find the section
+% that happens to contain it.
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+% ensure the thesis body starts on an odd (right) page
+\ifodd\value{page}\else\null\thispagestyle{empty}\clearpage\fi
+
+\input{chapters/ch01-introduction}
+\input{chapters/ch02-background}
+\input{chapters/ch05-graphical}
+\input{chapters/ch06-development}
+\input{chapters/ch07-gaussian-chain}
+\input{chapters/ch08-laplace}
+\input{chapters/ch10-nongaussian-em-method}
+\input{chapters/ch11-nongaussian-em-results}
+\input{chapters/ch09-rotating-ring}
+\input{chapters/ch12-conclusions}
+
+\appendix
+\input{chapters/appA-gaussian-identities}
+\input{chapters/appB-amp}
+\input{chapters/appC-reproducibility}
+% Appendices D-F -- the statistical-mechanics, stochastic-calculus and
+% diffusion-model background derivations -- are not submitted with the thesis.
+% They establish textbook material that none of the original results depend on,
+% and at roughly fifty pages they pushed the document to nearly four times
+% Bocconi's general length guidance while lowering the fraction of it that is
+% this work. They are retained in full in the companion compendium.
+\input{chapters/appG-linear-algebra}
+\input{chapters/appH-ring-derivations}
+% The withdrawn-results appendix moved to the compendium's claim audit
+% (Corrections chapter). A thesis reports its findings; the development record
+% of what was claimed and retracted along the way belongs in the companion
+% document, which exists for exactly that.
+\input{chapters/appJ-aggregation}
+
+% ------------------------------------------------------------
+% Bibliography — author-date (writing guide, Attachment 2)
+% ------------------------------------------------------------
+\clearpage
+\bibliographystyle{apalike}
+% One bibliography for all four documents. Four hand-kept copies of the same
+% 138 entries is precisely how two documents come to cite the same work
+% differently, which is the failure Appendix I warns about for numbers.
+\bibliography{references}
+
+\end{document}

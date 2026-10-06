@@ -1,0 +1,216 @@
+\documentclass[11pt,a4paper]{report}
+
+\usepackage[margin=2.6cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm,amsfonts}
+\usepackage{empheq}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{booktabs}
+% The claim-audit table is taller than a page and was overflowing its \vbox
+% by 138pt; longtable lets it break instead.
+\usepackage{longtable}
+\usepackage{capt-of}   % \captionof, used by the shared generated tables
+
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, fit, calc, decorations.pathreplacing}
+\usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=black,filecolor=black]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{enumitem}
+
+\graphicspath{{figures/}}
+\input{notation}
+
+
+% ---------- carried over with the background chapters -------------------
+% Chapters 13-18 came out of the thesis, which defines these in its own
+% preamble. They are reproduced rather than shared because the two documents
+% render a few of them differently and a single file would have to fork anyway.
+\providecommand{\Nd}{\mathcal{N}}
+\providecommand{\R}{\mathbb{R}}
+\providecommand{\E}{\mathbb{E}}
+\providecommand{\Prob}{\mathbb{P}}
+\providecommand{\dd}{\mathrm{d}}
+\providecommand{\T}{\mathsf{T}}
+\providecommand{\Deltat}{\Delta_t}
+\providecommand{\Sig}{\Sigma}
+\providecommand{\Sigz}{\Sigma_0}
+\providecommand{\Sigt}{\Sigma_t}
+\providecommand{\Qz}{Q_0}
+\providecommand{\Qt}{Q_t}
+\providecommand{\score}{S}
+\providecommand{\kl}[2]{D_{\mathrm{KL}}\!\left(#1 \,\|\, #2\right)}
+\providecommand{\inner}[2]{\left\langle #1, #2 \right\rangle}
+\providecommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\providecommand{\Deltat}{\Delta_t}
+\providecommand{\Sigz}{\Sigma_0}
+\providecommand{\inner}[2]{\left\langle #1, #2 \right\rangle}
+\providecommand{\kl}[2]{D_{\mathrm{KL}}\!\left(#1 \,\|\, #2\right)}
+\providecommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\usepackage{etoolbox}
+\newcounter{toolbox}[chapter]
+\renewcommand{\thetoolbox}{\thechapter.\arabic{toolbox}}
+\newtcolorbox{toolbox}[2][]{%
+  breakable, enhanced,
+  colback=black!3, colframe=black!55,
+  boxrule=0.4pt, arc=1.2mm, left=2mm, right=2mm, top=1.5mm, bottom=1.5mm,
+  phantom={\refstepcounter{toolbox}\ifblank{#1}{}{\label{#1}}},
+  title={\small\bfseries Toolbox~\thetoolbox\ --- #2},
+  fonttitle=\normalfont, coltitle=white, colbacktitle=black!55,
+  before skip=1.2em, after skip=1.2em
+}
+% Radial partition function of the ring model (Chapter 12).
+\newcommand{\Zring}{\mathcal{Z}}
+
+\theoremstyle{plain}
+\newtheorem{proposition}{Proposition}[chapter]
+\newtheorem{lemma}[proposition]{Lemma}
+\newtheorem{theorem}[proposition]{Theorem}
+\theoremstyle{definition}
+\newtheorem{definition}[proposition]{Definition}
+\newtheorem{example}[proposition]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[proposition]{Remark}
+
+% Three environments, deliberately unequal in weight.
+%
+% `intuition' is NOT a box. An earlier version of this document set it as a coloured panel,
+% which put a decorated frame on nearly every page and made a technical supplement read like a
+% textbook. It is now an ordinary indented paragraph: the content is worth keeping, the
+% packaging was not.
+%
+% `pitfall' and `codebox' remain boxed, because both interrupt the argument on purpose -- one
+% states an assumption that is doing real work and what fails without it, the other pins a
+% mathematical object to the line of code that realises it. Neither should be used for
+% commentary that the surrounding prose already carries.
+\newenvironment{intuition}%
+  {\par\smallskip\begingroup\leftskip=1.2em\rightskip=1.2em\small\noindent\ignorespaces}%
+  {\par\endgroup\smallskip}
+\newtcolorbox{pitfall}[1][]{breakable, colback=black!2, colframe=black!45,
+  boxrule=0.5pt, left=6pt, right=6pt, top=5pt, bottom=5pt,
+  title=\textbf{Assumption at work}, fonttitle=\small\bfseries, #1}
+\newtcolorbox{codebox}[1][]{breakable, colback=black!3, colframe=black!25,
+  boxrule=0.5pt, left=6pt, right=6pt, top=5pt, bottom=5pt,
+  title=\textbf{Implementation}, fonttitle=\small\bfseries, #1}
+
+% Exact pointer into the repository. Every mathematical object in this document that is
+% realised in code carries one of these. Paths are relative to research/nongaussian-bp/.
+% (defined in ../paper/notation.tex, shared with the note)
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small\leftmark}
+\rhead{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\title{\vspace{-2cm}\textbf{Diffusion Scores for Markov Data}\\[0.4em]
+\Large A technical compendium\\[1.2em]
+\large\normalfont Exact inference on the noised chain, estimation of the transition
+kernel, and comparison with neural denoisers}
+
+\author{Giovanni Mantovani\\
+\small Department of Computing Sciences, Bocconi University\\
+\small \texttt{giovanni.mantovani@studbocconi.it}}
+
+\date{\today}
+
+% Dense with monospace paths and long unbreakable numeric runs, like the
+% thesis' reproducibility appendix. TeX's default tolerance prefers running a
+% line past the margin to breaking early, and did so in seventeen places.
+\sloppy
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+\begin{tcolorbox}[width=0.9\textwidth, colback=black!3, colframe=black!30]
+\textbf{Status.} Work in progress, circulated internally. This document is the long-form
+companion to the internal note \emph{Diffusion scores for Markov data}. Where the note states
+a result, this document derives it. Chapters covering experiments still running are marked
+\textsc{[pending]} and will be completed as those results land; nothing marked pending is
+relied on elsewhere.
+\end{tcolorbox}
+\end{center}
+
+\vspace{1em}
+
+\begin{center}
+\begin{minipage}{0.86\textwidth}
+\small
+\textbf{Who this is for.} A reader who knows undergraduate probability and linear algebra and
+nothing about diffusion models, graphical models, or expectation maximisation. Every concept
+used anywhere in the project is built here from its definition. Nothing is cited in place of
+an explanation. Where a step is standard but non-obvious, it is done in full rather than
+asserted, and where an assumption is doing real work, there is a box saying what breaks
+without it.
+\end{minipage}
+\end{center}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% Six parts, in dependency order: what the model is, how inference on it works,
+% what a computer actually runs, how the unknown parts are learned, what the
+% experiments established, and what sits alongside the main line.
+%
+% The division is not decoration. Before it, a reader looking for "is this
+% derivation exact or is it a grid artefact" had to know which chapter to open,
+% and the two questions were interleaved. Parts II and III now separate them:
+% everything in II is exact at the level of continuous message functions, and
+% everything in III is about the error introduced by representing those
+% functions on a finite grid.
+
+\part{Model and exact identities}
+\input{chapters/ch02-setting}
+\input{chapters/ch04-score}
+\input{chapters/ch05-markov}
+
+\part{Functional inference}
+\input{chapters/ch06-graphical}
+\input{chapters/ch07-bp}
+\input{chapters/ch08-gaussian}
+
+\part{Numerical representation}
+\input{chapters/ch09-numerics}
+
+\part{Learning the transition}
+\input{chapters/ch10-estimation}
+
+\part{The experiment ledger}
+\input{chapters/ch11-claim-audit}
+
+\part{Case studies alongside the main line}
+\input{chapters/ch12-rotating-ring}
+
+% ------------------------------------------------------------------------
+% Part VII exists because the thesis was cut to length and none of this was
+% worth losing. Chapters 13-15 are the derivations that stood as the thesis'
+% Appendices D-F: the statistical mechanics, the stochastic calculus and the
+% diffusion-model background, in full rather than in the compressed form the
+% submitted document carries. Chapters 16-18 are older still -- the three
+% separate background chapters that were merged into the thesis' Chapter 2, at
+% their original length. They overlap each other and the chapters above; that
+% is what an unbounded companion document is for.
+% ------------------------------------------------------------------------
+\part{Background, at full length}
+\input{chapters/ch13-statmech-derivations}
+\input{chapters/ch14-stochastic-derivations}
+\input{chapters/ch15-diffusion-derivations}
+
+\part{The background chapters as first written}
+\input{chapters/ch16-statmech-long}
+\input{chapters/ch17-stochastic-long}
+\input{chapters/ch18-generative-long}
+
+\bibliographystyle{unsrtnat}
+% One bibliography for all four documents. Four hand-kept copies of the same
+% 138 entries is precisely how two documents come to cite the same work
+% differently, which is the failure Appendix I warns about for numbers.
+\bibliography{references}
+
+\end{document}
