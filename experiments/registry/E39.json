@@ -1,0 +1,21 @@
+{
+ "id": "E39",
+ "script": "experiments/e39_gaussian_sanity.py",
+ "hypothesis": "The consolidated note asks for the Gaussian sanity check as a short proposition (section 29 step 3; appendix F item 4) and as figure 2 of its figures-first plan (section 28: 'demonstrate convergence of grid BP to analytic score and Kalman smoother'). On the Gaussian linear chain three computations of one conditional law must agree: the closed form S = -Sigma_t^{-1} x, the Rauch-Tung-Striebel smoother (src/markov_score/kalman.py, written independently of the BP code), and sum-product; grid BP is the last one by trapezoidal quadrature on N_g points of [-A, A]. E39 measures how grid BP converges to the first two as the grid is refined and the domain widened, at every level of the paper's schedule.",
+ "design": "Gaussian linear chain rho = 0.85 (q = 1 - rho^2, a_1 ~ N(0, 1)), L = 32 sites, 256 test chains (rng tag e39-truth), one noised view per level (rng tag e39-noise, t), the twelve levels of FROZEN.t_grid (0.05 to 3). Arms per (N_g, A, t): grid BP (bp_grid.grid_bp_batch with the analytic log K on the grid and the N(0, 1) initial law, chunk 256) and moment-projected BP (grid_bp_projected_batch, at the operating grid only); references: the closed form (kalman.closed_form_gaussian) and the RTS smoother (kalman.kalman_rts), whose score is Tweedie on its mean. Part 'grid': A = 8, N_g in (11, 21, 41, 81, 161, 321, 401, 801, 1601). Part 'domain': fixed spacing 0.04 (the operating grid's), A in (2, 3, 4, 5, 6, 8, 10, 12), N_g = 2A/0.04 + 1. Metric: pooled relative score error ||S_hat - S_ref||_F / ||S_ref||_F over all chains and sites, against each reference; also the RTS score against the closed form. Deterministic; laptop.",
+ "predeclared_predictions": {
+  "P1": "The RTS smoother's score agrees with the closed form to <= 1e-12 (pooled relative) at all twelve levels.",
+  "P2": "At the operating grid (N_g, A) = (401, 8) grid BP's score agrees with the closed form and with the RTS smoother to <= 1e-10 at all twelve levels, and moment-projected BP (Proposition 1: it returns the LMMSE, which on the Gaussian chain is the exact posterior mean) to <= 1e-10 too.",
+  "P3": "At A = 8 the error against the closed form is non-increasing in N_g at every level until it reaches the floating-point floor (a rise by at most a factor 10 is allowed once below 1e-12), and the smallest N_g at which it falls below 1e-10 is at least as large at t = 0.05 as at t = 3 (the narrowest integrand, the likelihood at small t, sets the resolution).",
+  "P4": "At fixed spacing the error against the closed form is non-increasing in A at every level (same floor allowance), and at A = 3 it exceeds 1e-6 at the lowest level t = 0.05 (truncation at three marginal standard deviations is visible)."
+ },
+ "predeclared_analysis": "sanity.csv: one row per (part, arm, N_g, A, t) with the pooled relative error against each reference. P1-P4 read by tools/make_gaussian_sanity.py, which also draws paper/figures/fig_gaussian_sanity.pdf: (a) error against N_g at A = 8 for the lowest, a middle and the highest level, with the RTS-against-closed-form floor; (b) error against A at fixed spacing, same levels.",
+ "seeds": {
+  "confirmatory": "deterministic inputs (rng tags e39-truth, e39-noise)",
+  "dev": "--quick"
+ },
+ "resources": "laptop, minutes",
+ "status": "REGISTERED and PREDECLARED 2026-10-06, before any run",
+ "registered": "2026-10-06",
+ "dev_observation": "2026-10-06, before the confirmatory run, recorded so that it is not hidden: the --quick dev run (16 chains, levels 0.05/1/3, outputs/scratch/e39_quick) put moment-projected BP at 2.2e-2 from the closed form at (401, 8), so P2's projected clause is likely to fail. Probable cause, to be checked on the confirmatory data: Proposition 1 is about functional messages; on the grid the projection takes the moments of TRUNCATED backward messages (a wide Gaussian cut at +-8 has a smaller variance) and turns the flat terminal message into a Gaussian of variance A^2/3. The prediction is not changed."
+}
