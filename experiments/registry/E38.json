@@ -13,7 +13,12 @@
   "dev": "--quick"
  },
  "resources": "cluster, medium_cpu, 2 cpus, 32G, 2 h (one measurement at a time)",
- "status": "REGISTERED and PREDECLARED 2026-10-06, before any measurement; the last quantity in the note's section 9.8 not yet measured",
+ "status": "REGISTERED and PREDECLARED 2026-10-06, before any measurement; the last quantity in the note's section 9.8 not yet measured; SUBMITTED 2026-10-06 (686874)",
  "registered": "2026-10-06",
- "design_refinement": "2026-10-06, before any measurement: the method first written (ru_maxrss before and after) is a high-water mark and read +0.0 MB for a small transformer in the laptop smoke run, because the import had peaked higher; replaced by sampling the current RSS, which needs Linux's /proc/self/statm, hence a small cluster job instead of the laptop. Predictions unchanged."
+ "design_refinement": "2026-10-06, before any measurement: the method first written (ru_maxrss before and after) is a high-water mark and read +0.0 MB for a small transformer in the laptop smoke run, because the import had peaked higher; replaced by sampling the current RSS, which needs Linux's /proc/self/statm, hence a small cluster job instead of the laptop. Predictions unchanged.",
+ "hpc_runs": {
+  "deployment": "b3e9b34-20261006T202119Z (hpc/.deploy_b3e9b34.env)",
+  "e38-memory": "686874, medium_cpu, 2 cpus, 32G, 2:00 -> outputs/hpc_E38",
+  "submitted": "2026-10-06 ~22:20 BST"
+ }
 }

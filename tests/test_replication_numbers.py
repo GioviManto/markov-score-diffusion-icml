@@ -39,3 +39,18 @@ def test_the_frozen_two_seed_designs_read_as_registered():
     assert list(p3.value.round(3)) == [1.026, 1.007, 1.012]
     rising = R[R.clause.str.contains("rising")].iloc[0]
     assert rising.note == "1.27 < 8.49 < 13.28"
+
+
+def test_e38_reading_on_a_synthetic_full_design():
+    """Grid BP's memory exactly proportional to B * L reads slope 1 in both; networks far smaller read P2 confirmed."""
+    rows = []
+    for L in (32, 64, 128):
+        for B in (128, 512, 2048):
+            rows.append(dict(kind="infer", arm="bp_grid", L=L, B=B, N_g=401, increment_mb=1e-3 * B * L, method="statm-sampled"))
+            for arm in ("mlp", "window", "tcn", "bigru", "transformer", "unet"):
+                rows.append(dict(kind="infer", arm=arm, L=L, B=B, N_g=401, increment_mb=1e-5 * B * L, method="statm-sampled"))
+    rows.append(dict(kind="infer", arm="bp_grid", L=32, B=512, N_g=801, increment_mb=99.0, method="statm-sampled"))
+    R = pd.DataFrame(mr.read_e38(pd.DataFrame(rows)))
+    p1 = R[R.prediction == "P1"]
+    assert list(p1.value.round(6)) == [1.0, 1.0] and set(p1.verdict) == {"CONFIRMED"}
+    assert R[R.prediction == "P2"].verdict.iloc[0] == "CONFIRMED"

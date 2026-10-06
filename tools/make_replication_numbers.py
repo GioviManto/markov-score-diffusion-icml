@@ -15,6 +15,9 @@ E36x (experiments/registry/E36x.json):
   P1  stride 1: site energy and spline below 0.02 in 16/16; stride-4 / stride-1 >= 2 in 16/16, both arms
   P2  stride 4: MDN below the site energy in >= 12/16; UNRESOLVED if the MDN selected its last checkpoint in > 4 fits
   P3  the mixture's seed mean within 3% of E36's frozen floor at every stride
+E38 (experiments/registry/E38.json):
+  P1  grid BP's peak inference memory: log-log slope in [0.8, 1.2] over B = 128 -> 2048 (L = 32) and L = 32 -> 128 (B = 512)
+  P2  at B = 512, L = 32, N_g = 401 grid BP's peak inference memory exceeds every network's
 Bootstrap: Monte Carlo, 200,000 draws, seed 20260912 (sixteen seeds cannot be enumerated). The counts scale with the
 seeds present, so a dry run on two seeds reads "2/2" where the confirmatory run needs "16/16".
 """
@@ -119,6 +122,23 @@ def read_e36x(d, floors):
     return rows
 
 
+def read_e38(d):
+    rows = []
+    inf = d[(d.kind == "infer") & (d.N_g == d[d.arm == "bp_grid"].N_g.mode().iloc[0])]
+    bp = inf[inf.arm == "bp_grid"].set_index(["L", "B"]).increment_mb
+    L0, B0 = int(inf.L.min()), int(sorted(inf.B.unique())[len(inf.B.unique()) // 2])
+    for lab, sel in (("batch", bp.xs(L0, level="L")), ("length", bp.xs(B0, level="B"))):
+        x, y = np.log(sel.index.values.astype(float)), np.log(sel.values)
+        slope = float(np.polyfit(x, y, 1)[0]) if len(sel) > 1 and np.all(sel.values > 0) else float("nan")
+        rows.append(row("E38", "P1", f"grid BP memory slope in the {lab}", slope, None, len(sel), None if np.isnan(slope) else bool(0.8 <= slope <= 1.2),
+                        "MB: " + ", ".join(f"{v:.1f}" for v in sel.values)))
+    op = inf[(inf.L == L0) & (inf.B == B0)].set_index("arm").increment_mb
+    nets = op.drop("bp_grid")
+    rows.append(row("E38", "P2", f"L={L0}, B={B0}: grid BP above every network", float(op["bp_grid"] / nets.max()), int((op["bp_grid"] > nets).sum()), len(nets),
+                    bool((op["bp_grid"] > nets).all()), f"bp {op['bp_grid']:.1f} MB, largest network {nets.idxmax()} {nets.max():.1f} MB; method {d.method.iloc[0]}"))
+    return rows
+
+
 def e36_floors(path):
     o = pd.read_csv(path)
     o = o[(o.arm == "lmmse_true") & (o.level == -1)] if "level" in o else o[o.arm == "lmmse_true"]
@@ -130,6 +150,7 @@ def main() -> int:
     ap.add_argument("--e35", default="outputs/hpc_E35x_s*/augmented.csv")
     ap.add_argument("--e36", default="outputs/hpc_E36x_s*/clean.csv")
     ap.add_argument("--floors", default="outputs/E36/oracles.csv")
+    ap.add_argument("--e38", default="outputs/hpc_E38/memory.csv")
     ap.add_argument("--out", default="reports/numbers")
     a = ap.parse_args()
     rows = []
@@ -138,6 +159,9 @@ def main() -> int:
         rows += read_e35x(d35)
     if not d36.empty:
         rows += read_e36x(d36, e36_floors(ROOT / a.floors))
+    d38 = _load(a.e38)
+    if not d38.empty:
+        rows += read_e38(d38)
     if not rows:
         print("nothing to read yet"); return 0
     R = pd.DataFrame(rows)

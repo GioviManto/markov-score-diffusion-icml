@@ -29,6 +29,7 @@ for s in E33q_s0 E33q_s4 E33q_s8 E33q_s12; do fetch 32448fe "$s"; done
 fetch 52cf980 E34c
 # E35x / E36x (5 Oct): the two laptop designs at sixteen seeds
 for x in E35x_s0 E35x_s8 E36x_s0 E36x_s8; do fetch 7e850ba "$x"; done
+fetch b3e9b34 E38     # E38 (6 Oct): peak memory per call
 rm -f /tmp/msd_fetch_$$.log
 echo "--- coverage"
 .venv/bin/python tools/check_field_coverage.py || status=1
