@@ -24,13 +24,46 @@ approximates the continuous chain with truncation (mass outside $[-\halfwidth,\h
 and quadrature (second order in the spacing) errors that are measured, not assumed.
 
 \paragraph{Validation where the answer is known.}
-On the Gaussian chain every message is Gaussian, the forward sweep is the Kalman filter and
-the full forward--backward sweep is the Rauch--Tung--Striebel smoother, whose mean is the
-LMMSE estimator of \cref{prop:lmmse}; this is the sanity check of the whole recursion. At
-$\ngrid=401$, $\halfwidth=8$ the grid recursion reproduces that closed form and
-brute-force enumeration of the discretised posterior on short chains to double
-precision (\codefile{tests/test\_gaussian\_bp\_equivalence.py},
-\codefile{tests/test\_fisher\_bruteforce.py}). Against a finer reference
+\begin{proposition}[The Gaussian chain: score, smoother and sum-product coincide]
+\label{prop:kalman}
+Let the driving noise of \cref{eq:prior} be Gaussian, so that $\va\sim\normal{0}{\Sig_0}$ with
+$(\Sig_0)_{ij}=\corr^{|i-j|}$, and let $\vx$ follow \cref{eq:channel}. Then
+(i) $\score(\vx,t)=-\Sig_t^{-1}\vx$ and $\pmean{\va}=e^{-t}\Sig_0\Sig_t^{-1}\vx$, with
+$\Sig_t=e^{-2t}\Sig_0+\Dt\Id$, and Tweedie's identity holds between them; (ii) every message of
+\cref{eq:bp} is Gaussian, $\lmsg_i$ is the Kalman filter's prediction density
+$p(a_i\mid x_{1:i-1})$ and $\lmsg_i\like$ its filtering density, and the site marginals
+$\propto\lmsg_i\like\rmsg_i$ are those of the Rauch--Tung--Striebel smoother, whose means are
+therefore $\pmean{\va}$ of (i).
+\end{proposition}
+The proof is in \cref{app:proofs}; \cref{fig:gaussian} measures it (\textsc{e39}). An RTS
+smoother written without the BP code (\codefile{src/markov\_score/kalman.py}) agrees with the
+closed form to $\gsRtsWorst$, and grid BP at the operating grid agrees with both to $\gsOpWorst$
+at every one of the $\gsLevels$ levels. Refining the grid converges faster than any power of the
+spacing, as the trapezoid rule does on Gaussian integrands, and reaches $10^{-10}$ by
+$\ngrid=\gsNeedTmin$ at the smallest level, where the likelihood is narrowest, and by
+$\ngrid=\gsNeedTmax$ at the largest; widening the domain at the operating spacing removes the
+truncation error, which is $\gsAthreeTmin$ at $\halfwidth=3$. On the same grid the
+moment-projected recursion of \cref{prop:lmmse} is off by up to $\gsProjWorst$: its backward
+messages are Gaussians whose variance grows like $e^{2t}$, and the grid truncates them at
+$\pm\halfwidth$. The proposition concerns functional messages, and the LMMSE floors reported
+here are computed in closed form. Grid BP also reproduces brute-force enumeration of the
+discretised posterior on short chains to double precision
+(\codefile{tests/test\_gaussian\_bp\_equivalence.py},
+\codefile{tests/test\_fisher\_bruteforce.py}).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig_gaussian_sanity.pdf}
+  \caption{\textbf{The Gaussian sanity check (\textsc{e39}).} Pooled relative score error of
+  grid BP against the closed-form score (lines) and against an independent
+  Kalman--Rauch--Tung--Striebel smoother (crosses) on the Gaussian chain, at the smallest, a
+  middle and the largest level. (a) Refining the grid at $\halfwidth=8$; (b) widening the domain
+  at the operating spacing. Dashed: the operating grid. Dotted: the smoother against the closed
+  form.}
+  \label{fig:gaussian}
+\end{figure}
+
+Against a finer reference
 ($\ngrid=1601$, $\halfwidth=12$) the worst relative score error over the twelve levels
 and four driving-noise families on ordinary draws is $\gcworstord$; under a
 three-standard-deviation displacement the heavy-tailed families lose two orders

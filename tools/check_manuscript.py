@@ -44,6 +44,7 @@ OPTIONAL = {"make_capacity_numbers.py": "outputs/E02a/capacity.csv", "make_learn
             "make_audit_numbers.py": "outputs/E16/edgeworth.csv", "make_fig_theory.py": "outputs/E18/closure_wide.csv",
             "make_fig_locality.py": "outputs/E15/locality.csv", "make_exceedance.py": "outputs/E07/ladder.csv",
             "make_grid_envelope.py": "outputs/E11/grid.csv",
+            "make_gaussian_sanity.py": "outputs/E39/sanity.csv",
             # regime-numbers.tex is generated from E13x, the sixteen-seed run, NOT from the frozen
             # eight-seed E13: both would write the same fragment and the later one would silently win.
             # E13 stays frozen as history and feeds nothing.

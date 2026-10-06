@@ -30,6 +30,31 @@ the LMMSE of the true covariance is the best linear map in mean square; and the 
 log-likelihood of a noised sample is a function of its sample covariance, whose
 expectation $e^{-2t}\Sig_0+\Dt\Id$ identifies $(\corr,\ivar)$.
 
+\subsection{\Cref{prop:kalman}}
+(i) $\va$ and $\vz$ are independent and Gaussian, so $(\va,\vx)$ is jointly Gaussian with
+$\Cov(\vx)=e^{-2t}\Sig_0+\Dt\Id=\Sig_t$ and $\Cov(\va,\vx)=e^{-t}\Sig_0$. Hence
+$\Pt=\normal{0}{\Sig_t}$, $\score=\nabla\log\Pt=-\Sig_t^{-1}\vx$, and
+$\pmean{\va}=\Cov(\va,\vx)\Cov(\vx)^{-1}\vx=e^{-t}\Sig_0\Sig_t^{-1}\vx$. Then
+$\vx-e^{-t}\pmean{\va}=(\Sig_t-e^{-2t}\Sig_0)\Sig_t^{-1}\vx=\Dt\Sig_t^{-1}\vx$, which is
+Tweedie's identity $\score=-(\vx-e^{-t}\pmean{\va})/\Dt$.
+(ii) Forward, by induction. $\lmsg_1=\mu=\normal{0}{1}$ is the law of $a_1$ before any
+observation. If $\lmsg_i(a)=p(a_i{=}a\mid x_{1:i-1})=\mathcal N(a;m,P)$, Bayes' rule gives
+$\lmsg_i\ell_i\propto p(a_i\mid x_{1:i})$, Gaussian with mean $m+k(x_i-e^{-t}m)$ and variance
+$(1-ke^{-t})P$, $k=e^{-t}P/(e^{-2t}P+\Dt)$: the Kalman update. The Markov property then gives
+$\lmsg_{i+1}(a')=\int\kernel(a'\mid a)\lmsg_i(a)\ell_i(a)\dd a\propto p(a_{i+1}{=}a'\mid x_{1:i})$,
+Gaussian with mean $\corr$ times the filtered mean and variance $\corr^2$ times the filtered
+variance plus $\ivar$: the Kalman prediction. Backward, $\rmsg_{\nsites}\equiv1$, and if
+$\rmsg_{i+1}(a)\propto p(x_{i+2:\nsites}\mid a_{i+1}{=}a)$ then
+$\rmsg_i(a)=\int\kernel(a'\mid a)\ell_{i+1}(a')\rmsg_{i+1}(a')\dd a'\propto
+p(x_{i+1:\nsites}\mid a_i{=}a)$, again by the Markov property; it is the exponential of a
+quadratic in $a$ (a Gaussian in information form, of zero precision at $i=\nsites$). Since
+$x_{i+1:\nsites}$ and $x_{1:i}$ are conditionally independent given $a_i$,
+$\lmsg_i\ell_i\rmsg_i\propto p(a_i\mid x_{1:i})\,p(x_{i+1:\nsites}\mid a_i)\propto
+p(a_i\mid\vx)$. The Rauch--Tung--Striebel smoother computes the same conditional law by another
+factorisation, conditioning backward on $a_{i+1}$; two exact computations of one law agree, and
+its mean is $\pmean{a_i}$ of (i). \codefile{tests/test\_kalman.py} checks the three against each
+other to $10^{-12}$.
+
 \subsection{\Cref{thm:hermite}}
 For $z\sim\normal{0}{1}$, real $a$ and $\alpha\in(0,1)$, the
 generating function $e^{sx-s^2/2}=\sum_n\Hen{n}(x)s^n/n!$ evaluated at

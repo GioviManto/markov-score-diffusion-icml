@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-10-06 22:20:49",
+  "git_commit": "e5f32ff962e38c2018e253537f6a83018a1c587b",
+  "git_branch": "claude/phi4-field-2026-10-01",
+  "git_dirty": "?? outputs/E33_preview_laptop/\n?? outputs/E33_preview_laptop_pair/\n?? outputs/E34_preview_laptop/\n?? outputs/E34_preview_laptop_learned/\n?? outputs/E34_preview_laptop_pairclean/\n?? outputs/E37/all.csv\n?? outputs/logs/e32_2026-10-01.log\n?? outputs/logs/e32_fixed_h_2026-10-01.log\n?? outputs/logs/e33_preview_2026-10-01.log\n?? outputs/logs/e33_preview_M2048_2026-10-01.log\n?? outputs/logs/e33_preview_pair_2026-10-01.log\n?? outputs/logs/e33_preview_pair_M2048_2026-10-01.log\n?? outputs/logs/e34_clean_preview_2026-10-01.log\n?? outputs/logs/e34_learned_2026-10-05.log\n?? outputs/logs/e34_learned_pair_2026-10-03.log\n?? outputs/logs/e34_learned_preview_2026-10-01.log\n?? outputs/logs/e34_pairclean_preview_2026-10-01.log\n?? outputs/logs/e34_physics_2026-10-01.log\n?? outputs/logs/e35_2026-10-01.log\n?? outputs/logs/e36_2026-10-01.log\n?? outputs/logs/e36_rerun_2026-10-02.log\n?? outputs/logs/e37_2026-10-05.log\n?? outputs/logs/e38_2026-10-06.log\n?? reports/figures/fig-field-potential.png\n?? reports/figures/fig-field-runtime.png\n?? reports/figures/fig-field-sweep.png\n?? reports/figures/primer-em.png\n?? reports/figures/primer-field.png\n?? reports/figures/primer-fourier.png\n?? reports/figures/primer-hermite.png\n?? reports/figures/primer-kalman.png\n?? reports/figures/primer-langevin.png",
+  "source_archive_sha256": "",
+  "source_is_clean": false,
+  "revision_source": "git",
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "platform": "macOS-14.1.1-arm64-arm-64bit-Mach-O",
+  "hostname": "MacBook-Air-160.local",
+  "slurm_job_id": "",
+  "slurm_array_task_id": "",
+  "cpu_count": "8",
+  "blas_threads": "",
+  "settings": {
+    "rho": 0.85,
+    "n_sites": 32,
+    "n_chains": 256,
+    "levels": [
+      0.05,
+      0.0725,
+      0.1053,
+      0.1527,
+      0.2216,
+      0.3215,
+      0.4665,
+      0.6769,
+      0.9821,
+      1.425,
+      2.0676,
+      3.0
+    ],
+    "grid_sizes": [
+      11,
+      21,
+      41,
+      81,
+      161,
+      321,
+      401,
+      801,
+      1601
+    ],
+    "grid_half_width": 8.0,
+    "domain_half_widths": [
+      2.0,
+      3.0,
+      4.0,
+      5.0,
+      6.0,
+      8.0,
+      10.0,
+      12.0
+    ],
+    "domain_spacing": 0.04,
+    "operating": [
+      401,
+      8.0
+    ]
+  },
+  "quick": false
+}

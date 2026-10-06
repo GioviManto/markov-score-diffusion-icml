@@ -119,7 +119,7 @@ def figure(d, out):
         for (t, c, mk) in zip(pick, (fs.CAT[0], fs.CAT[1], fs.CAT[2]), fs.MARKERS):
             s = data[data.t == t].sort_values(x)
             y = s.err_closed_form.clip(lower=1e-17)
-            ax.plot(s[x], y, color=c, lw=1.0, marker=mk, ms=3.5, label=rf"$t={t:g}$")
+            ax.plot(s[x], y, color=c, lw=1.0, marker=mk, ms=3.5, label=rf"$t={t:.2g}$")
             ax.plot(s[x], s.err_rts.clip(lower=1e-17), color=c, lw=0, marker="x", ms=3.5, alpha=0.8)
         floor = data.rts_vs_closed_form.max()
         ax.axhline(floor, color=fs.INK2, lw=0.8, ls=":")
