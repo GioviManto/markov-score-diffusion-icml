@@ -1201,3 +1201,17 @@ one lookup away.
   are missing.
 
 - **2026-10-05** — N-29 resolved for the two cost answers: the exclusive-node reruns landed (sacct AllocCPUS = the whole node). **Q7** stands: BP / transformer = 12.5x on CPU (two different nodes) and 15.1x on the H200 (hpc_E24x, hpc_E24x_gpu). **Q8** stands: the ancestral sampler is 731x cheaper than the reverse SDE at equal error (200 steps, B = 2048, 8 BLAS threads; was 725x) and 1465x cheaper than the 400-step SDE (hpc_E27x); single-threaded the 400-step ratio is 2343x, so every cost citation carries its thread count. From the consolidated note: the domain-length distribution (section 24.5) is E37; the global-latent repair and the subsampling protocol at sixteen seeds are E35x and E36x (submitted).
+
+- **2026-10-06 (evening)** — the consolidated note's section 29 and appendix F closed. **Notation** (§29 step 2,
+  F.5, and this ledger's §4): one table, `docs/NOTATION.md`, implemented in `paper/notation.tex` and applied to the
+  paper, the field report, `FIELD_MODEL.md` and the library docstrings; "innovation" became *driving noise*, "AR(1)"
+  the *linear chain*; collisions settled (γ, ξ, h, K/T, M/N_g, α); the archival thesis gets a read-only concordance.
+  **Metric definitions** (§29 step 1): `docs/METRICS.md`, from the code that wrote the frozen outputs. **The Gaussian
+  sanity check** (§29 step 3, F.4, §28 fig. 2): a proposition with its proof in the paper's appendix B and E39 —
+  grid BP agrees with the closed form and an independent RTS smoother to 1.9e-13 at (401, 8); one clause falsified as
+  written (moment-projected BP on the grid, up to 0.26: the grid truncates its widening backward messages).
+  **The FFT transition** (§29 step 5, §9.2): E40 — second-order accurate and 5.8x *slower* than dense BP at
+  N_g = 401 on one core; tuned, break-even near N_g = 3200; the 25 Sep anatomy's cap was right. **FFBS** (§9.7):
+  `markov_score.ffbs`. **Information plots** relabelled by statistical order (F.3). **Figures first** (§28 and the
+  call's summary figure): `reports/figures-first-2026-10-06.pdf`, all seven figures plus the summary, from frozen
+  outputs.

@@ -1,0 +1,162 @@
+\documentclass[10pt,a4paper]{article}
+
+% ---------------------------------------------------------------------------
+% Figures first: the seven figures of the consolidated note's section 28 and the summary figure the 25 September
+% call asked for, every panel from frozen outputs. Build: cd reports && tectonic -X compile figures-first-2026-10-06.tex
+% Figures: python tools/make_figures_first.py (3, 4, 7, summary); tools/make_gaussian_sanity.py (2);
+% tools/make_field_sweep_figs.py (5); tools/make_field_runtime_fig.py (6); figure 1 is TikZ (figures/ff-method.tex).
+% ---------------------------------------------------------------------------
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1.9cm]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{calc,arrows.meta,positioning}
+\usepackage[hidelinks]{hyperref}
+\definecolor{fgblue}{HTML}{2A78D6}
+\definecolor{fgink}{HTML}{52514E}
+\definecolor{fgmuted}{HTML}{8A8985}
+\definecolor{fgfill}{HTML}{E1E0DC}
+\input{../paper/notation}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\setlength{\parskip}{0.3em}
+\graphicspath{{figures/}{../paper/figures/}}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries Figures first}\\[0.25em]
+{\normalsize The decisive figures of the consolidated note's plan, from frozen outputs}\\[0.35em]
+{\footnotesize 6 October 2026 \textperiodcentered\ branch \code{claude/phi4-field-2026-10-01} \textperiodcentered\
+notation \code{docs/NOTATION.md}, metrics \code{docs/METRICS.md}}
+\end{center}
+
+\noindent The consolidated note (section 28) and the call of 25 September ask for five or six decisive figures before
+the prose, and a summary figure that ``really shows everything you want to show''. This document is that selection,
+for choosing: the seven figures of the note's plan, each built from frozen outputs only and named by the experiment
+that produced it, and the summary. Nothing here is new data except E39 (figure 2); E40 (the FFT transition) and the
+sixteen-seed replications E35x/E36x are reported in the field report.
+
+\noindent\textbf{In one paragraph.} The estimator learns the local law of a Markov chain from noisy sequences by EM and
+turns it into a score by exact inference on the chain (figure~1); on the Gaussian chain it reproduces the closed-form
+score and the Kalman smoother to $2\times10^{-13}$ (figure~2). On the Laplace chain the learned mixture kernel beats the
+Gaussian score wherever non-Gaussian structure survives the noise, and every network at every level (figure~3); with
+128 sequences it is more accurate than the best network with 2048 (figure~4). On the $\phi^4$ field the same mixture
+kernel falls onto the linear floor, because its drift is linear, while a five-parameter site energy reaches 3--17\,\%
+of the floor at $M=2048$ and the networks are worse than the floor from $\Theta=0.5$ on (figure~5 and the field
+report). Grid BP costs 0.5--2\,ms per sequence, 6 to 120 times a network's, for an error 14 to 32 times smaller
+(figure~6), and an FFT transition does not change that at these grid sizes (E40). Under a global latent the
+first-order kernel is 1.5--1.7 times worse than the linear floor, and the same kernel on the augmented state repairs
+it (figure~7).
+
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{ff-summary.pdf}
+\caption*{\textbf{Summary figure.} (a)~Per-level score error on the Laplace chain at $M=2048$ (E28). (b)~Pooled risk against the number of
+training sequences on the Laplace chain (E02a, E03). (c)~Risk over the linear floor across temperature on the $\phi^4$
+field at $M=2048$ (E33). (d)~Risk over the linear floor against inference cost on the field at $h=1$, $0.5$, $0.25$
+(E33, E24x). Blue: the paper's mixture kernel (EM--BP); green: the site energy; yellow: the best network in (a, b), the
+window head in (c, d); dashed: the Gaussian score or linear floor.}
+\end{figure}
+
+\section*{1. The method}
+\begin{figure}[H]\centering
+\input{figures/ff-method}
+\caption{\textbf{Learn the local law, infer globally.} Top: EM on $\nseq$ noisy sequences; the E-step runs BP and
+sums its pair marginals into $\Xis$, the M-step updates the kernel, and the two alternate. Bottom: the learned kernel
+inside BP at any level $t$ gives the posterior mean, Tweedie's identity turns it into the score, and the reverse SDE
+uses the score to denoise or generate. A direct score network learns all of the bottom row at once; here only the
+kernel is learned.}
+\end{figure}
+
+\section*{2. The Gaussian sanity check}
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{fig_gaussian_sanity.pdf}
+\caption{\textbf{Grid BP converges to the closed-form score and to the Kalman smoother} (E39, Gaussian linear chain,
+$\rho=0.85$, $L=32$, 256 chains, frozen). Pooled relative score error against the closed form (lines) and against an
+independent Rauch--Tung--Striebel smoother (crosses), at three of the twelve levels. (a) Refining the grid at $A=8$;
+(b) widening the domain at the operating spacing. Dashed: the operating grid; dotted: the smoother against the closed
+form.}
+\end{figure}
+\noindent The smoother agrees with the closed form to $1.7\times10^{-15}$, and grid BP at $(401,8)$ with both to
+$1.9\times10^{-13}$ at every level. Refining the grid converges faster than any power of the spacing and reaches
+$10^{-10}$ by $N_g=81$ at the smallest levels and $41$ at the largest; at $A=3$ the truncation costs
+$9.9\times10^{-2}$. The paper now states this as a proposition with its proof (appendix B). One registered clause failed
+as written: moment-projected BP on the same grid is off by up to $0.26$, because the grid truncates its backward
+messages, whose variance grows like $e^{2t}$; widened to $A=64$ it is exact to $10^{-15}$ up to $t=1.4$ (E39).
+
+\section*{3. Where non-Gaussian structure pays}
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{ff-nongaussian-gain.pdf}
+\caption{\textbf{The gain from non-Gaussian structure, level by level} (E28, the Laplace linear chain, $\rho=0.85$,
+$L=32$, sixteen seeds, frozen). Relative score error against the exact score at each level for EM--BP ($C=8$), the
+Gaussian score (the LMMSE of the true covariance), the six networks of the paper (thin) and the best of them at each
+level, and the isotropic prior. (a) $M=128$; (b) $M=2048$ training sequences.}
+\end{figure}
+\noindent EM--BP is below the best network at every level and both sizes (2 to 47\,\% of its error at $M=2048$), and
+below the Gaussian score until the noise has erased the non-Gaussian structure: the two cross near $t=1$ with 128
+sequences and near $t=2$ with 2048, the crossover moving with data as E28 found. At $t=0.05$ and $M=2048$ the three
+errors are $0.041$ (EM--BP), $0.088$ (best network) and $0.278$ (Gaussian score).
+
+\section*{4. Sample efficiency}
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{ff-sample-efficiency.pdf}
+\caption{\textbf{Error against the number of training sequences.} (a) The Laplace linear chain (E03 networks, E02a
+EM--BP with $C=8$; the paper's baselines table), schedule-pooled risk, sixteen seeds; dashed: the LMMSE floor;
+dotted: isotropic. (b) The $\phi^4$ field at $\Theta=0.3$, $h=1$ (E33): the four kernels (risk selection) and the two
+networks; dashed: the linear floor.}
+\end{figure}
+\noindent On the Laplace chain EM--BP is below the LMMSE floor already at $M=32$ ($0.099$ against $0.167$), where
+every network is above it, and with 128 sequences ($0.055$) it beats the best network with 2048 (bidirectional GRU,
+$0.060$). On the field the site energy falls from $0.073$ to $0.009$ between $M=32$ and $2048$ and the spline from
+$0.095$ to $0.016$, while the mixture kernel stays on the floor ($0.27$) at every size; the networks, trained at
+$M=128$ and $2048$, reach $0.13$ (window) and $0.14$ (transformer).
+
+\section*{5. The temperature sweep}
+\begin{figure}[H]\centering
+\includegraphics[width=\textwidth]{fig-field-sweep.pdf}
+\caption{\textbf{The $\phi^4$ field across temperature} (E32 fixed-spacing and iso-correlation sweeps, E34; the
+field report's figure). Correlation length, domain length, kink density and the score error of the linear closure
+across $\Theta$.}
+\end{figure}
+\noindent At fixed spacing ($h=1$) the linear floor falls only from $0.30$ to $0.18$ over $\Theta=0.2$--$2$ while
+kinks multiply ($0.016$ to $0.166$ per bond) and domains shorten ($9.0$ to $5.3$ sites); along the iso-correlation
+line it falls from $0.269$ to $0.041$ (E32, frozen). The learned arms across $\Theta$ are panel (c) of the summary.
+In one dimension there is no phase transition at $\Theta>0$; the low-temperature end is a sharp crossover.
+
+\section*{6. Refinement and runtime}
+\begin{figure}[H]\centering
+\includegraphics[width=0.92\textwidth]{fig-field-runtime.pdf}
+\caption{\textbf{Accuracy against cost across the lattice spacing} (E33 risk at $M=2048$ over its linear floor,
+sixteen seeds; inference from E24's exclusive-node sweep, 8 BLAS threads; training wall clock from E33, shared nodes).
+Markers: $h=1$, $0.5$, $0.25$ ($L=32$, $64$, $128$). (a) Inference, ms per sequence; (b) training, s per fit.}
+\end{figure}
+\noindent Grid BP costs $0.5$, $1.0$ and $2.0$\,ms per sequence at $L=32$, $64$, $128$; the networks are 6 to 120
+times cheaper but sit at 48--103\,\% of the linear floor, against 3--4\,\% for the site energy and 6--7\,\% for the
+spline. A network trains in 9--22 minutes, an EM fit in 35 minutes to 5 hours (shared nodes). The FFT transition the
+note proposes (section 9.2; E40) is accurate to second order ($6.7\times10^{-4}$ from dense BP at $N_g=401$) and
+$5.8$ times slower than the dense one there on one core; tuned, it breaks even only near $N_g=3200$.
+
+\section*{7. Misspecification and its repair}
+\begin{figure}[H]\centering
+\includegraphics[width=0.86\textwidth]{ff-misspec-repair.pdf}
+\caption{\textbf{A global latent the first-order kernel cannot see, and the repair by state augmentation} (E35:
+$X_i=Gb+U_i$, $G=\pm1$ per sequence, $U$ the Gaussian linear chain at $\rho=0.85$; closed-form exact score; two
+seeds, frozen). The mixture kernel on $X$ (first order) and the same kernel on the state $(X_i,G)$ tied by
+reflection (augmented), against the linear floor, over the latent strength $b$. (a) $M=512$;
+(b) $M=2048$.}
+\end{figure}
+\noindent At $b=0$ the arms agree and the floor is the exact score (the chain is Gaussian). With the latent the
+first-order kernel's risk grows with $b$ and does not fall when $M$ quadruples: it is 1.5 to 1.7 times worse than the
+linear floor at $b=1$ and $2$. The augmented kernel, with the same parameter count, stays flat; at $b=2$, $M=2048$ its
+risk is $8.6$ and $17.9$ times smaller than the first-order one in the two seeds. Sixteen seeds (E35x) are queued on
+the cluster, and the figure will be redrawn from them.
+
+\end{document}
