@@ -83,8 +83,8 @@ def chain_covariance(rho: float, q: float, L: int) -> np.ndarray:
 def chain_kappa4(rho: float, kappa4_eps: float, L: int) -> np.ndarray:
     """Fourth-cumulant tensor kappa_4[i, j, k, l] of the chain.
 
-    Cumulants are additive over the independent innovations; a_1 is Gaussian and
-    contributes nothing; innovation eps_m (m >= 2, 1-indexed) enters a_i with
+    Cumulants are additive over the independent driving-noise terms; a_1 is Gaussian and
+    contributes nothing; driving noise eps_m (m >= 2, 1-indexed) enters a_i with
     coefficient rho^{i-m} for i >= m. Hence
         kappa_4[i,j,k,l] = kappa_4(eps) * sum_{m=2}^{min(i,j,k,l)} rho^{i+j+k+l-4m}.
     With 0-indexed sites s = i - 1 the sum runs over m' = 1 .. min(s).

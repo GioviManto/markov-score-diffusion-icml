@@ -59,7 +59,7 @@ physicist's parametrisation) and 3--5 October (every confirmatory result, E35, E
 Jérôme and Marc asked for a test of the estimator on Markov data from a physical model: spatial
 snapshots of the one-dimensional stochastic Allen--Cahn ($\phi^4$) field, whose stationary law is a
 nearest-neighbour Gibbs measure, with four arms tracked across temperature and lattice spacing (a
-learned pair energy, the Gaussian closure, the window CNN, the exact score), and the suggestion that
+learned pair energy, the Gaussian closure, the window CNN, the oracle score), and the suggestion that
 with this concrete example the paper may be complete. Everything in this report was built, tested
 and registered on 1 October; by 5 October every registered run had landed, been read against its
 predictions and been frozen (\S\ref{sec:conf}).
@@ -67,9 +67,9 @@ predictions and been frozen (\S\ref{sec:conf}).
 \begin{enumerate}[leftmargin=1.4em,itemsep=0.15em]
 \item \st{The chain is exact and in the package} (\S\ref{sec:chain}). Its kernel is a Gaussian step
   tilted by a function of the \emph{arrival} point, the column normaliser being the ground-state
-  transform. The Gaussian AR(1) chain is the one member the two laboratories share
+  transform. The Gaussian linear chain is the one member the two laboratories share
   (Proposition~\ref{prop:embed}); the paper's mixture kernel is misspecified here through a nonlinear
-  drift, not through its innovation shape.
+  drift, not through the shape of its driving noise.
 \item \st{The learned pair energy is a transition kernel} (\S\ref{sec:est}): concave M-step, the
   gradient is Boltzmann learning's positive phase minus a \emph{conditional} negative phase, no
   chain-wide partition function (Proposition~\ref{prop:boltz}).
@@ -87,9 +87,9 @@ predictions and been frozen (\S\ref{sec:conf}).
   computes on linear chains.
 \item \st{E32} (\S\ref{sec:e32}): at matched correlation $\lambda_1/\lambda_0=0.85$ the linear floor
   is $0.269$ at $\Th=0.3$ against $0.168$ for the Laplace laboratory, and falls to $0.041$ at
-  $\Th=2$; the operating grid is exact to $10^{-12}$; Theorem~2's gap ratio rises monotonically
+  $\Th=2$; the operating grid's score agrees with a four times finer grid's to $10^{-12}$; Theorem~2's gap ratio rises monotonically
   through $t_*$ to $0.73$--$0.94$ at $t=3$.
-\item \st{E33 and E34} (\S\ref{sec:e33}): five kernel arms through exact BP, the window head and the
+\item \st{E33 and E34} (\S\ref{sec:e33}): five kernel arms through grid BP, the window head and the
   transformer under both interfaces, the oracles; the physical statistics the consolidated note
   asks for; the clean-data interface. Eleven predictions were registered before any confirmatory
   cell ran; one Legendre fit crashed the kernel jobs on the finest lattice, and amendment~3 (a failed fit
@@ -109,16 +109,24 @@ predictions and been frozen (\S\ref{sec:conf}).
   as written, P7 because the site energy did better than predicted.
 \end{enumerate}
 
-Notation. $\Th$ is the physical temperature (the code and the cell names call it \code{T}), $h$ the lattice spacing,
-$t$ the diffusion time of the channel $x_t=e^{-t}a+\sqrt{1-e^{-2t}}\,z$, $L$ the number of sites,
-$M$ the number of training sequences, $N_g$ the grid size. The consolidated note's $\sigma$ is our
-$\sqrt{1-e^{-2t}}/e^{-t}$.
+Notation (one table for the code, the paper and this report: \code{docs/NOTATION.md}). $\Th$ is the physical
+temperature (the code and the cell names call it \code{T}), $h$ the lattice spacing, $\phi_i$ the field and
+$a_i=\phi_i/s$ its standardised value, $t$ the diffusion time of the channel $x_t=e^{-t}a+\sqrt{\Delta_t}\,z$ with
+$\Delta_t=1-e^{-2t}$, $L$ the number of sites, $M$ the number of training sequences, $N_g$ the grid size. The
+consolidated note's $\sigma$ is our $\sigma_t=\sqrt{e^{2t}-1}$ (its channel $Y=X+\sigma Z$ is ours multiplied by
+$e^{t}$). $K(a'\mid a)$ is always a normalised transition and $\mathsf T=e^{-W}$ the transfer operator; $\ell_i$ is
+the local likelihood, $\overrightarrow m_i$ and $\overleftarrow m_i$ the forward and backward messages without it
+(the note's $\alpha_i=\overrightarrow m_i\ell_i$ and $\beta_i=\overleftarrow m_i$); $\gamma$ is the bond variance
+and $\xi$ the correlation length. A linear chain $a_{i+1}=\rho a_i+\varepsilon_i$ has driving noise $\varepsilon_i$
+(the paper used to say ``innovation''). \emph{Grid BP} is sum-product on $N_g=401$ trapezoidal points on $[-8,8]$:
+exact for the finite-state model the grid defines, an approximation of the continuous chain whose truncation and
+quadrature errors are measured (E32 P1); run with the true kernel it gives the \emph{reference} (oracle) score.
 
 \section{The chain}\label{sec:chain}
 
 \subsection{From the SPDE to a Markov chain}
 
-The equation $\partial_s\phi=\partial_x^2\phi-V'(\phi)+\sqrt{2\Th}\,\eta$ with $V(\phi)=(\phi^2-1)^2/4$
+The equation $\partial_\tau\phi=\partial_x^2\phi-V'(\phi)+\sqrt{2\Th}\,\eta$ with $V(\phi)=(\phi^2-1)^2/4$
 is the gradient flow of $H[\phi]=\int[\tfrac12(\partial_x\phi)^2+V(\phi)]\dd x$ at temperature
 $\Th$; in one space dimension its stationary law is the Gibbs measure $\propto\exp(-H/\Th)$. On a
 lattice of spacing $h$, $H_h(\phi)=\sum_i[(\phi_{i+1}-\phi_i)^2/2h+hV(\phi_i)]$, a nearest-neighbour
@@ -147,7 +155,10 @@ $\pi(\phi_1)\prod K(\phi_{i+1}\mid\phi_i)$; that is what ``spatial snapshots of 
 means, and it is the law the data are drawn from. (A finite open chain with free ends is also
 Markov but inhomogeneous within a correlation length of its ends; we do not use it.) The lag-$k$
 covariance is $\sum_{n\ge1}(\lambda_n/\lambda_0)^k\langle\psi_0|\phi|\psi_n\rangle^2$, so $\rho_1:=\lambda_1/\lambda_0$
-plays the role $\rho$ plays for the AR(1) family and the correlation length in sites is $1/\log(1/\rho_1)$.
+plays the role $\rho$ plays for the linear chains and the correlation length in sites is $\xi=1/\log(1/\rho_1)$.
+In one dimension there is no phase transition at any $\Th>0$: a kink costs the finite energy $E_{\rm kink}$, so
+$\rho_1<1$ and $\xi$ is finite at every temperature, growing roughly like $e^{E_{\rm kink}/\Th}$ as $\Th\to0$. The
+low-temperature cells sit in a sharp crossover, not in an ordered phase.
 
 \subsection{The tilted-walk identity}
 
@@ -174,27 +185,27 @@ $\psi_0$ or $\lambda_0$.
 \subsection{Where the two laboratories meet}
 
 \begin{proposition}[Gaussian embedding]\label{prop:embed}
-The Gaussian AR(1) kernel $\Nn(a';\rho a,q)$ with $0<\rho<1$ is the member of \eqref{eq:tilt} with
+The linear-Gaussian kernel $\Nn(a';\rho a,q)$ with $0<\rho<1$ is the member of \eqref{eq:tilt} with
 step variance $\gamma=q/\rho$ and $\log g(a')=-(1-\rho)a'^2/2q+\mathrm{const}$. No other kernel of
-innovation form $p_\varepsilon(a'-\rho a)$, $\rho\neq0$, belongs to the family, and no other member of
-the family has a state-independent innovation.
+the linear form $p_\varepsilon(a'-\rho a)$, $\rho\neq0$, belongs to the family, and no other member of
+the family has state-independent driving noise.
 \end{proposition}
 \begin{proof}
 $\log\Nn(a';\rho a,q)=-a'^2/2q+\rho aa'/q-\rho^2a^2/2q+\mathrm{c}$ and $\log[G_\gamma(a'-a)g(a')]=-a'^2/2\gamma+aa'/\gamma-a^2/2\gamma+\log g(a')+\mathrm c$.
 Matching the cross term gives $\gamma=q/\rho$; the $a'^2$ terms give $\log g(a')=-a'^2(1/q-\rho/q)/2$,
 a Gaussian of variance $q/(1-\rho)=1+\rho$; the $a^2$ terms are absorbed by $Z(a)$. For the second
 claim, $\partial_a\partial_{a'}\log K$ equals $1/\gamma$, a constant, for every member of \eqref{eq:tilt},
-and equals $-\rho(\log p_\varepsilon)''(a'-\rho a)$ for an innovation kernel, which is constant iff
+and equals $-\rho(\log p_\varepsilon)''(a'-\rho a)$ for a linear kernel, which is constant iff
 $\log p_\varepsilon$ is quadratic.
 \end{proof}
 
 \begin{remark}[the misspecification mechanism]
 Expanding $\log g$ around $a$, $K(a'\mid a)\approx\Nn\!\big(a';\,a+\gamma(\log g)'(a),\,\gamma\big)$:
-at fine $h$ the chain is the Euler step of $\dd a=\gamma(\log g)'(a)\dd s+\sqrt{2\gamma}\dd W$ with a
-\emph{nonlinear} drift. The mixture-innovation kernel $\sum_c\pi_c\Nn(a'-\rho a;\mu_c,s_c^2)$ has a
-linear drift and a state-independent innovation; it is misspecified here through the drift. That is
+at fine $h$ the chain is the Euler step of $\dd a=\gamma(\log g)'(a)\dd\tau+\sqrt{2\gamma}\dd W_\tau$ with a
+\emph{nonlinear} drift. The mixture kernel $\sum_c\pi_c\Nn(a'-\rho a;\mu_c,s_c^2)$ has a
+linear drift and state-independent driving noise; it is misspecified here through the drift. That is
 a different mechanism from every axis of the paper's misspecification study (global latent,
-long-range coupling, AR(2), site-dependent $\rho$, heteroskedasticity), and E33's P1/P2 measure it.
+long-range coupling, a second lag, site-dependent $\rho$, heteroskedasticity), and E33's P1/P2 measure it.
 \end{remark}
 
 \subsection{Standardisation, cells}
@@ -365,15 +376,15 @@ well-posed estimator, for a reason that was found by the diagnostic, not anticip
 \begin{proposition}[the backward message saturates]
 Let $\log g(a')\le -c\,a'^4+C$ (a super-Gaussian tilt, $c>0$). Then $K(\cdot\mid a)$ concentrates, as
 $|a|\to\infty$, near $a'_*(a)$ with $|a'_*|\sim(|a|/4c\gamma)^{1/3}$, and the backward message
-$R(a)=\int K(a'\mid a)\ell(a')\dd a'=\E[\ell(a_{i+1})\mid a_i=a]$ is bounded and decays only as
+$\overleftarrow m(a)=\int K(a'\mid a)\ell(a')\dd a'=\E[\ell(a_{i+1})\mid a_i=a]$ is bounded and decays only as
 $\exp(-c'|a|^{2/3})$.
 \end{proposition}
 \begin{proof}[Sketch]
 The exponent $-(a'-a)^2/2\gamma-ca'^4$ is maximised where $(a-a')/\gamma=4ca'^3$, i.e.\ $a'_*\approx(a/4c\gamma)^{1/3}$
 for large $|a|$, with curvature $\sim12ca'^2_*$, so $K(\cdot\mid a)$ is a sharpening Gaussian at $a'_*$ and
-$R(a)\approx\ell(a'_*(a))$; for a Gaussian $\ell$ of width $\sqrt{\Delta}/\alpha$ this is $\exp(-\alpha^2(a'_*-x/\alpha)^2/2\Delta)$.
+$\overleftarrow m(a)\approx\ell(a'_*(a))$; for the channel's $\ell(a')\propto\exp[-(x-e^{-t}a')^2/2\Delta_t]$ this is $\exp[-(x-e^{-t}a'_*)^2/2\Delta_t]$.
 \end{proof}
-So on a finite grid $R$ is nearly constant, and the Gaussian with its moments is close to flat: the
+So on a finite grid $\overleftarrow m$ is nearly constant, and the Gaussian with its moments is close to flat: the
 projection discards the backward information. Measured at $t=0.47$ on the $(401,8)$ grid, 28\,\% of
 a projected message's mass sits in the outer 5\,\% of the grid; over E32's cells and levels the
 maximum is 42\,\% at the base cell and 98--100\,\% at every other cell (Table~\ref{tab:ladder}). On
@@ -408,7 +419,7 @@ $\Th=0.3$, $h=0.25$, $L=128$   & 0.098 & 0.750 & 0.529 & 1.00 & $1.1\times10^{-1
 \end{tabular}
 \caption{E32 ladder, pooled relative score error over the twelve-level schedule (mean of two
 replicates of 512 chains), the projected recursion's largest edge mass over levels, and the worst
-relative error of the $(401,8)$ exact score against $(1601,8)$ over levels. For scale: the Laplace
+relative error of the $(401,8)$ reference score against $(1601,8)$ over levels. For scale: the Laplace
 laboratory's floor at $\rho=0.85$ is $0.168$ and E14b's bimodal chain's $0.082$.}
 \label{tab:ladder}
 \end{table}
@@ -424,13 +435,13 @@ largest where the wells are deepest.}
 
 \begin{figure}[h]\centering
 \includegraphics[width=0.52\textwidth]{fig-field-theory.pdf}
-\caption{Theorem~2 on the second laboratory: $\E\|S-S^{\mathrm G}\|^2$ from tree-exact BP against the
+\caption{Theorem~2 on the second laboratory: $\E\|S-S^{\mathrm G}\|^2$ from grid BP against the
 linear floor, divided by $\tfrac16\|\kappa_4\|_F^2e^{-8t}$ with $\kappa_4$ from transfer-matrix
 four-point functions, at the four temperature cells; $t_*=\tfrac12\log\lambda_{\max}(\Sigma_0)=1.15$.}
 \label{fig:theory}
 \end{figure}
 
-\st{P1, the grid: confirmed far inside its bound.} The $(401,8)$ exact score agrees with the
+\st{P1, the grid: confirmed far inside its bound.} The $(401,8)$ reference score agrees with the
 $(1601,8)$ one to $10^{-12}$ relative or better on every cell and level, against a declared
 tolerance of $10^{-3}$. The field kernel is smooth, so the trapezoid rule is spectrally accurate here,
 unlike the Laplace chain's kink. The same holds for the eigensolve: halving the fine spacing or
@@ -441,7 +452,7 @@ widening the domain moves $\lambda_0$, $\rho_1$ and $s$ by less than $10^{-10}$.
 
 \st{P3, Theorem~2: consistent, not reached within the schedule.} The ratio rises monotonically
 through $t_*$ and reads $0.85$, $0.87$, $0.73$, $0.94$ at $t=3$ on the four cells
-(Fig.~\ref{fig:theory}). The AR(1) families reached the constant at $t=4$ with 8192 chains (E18);
+(Fig.~\ref{fig:theory}). The linear chains reached the constant at $t=4$ with 8192 chains (E18);
 this run stops at $t=3$ with 512, and the ratio at $t=2$ already moves by $0.1$ between the two
 replicates. The constants are large, $C_4=\tfrac16\|\kappa_4\|_F^2=3882$, $2350$, $1261$, $838$ at
 $\Th=0.3,0.5,1,2$ for $L=32$, which is why the gap is still $10^{-2}$--$10^{-1}$ of the score energy
@@ -450,7 +461,7 @@ at $t=1$. Extending the schedule to $t=4$ with 8192 chains is cheap and is the o
 \st{The floor itself.} At the base cell the linear floor is $0.269$, well above the Laplace
 laboratory's $0.168$ at the same correlation and more than three times E14b's bimodal chain's
 $0.082$ (kurtosis $-0.72$): the field at $\Th=0.3$ carries more structure beyond second order than
-any chain the paper has used, and the exact score has that much room above the floor. The floor
+any chain the paper has used, and the reference score has that much room above the floor. The floor
 falls monotonically along the temperature sweep ($0.269\to0.041$), which is E33's P6, and along the
 refinement cells ($0.269\to0.162\to0.098$), because at finer $h$ the per-step kernel is closer to
 Gaussian while the chain is more correlated.
@@ -509,7 +520,7 @@ Gaussian. At fixed spacing the floor falls only from $0.30$ to $0.18$: a hot cel
 site, so there is little sequence structure to lose, but its marginal still has kurtosis $-0.78$,
 and the closure cannot denoise a non-Gaussian marginal even site by site. The note's expectation
 that ``all methods come closer at high $\Th$'' is therefore true of the structured arms against
-each other, not of the linear closure against the exact score, which keeps a floor of $0.18$ at
+each other, not of the linear closure against the reference score, which keeps a floor of $0.18$ at
 $\Th=2$ on this axis. For the learned arms the fixed-$h$ cells are not in E33; whether to add them
 is question~3 to Jérôme and Marc.
 
@@ -533,7 +544,7 @@ bond does not survive marginalising the intermediate sites), so the gradient-cla
 misspecified on the subsampled chain while a state-dependent mixture is not.
 
 \begin{table}[h]\centering\footnotesize
-\caption{E36, clean-data fits on $2048$ strided chains (seeds 0 and 1), scored against exact BP with $K^s$.
+\caption{E36, clean-data fits on $2048$ strided chains (seeds 0 and 1), scored against grid BP with the true $K^s$.
 ``Floor'' is the linear floor of the same strided chain.}
 \label{tab:stride}
 \begin{tabular}{@{}rrrrrr@{}}
@@ -552,7 +563,7 @@ exactly specified (risk $0.0013$ to $0.0021$), and at stride 4 their risk is $18
 seeds. The third part, that the neural kernel beats the site energy at stride 4, holds on one seed of two
 ($0.023$ against $0.040$, then $0.093$ against $0.041$); the neural kernel selected its last checkpoint in all six
 cells, so its numbers are limited by the iteration budget and the clause is unresolved rather than refuted.
-Two observations were not registered and are the more useful ones. The innovation mixture sits \emph{on}
+Two observations were not registered and are the more useful ones. The mixture kernel sits \emph{on}
 the linear floor at every stride (ratio $1.007$ to $1.026$): on the field, the paper's estimator is the Gaussian
 closure even with clean data, because its drift is linear. And subsampling costs the gradient-class
 kernels a factor of $20$ to $30$ in risk but not their advantage: at stride 4 they are still at $15$ to $17\,\%$ of the floor.
@@ -566,7 +577,7 @@ bundles keyed by tag, seed, cell and $M$, one noised view per sequence spread ov
 levels, validation 1024 and test 2048 chains per seed):
 
 \begin{itemize}[leftmargin=1.4em,itemsep=0.1em]
-\item kernel arms through exact BP, the same ladder to 1200 for every kernel, the kernel's own
+\item kernel arms through grid BP, the same ladder to 1200 for every kernel, the kernel's own
   invariant law as initial law, both of E14's selection rules (held-out BP risk; held-out one-view
   evidence): \code{em\_mixture} ($C=8$, 25 parameters, misspecified), \code{em\_tilted\_poly} (Legendre
   degree 6, 7), \code{em\_tilted\_spline} (24 B-splines, 25), \code{em\_mdn} (E25/E30's neural kernel,
@@ -703,7 +714,7 @@ generated from the frozen files, by \code{tools/make\_field\_confirmatory\_table
 
 \begin{table}[h]\centering\footnotesize
 \caption{E33, score risk over the linear floor (the covariance twin, E33's oracles), mean over sixteen seeds,
-through one noised view per sequence. Below one beats the Gaussian closure. Kernel arms by EM through exact
+through one noised view per sequence. Below one beats the Gaussian closure. Kernel arms by EM through grid
 BP, parameter counts in brackets; networks under the two interfaces. A superscript counts failed fits
 (amendment~3), excluded from the mean; ``failed'': all sixteen.}
 \label{tab:conf-score}
@@ -799,7 +810,7 @@ clock per fit as E33 recorded it (shared nodes, indicative). Regenerated by
 \label{fig:runtime}
 \end{figure}
 
-Figure~\ref{fig:runtime} is the comparison the note's section 9.8 asks to be measured rather than asserted. Exact BP
+Figure~\ref{fig:runtime} is the comparison the note's section 9.8 asks to be measured rather than asserted. Grid BP
 costs $0.5$, $1.0$ and $2.0$\,ms per sequence at $L=32$, $64$, $128$, linear in $L$, and the networks $4$ to $320\,\mu$s:
 a network is $6$ to $120$ times cheaper per posterior mean. In accuracy the order is reversed and the gap is larger:
 the site energy sits at $3$--$4\,\%$ of the floor on every lattice, the spline at $6$--$7\,\%$, while the best network
@@ -854,7 +865,7 @@ failed anywhere.
 The consolidated note's section 8 predicts that a latent shared by a whole sequence leaves a first-order
 kernel with a bias that data do not remove, and that enlarging the state removes it. E35 tests both on a
 case with a closed-form exact score: $X_i=Gb+U_i$, with $G=\pm1$ a fair sign per sequence and $U$ the
-Gaussian AR(1) chain at $\rho=0.85$. The repair is the same mixture kernel on the state $(X_i,G)$, the two
+Gaussian linear chain at $\rho=0.85$. The repair is the same mixture kernel on the state $(X_i,G)$, the two
 phases tied by reflection, with the same number of parameters (\code{markov\_score/augmented.py}).
 
 \begin{table}[h]\centering\footnotesize
@@ -878,9 +889,9 @@ paper's first-order estimator is $1.5$--$1.7$ times \emph{worse} than the linear
 \toprule
 the note asks for & where it is \\
 \midrule
-four arms across $\Th$, $h$, $\sigma$ & E33: learned pair energy (two capacities), closure = covariance twin (\S\ref{sec:closure}), window head, exact score; twelve levels $t$; six cells \\
+four arms across $\Th$, $h$, $\sigma$ & E33: learned pair energy (two capacities), closure = covariance twin (\S\ref{sec:closure}), window head, oracle score (grid BP, true kernel); twelve levels $t$; six cells \\
 exact transfer-matrix sampling & \code{field.py}: eigensolve on 2401 points, continuum rejection sampler and lattice inverse-CDF sampler, agreeing \\
-score error, posterior-mean error & E33's estimand; the posterior-mean error is the same quantity per level up to $\alpha/\Delta$ \\
+score error, posterior-mean error & E33's estimand; the posterior-mean error is the same quantity per level up to $e^{-t}/\Delta_t$ \\
 $C(r)$, $\xi$, kinks, domains, bimodality & E34 \code{physics\_truth} and \code{physics\_learned} \\
 generated-sample quality & E34 \code{physics\_learned}; the direct sampler of E27 \\
 runtime & E24x (uncontended reruns, in queue); the field adds nothing to BP's cost, which depends on $N_g$, $L$, $B$ only \\
@@ -910,7 +921,7 @@ subsampling a fine lattice & E36 (\S\ref{sec:stride}): kernel $K^s$ exact; P1, P
   closure arm is the covariance twin. Does that match what Marc had in mind by ``Gaussian closure''
   for this benchmark, or did he mean the Kalman smoother of the linearised dynamics?
 \item The temperature sweep is at matched $\lambda_1/\lambda_0=0.85$ rather than at fixed $h$, so that
-  the field is compared with the AR(1) laboratory at matched second-order structure. Agreed, or
+  the field is compared with the linear-chain laboratory at matched second-order structure. Agreed, or
   would a fixed-$h$ sweep be more natural for the physics reading?
 \item Theorem~2's ratio is still $0.75$--$0.95$ at $t=3$: the $\phi^4$ constants are large. Is it worth
   a sentence in the paper, or only the figure?

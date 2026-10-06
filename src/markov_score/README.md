@@ -3,14 +3,21 @@
 Pure functions and small dataclasses. Nothing here reads a configuration file,
 writes an output, or knows which experiment is running; that is `experiments/`.
 
+## Notation
+
+The symbols in docstrings are those of the paper and the reports; `docs/NOTATION.md` is the
+table, including the code name of each object (for instance `alpha` = e^{-t}, `delta` = Δ_t,
+`forward`/`backward` = the cavity messages m→_i, m←_i, `n_grid` = N_g, `n_chains` = M) and the
+identifiers kept for frozen data (`MixtureInnovationKernel`, `innovation_excess_kurtosis`, …).
+
 ## The core path
 
 Read these four in order and you have the whole method:
 
 | Module | What it is |
 |---|---|
-| `priors.py` | the clean chain — Gaussian, Laplace, mixture AR(1) generators |
-| `noising.py` | the OU channel: `x = α_t a + √Δ_t z`, and the likelihood table |
+| `priors.py` | the clean chain — linear chains with Gaussian, Laplace, mixture driving noise (the classes keep their `*AR1` names) |
+| `noising.py` | the OU channel: `x = e^{-t} a + √Δ_t z` (argument `alpha` = e^{-t}), and the likelihood table |
 | `bp_grid.py` | sum-product on the posterior chain, represented on a truncated grid |
 | `em.py` | the E-step statistic Ξ, Fisher's identity, and the EM loop |
 | `kernels.py` | parameterised transitions and their M-steps |
@@ -28,7 +35,7 @@ Worth stating because it has been overclaimed in this codebase before:
 - **Exact**: the continuous functional recursion; the analytic Gaussian
   likelihood; the E-step's structure, since the posterior really is a tree.
 - **Not exact**: what actually runs. Messages are functions on ℝ represented on a
-  truncated grid, so there is truncation error and O(h²) quadrature error. The
+  truncated grid, so there is truncation error and O(Δu²) quadrature error (Δu the grid spacing). The
   evidence `bp_grid` returns is a quadrature estimate under that grid model.
 - **Exact only sometimes**: the M-step. Closed-form maximiser for the Gaussian
   and Laplace kernels; conditional-maximisation sweeps (generalised EM) for the

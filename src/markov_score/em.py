@@ -30,30 +30,32 @@ structure untouched. A chain is a tree, hence sum-product BP returns the
 approximation anywhere.
 
 The remaining error is the grid representation of the continuous messages, and it
-is measured rather than assumed. At M = 401, A = 8 the recursion agrees with the
+is measured rather than assumed. At N_g = 401, A = 8 the recursion agrees with the
 Gaussian closed form to 9.2e-15 relative and with brute-force enumeration of the
 discretised posterior to 1.6e-14 -- at that configuration, on those tests. That is
 not a 1e-15 error bound for arbitrary kernels, tails or noise levels: trapezoidal
-quadrature is O(h^2) and degrades when a likelihood is narrower than a few grid
+quadrature is O(du^2) and degrades when a likelihood is narrower than a few grid
 cells, and the truncation diagnostic is a statistic over sampled chains whose
 worst case at A = 8 is 1.2e-6, not its 90th percentile of 1.5e-8. See
 frozen_config.half_width and experiments/exp_18_revision_diagnostics.py.
 
 The one matrix that is the whole E-step
 ---------------------------------------
-Write the grid as u_1..u_M with quadrature weights w, and let
+Write the grid as u_1..u_{N_g} with quadrature weights w, and let
 
-    f_i = w * L_i * ell_i        ("forward message including its local factor")
-    g_i = w * R_i * ell_i        ("backward message including its local factor")
+    f_i = w * m->_i * ell_i      ("forward message including its local factor")
+    g_i = w * m<-_i * ell_i      ("backward message including its local factor")
+
+with m->_i, m<-_i the cavity messages of docs/NOTATION.md (arrays `fwd`, `bwd` below)
 
 for one chain. The pairwise posterior on edge (i, i+1) is
 
-    b_{i,i+1}(u_j, u_k)  =  f_i(j) K[k, j] g_{i+1}(k) / Z_i,
+    p(a_i = u_j, a_{i+1} = u_k | x)  =  f_i(j) K[k, j] g_{i+1}(k) / Z_i,
     Z_i = g_{i+1}^T K f_i.
 
 Every quantity EM needs is an expectation under these pairwise beliefs summed
 over edges and over the dataset, so the entire E-step compresses into a single
-M x M matrix
+N_g x N_g matrix
 
     C = sum_{d, i} g^{(d)}_{i+1} (f^{(d)}_i)^T / Z^{(d)}_i,      Xi = C * K,
 
@@ -76,7 +78,7 @@ Consequences used throughout this module:
 
        Q(theta | theta') = <Xi(theta'), log K_theta>  +  site-1 term  +  const,
 
-   so the M-step never touches the data again -- only the M x M matrix Xi.
+   so the M-step never touches the data again -- only the N_g x N_g matrix Xi.
 
 2. Fisher's identity gives the gradient of the *exact* marginal log-likelihood
    with no differentiation through the forward-backward recursion:
@@ -86,8 +88,8 @@ Consequences used throughout this module:
    This is the key computational point: BP is not something we backpropagate
    through, it is the thing that supplies the expectation. No autodiff needed.
 
-3. Cost per EM iteration is O(N n M^2), independent of the number of
-   parameters, and the M-step is O(P M^2) with P = dim(theta).
+3. Cost per EM iteration is O(M L N_g^2) for M sequences of L sites, independent of the
+   number of parameters, and the M-step is O(P N_g^2) with P = dim(theta).
 """
 
 from __future__ import annotations
@@ -103,10 +105,10 @@ from markov_score.backend import get_xp, to_device, to_host
 class ExpectedStatistics:
     """Sufficient statistics of one E-step over a whole dataset.
 
-    xi           : (M, M) expected pairwise transition mass, xi[k, j] is the mass
+    xi           : (N_g, N_g) expected pairwise transition mass, xi[k, j] is the mass
                    on u_j -> u_k summed over all edges of all chains. Sums to
                    the total number of edges.
-    site1        : (M,) expected posterior mass at the first site, summed over
+    site1        : (N_g,) expected posterior mass at the first site, summed over
                    chains (sums to the number of chains). Only needed if the
                    initial density mu is also learned.
     log_evidence : sum_d log p_{t_d, theta}(x^(d)), the exact marginal
@@ -148,9 +150,9 @@ def e_step(
 
     Parameters
     ----------
-    log_K : (M, M) log K[out, in] = log K_theta(u_out | u_in) at the current theta.
-    X     : (B, n) noisy observations, all at the same (alpha, delta).
-    log_mu: (M,) log initial density; defaults to the standard normal used by
+    log_K : (N_g, N_g) log K[out, in] = log K_theta(u_out | u_in) at the current theta.
+    X     : (B, L) noisy observations, all at the same (alpha, delta).
+    log_mu: (N_g,) log initial density; defaults to the standard normal used by
             `priors` when it draws a_1.
     chunk : batch rows processed at once (memory knob; results are exact and
             chunk-independent).
@@ -164,7 +166,7 @@ def e_step(
     accumulation of the pairwise statistics and the evidence bookkeeping.
     """
     X = np.atleast_2d(np.asarray(X, dtype=float))
-    m = len(grid)
+    n_grid = len(grid)
     if log_mu is None:
         log_mu = -0.5 * grid**2 - 0.5 * np.log(2.0 * np.pi)
     K = np.exp(log_K)
@@ -176,7 +178,7 @@ def e_step(
     total = None
     for start in range(0, X.shape[0], chunk):
         part = _e_step_chunk(
-            grid, weights, K, X[start : start + chunk], alpha, delta, log_mu, m,
+            grid, weights, K, X[start : start + chunk], alpha, delta, log_mu, n_grid,
             None if chain_weights is None else chain_weights[start : start + chunk],
         )
         total = part if total is None else total + part
@@ -193,17 +195,17 @@ def _e_step_chunk(
     alpha: float,
     delta: float,
     log_mu: np.ndarray,
-    m: int,
+    n_grid: int,
     chain_weights: np.ndarray | None = None,
 ) -> ExpectedStatistics:
-    b_size, n = X.shape
-    if n < 2:
+    b_size, n_sites = X.shape
+    if n_sites < 2:
         raise ValueError("EM on a chain needs at least two sites.")
 
     # The E-step is where this project's compute actually goes: the forward and
-    # backward sweeps are 2(n-1) matmuls of (B, M) against (M, M), and the
-    # pairwise accumulation is two more at (E, M) x (M, M) with E = B(n-1). At
-    # M = 401 and nseq in the thousands that is the whole cost of a fit, so it
+    # backward sweeps are 2(L-1) matmuls of (B, N_g) against (N_g, N_g), and the
+    # pairwise accumulation is two more at (E, N_g) x (N_g, N_g) with E = B(L-1). At
+    # N_g = 401 and M in the thousands that is the whole cost of a fit, so it
     # is the one part worth putting on a device.
     #
     # Everything below runs through `xp`, which is numpy unless BP_DEVICE asks
@@ -225,40 +227,40 @@ def _e_step_chunk(
     # are restored in the evidence at the end.
     z = X[:, :, None] - alpha * grid[None, None, :]
     log_ell = -0.5 * z**2 / delta
-    row_shift = log_ell.max(axis=2)  # (B, n)
+    row_shift = log_ell.max(axis=2)  # (B, L)
     log_ell = log_ell - row_shift[:, :, None]
-    ell = xp.exp(log_ell)  # (B, n, M)
+    ell = xp.exp(log_ell)  # (B, L, N_g)
 
-    L = xp.empty((n, b_size, m))
-    R = xp.empty((n, b_size, m))
-    L[0] = xp.exp(log_mu)[None, :]
+    fwd = xp.empty((n_sites, b_size, n_grid))
+    bwd = xp.empty((n_sites, b_size, n_grid))
+    fwd[0] = xp.exp(log_mu)[None, :]
     log_z_fwd = xp.zeros(b_size)
 
-    for i in range(n - 1):
-        incoming = L[i] * ell[:, i, :] * weights[None, :]  # (B, M)
-        out = incoming @ K.T  # (B, M);  out[b, k] = sum_j K[k, j] incoming[b, j]
+    for i in range(n_sites - 1):
+        incoming = fwd[i] * ell[:, i, :] * weights[None, :]  # (B, N_g)
+        out = incoming @ K.T  # (B, N_g);  out[b, k] = sum_j K[k, j] incoming[b, j]
         mass = out @ weights
         _guard(xp, mass, f"Forward message {i + 1} lost all mass.")
-        L[i + 1] = out / mass[:, None]
+        fwd[i + 1] = out / mass[:, None]
         log_z_fwd += xp.log(mass)
 
-    R[-1] = 1.0
-    for i in range(n - 1, 0, -1):
-        incoming = R[i] * ell[:, i, :] * weights[None, :]
+    bwd[-1] = 1.0
+    for i in range(n_sites - 1, 0, -1):
+        incoming = bwd[i] * ell[:, i, :] * weights[None, :]
         out = incoming @ K
         mass = out @ weights
         _guard(xp, mass, f"Backward message {i - 1} lost all mass.")
-        R[i - 1] = out / mass[:, None]
+        bwd[i - 1] = out / mass[:, None]
 
     # Pairwise accumulation. F[i] and G[i] carry the local factors so that the
     # unnormalized pairwise belief on edge (i, i+1) is F[i](j) K[k, j] G[i+1](k).
-    F = L * ell.transpose(1, 0, 2) * weights[None, None, :]  # (n, B, M)
-    G = R * ell.transpose(1, 0, 2) * weights[None, None, :]  # (n, B, M)
+    F = fwd * ell.transpose(1, 0, 2) * weights[None, None, :]  # (L, B, N_g)
+    G = bwd * ell.transpose(1, 0, 2) * weights[None, None, :]  # (L, B, N_g)
 
-    f_all = F[:-1].reshape(-1, m)  # (B(n-1), M)
-    g_all = G[1:].reshape(-1, m)  # (B(n-1), M)
+    f_all = F[:-1].reshape(-1, n_grid)  # (B(L-1), N_g)
+    g_all = G[1:].reshape(-1, n_grid)  # (B(L-1), N_g)
     # Z_e = g_e^T K f_e for every edge e, as two BLAS calls rather than a
-    # three-operand einsum (which would contract at O(E M^2) outside BLAS).
+    # three-operand einsum (which would contract at O(E N_g^2) outside BLAS).
     #
     # ONE contraction for both backends. This used to branch -- numpy on
     # `einsum`, cupy on multiply-and-sum -- because the two accumulate in
@@ -272,22 +274,22 @@ def _e_step_chunk(
     # what the parity test exists to rule out.
     partition = (g_all * (f_all @ K.T)).sum(axis=1)
     _guard(xp, partition, "Pairwise belief lost all mass.")
-    # Optional per-chain weights (responsibilities, markov_score.augmented): each chain's n-1
+    # Optional per-chain weights (responsibilities, markov_score.augmented): each chain's L-1
     # edges carry its weight. Without weights this is bit-for-bit the accumulation it was.
-    # The edge rows of f_all/g_all are SITE-major ((n-1, B, M) reshaped), so the weight vector
-    # is the chain vector tiled n-1 times, not repeated: `repeat` put every chain's weight on
+    # The edge rows of f_all/g_all are SITE-major ((L-1, B, N_g) reshaped), so the weight vector
+    # is the chain vector tiled L-1 times, not repeated: `repeat` put every chain's weight on
     # the wrong edges and was caught by the subset test (tests/test_augmented.py).
     if chain_weights is None:
         cw = None
-        c_mat = (g_all / partition[:, None]).T @ f_all  # (M, M), C[k, j]
+        c_mat = (g_all / partition[:, None]).T @ f_all  # (N_g, N_g), C[k, j]
     else:
         cw = to_device(np.asarray(chain_weights, dtype=float), xp)
-        scale = xp.tile(cw, n - 1) / partition
+        scale = xp.tile(cw, n_sites - 1) / partition
         c_mat = (g_all * scale[:, None]).T @ f_all
     xi = c_mat * K
 
     # Site-1 posterior mass (for a learnable initial density).
-    raw1 = L[0] * ell[:, 0, :] * R[0]
+    raw1 = fwd[0] * ell[:, 0, :] * bwd[0]
     mass1 = raw1 @ weights
     site_rows = (raw1 / mass1[:, None]) * weights[None, :]
     if cw is not None:
@@ -295,15 +297,15 @@ def _e_step_chunk(
     site1 = site_rows.sum(axis=0)
 
     # Exact evidence: forward normalizers x tail integral x restored constants.
-    tail = (L[-1] * ell[:, -1, :]) @ weights
-    log_const = row_shift.sum(axis=1) + n * (-0.5 * np.log(2.0 * np.pi * delta))
+    tail = (fwd[-1] * ell[:, -1, :]) @ weights
+    log_const = row_shift.sum(axis=1) + n_sites * (-0.5 * np.log(2.0 * np.pi * delta))
     log_evidence = float(to_host(xp.sum(log_z_fwd + xp.log(tail) + log_const)))
 
     return ExpectedStatistics(
         xi=to_host(xi),
         site1=to_host(site1),
         log_evidence=log_evidence,
-        n_edges=b_size * (n - 1),
+        n_edges=b_size * (n_sites - 1),
         n_chains=b_size,
     )
 

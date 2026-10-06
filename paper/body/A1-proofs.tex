@@ -10,7 +10,7 @@ moments, which is the Gaussian chain's initial message. If $\lmsg^{\mathrm{p}}_{
 that chain's message, with mean $m$ and variance $v$, multiplying by $\ell_{i-1}$ gives
 a Gaussian with the precision-weighted moments, identical in both chains; the transition
 integral against $a_i=\corr a_{i-1}+\varepsilon_i$ is the density of $\corr a_{i-1}+\varepsilon_i$,
-whose mean and variance are $(\corr m',\corr^2v'+\ivar)$ for every innovation with
+whose mean and variance are $(\corr m',\corr^2v'+\ivar)$ for every driving noise with
 moments $(0,\ivar)$, so $\Pgauss$ returns the Gaussian chain's next message. The
 backward message is $h(\corr a)$ with $h$ the density of $a''-\varepsilon$ under the
 incoming Gaussian, of mean $m'$ and variance $v'+\ivar$; as a function of $a$ its
@@ -31,11 +31,11 @@ log-likelihood of a noised sample is a function of its sample covariance, whose
 expectation $e^{-2t}\Sig_0+\Dt\Id$ identifies $(\corr,\ivar)$.
 
 \subsection{\Cref{thm:hermite}}
-For $z\sim\normal{0}{1}$ and real $a$, $\alpha$ with $\beta=\sqrt{1-\alpha^2}$, the
+For $z\sim\normal{0}{1}$, real $a$ and $\alpha\in(0,1)$, the
 generating function $e^{sx-s^2/2}=\sum_n\Hen{n}(x)s^n/n!$ evaluated at
-$x=\alpha a+\beta z$ and averaged over $z$ gives
+$x=\alpha a+\sqrt{1-\alpha^2}\,z$ and averaged over $z$ gives
 $e^{s\alpha a-s^2\alpha^2/2}=\sum_n\Hen{n}(a)(\alpha s)^n/n!$, hence
-$\E_z\Hen{n}(\alpha a+\beta z)=\alpha^n\Hen{n}(a)$. The coordinates of $\vz$ are
+$\E_z\Hen{n}(\alpha a+\sqrt{1-\alpha^2}\,z)=\alpha^n\Hen{n}(a)$. The coordinates of $\vz$ are
 independent given $\va$, so the product form holds for $H_\nu$; integrating over
 $\va\sim\Pz$ requires only $\E|\va|^{|\nu|}<\infty$. The cases $n\le4$ are verified in
 Lean as polynomial identities under the first four Gaussian moments.
@@ -45,9 +45,9 @@ Lean as polynomial identities under the first four Gaussian moments.
 
 \paragraph{Exact identities.}
 With $\alpha=e^{-t}$ and $\Dt=1-\alpha^2$, Bayes' rule gives
-$\Pt(\vx)=\gamma_{\Dt}(\vx)\,\E_{\Pz}\exp\bigl(\alpha\vx\cdot\va/\Dt-\alpha^2|\va|^2/2\Dt\bigr)$,
-where $\gamma_{\Dt}$ is the $\normal{0}{\Dt\Id}$ density. Hence
-$\log\Pt(\vx)=\log\gamma_{\Dt}(\vx)+\Lambda(s,b)$ with $s=\alpha\vx/\Dt$, $b=\alpha^2/\Dt$
+$\Pt(\vx)=\gref_{\Dt}(\vx)\,\E_{\Pz}\exp\bigl(\alpha\vx\cdot\va/\Dt-\alpha^2|\va|^2/2\Dt\bigr)$,
+where $\gref_{\Dt}$ is the $\normal{0}{\Dt\Id}$ density. Hence
+$\log\Pt(\vx)=\log\gref_{\Dt}(\vx)+\Lambda(s,b)$ with $s=\alpha\vx/\Dt$, $b=\alpha^2/\Dt$
 and $\Lambda(s,b)=\log\E_{\Pz}\exp(s\cdot\va-b|\va|^2/2)$;
 $\E[\va\mid\vx]=\nabla_s\Lambda$ and $\score=-\vx/\Dt+(\alpha/\Dt)\nabla_s\Lambda$.
 
@@ -99,15 +99,15 @@ contractions with $\delta_{ii}$ are exactly the terms that convert monomials int
 polynomials. The $m$-th component is $\alpha^4\,\tfrac16\sum_{jkl}\kfour[mjkl]\,{:}x_jx_kx_l{:}$.
 
 \paragraph{Second moment.}
-Under $\gamma$, Wick's theorem gives
-$\E_\gamma[{:}x_jx_kx_l{:}\,{:}x_{j'}x_{k'}x_{l'}{:}]$ equal to the number of perfect
+Under $\gref$, Wick's theorem gives
+$\E_{\gref}[{:}x_jx_kx_l{:}\,{:}x_{j'}x_{k'}x_{l'}{:}]$ equal to the number of perfect
 matchings of $\{j,k,l\}$ with $\{j',k',l'\}$ respecting indices; contracted with the
 symmetric tensor this yields
-$\E_\gamma\bigl[(\tfrac16\sum_{jkl}\kfour[mjkl]{:}x_jx_kx_l{:})^2\bigr]
+$\E_{\gref}\bigl[(\tfrac16\sum_{jkl}\kfour[mjkl]{:}x_jx_kx_l{:})^2\bigr]
 =\tfrac{3!}{36}\sum_{jkl}\kfour[mjkl]^2$, and summing over $m$,
-$\E_\gamma\lVert\text{leading term}\rVert^2=\tfrac16\Frob{\kfour}^2\alpha^8$. Replacing
-$\E_\gamma$ by $\E_{\Pt}$ on the bulk costs a factor $1+O(\alpha^2)$:
-$\Pt/\gamma=1+\alpha^2\tfrac12\langle\Sig_0-\Id,{:}\vx\vx^{\!\top}{:}\rangle+O(\alpha^4(1+|\vx|)^4)$
+$\E_{\gref}\lVert\text{leading term}\rVert^2=\tfrac16\Frob{\kfour}^2\alpha^8$. Replacing
+$\E_{\gref}$ by $\E_{\Pt}$ on the bulk costs a factor $1+O(\alpha^2)$:
+$\Pt/\gref=1+\alpha^2\tfrac12\langle\Sig_0-\Id,{:}\vx\vx^{\!\top}{:}\rangle+O(\alpha^4(1+|\vx|)^4)$
 there, and the degree-2 correction carries an explicit factor $\alpha^2$, so its contribution to the second moment is of relative size $\alpha^2$. The cross term between the
 leading term and the grade-six remainder is $O(\alpha^{10})$ by Cauchy--Schwarz and the
 moment bound. The constant in $O(\alpha^2)$ depends on $\Pz$ and $\nsites$; for the
@@ -131,23 +131,23 @@ regime of \cref{sec:theory}.
 \paragraph{Information and the general order.}
 $\partial_\theta\log\Pt=\partial_\theta\Lambda$. If $\partial_\theta\Sig_0\neq0$ the
 grade-two term $\tfrac{\alpha^2}2\langle\partial_\theta\Sig_0,{:}\vx\vx^{\!\top}{:}\rangle$
-leads, and $\E_\gamma$ of its square is
+leads, and $\E_{\gref}$ of its square is
 $\tfrac{\alpha^4}4\cdot2\Frob{\partial_\theta\Sig_0}^2$ by Wick, giving \cref{eq:info2}.
 If $\partial_\theta\Sig_0=0$ the grade-four term
 $\tfrac{\alpha^4}{24}\sum\partial_\theta\kfour[ijkl]{:}x_ix_jx_kx_l{:}$ leads, with
-$\gamma$-second moment $\tfrac{4!}{24^2}\Frob{\partial_\theta\kfour}^2\alpha^8$, giving
+$\gref$-second moment $\tfrac{4!}{24^2}\Frob{\partial_\theta\kfour}^2\alpha^8$, giving
 \cref{eq:info4}; the corrections and the tail are handled as above. For
 \cref{thm:general}, the graded expansion of $\Lambda$ and the expansion
 $\log\bigl(1+\sum_{|\nu|\ge2}\alpha^{|\nu|}\E_{\Pz}[H_\nu]H_\nu(\vx)/\nu!\bigr)$ obtained
 from Mehler's kernel are two formal series in $\alpha$ for the same function whose
 coefficients at each grade are polynomials in the moments of $\Pz$ up to that grade; they
 agree on every compactly supported $\Pz$, where both converge, hence identically. The
-grade-$m$ coefficient of $\partial_\theta\log(\Pt/\gamma)$ is therefore
+grade-$m$ coefficient of $\partial_\theta\log(\Pt/\gref)$ is therefore
 $\alpha^m\sum_{|\nu|=m}\partial_\theta\E[H_\nu]H_\nu(\vx)/\nu!$ plus $\partial_\theta$ of
 products of lower-grade terms, each of which vanishes by the minimality of $m$; its
-$\gamma$-second moment is $\alpha^{2m}\sum_{|\nu|=m}(\partial_\theta\E H_\nu)^2/\nu!$ by
+$\gref$-second moment is $\alpha^{2m}\sum_{|\nu|=m}(\partial_\theta\E H_\nu)^2/\nu!$ by
 orthogonality, and the bulk correction and the tail are as before. Since
-${:}\vx\vx^{\!\top}{:}$ and the degree-four Hermite polynomials are $\gamma$-orthogonal,
+${:}\vx\vx^{\!\top}{:}$ and the degree-four Hermite polynomials are $\gref$-orthogonal,
 the leading cross-information between a degree-2 and a degree-4 coordinate vanishes, so
 the leading term of the efficient information of the degree-4 coordinate after
 degree-2 nuisances equals that of its raw information. For the Gaussian chain
@@ -164,11 +164,11 @@ and the maximum-likelihood estimator is asymptotically efficient; the stated bou
 $1/I_t^{\mathrm{eff}}$ with the efficient information of \cref{thm:general}.
 
 \paragraph{The crossover.}
-For the Gaussian chain the expansion of $\Pt/\gamma$ is an expansion in $\alpha^2\Sig_0$,
+For the Gaussian chain the expansion of $\Pt/\gref$ is an expansion in $\alpha^2\Sig_0$,
 i.e.\ in $\alpha^2\lmax(\Sig_0)$ in operator norm, with $\lmax\le(1+\corr)/(1-\corr)$ by
 the Toeplitz bound $\lmax\le\sum_k\corr^{|k|}$; $\Sig_t^{-1}$ is within $\alpha^2\lmax$
 of $\Id$ in operator norm, which is the source of $\epsilon_t=O(e^{-2t}\lmax)$ and of
-$\tstar=\tfrac12\log\lmax$. The same chain has $\Pt/\gamma\in L^2(\gamma)$ iff
-$2\Id-\Sig_t\succ0$, i.e.\ iff $e^{2t}>\lmax-1$, so the Hermite expansion of $\Pt/\gamma$
-converges in $L^2(\gamma)$ exactly above that time; for the Laplace chain it never does,
+$\tstar=\tfrac12\log\lmax$. The same chain has $\Pt/\gref\in L^2(\gref)$ iff
+$2\Id-\Sig_t\succ0$, i.e.\ iff $e^{2t}>\lmax-1$, so the Hermite expansion of $\Pt/\gref$
+converges in $L^2(\gref)$ exactly above that time; for the Laplace chain it never does,
 which is why the proof goes through $\Lambda$.

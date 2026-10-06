@@ -61,7 +61,7 @@ def main() -> int:
              # six columns in one column of text: short headers, the reference sample's own
              # statistics as a row of each block rather than "(ref x)" inside every cell
              "\\begin{table}[t]\\centering\\small\\setlength{\\tabcolsep}{4pt}",
-             "\\caption{Generated samples against the true law at $t_{\\min}$: mean log-likelihood gap $\\Delta\\ell$ to the reference sample under the true $P_{t_{\\min}}$ (exact evidence; the exact arm's gap is the sampler's discretisation floor), innovation excess kurtosis $\\hat\\kappa_4$, lag fourth cumulant, sliced $W_2$; the row marked \\emph{reference} carries the reference sample's own statistics. Mean over seeds.}",
+             "\\caption{Generated samples against the true law at $t_{\\min}$: mean log-likelihood gap $\\Delta\\ell$ to the reference sample under the true $P_{t_{\\min}}$ (exact evidence; the exact arm's gap is the sampler's discretisation floor), driving-noise excess kurtosis $\\hat\\kappa_4$, lag fourth cumulant, sliced $W_2$; the row marked \\emph{reference} carries the reference sample's own statistics. Mean over seeds.}",
              "\\label{tab:generation}", "\\begin{tabular}{@{}llrrrr@{}}", "\\toprule",
              "$\\nseq$ & arm & $\\Delta\\ell$ & $\\hat\\kappa_4$ & lag-$\\kappa_4$ & $W_2$ \\\\", "\\midrule"]
     for n in sorted(df.n_chains.unique()):

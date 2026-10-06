@@ -67,7 +67,7 @@ import numpy as np
 
 
 # ---------------------------------------------------------------------------
-# Innovation recovery
+# Driving-noise recovery
 # ---------------------------------------------------------------------------
 
 def ar_residuals(a: np.ndarray, rho: float) -> np.ndarray:
@@ -76,9 +76,9 @@ def ar_residuals(a: np.ndarray, rho: float) -> np.ndarray:
     ``a`` has shape ``(n_chains, n_sites)``; the returned array has ``n_sites - 1`` columns
     because ``r_1`` is not identified without knowing the initial draw.
 
-    **These are innovations only when ``a`` is the clean chain.** Every generated sample in
+    **This is the driving noise only when ``a`` is the clean chain.** Every generated sample in
     this project is a draw from ``p_{t_min}``, not from ``p_0`` -- the reverse integration
-    must stop at ``t_min > 0`` -- and there the filter does not recover the innovations. With
+    must stop at ``t_min > 0`` -- and there the filter does not recover the driving noise. With
     ``x_i = alpha a_i + sqrt(Delta) z_i`` and ``a_i = rho a_{i-1} + eps_i``,
 
         r_i = alpha eps_i + sqrt(Delta) (z_i - rho z_{i-1}),
@@ -89,11 +89,11 @@ def ar_residuals(a: np.ndarray, rho: float) -> np.ndarray:
         Corr(r_i, r_{i+1}) = -rho Delta / (alpha^2 q + Delta (1 + rho^2)).
 
     The noised process is not AR(1) at all -- even in the Gaussian case it is ARMA-type --
-    so calling ``r`` an innovation overstates what has been recovered. The *marginal* shape
+    so calling ``r`` the driving noise overstates what has been recovered. The *marginal* shape
     comparison remains valid and is still the sharpest available discriminator between
     families, since the covariance is matched by construction and only shape distinguishes
     them. What does not survive is the claim that this measures recovery of the clean
-    transition innovation law.
+    transition driving-noise law.
 
     Named `ar_residuals` for that reason; `innovations` is kept as a deprecated alias so no
     committed caller breaks silently, and `residual_autocorrelation` below reports the
@@ -104,7 +104,7 @@ def ar_residuals(a: np.ndarray, rho: float) -> np.ndarray:
     return a[:, 1:] - rho * a[:, :-1]
 
 
-#: Deprecated alias. The quantity is an AR-filtered residual, not an innovation, whenever it
+#: Deprecated alias. The quantity is an AR-filtered residual, not the driving noise, whenever it
 #: is applied to anything other than a clean chain -- which in this project is always.
 innovations = ar_residuals
 
@@ -112,7 +112,7 @@ innovations = ar_residuals
 def residual_autocorrelation(r: np.ndarray, max_lag: int = 5) -> list[float]:
     """Autocorrelation of the AR-filtered residuals, lags 1..max_lag.
 
-    Zero at every lag exactly when ``r`` really is an innovation sequence. On a sample of
+    Zero at every lag exactly when ``r`` really is a driving-noise sequence. On a sample of
     ``p_{t_min}`` lag 1 is predicted to be ``-rho Delta / (alpha^2 q + Delta (1 + rho^2))``,
     so this is the diagnostic that turns the caveat above into a number a reader can check
     against the closed form.
@@ -136,7 +136,7 @@ def predicted_residual_autocorr(rho: float, q: float, t_min: float) -> float:
     """Closed-form lag-1 residual correlation of ``p_{t_min}``.
 
     ``-rho Delta / (alpha^2 q + Delta (1 + rho^2))``, the quantity `residual_autocorrelation`
-    should reproduce. Having both means the "these are not innovations" correction is
+    should reproduce. Having both means the "these are not driving noise" correction is
     verifiable rather than a footnote.
     """
     alpha = float(np.exp(-t_min))

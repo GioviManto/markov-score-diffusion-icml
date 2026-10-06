@@ -22,7 +22,7 @@ Three rungs of expressivity, matching the three phases of the plan:
                                            closed-form M-step (weighted median +
                                            weighted mean absolute residual).
   MixtureInnovationKernel  rho, {w,m,s}_c  linear autoregression with an
-                                           arbitrary innovation density; closed
+                                           arbitrary driving-noise density; closed
                                            form M-step by an inner EM over the
                                            mixture label. This is the honest
                                            "we know it is Markov but not the
@@ -79,7 +79,7 @@ class ParametricKernel(Protocol):
 
 
 def _residual(grid: np.ndarray, rho: float, grid_out: np.ndarray | None = None) -> np.ndarray:
-    """e[out, in] = u_out - rho u_in, the innovation implied by a grid pair.
+    """e[out, in] = u_out - rho u_in, the driving noise implied by a grid pair.
 
     `grid_out` lets the outgoing (child) axis live on a *different* grid from the
     incoming (parent) one, which is what makes a transition matrix rectangular.
@@ -114,7 +114,7 @@ class GaussianAR1Kernel:
         An AR(1) chain is covariance-stationary exactly when |rho| < 1. Outside
         that the finite-chain law is still valid but has no stationary
         distribution to match variances against, so `FROZEN.innovation_variance`
-        and every "variance-matched across innovation families" statement stop
+        and every "variance-matched across driving-noise families" statement stop
         applying to it.
         """
         return abs(self.rho) < 1.0
@@ -159,7 +159,7 @@ class GaussianAR1Kernel:
 
         What breaks at |rho| >= 1 is the INTERPRETATION, and only that. The
         chain is no longer covariance-stationary, so the variance-matching
-        convention q = 1 - rho^2 that makes every innovation family share
+        convention q = 1 - rho^2 that makes every driving-noise family share
         Cov(a_i, a_j) = rho^|i-j| stops meaning anything, and any statement in
         the paper that appeals to stationarity does not cover such a fit.
         `is_covariance_stationary` exposes the test, and the warning below
@@ -293,14 +293,14 @@ def _weighted_median(values: np.ndarray, weights: np.ndarray) -> float:
 
 
 # ----------------------------------------------------------------------------
-# Rung 3: linear autoregression, unknown innovation density
+# Rung 3: linear autoregression, unknown driving-noise density
 # ----------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class MixtureInnovationKernel:
     """K(a'|a) = sum_c pi_c N(a' - rho a; mu_c, s_c^2).
 
-    Keeps the linear autoregression but makes the innovation law essentially
+    Keeps the linear autoregression but makes the driving-noise law essentially
     free: a C-component mixture approximates heavy tails, skew and bimodality
     alike. This is the estimator to use when we genuinely do not know the model
     behind the data -- it never sees a Laplace density, yet it has to reproduce
@@ -310,7 +310,7 @@ class MixtureInnovationKernel:
     zero-mean condition sum_c pi_c mu_c = 0 by recentering after each update is
     not harmless: the projection does not maximize Q and it broke monotone
     ascent by ~1e-2 nats in testing. Unconstrained ECM is exactly monotone, and
-    on zero-mean data the fitted innovation mean lands at the 1e-3 level by
+    on zero-mean data the fitted driving-noise mean lands at the 1e-3 level by
     itself, so the condition is reported as a diagnostic rather than enforced.
     """
 
@@ -344,7 +344,7 @@ class MixtureInnovationKernel:
         default grid spacing is h = 0.04. Nothing stops a component from being forty times
         narrower than one grid cell, and a high-capacity fit has every incentive to exploit
         that: an under-resolved spike can raise the quadrature likelihood without
-        corresponding to any feature of the innovation law.
+        corresponding to any feature of the driving-noise law.
 
         That matters for a specific claim. The capacity sweep's improvement from C = 12 to
         C = 16 is small, and it cannot be read as real until the fitted components are known
@@ -387,11 +387,11 @@ class MixtureInnovationKernel:
 
     @property
     def innovation_moments(self) -> dict:
-        """Mean, variance and excess kurtosis of the fitted innovation law.
+        """Mean, variance and excess kurtosis of the fitted driving-noise law.
 
         Excess kurtosis is the project's scalar non-Gaussianity knob (0 for a
         Gaussian, +3 for the Laplace chain), so it is the natural single number
-        to check a recovered innovation density against.
+        to check a recovered driving-noise density against.
         """
         m1 = float(self.pi @ self.mu)
         cen = self.mu - m1
@@ -407,7 +407,7 @@ class MixtureInnovationKernel:
     def init(
         cls, n_components: int, rho: float, var: float, rng: np.random.Generator
     ) -> "MixtureInnovationKernel":
-        """Spread components over the plausible innovation range."""
+        """Spread components over the plausible driving-noise range."""
         pi = np.full(n_components, 1.0 / n_components)
         mu = np.linspace(-1.0, 1.0, n_components) * np.sqrt(var)
         mu = mu - mu @ pi
@@ -488,7 +488,7 @@ class MixtureInnovationKernel:
         kernel (`inner_sweeps`, `inner_converged`, `inner_q_gain`) so an unfinished
         inner loop is visible instead of silent.
 
-        The default of 4 was materially under-converging the innovation SHAPE,
+        The default of 4 was materially under-converging the driving noise SHAPE,
         which is the quantity every non-Gaussian claim depends on. Measured at
         C = 8, n = 256, t = 0.22, M = 401, fixed at 40 outer iterations, varying
         only this budget (true excess kurtosis is 3.0):

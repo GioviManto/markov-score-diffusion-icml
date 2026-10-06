@@ -208,7 +208,7 @@ def mixture_chain_bp(
 
     Parameters
     ----------
-    pi, mu, s2 : the innovation mixture, i.e. the transition kernel is
+    pi, mu, s2 : the driving-noise mixture, i.e. the transition kernel is
                  K(a' | a) = sum_k pi_k N(a' - rho a; mu_k, s2_k).
     max_components : message budget C. C = 1 recovers single-Gaussian ADF-BP,
                  which for a linear chain equals exact Gaussian BP on the

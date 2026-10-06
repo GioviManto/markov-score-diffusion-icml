@@ -25,7 +25,7 @@ the maximiser is the belief-weighted Yule--Walker pair
 $\corr=S_{01}/S_{00}$, $\ivar=(S_{11}-\corr S_{01})/W$ with
 $S_{00}=\sum_{kl}\Xis_{kl}\gridpt{l}^2$, $S_{01}=\sum_{kl}\Xis_{kl}\gridpt{k}\gridpt{l}$,
 $S_{11}=\sum_{kl}\Xis_{kl}\gridpt{k}^2$ and $W=\sum_{kl}\Xis_{kl}$ ($k$ indexes the child
-site, $l$ the parent); for the mixture-innovation kernel
+site, $l$ the parent); for the mixture kernel
 $\kernelth(a'\mid a)=\sum_{c=1}^{\ncomp}\pi_c\,\normal{a'-\corr a-\nu_c}{s_c^2}$ used below,
 the complete-data problem carries a second latent label and we take conditional-maximisation
 sweeps, a generalised EM whose ascent is monotone \citep{dempster1977maximum,meng1993maximum}. The
@@ -36,7 +36,7 @@ bundle.
 \paragraph{The information curve predicts what is learned at each level.}
 \Cref{cor:samples} makes a prediction about learning that the exact score does not
 need: fitting from $\nseq$ sequences all observed at level $t$, the shape of the
-innovation law stops being identifiable at the level where its Cram\'er--Rao reference
+driving-noise law stops being identifiable at the level where its Cram\'er--Rao reference
 crosses the coordinate's range, while the correlation survives to the crossover.
 \IfFileExists{sections/learning-numbers.tex}{\input{body/04a-learning-results}}{\needsdata{E06 queued: the estimator against the information reference}}
 This is also the arithmetic behind the one-view protocol: of twelve levels spread over
@@ -46,7 +46,7 @@ $t\in[0.05,3]$, only the lowest four carry appreciable information about shape.
   \centering
   \IfFileExists{figures/fig_learning.pdf}{\includegraphics[width=\columnwidth]{fig_learning.pdf}}{\needsdata{fig\_learning.pdf (E06)}}
   \caption{\textbf{Learning through noise.} Recovery of the correlation coordinate and
-  of the innovation shape from $\nseq=512$ sequences observed at a single level $t$,
+  of the driving-noise shape from $\nseq=512$ sequences observed at a single level $t$,
   sixteen replicates (points: individual fits; line: RMSE), against the Cram\'er--Rao
   reference (dashed), the clean-data floor (dotted) and, for the shape, the coordinate's
   range. The fits are unimodal and at the reference at the lowest levels, split into a

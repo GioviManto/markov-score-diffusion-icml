@@ -37,7 +37,7 @@ def transition_hellinger(
     Everything else in this package measures the fitted kernel through what it
     does -- the score it induces, the posterior mean it produces. Those are the
     quantities the diffusion model actually uses, but they are also forgiving:
-    two visibly different innovation densities can induce scores that agree to
+    two visibly different driving-noise densities can induce scores that agree to
     the third decimal at moderate noise, because the channel has already blurred
     the difference away. A claim that the transition itself was recovered has to
     be stated on the transition.

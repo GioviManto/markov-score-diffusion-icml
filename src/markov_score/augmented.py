@@ -12,7 +12,7 @@ sequence from the evidence.
 The augmentation here uses the Z_2 symmetry of the truth (U symmetric): the minus component
 is the reflection of the plus one, K_-(x'|x) = K_+(-x'|-x) and mu_-(x) = mu_+(-x), so the
 augmented model has exactly the parameters of one kernel, and no extra parameter for b: an
-AR(1)-type kernel with an innovation mean already represents a chain with mean +b. On the
+AR(1)-type kernel with a driving-noise mean already represents a chain with mean +b. On the
 symmetric grid the reflection is index reversal.
 
 What is computed exactly

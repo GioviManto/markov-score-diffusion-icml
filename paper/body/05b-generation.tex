@@ -7,7 +7,7 @@ $\genLoglikgapDExact$ nats per sequence at $\nseq=2048$, is the sampler's own di
 error, the reference against which the other arms are read; the fitted kernel sits at $\genLoglikgapDEm$, the LMMSE twin at
 $\genLoglikgapDLmmse$ and the isotropic score at $\genLoglikgapDIso$. The excess kurtosis of the
 generated sequences' autoregressive residuals at $t_{\min}$, where the residual noise
-lowers even the true law's value below the innovation's $3$, is $\genKurtgenDEm$ for the
+lowers even the true law's value below the driving noise's $3$, is $\genKurtgenDEm$ for the
 fitted kernel against $\genKurtrefD$ for the true law and $\genKurtgenDLmmse$ for the twin, which by
-construction generates Gaussian innovations: what the second-order estimator discards in
+construction generates Gaussian driving noise: what the second-order estimator discards in
 score error it discards in the samples.

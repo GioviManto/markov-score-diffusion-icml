@@ -3,7 +3,7 @@
 Why this module exists
 ----------------------
 The project claims that the OU channel destroys higher-order information faster than
-second-order information, on the strength of `exp_06`: Fisher information for the innovation
+second-order information, on the strength of `exp_06`: Fisher information for the driving noise
 variance ``q`` falls by 142x between t = 0.05 and t = 1.6 while information for the
 correlation ``rho`` falls by only 26x.
 
@@ -55,7 +55,7 @@ from scipy.special import digamma, gammaln
 
 
 def _log_scale(q: float, beta: float) -> float:
-    """log s(q, beta) with s chosen so the innovation variance is exactly q."""
+    """log s(q, beta) with s chosen so the driving-noise variance is exactly q."""
     return 0.5 * (np.log(q) + gammaln(1.0 / beta) - gammaln(3.0 / beta))
 
 
@@ -72,7 +72,7 @@ def generalized_gaussian_excess_kurtosis(beta: float) -> float:
 
 @dataclass(frozen=True)
 class GeneralizedGaussianKernel:
-    """K(a' | a) = p_beta(a' - rho a) with Var(innovation) = q for every beta.
+    """K(a' | a) = p_beta(a' - rho a) with Var(driving noise) = q for every beta.
 
     Parameter vector is ``(rho, q, beta)``. ``beta`` is the shape coordinate: it changes the
     fourth moment at fixed second moment, which is exactly what the higher-order-information

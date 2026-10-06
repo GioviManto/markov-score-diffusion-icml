@@ -53,22 +53,22 @@ the pooled energy and the expansion diverges there: the correction is a statemen
 what the gap is made of at each level, not a competitor on the schedule.
 
 \paragraph{Closed-form misspecification bias (\textsc{e17}).}
-For a Gaussian truth with covariance $\Sig(\varepsilon)$ the population limit of the
-Gaussian AR(1) fit under the one-view protocol is
-$\theta^\ast(\varepsilon)=\arg\min_{(\corr,\ivar)}\sum_t\mathrm{KL}(\normal{0}{\Sig_t(\varepsilon)}\,\|\,\normal{0}{\hat\Sig_t(\corr,\ivar)})$
+For a Gaussian truth with covariance $\Sig(\delta)$ the population limit of the
+linear-Gaussian fit under the one-view protocol is
+$\theta^\ast(\delta)=\arg\min_{(\corr,\ivar)}\sum_t\mathrm{KL}(\normal{0}{\Sig_t(\delta)}\,\|\,\normal{0}{\hat\Sig_t(\corr,\ivar)})$
 and its pooled relative score error is
-$b(\varepsilon)^2=\sum_t\operatorname{tr}[(\hat\Sig_t^{-1}-\Sig_t^{-1})\Sig_t(\hat\Sig_t^{-1}-\Sig_t^{-1})]/\sum_t\operatorname{tr}\Sig_t^{-1}$.
-Against the frozen EM--BP errors at $\nseq=2048$: AR(2) at the largest strength
+$b(\delta)^2=\sum_t\operatorname{tr}[(\hat\Sig_t^{-1}-\Sig_t^{-1})\Sig_t(\hat\Sig_t^{-1}-\Sig_t^{-1})]/\sum_t\operatorname{tr}\Sig_t^{-1}$.
+Against the frozen EM--BP errors at $\nseq=2048$: the second-lag coefficient at the largest strength
 $\audBiasArtwoEzeropfour$ (KL projection), $\audBiasLagoneArtwoEzeropfour$ (lag-one
 plug-in) versus $\audBiasEmDArtwoEzeropfour$ measured; site-varying $\corr$ at its
 largest strength $\audBiasSitevarEzeroponefour$ versus $\audBiasEmDSitevarEzeroponefour$;
 long-range coupling $\audBiasLongrangeEzeropfour$, $\audBiasLagoneLongrangeEzeropfour$
-versus $\audBiasEmDLongrangeEzeropfour$; rank-one latent at $\beta=1$
+versus $\audBiasEmDLongrangeEzeropfour$; rank-one latent at $\delta=1$
 $\audBiasGlobalEone$ versus $\audBiasEmDGlobalEone$. The largest deviation of the
 lag-one projection from the measured error over all cells is
-$\audBiasMaxAbsDevLagoneD$. Small-$\varepsilon$ laws: $b\approx\audBiasCoefArtwo\,\varepsilon$
-(AR(2)), $\audBiasCoefSitevar\,\varepsilon$ (site-varying), $\audBiasCoefLongrange\,\varepsilon$
-(long-range, local exponent $\audBiasOrderLongrange$), $\audBiasCoefGlobal\,\beta^2$
+$\audBiasMaxAbsDevLagoneD$. Small-$\delta$ laws: $b\approx\audBiasCoefArtwo\,\delta$
+(second lag), $\audBiasCoefSitevar\,\delta$ (site-varying), $\audBiasCoefLongrange\,\delta$
+(long-range, local exponent $\audBiasOrderLongrange$), $\audBiasCoefGlobal\,\delta^2$
 (rank-one).
 
 \paragraph{The closure constant and the heavy-tailed regime (\textsc{e18}).}

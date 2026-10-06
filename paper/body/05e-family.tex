@@ -3,9 +3,9 @@
   \centering
   \includegraphics[width=\figcolw]{fig_family.pdf}
   \caption{\textbf{Capacity buys exactly what the closure discards.} Pooled relative score
-  error against the innovation's excess kurtosis for the generalised-Gaussian family at
+  error against the driving noise's excess kurtosis for the generalised-Gaussian family at
   fixed $\corr$ and variance ($\nseq=\famSize$, $\famSeeds$ seeds, $\pm$ s.e.): the
-  Gaussian-innovation kernel tracks the LMMSE floor, which is the exact price of
+  linear-Gaussian kernel tracks the LMMSE floor, which is the exact price of
   second-order closure for each member; the mixture kernel tracks the exact score, and
   the two meet at the Gaussian member, where there is nothing beyond second order to
   learn. At that member the floor is exactly zero---the covariance twin \emph{is} the
@@ -13,10 +13,10 @@
   point.}
   \label{fig:family}
 \end{figure}
-Moving the innovation from Laplace (excess kurtosis $+3$) through the Gaussian to the
+Moving the driving noise from Laplace (excess kurtosis $+3$) through the Gaussian to the
 platykurtic end at fixed $\corr$ and variance (\cref{fig:family}), the LMMSE floor traces a
 V: $\famLmmseBone$ at the Laplace end, exactly zero at $\beta=2$ where the covariance twin
-\emph{is} the truth, and $\famLmmseBsix$ at the platykurtic end. The Gaussian-innovation
+\emph{is} the truth, and $\famLmmseBsix$ at the platykurtic end. The linear-Gaussian
 kernel follows that V within its own standard error at every member, which is
 \cref{prop:lmmse} read across a family rather than at a point; the mixture kernel stays
 between $\famEmeightBtwo$ and $\famEmeightBone$ throughout. The paired gain of $\ncomp=8$

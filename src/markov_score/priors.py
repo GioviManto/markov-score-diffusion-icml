@@ -5,10 +5,10 @@ Two families:
 1. Chain priors (exactly Markov): linear AR(1)-type recursions
        a_1 ~ N(0, 1),   a_i = rho a_{i-1} + eps_i,   Var(eps_i) = 1 - rho^2,
    with Gaussian, Laplace, Student-t, or symmetric two-component Gaussian-mixture
-   innovations. All share the same second-order structure
+   driving noise. All share the same second-order structure
        Cov(a_i, a_j) = rho^{|i-j|}
    (unit marginal variance), so they differ *only* beyond second moments. The
-   innovation's excess kurtosis is the scalar "non-Gaussianity knob":
+   driving noise's excess kurtosis is the scalar "non-Gaussianity knob":
      - Gaussian: 0
      - Laplace: +3 (heavy tails)
      - Student-t(nu): 6/(nu-4) for nu > 4 (heavy tails)
@@ -148,7 +148,7 @@ class StudentTAR1:
     @property
     def scale(self) -> float:
         if self.nu <= 2.0:
-            raise ValueError("Student-t innovations need nu > 2 for finite variance.")
+            raise ValueError("Student-t driving noise needs nu > 2 for finite variance.")
         return float(np.sqrt(self.q * (self.nu - 2.0) / self.nu))
 
     @property
@@ -182,7 +182,7 @@ class UniformAR1:
     The bounded-support case (question R3). It is the interesting one because
     its failure mode is different in kind from the others in this module: heavy
     tails (Laplace, Student-t) and bimodality (Gaussian mixture) both fail a
-    Gaussian closure through *shape*, whereas a compactly supported innovation
+    Gaussian closure through *shape*, whereas a compactly supported driving noise
     fails through *support* -- the true posterior is exactly zero outside a
     finite interval and no Gaussian message can represent that edge.
 

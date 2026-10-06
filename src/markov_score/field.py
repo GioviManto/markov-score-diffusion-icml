@@ -2,7 +2,7 @@
 
 Why this module exists
 ----------------------
-Every chain prior in `priors.py` has the form a' = rho a + eps with an innovation law that is
+Every chain prior in `priors.py` has the form a' = rho a + eps with a driving-noise law that is
 free but state-independent. Jerome Garnier-Brun and Marc Mezard asked (1 October 2026) for a
 test of the estimator on Markov data that come from a physical model rather than from that
 construction. The stochastic Allen-Cahn / phi^4 equation in one space dimension,
@@ -16,9 +16,9 @@ T, so its stationary law is the Gibbs measure exp(-E/T). Discretised with spacin
 
 which couples nearest neighbours only. A spatial snapshot is therefore EXACTLY a Markov chain
 in the site index, and -- this is the point -- its transition kernel is not of the form
-"rho a + innovation": it is a Gaussian random-walk step tilted by a function of the arrival
-point. The mixture-innovation kernel the paper fits is misspecified here (through the DRIFT,
-which is nonlinear, not through the innovation shape), and the estimator that is exactly
+"rho a + driving noise": it is a Gaussian random-walk step tilted by a function of the arrival
+point. The mixture kernel the paper fits is misspecified here (through the DRIFT,
+which is nonlinear, not through the driving-noise shape), and the estimator that is exactly
 specified is `tilted_kernel.TiltedWalkKernel`.
 
 The transfer operator and the chain
@@ -260,7 +260,7 @@ class Phi4Chain:
     @property
     def innovation_excess_kurtosis(self) -> float:
         """Excess kurtosis of the MARGINAL, the family's non-Gaussianity knob: the per-step
-        innovation is not state-independent here, so the AR(1) notion does not apply."""
+        driving noise is not state-independent here, so the AR(1) notion does not apply."""
         return self.spectrum.excess_kurtosis
 
     # ------------------------------------------------------------------ densities

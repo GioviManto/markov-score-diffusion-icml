@@ -18,7 +18,7 @@ This module provides the continuous analogue of that data model:
     leaves are observed; internal nodes are latent.
 
 Two leaves whose lowest common ancestor sits at depth d are separated by
-2(L - d) edges, so for Gaussian innovations
+2(L - d) edges, so for Gaussian driving noise
 
     Cov(leaf_i, leaf_j) = rho^{2(L - d(i,j))},
 
@@ -28,12 +28,12 @@ eigenvalues are what `src/spectral.py` turns into a ladder of speciation times.
 Two BP implementations, mirroring Layers 1-2 of the package:
 
 - `tree_bp_gaussian` -- information form (h, lambda), exact for Gaussian
-  innovations, O(n) and free of any discretization. This is the reference.
-- `tree_bp_grid` -- grid messages, exact up to quadrature for *any* innovation
+  driving noise, O(n) and free of any discretization. This is the reference.
+- `tree_bp_grid` -- grid messages, exact up to quadrature for *any* driving noise
   law. Same two primitives as the chain (`K.T @ f` upward, `K @ g` downward),
   so the conventions of `src/bp_grid.py` carry over unchanged: K[out, in].
 
-`tree_bp_grid` agrees with `tree_bp_gaussian` to ~1e-10 on Gaussian innovations
+`tree_bp_grid` agrees with `tree_bp_gaussian` to ~1e-10 on Gaussian driving noise
 (tests/test_hierarchy.py), which is the same cross-check that validated the
 chain code.
 
@@ -115,7 +115,7 @@ class TreeIndex:
 class GaussianTree:
     """Balanced-tree Gaussian prior on `branching**depth` observed leaves.
 
-    `rho` is the per-edge correlation; innovations have variance 1 - rho^2 so
+    `rho` is the per-edge correlation; driving-noise terms have variance 1 - rho^2 so
     every node, including the leaves, has unit marginal variance -- the same
     normalization the chain priors use, which is what makes the two families
     directly comparable at fixed noise schedule.
@@ -657,7 +657,7 @@ def tree_score_gaussian(
 
 
 # ----------------------------------------------------------------------------
-# Exact BP on the tree -- grid messages (any innovation law)
+# Exact BP on the tree -- grid messages (any driving-noise law)
 # ----------------------------------------------------------------------------
 
 def tree_bp_grid(
@@ -677,7 +677,7 @@ def tree_bp_grid(
     and the downward message is `K @ g` (transport the parent). `log_root` is
     the root's log prior on the grid.
 
-    Works for any innovation law, which is the whole point: for a non-Gaussian
+    Works for any driving-noise law, which is the whole point: for a non-Gaussian
     tree there is no information-form shortcut, and the dense reference does not
     exist either.
     """

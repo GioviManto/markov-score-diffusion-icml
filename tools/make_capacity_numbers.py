@@ -151,7 +151,7 @@ def main() -> int:
            "\\caption{Schedule-pooled relative score error on all sites, mean over $\\capSeeds$ seeds "
            "(s.e.\\ in the text macros; the isotropic reference is $\\capIsoD$ at every size). Every arm is "
            "scored on identical test bundles. The last column is the same capacity fitted to the "
-           "innovation law itself---the $\\ncomp$-component mixture closest in Kullback--Leibler "
+           "driving-noise law itself---the $\\ncomp$-component mixture closest in Kullback--Leibler "
            "divergence, an infinite-data reference for the family rather than a bound; $\\dagger$ marks "
            "fits whose narrowest component is under two grid cells.}",
            "\\label{tab:capacity}",

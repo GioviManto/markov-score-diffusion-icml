@@ -21,7 +21,7 @@ Why the reference is exact, and cheap
 -------------------------------------
 Conditional on ``g`` the prior is Markov again, so grid BP applies. The naive way to use
 that is to build a kernel with a g-dependent mean shift, which needs new per-family
-innovation code. A change of variables avoids it entirely. With ``c = sqrt(1 + beta^2)``,
+driving-noise code. A change of variables avoids it entirely. With ``c = sqrt(1 + beta^2)``,
 ``x = alpha a + sqrt(Delta) z`` gives
 
     c x - alpha beta g  =  alpha y + c sqrt(Delta) z,
@@ -29,7 +29,7 @@ innovation code. A change of variables avoids it entirely. With ``c = sqrt(1 + b
 so defining ``x' = c x - alpha beta g``, the pair ``(y, x')`` is *exactly* the standard
 setup: a plain Laplace AR(1) chain observed through an OU channel with the same forward
 factor ``alpha`` and inflated noise variance ``c^2 Delta``. No shifted kernel, no new
-innovation density, no second implementation of anything -- `grid_bp_batch` runs unmodified
+driving-noise density, no second implementation of anything -- `grid_bp_batch` runs unmodified
 on ``x'``, with the prior's own ``log_transition_matrix`` and its own ``N(0,1)`` initial law,
 which is the correct law for ``y_1``.
 
@@ -47,7 +47,7 @@ tens of passes -- minutes, not hours. Its two error sources are the grid, shared
 other number in the project, and the ``g`` quadrature, which is refinable and measured.
 
 Two independent checks pin it, both in `tests/test_nonmarkov.py`: at ``beta = 0`` it must
-reduce exactly to plain grid BP, and with Gaussian innovations it must match
+reduce exactly to plain grid BP, and with Gaussian driving noise it must match
 `exact_scores.exact_gaussian_posterior_mean` under `GaussianAR1PlusGlobal.covariance` -- a
 completely separate computation of the same quantity by linear algebra.
 """
@@ -177,7 +177,7 @@ def global_latent_posterior_mean(
 
 
 def laplace_plus_global(rho: float, beta: float) -> ChainPlusGlobal:
-    """The non-Gaussian, non-Markov prior: Laplace innovations plus a shared latent."""
+    """The non-Gaussian, non-Markov prior: Laplace driving noise plus a shared latent."""
     return ChainPlusGlobal(base=LaplaceAR1(rho), beta=beta)
 
 

@@ -7,7 +7,7 @@ evidence of tree-exact BP under the true kernel: the one metric a reviewer canno
 with, because the law is known and the evidence is exact for the discretised model.
 
 Predeclared set (docs/RESEARCH_PLAN.md, E5):
-    innovation excess kurtosis (with bootstrap s.e.)
+    driving-noise excess kurtosis (with bootstrap s.e.)
     marginal 1-D Wasserstein-1 (pooled over sites)
     sliced Wasserstein-2 in R^L (random projections, common seed)
     energy distance in R^L
@@ -84,7 +84,7 @@ def residual_autocorr(r: np.ndarray, max_lag: int = 5) -> np.ndarray:
 
 
 def lag_fourth_cumulant(r: np.ndarray) -> float:
-    """cum(r_i, r_i, r_{i+1}, r_{i+1}) pooled over sites: zero for Gaussian innovations,
+    """cum(r_i, r_i, r_{i+1}, r_{i+1}) pooled over sites: zero for Gaussian driving noise,
     and, for an AR(1) residual at t_min > 0, a known nonzero value that shape-blind samplers miss."""
     a, b = r[:, :-1].ravel(), r[:, 1:].ravel()
     a = a - a.mean(); b = b - b.mean()

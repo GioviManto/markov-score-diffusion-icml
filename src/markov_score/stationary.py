@@ -1,8 +1,8 @@
 """Strictly stationary initialisation of the chain priors.
 
 Every prior in `src/priors.py` starts its recursion at ``a[0] ~ N(0, 1)`` and then applies
-non-Gaussian innovations. That makes the chain **covariance**-stationary -- ``Var(a_i) = 1``
-and ``Cov(a_i, a_j) = rho^|i-j|`` exactly, for every variance-matched innovation law -- but
+non-Gaussian driving noise. That makes the chain **covariance**-stationary -- ``Var(a_i) = 1``
+and ``Cov(a_i, a_j) = rho^|i-j|`` exactly, for every variance-matched driving-noise law -- but
 not strictly stationary. The invariant law of
 
     a_i = rho a_{i-1} + eps_i
@@ -242,7 +242,7 @@ def sample_stationary(
 
     Implemented as burn-in of `prior.sample` rather than by inverting an invariant CDF, and
     that is the point: the recursion *is* the definition of the invariant law, so this needs
-    no per-family code and stays correct for any innovation law a prior chooses to implement.
+    no per-family code and stays correct for any driving-noise law a prior chooses to implement.
     Inverting a CDF would mean five separate derivations, five chances to be wrong, and no
     way to check the result except against this.
     """

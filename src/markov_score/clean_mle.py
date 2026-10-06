@@ -11,10 +11,10 @@ error it shows is open to being blamed on the grid.
 The estimators here remove that ambiguity by never discretising:
 
     gaussian_ols          exact closed-form MLE for a Gaussian AR(1)
-    mixture_ecm_raw       ECM on the raw pairs for a Gaussian-mixture innovation
+    mixture_ecm_raw       ECM on the raw pairs for a Gaussian-mixture driving noise
 
 Measured against `fit_clean` on identical chains (N = 64...1024, 12 replicates,
-M = 401), the two agree to RMS 4.4e-4 in the innovation variance and 2.1e-4 in
+M = 401), the two agree to RMS 4.4e-4 in the driving-noise variance and 2.1e-4 in
 rho, while the estimation errors themselves run 2.7e-3 to 1.1e-2. The grid is
 therefore an order of magnitude too small to explain the clean arm's error, which
 is what `experiments/exp_06 --only clean_raw_mle` reports.
@@ -66,7 +66,7 @@ def gaussian_log_lik(A: np.ndarray, rho: float, q: float) -> float:
 def mixture_log_lik(
     A: np.ndarray, rho: float, pi: np.ndarray, mu: np.ndarray, s2: np.ndarray
 ) -> float:
-    """Exact clean-data transition log-likelihood for a mixture innovation."""
+    """Exact clean-data transition log-likelihood for a mixture driving noise."""
     from scipy.special import logsumexp
 
     x, y = _pairs(A)
@@ -104,7 +104,7 @@ def mixture_ecm_raw(
     conditional maximiser and breaks the ascent.
 
     Returns the fitted parameters, the exact log-likelihood trace, the moments of
-    the fitted innovation law, and the largest likelihood decrease observed.
+    the fitted driving-noise law, and the largest likelihood decrease observed.
     """
     from scipy.special import logsumexp
 

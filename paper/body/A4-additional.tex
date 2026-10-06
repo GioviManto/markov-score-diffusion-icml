@@ -22,7 +22,7 @@ Gaussian & $0$ & \isoFloorGaussian & \lmmseFloorGaussian \\
 \section{The second-order floor across correlation}
 \label{app:phase}
 The frozen configuration fixes $\corr=0.85$. The price of second-order closure is a function
-of $\corr$ as well as of the innovation law, and this appendix reports it over
+of $\corr$ as well as of the driving-noise law, and this appendix reports it over
 $\corr\in\{0,0.3,0.6,0.85,0.95\}$ for five families on the twelve-level schedule, computed
 from the exact score with no estimation involved.
 The heavy-tailed family is quoted from a recomputation on the
@@ -38,9 +38,9 @@ are quoted from the operating grid, where they are converged.
 
 \section{Capacity: the previous reading, and why it is void}
 \label{app:capacity}
-An earlier study of this model compared innovation mixtures of $\ncomp\in\{1,2,4,8,16\}$
+An earlier study of this model compared mixture kernels of $\ncomp\in\{1,2,4,8,16\}$
 at $\nseq\in\{128,512\}$ over sixteen seeds and concluded that no capacity improved on a
-single Gaussian innovation, attributing the estimator's margin over the networks to the
+single linear-Gaussian kernel, attributing the estimator's margin over the networks to the
 Markov factorisation and its covariance alone. That sweep is void for a reason prior to
 any reading of it: its training draw re-created the random generator for every sequence,
 so every arm at every capacity and seed was fitted to a single chain of $\nsites$ sites
@@ -58,7 +58,7 @@ chain independently, asserts it, and selects the checkpoint identically for ever
 capacity on a per-seed validation bundle; the same defect was found and fixed in one of
 our own drivers before any of its numbers reached a page (\cref{app:protocol}).
 
-\section{Capacity across the innovation family}
+\section{Capacity across the driving-noise family}
 \label{app:family}
 \IfFileExists{sections/family-numbers.tex}{\input{body/05e-family}}{\needsdata{E02b queued}}
 
@@ -117,8 +117,8 @@ view carries proportionally more sites; so does EM--BP's, and the factor survive
 }{\needsdata{E14 pending: the matched comparison across correlations and chain lengths}}
 
 \IfFileExists{sections/regime-baselines-bimodal-numbers.tex}{%
-\paragraph{A platykurtic innovation (\textsc{e14b}).}
-Every matched comparison above uses the Laplace innovation, whose excess kurtosis is
+\paragraph{Platykurtic driving noise (\textsc{e14b}).}
+Every matched comparison above uses the Laplace driving noise, whose excess kurtosis is
 positive, so the advantage could in principle be a statement about heavy tails. The frozen
 cell repeated with the symmetric two-component mixture, whose excess kurtosis is negative
 at the same covariance, answers it: the second-order floor is

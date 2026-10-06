@@ -16,8 +16,8 @@ We study a family that is neither. A first-order Markov chain with continuous, n
 transitions has a globally dependent, nonlinear score, yet under coordinatewise
 Ornstein--Uhlenbeck noise its posterior factor graph is a tree, so two sweeps of functional
 message passing return the score exactly (\cref{sec:setup}). The chain's covariance is fixed
-by two numbers and everything beyond it by the innovation law, so Gaussian, Laplace,
-Student-$t$, uniform and bimodal innovations, and a one-parameter family interpolating
+by two numbers and everything beyond it by the driving-noise law, so Gaussian, Laplace,
+Student-$t$, uniform and bimodal driving noise, and a one-parameter family interpolating
 between them, share one covariance exactly and differ only in higher-order structure. The
 laboratory therefore separates, by construction, what diffusion noise does to correlation
 from what it does to shape.
@@ -47,16 +47,16 @@ The second is empirical (\cref{sec:learning}). We learn the transition law from 
 sequences alone by expectation--maximisation around the same exact recursion, with Fisher's
 identity supplying the exact likelihood gradient from one forward--backward pass. The
 information curve of \cref{sec:theory} predicts the level at which the shape of the
-innovation law stops being identifiable from a given number of sequences, and the fits do
-what it says: they sit at the information reference below that level and collapse to a
-Gaussian innovation at it, while the correlation survives to the crossover.
+driving-noise law stops being identifiable from a given number of sequences, and the fits do
+what it says: they sit at the information reference below that level and collapse to
+Gaussian driving noise at it, while the correlation survives to the crossover.
 
 The third is a controlled comparison (\cref{sec:experiments}). Against six sequence
 denoisers trained under one recipe the structured estimator is ahead at every sample size;
 at the estimator's own information interface, one noised view per sequence with neither a
 clean chain nor the true score for model selection, the best network is a factor
 $\matchedRatioBestD$ behind, a larger gap than at the standard interface. The advantage is
-earned by the non-Gaussian capacity of the innovation model and not by the Markov
+earned by the non-Gaussian capacity of the driving-noise model and not by the Markov
 factorisation alone, transfers to generation, extrapolates in sequence length, and ends at a
 misspecification strength that a closed-form bias predicts. Given enough clean data the
 networks do pass the second-order floor of \cref{prop:lmmse}, so the gap is a statement

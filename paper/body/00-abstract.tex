@@ -14,14 +14,14 @@ Gaussian---which we show is exactly what Gaussian message closure computes---is
 $\tfrac16\lVert\kappa_4\rVert_F^2e^{-8t}$, with the crossover set by the covariance
 spectrum. Tree-exact inference verifies the rates and the constants, adding the
 fourth-order term back to the Gaussian score closes the gap wherever the expansion
-converges, and heavy-tailed innovations reach the same constant. We then learn the
+converges, and heavy-tailed driving noise reaches the same constant. We then learn the
 transition law from noised sequences alone by expectation--maximisation around the same
 recursion: the fitted shape sits at the information reference while the coordinate is
-identifiable and collapses to a Gaussian innovation where the reference says it must,
+identifiable and collapses to Gaussian driving noise where the reference says it must,
 and moment estimators show the predicted rates at a fraction of the efficiency.
 Against six sequence denoisers trained under one recipe the structured estimator is
 ahead at every sample size; at the estimator's own information interface---one noised
 view per sequence, no clean chain, no true score for model selection---the best network
 is a factor $\matchedRatioBestD$ behind. The advantage is earned by the non-Gaussian
-capacity of the innovation model, transfers to generation, extrapolates in length, and
+capacity of the driving-noise model, transfers to generation, extrapolates in length, and
 ends at a misspecification strength that a closed-form bias predicts.

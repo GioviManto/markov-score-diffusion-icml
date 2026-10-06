@@ -8,7 +8,7 @@ The posterior on a chain is
 
 BP on this tree is *exact at the level of continuous message functions*; the only
 approximation made here is the representation of those functions by their values
-on an equally spaced grid u_1..u_M on [-A, A] with composite trapezoidal
+on an equally spaced grid u_1..u_{N_g} on [-A, A] with composite trapezoidal
 quadrature. Two error sources follow:
   (i)  tail truncation: posterior mass outside [-A, A] is discarded;
   (ii) quadrature: O(dx^2) trapezoid error, which becomes serious only when an
@@ -57,14 +57,14 @@ class GridBPResult:
 
     means, variances : posterior marginal mean / variance per site (exact up to
                        grid error).
-    beliefs          : normalized posterior marginals on the grid, shape (n, M).
+    beliefs          : normalized posterior marginals on the grid, shape (L, N_g).
     log_evidence     : log p_t(x) under the truncated grid model -- a quadrature
                        estimate of the continuous evidence, including all
                        constants (likelihood normalizers and message rescalings).
                        Exact for the finite-state model the grid defines; see the
                        module docstring on what "exact" does and does not cover.
-    forward, backward: the normalized messages L_i and R_i on the grid, shape
-                       (n, M) each, present only when `grid_bp(..., return_messages=True)`
+    forward, backward: the normalized cavity messages m->_i and m<-_i on the grid, shape
+                       (L, N_g) each, present only when `grid_bp(..., return_messages=True)`
                        was asked for and None otherwise.
 
                        These are the objects the BP literature calls mu_k, and they are
@@ -74,7 +74,7 @@ class GridBPResult:
                        Exposing them from this recursion is deliberate: the alternative
                        is a second implementation of the same sweep inside an experiment,
                        which is exactly what the module docstring and `backend.py` argue
-                       against. L_i and R_i EXCLUDE the local likelihood ell_i, matching
+                       against. m->_i and m<-_i EXCLUDE the local likelihood ell_i, matching
                        the convention in the recursion below.
     """
 
@@ -102,18 +102,20 @@ def grid_bp(
 
     Parameters
     ----------
-    log_K   : log K[out, in] = log p(a_out | a_in) on the grid, shape (M, M).
+    log_K   : log K[out, in] = log p(a_out | a_in) on the grid, shape (N_g, N_g).
     log_ell : row-shifted log-likelihood table from `noising.log_likelihood_matrix`,
-              shape (n, M). Row shifts are undone in the evidence computation.
+              shape (L, N_g). Row shifts are undone in the evidence computation.
     x       : observations (needed only to restore the exact evidence constants).
     log_mu  : log initial density on the grid; defaults to standard normal.
 
-    Left message L_i excludes the local likelihood ell_i; right message R_i
-    likewise. Recursions (trapezoidal quadrature of the exact continuous ones):
+    The forward cavity message m->_i (array `fwd`) excludes the local likelihood ell_i; the
+    backward one m<-_i (`bwd`) likewise; the site marginal is m->_i ell_i m<-_i (the notation
+    of docs/NOTATION.md; the collaborators' note writes alpha_i = m->_i ell_i, beta_i = m<-_i).
+    Recursions (trapezoidal quadrature of the exact continuous ones):
 
-        L_{i+1} = K @ (L_i * ell_i * w),      R_{i-1} = K^T @ (R_i * ell_i * w).
+        m->_{i+1} = K @ (m->_i * ell_i * w),      m<-_{i-1} = K^T @ (m<-_i * ell_i * w).
     """
-    n, m = log_ell.shape
+    n_sites, n_grid = log_ell.shape
     if log_mu is None:
         log_mu = -0.5 * grid**2 - 0.5 * np.log(2.0 * np.pi)
 
@@ -125,36 +127,36 @@ def grid_bp(
     z = x[:, None] - alpha * grid[None, :]
     row_shift = (-0.5 * z**2 / delta).max(axis=1)
     gauss_norm = -0.5 * np.log(2.0 * np.pi * delta)
-    log_const = float(np.sum(row_shift) + n * gauss_norm)
+    log_const = float(np.sum(row_shift) + n_sites * gauss_norm)
 
-    L = np.empty((n, m))
-    R = np.empty((n, m))
-    L[0] = np.exp(log_mu)
+    fwd = np.empty((n_sites, n_grid))
+    bwd = np.empty((n_sites, n_grid))
+    fwd[0] = np.exp(log_mu)
     log_z_fwd = 0.0  # accumulated log of message rescaling constants
 
-    for i in range(n - 1):
-        incoming = L[i] * ell[i] * weights
+    for i in range(n_sites - 1):
+        incoming = fwd[i] * ell[i] * weights
         out = K @ incoming
         c = float(np.sum(out * weights))
         if not np.isfinite(c) or c <= 0.0:
             raise FloatingPointError(f"Forward message {i + 1} lost all mass.")
-        L[i + 1] = out / c
+        fwd[i + 1] = out / c
         log_z_fwd += np.log(c)
 
-    R[-1] = np.ones(m)
-    for i in range(n - 1, 0, -1):
-        incoming = R[i] * ell[i] * weights
+    bwd[-1] = np.ones(n_grid)
+    for i in range(n_sites - 1, 0, -1):
+        incoming = bwd[i] * ell[i] * weights
         out = K.T @ incoming
         c = float(np.sum(out * weights))
         if not np.isfinite(c) or c <= 0.0:
             raise FloatingPointError(f"Backward message {i - 1} lost all mass.")
-        R[i - 1] = out / c
+        bwd[i - 1] = out / c
 
-    beliefs = np.empty((n, m))
-    means = np.empty(n)
-    variances = np.empty(n)
-    for i in range(n):
-        raw = L[i] * ell[i] * R[i]
+    beliefs = np.empty((n_sites, n_grid))
+    means = np.empty(n_sites)
+    variances = np.empty(n_sites)
+    for i in range(n_sites):
+        raw = fwd[i] * ell[i] * bwd[i]
         mass = float(np.sum(raw * weights))
         if not np.isfinite(mass) or mass <= 0.0:
             raise FloatingPointError(f"Belief {i} lost all mass.")
@@ -163,19 +165,19 @@ def grid_bp(
         means[i] = float(np.sum(grid * b * weights))
         variances[i] = float(np.sum((grid - means[i]) ** 2 * b * weights))
 
-    # Evidence: p(x) = (prod of forward rescale constants) * int L_n ell_n da,
-    # where L_n is the *normalized* forward message at the last site; restore the
+    # Evidence: p(x) = (prod of forward rescale constants) * int m->_L ell_L da,
+    # where m->_L is the *normalized* forward message at the last site; restore the
     # removed likelihood constants at the end.
-    tail = float(np.sum(L[-1] * ell[-1] * weights))
+    tail = float(np.sum(fwd[-1] * ell[-1] * weights))
     log_evidence = log_z_fwd + np.log(tail) + log_const
 
     return GridBPResult(
         means=means, variances=variances, beliefs=beliefs, log_evidence=log_evidence,
         # Normalized to unit quadrature mass, as the recursion leaves them, so they are
         # densities on the grid and can be compared with candidate message families
-        # directly. R[-1] is the constant 1 by construction and is returned as such.
-        forward=(L.copy() if return_messages else None),
-        backward=(R.copy() if return_messages else None),
+        # directly. bwd[-1] is the constant 1 by construction and is returned as such.
+        forward=(fwd.copy() if return_messages else None),
+        backward=(bwd.copy() if return_messages else None),
     )
 
 
@@ -204,20 +206,20 @@ def grid_bp_batch(
     boundary_frac: float | None = None,
     chunk: int | None = 256,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Vectorized grid BP over a batch of observations X of shape (B, n).
+    """Vectorized grid BP over a batch of observations X of shape (B, L).
 
     ``chunk`` bounds the rows processed at once (memory knob, default 256): the chains are
     independent, so the recursion is run on consecutive blocks of ``chunk`` rows and the
     outputs concatenated; the result is the same to floating-point round-off
-    (``tests/test_bp_grid_chunk.py``). At M = 401 grid points and n = 32 sites the
-    unchunked pass over a 2048-chain bundle holds about 1 GB of (B, n, M) temporaries,
+    (``tests/test_bp_grid_chunk.py``). At N_g = 401 grid points and L = 32 sites the
+    unchunked pass over a 2048-chain bundle holds about 1 GB of (B, L, N_g) temporaries,
     which is what pushed six concurrent experiment workers into swap on an 8 GB laptop.
 
     Same algorithm as `grid_bp` (independent chains, one per batch row), with
-    the site loop shared and each message update a (M, M) @ (M, B) matmul.
+    the site loop shared and each message update a (N_g, N_g) @ (N_g, B) matmul.
     Used by the reverse-dynamics experiments, where BP must run at every
     integration step for every trajectory. Returns (means, variances), each of
-    shape (B, n), or (means, variances, log_evidence) with `return_evidence=True`,
+    shape (B, L), or (means, variances, log_evidence) with `return_evidence=True`,
     the third being the per-chain log p_t(x) under the grid model, shape (B,).
 
     The evidence is the same quantity `grid_bp` returns for a single chain, computed
@@ -247,50 +249,50 @@ def grid_bp_batch(
     log_K = to_device(log_K, xp)
     X = to_device(X, xp)
 
-    b_size, n = X.shape
-    m = len(grid)
+    b_size, n_sites = X.shape
+    n_grid = len(grid)
     if log_mu is None:
         log_mu = -0.5 * grid**2 - 0.5 * xp.log(2.0 * xp.pi)
     else:
         log_mu = to_device(log_mu, xp)
     K = xp.exp(log_K)
 
-    # ell[i] has shape (B, M): row-shifted per (batch, site). The shifts are kept rather
+    # ell[i] has shape (B, N_g): row-shifted per (batch, site). The shifts are kept rather
     # than discarded so the evidence can be restored exactly, as `grid_bp` does.
     z = X[:, :, None] - alpha * grid[None, None, :]
     log_ell = -0.5 * z**2 / delta
-    row_shift = log_ell.max(axis=2)  # (B, n)
+    row_shift = log_ell.max(axis=2)  # (B, L)
     log_ell = log_ell - row_shift[:, :, None]
-    ell = xp.exp(log_ell)  # (B, n, M)
+    ell = xp.exp(log_ell)  # (B, L, N_g)
 
-    L = xp.empty((n, b_size, m))
-    R = xp.empty((n, b_size, m))
-    L[0] = xp.exp(log_mu)[None, :]
+    fwd = xp.empty((n_sites, b_size, n_grid))
+    bwd = xp.empty((n_sites, b_size, n_grid))
+    fwd[0] = xp.exp(log_mu)[None, :]
     log_z_fwd = xp.zeros(b_size)
 
-    for i in range(n - 1):
-        incoming = L[i] * ell[:, i, :] * weights[None, :]  # (B, M)
+    for i in range(n_sites - 1):
+        incoming = fwd[i] * ell[:, i, :] * weights[None, :]  # (B, N_g)
         out = (K @ incoming.T).T
         mass = out @ weights
         if not bool(xp.all(xp.isfinite(mass))) or bool(xp.any(mass <= 0.0)):
             raise FloatingPointError(f"Batched forward message {i + 1} lost mass.")
-        L[i + 1] = out / mass[:, None]
+        fwd[i + 1] = out / mass[:, None]
         log_z_fwd = log_z_fwd + xp.log(mass)
 
-    R[-1] = 1.0
-    for i in range(n - 1, 0, -1):
-        incoming = R[i] * ell[:, i, :] * weights[None, :]
+    bwd[-1] = 1.0
+    for i in range(n_sites - 1, 0, -1):
+        incoming = bwd[i] * ell[:, i, :] * weights[None, :]
         out = (K.T @ incoming.T).T
         mass = out @ weights
         if not bool(xp.all(xp.isfinite(mass))) or bool(xp.any(mass <= 0.0)):
             raise FloatingPointError(f"Batched backward message {i - 1} lost mass.")
-        R[i - 1] = out / mass[:, None]
+        bwd[i - 1] = out / mass[:, None]
 
-    means = xp.empty((b_size, n))
-    variances = xp.empty((b_size, n))
-    bel_edge = xp.zeros((b_size, n)) if boundary_frac else None
-    for i in range(n):
-        raw = L[i] * ell[:, i, :] * R[i]
+    means = xp.empty((b_size, n_sites))
+    variances = xp.empty((b_size, n_sites))
+    bel_edge = xp.zeros((b_size, n_sites)) if boundary_frac else None
+    for i in range(n_sites):
+        raw = fwd[i] * ell[:, i, :] * bwd[i]
         mass = raw @ weights
         if not bool(xp.all(xp.isfinite(mass))) or bool(xp.any(mass <= 0.0)):
             raise FloatingPointError(f"Batched belief {i} lost mass.")
@@ -298,7 +300,7 @@ def grid_bp_batch(
         means[:, i] = bel @ (grid * weights)
         variances[:, i] = bel @ (grid**2 * weights) - means[:, i] ** 2
         if boundary_frac:
-            e = max(1, int(boundary_frac * m))
+            e = max(1, int(boundary_frac * n_grid))
             bel_edge[:, i] = (bel[:, :e] @ weights[:e]) + (bel[:, -e:] @ weights[-e:])
 
     if boundary_frac:
@@ -316,8 +318,8 @@ def grid_bp_batch(
         #
         # Computing it inside the recursion is the only way to be sure the
         # diagnostic and the algorithm refer to the same object.
-        e = max(1, int(boundary_frac * m))
-        fwd_edge = (L[:, :, :e] @ weights[:e]) + (L[:, :, -e:] @ weights[-e:])
+        e = max(1, int(boundary_frac * n_grid))
+        fwd_edge = (fwd[:, :, :e] @ weights[:e]) + (fwd[:, :, -e:] @ weights[-e:])
         diag = {
             # L is normalised to unit mass under the quadrature, so these are
             # already fractions.
@@ -328,14 +330,14 @@ def grid_bp_batch(
             "edge_cells": int(e),
         }
         if return_evidence:
-            tail = (L[-1] * ell[:, -1, :]) @ weights
-            log_const = row_shift.sum(axis=1) + n * (-0.5 * xp.log(2.0 * xp.pi * delta))
+            tail = (fwd[-1] * ell[:, -1, :]) @ weights
+            log_const = row_shift.sum(axis=1) + n_sites * (-0.5 * xp.log(2.0 * xp.pi * delta))
             return means, variances, log_z_fwd + xp.log(tail) + log_const, diag
         return means, variances, diag
 
     if return_evidence:
-        tail = (L[-1] * ell[:, -1, :]) @ weights
-        log_const = row_shift.sum(axis=1) + n * (-0.5 * xp.log(2.0 * xp.pi * delta))
+        tail = (fwd[-1] * ell[:, -1, :]) @ weights
+        log_const = row_shift.sum(axis=1) + n_sites * (-0.5 * xp.log(2.0 * xp.pi * delta))
         return means, variances, log_z_fwd + xp.log(tail) + log_const
     return means, variances
 
@@ -361,7 +363,7 @@ def grid_bp_projected_batch(
 
     Why this exists (1 October 2026). Proposition 1 identifies this algorithm with the LMMSE
     estimator of the covariance twin, but its proof uses the LINEAR transition a' = rho a + eps:
-    the first two moments of a convolution depend on the innovation only through its first two
+    the first two moments of a convolution depend on the driving noise only through its first two
     moments. For a kernel whose conditional mean is nonlinear (the phi^4 chain, `field.py`),
     the projected message after a transition depends on the incoming message beyond its mean
     and variance, so the identity need not hold and "Gaussian closure" and "the linear floor"
@@ -369,7 +371,7 @@ def grid_bp_projected_batch(
     is the second. On the linear-transition families the two agree to quadrature accuracy,
     which is the test (tests/test_bp_projected.py).
 
-    Returns (means, variances) of the site beliefs L_i ell_i R_i formed from the PROJECTED
+    Returns (means, variances) of the site beliefs m->_i ell_i m<-_i formed from the PROJECTED
     messages, each of shape (B, n); with `return_diagnostics=True` a third value, the largest
     fraction of any projected message's mass in the outermost `edge_frac` of the grid.
 
@@ -406,11 +408,11 @@ def grid_bp_projected_batch(
     weights = np.asarray(weights, dtype=float)
     K = np.exp(np.asarray(log_K, dtype=float))
     X = np.asarray(X, dtype=float)
-    b_size, n = X.shape
-    m = len(grid)
+    b_size, n_sites = X.shape
+    n_grid = len(grid)
     gw = grid * weights
     g2w = grid**2 * weights
-    e = max(1, int(edge_frac * m))
+    e = max(1, int(edge_frac * n_grid))
     edge_mass = 0.0
 
     def project(msg):
@@ -432,23 +434,23 @@ def grid_bp_projected_batch(
     log_ell = -0.5 * z**2 / delta
     ell = np.exp(log_ell - log_ell.max(axis=2, keepdims=True))
 
-    L = np.empty((n, b_size, m))
-    R = np.empty((n, b_size, m))
+    fwd = np.empty((n_sites, b_size, n_grid))
+    bwd = np.empty((n_sites, b_size, n_grid))
     with np.errstate(divide="ignore"):
         mu0 = np.exp(np.asarray(log_mu, dtype=float))
-    L[0] = project(np.broadcast_to(mu0, (b_size, m)).copy())
-    for i in range(n - 1):
-        incoming = L[i] * ell[:, i, :] * weights[None, :]
-        L[i + 1] = project((K @ incoming.T).T)
-    R[-1] = 1.0
-    for i in range(n - 1, 0, -1):
-        incoming = R[i] * ell[:, i, :] * weights[None, :]
-        R[i - 1] = project((K.T @ incoming.T).T)
+    fwd[0] = project(np.broadcast_to(mu0, (b_size, n_grid)).copy())
+    for i in range(n_sites - 1):
+        incoming = fwd[i] * ell[:, i, :] * weights[None, :]
+        fwd[i + 1] = project((K @ incoming.T).T)
+    bwd[-1] = 1.0
+    for i in range(n_sites - 1, 0, -1):
+        incoming = bwd[i] * ell[:, i, :] * weights[None, :]
+        bwd[i - 1] = project((K.T @ incoming.T).T)
 
-    means = np.empty((b_size, n))
-    variances = np.empty((b_size, n))
-    for i in range(n):
-        raw = L[i] * ell[:, i, :] * R[i]
+    means = np.empty((b_size, n_sites))
+    variances = np.empty((b_size, n_sites))
+    for i in range(n_sites):
+        raw = fwd[i] * ell[:, i, :] * bwd[i]
         mass = raw @ weights
         if not np.all(np.isfinite(mass)) or np.any(mass <= 0.0):
             raise FloatingPointError(f"Projected belief {i} lost mass.")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Family figure and macros from E02b: capacity's value against the innovation's non-Gaussianity.
+"""Family figure and macros from E02b: capacity's value against the driving noise's non-Gaussianity.
 
 Per beta (excess kurtosis from +3 to -1.1 at fixed rho and variance): mean +/- s.e. over
 seeds of the all-site pooled risk of EM-BP at C = 1 and C = 8, of the LMMSE oracle (the
@@ -87,7 +87,7 @@ def main() -> int:
         ax.errorbar(x, summ.C1, yerr=summ.C1_se, color=fs.CAT[3], ls="-.", marker="^", ms=3.5, lw=1.3, capsize=0); labels.append((float(summ.C1.iloc[-1]), "EM\u2013BP, $C=1$", fs.CAT[3]))
     if "C8" in summ:
         ax.errorbar(x, summ.C8, yerr=summ.C8_se, color=fs.CAT[0], ls="-", marker="o", ms=3.5, lw=1.4, capsize=0); labels.append((float(summ.C8.iloc[-1]), "EM\u2013BP, $C=8$", fs.CAT[0]))
-    ax.set_yscale("log"); ax.set_xlabel("innovation excess kurtosis  $\\kappa_4/q^2$"); ax.set_ylabel("pooled relative score error")
+    ax.set_yscale("log"); ax.set_xlabel("driving-noise excess kurtosis  $\\kappa_4/q^2$"); ax.set_ylabel("pooled relative score error")
     floor_pos = summ.Lmmse[~zero]
     lo = min(float(floor_pos.min()), float(summ.C8.min()), float(summ.C1.min())) / 6
     ax.set_ylim(lo, 1.5)

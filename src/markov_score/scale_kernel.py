@@ -6,7 +6,7 @@ Every kernel in `src/kernels.py` is linear-autoregressive,
 
     K(a' | a) = phi(a' - rho a),
 
-so the parent's entire influence on the child is a shift of the innovation's
+so the parent's entire influence on the child is a shift of the driving noise's
 *location*: the conditional variance does not depend on `a` at all. On a chain of
 simulated AR(1) data that is the right family, because it is the generating one.
 

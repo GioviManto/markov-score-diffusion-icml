@@ -13,7 +13,7 @@ Two implementations with very different numerical status:
      moment-matched assumed-density (single-Gaussian projected) BP:
      the tilted product (Gaussian message x Gaussian likelihood) is exactly
      Gaussian, and the transition step maps N(m, v) to a density whose first two
-     moments are (rho m, rho^2 v + q) regardless of the innovation shape.
+     moments are (rho m, rho^2 v + q) regardless of the driving-noise shape.
      Consequently single-Gaussian ADF-BP == exact Gaussian BP on the
      covariance-matched Gaussian model (equivalence proposition; verified in
      tests). Its error on a non-Gaussian chain is therefore both the "Gaussian
@@ -54,7 +54,7 @@ def gaussian_chain_bp(
 ) -> GaussianBPResult:
     """Analytic information-form BP for the linear chain posterior.
 
-    Model: a_1 ~ N(0, prior_var0), a_i = rho a_{i-1} + innovation(var q),
+    Model: a_1 ~ N(0, prior_var0), a_i = rho a_{i-1} + driving noise (var q),
     x_i | a_i ~ N(alpha a_i, delta).
 
     The likelihood contributes precision alpha^2/delta and information

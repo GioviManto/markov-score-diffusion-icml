@@ -1,6 +1,6 @@
 %% Included by 05-experiments.tex only when sections/capacity-numbers.tex exists (E02a done).
 \input{sections/tab-capacity}
-\Cref{tab:capacity} places every arm on identical test bundles. A Gaussian-innovation
+\Cref{tab:capacity} places every arm on identical test bundles. A linear-Gaussian
 kernel ($\ncomp=1$) lands on the LMMSE floor, within sampling error, at every size
 ($\capEmoneA$, $\capEmoneB$, $\capEmoneC$, $\capEmoneD$ against the floor
 $\capLmmseA$--$\capLmmseD$), as \cref{prop:lmmse} requires; the mixture kernel goes
@@ -10,12 +10,12 @@ $\capDiffD$ (bootstrap $[\capDiffDlo,\capDiffDhi]$) at $\nseq=2048$ and
 $\capDiffA$ ($[\capDiffAlo,\capDiffAhi]$) already at $\nseq=32$, in favour of the
 mixture in $\capWinsD$ and $\capWinsA$ of $\capSeeds$ seeds. At $\nseq=2048$ the
 $\ncomp=8$ arm still selects the top of its $1200$-iteration ladder in $\capAtCapeightD$ of
-$\capSeeds$ seeds, so its error there is an upper bound on what a longer ladder would give. The fitted innovation
+$\capSeeds$ seeds, so its error there is an upper bound on what a longer ladder would give. The fitted driving noise
 excess kurtosis is $\capKurteightD$ at $\nseq=2048$ against the true $3$; $\capUnresolved$
 of $\capCells$ fitted cells fail the two-grid-cell resolution gate and are reported, not
 dropped. The last row of \cref{tab:capacity} is the family's infinite-data reference, the
 $\ncomp$-component mixture closest in Kullback--Leibler divergence to the Laplace
-innovation: its $\ncomp=1$ member scores $\capPopone$, the LMMSE floor to three decimals,
+driving noise: its $\ncomp=1$ member scores $\capPopone$, the LMMSE floor to three decimals,
 and at $\ncomp=8$ it scores $\capPopeight$, so the fitted kernel at $\nseq=2048$ sits
 $\capPopRatioeightD\times$ above what its own family can express, a data limit and not a
 capacity limit (\cref{app:capacity}).

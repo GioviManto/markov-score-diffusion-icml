@@ -9,50 +9,52 @@ the chain. Experiments: E32 (oracles, deterministic) and E33 (learning).
 
 ## 1. The chain
 
-The SPDE ∂ₜφ = ∂ₓ²φ − V′(φ) + √(2T) η in one space dimension, V(φ) = (φ² − 1)²/4, is the
-gradient flow of E[φ] = ∫[½(∂ₓφ)² + V(φ)] dx at temperature T; its stationary law is
-exp(−E/T). On a lattice of spacing h,
+The SPDE ∂_τφ = ∂ₓ²φ − V′(φ) + √(2Θ) η in one space dimension, V(φ) = (φ² − 1)²/4, is the
+gradient flow of H[φ] = ∫[½(∂ₓφ)² + V(φ)] dx at temperature Θ; its stationary law is
+exp(−H/Θ). (Notation: `docs/NOTATION.md`; τ is the SPDE's time, t the diffusion time, and the
+code's `T` is Θ.) On a lattice of spacing h,
 
-    E_h(φ) = Σᵢ [ (φᵢ₊₁ − φᵢ)² / 2h + h V(φᵢ) ],
+    H_h(φ) = Σᵢ [ (φᵢ₊₁ − φᵢ)² / 2h + h V(φᵢ) ],
 
 a nearest-neighbour energy, so a spatial snapshot is exactly a first-order Markov chain in
 the site index (Jerome's point, and the whole reason the machinery applies).
 
 **Transfer operator.** With the site terms split symmetrically,
 
-    T(φ, φ′) = e^{−hV(φ)/2T} e^{−(φ′−φ)²/2Th} e^{−hV(φ′)/2T},
+    𝖳(φ, φ′) = e^{−hV(φ)/2Θ} e^{−(φ′−φ)²/2Θh} e^{−hV(φ′)/2Θ},
 
 a symmetric, positive, Hilbert–Schmidt kernel. Its largest eigenvalue λ₀ is simple with a
 positive eigenfunction ψ₀ (Perron–Frobenius). The infinite-volume Gibbs measure is the
 stationary chain with marginal π = ψ₀² and kernel
 
-    K(φ′ | φ) = T(φ, φ′) ψ₀(φ′) / (λ₀ ψ₀(φ)),
+    K(φ′ | φ) = 𝖳(φ, φ′) ψ₀(φ′) / (λ₀ ψ₀(φ)),
 
 reversible with respect to π. The lag-k covariance is Σₙ (λₙ/λ₀)^k ⟨ψ₀|φ|ψₙ⟩², so
-ρ₁ := λ₁/λ₀ plays the role ρ plays for the AR(1) family and the correlation length in sites
-is 1/log(1/ρ₁). The chain exposed to the package is standardised, a = φ/s with
+ρ₁ := λ₁/λ₀ plays the role ρ plays for the linear chains and the correlation length in sites
+is ξ = 1/log(1/ρ₁). There is no phase transition at any Θ > 0 in one dimension: ξ is finite at
+every temperature and grows roughly like e^{E_kink/Θ} as Θ → 0, a crossover. The chain exposed to the package is standardised, a = φ/s with
 s² = Var_π(φ).
 
 **The tilted-walk identity.** Rearranging the eigen-equation,
 
-    K(φ′ | φ) = N(φ′; φ, Th) g(φ′) / Z(φ),   g = ψ₀ e^{−hV/2T},   Z(φ) = ∫ N(φ′; φ, Th) g(φ′) dφ′,
+    K(φ′ | φ) = N(φ′; φ, Θh) g(φ′) / Z(φ),   g = ψ₀ e^{−hV/2Θ},   Z(φ) = ∫ N(φ′; φ, Θh) g(φ′) dφ′,
 
-and Z(φ) = λ₀ ψ₀(φ) e^{+hV(φ)/2T}: the kernel is a Gaussian step tilted by a function of the
+and Z(φ) = λ₀ ψ₀(φ) e^{+hV(φ)/2Θ}: the kernel is a Gaussian step tilted by a function of the
 *arrival* point, and the column normaliser is the h-transform. This is Jerome's "Gaussian
-increment tilted by ψ₀(φ′)e^{−hV/T}/ψ₀(φ)", written so that the normaliser is explicit.
+increment tilted by ψ₀(φ′)e^{−hV/Θ}/ψ₀(φ)", written so that the normaliser is explicit.
 
-**Where the two laboratories meet.** A Gaussian AR(1) chain with 0 < ρ < 1 is the member of
-this family with log g quadratic (step variance q/ρ, tilt variance 1 + ρ). No other AR(1)
-member is (a Laplace innovation is not a Gaussian step times a function of φ′), and no
-other member of this family has a state-independent innovation. The two families intersect
-at the Gaussian chain and nowhere else. The mixture-innovation kernel is misspecified on the
+**Where the two laboratories meet.** A Gaussian linear chain with 0 < ρ < 1 is the member of
+this family with log g quadratic (step variance q/ρ, tilt variance 1 + ρ). No other linear
+chain is (Laplace driving noise is not a Gaussian step times a function of φ′), and no
+other member of this family has state-independent driving noise. The two families intersect
+at the Gaussian chain and nowhere else. The mixture kernel is misspecified on the
 field chain through its *drift*, which is nonlinear: the conditional mean step of a tilted
 walk is exactly γ (log Z)′(a) (exponential tilting: the drift is the gradient of the
-log-normaliser), which for the field is Th (log ψ₀)′(φ) + (h²/2) V′(φ), so the small-h limit
-is the diffusion dφ = T (log ψ₀)′ dx + √T dW in the site index. The drift is the log-derivative
-of the *ground state*, not −V′, and the noise is √T (the Wiener factor of exp(−∫(∂φ)²/2T));
-an earlier version of this note wrote √(2T), the time-SPDE's noise, which is wrong here. The
-misspecification is through the drift, not through the innovation shape, a different
+log-normaliser), which for the field is Θh (log ψ₀)′(φ) + (h²/2) V′(φ), so the small-h limit
+is the diffusion dφ = Θ (log ψ₀)′ dx + √Θ dW in the site index. The drift is the log-derivative
+of the *ground state*, not −V′, and the noise is √Θ (the Wiener factor of exp(−∫(∂φ)²/2Θ));
+an earlier version of this note wrote √(2Θ), the time-SPDE's noise, which is wrong here. The
+misspecification is through the drift, not through the shape of the driving noise, a different
 mechanism from every E08 axis.
 
 ## 2. The estimator: the learned pair energy as a transition kernel
@@ -86,14 +88,14 @@ is reversible with invariant density
     π_g ∝ g Z_g,        since π_g(a) K_g(a′|a) ∝ g(a) g(a′) N(a′; a, γ) is symmetric in (a, a′).
 
 Equivalently K_g is the ground-state transform of the symmetric operator
-T(a, a′) = u(a) N(a′; a, γ) u(a′) with u = √(g/Z_g), whose Perron eigenfunction is ψ = √(g Z_g)
-with eigenvalue exactly 1 (T ψ = u ∫ N g = u Z_g = ψ). So every tilted walk is the Gibbs chain of
+𝖳(a, a′) = u(a) N(a′; a, γ) u(a′) with u = √(g/Z_g), whose Perron eigenfunction is ψ = √(g Z_g)
+with eigenvalue exactly 1 (𝖳 ψ = u ∫ N g = u Z_g = ψ). So every tilted walk is the Gibbs chain of
 the symmetric pair energy
 
     W(a, a′) = (a′ − a)²/2γ + f(a) + f(a′),        f = −½ log(g / Z_g),
 
 and conversely every pair energy of this gradient form is a tilted walk (the identity of §1).
-For the field's own (γ, g), f = (h/2T) V(s a) + const to 1e-10 (`tests/test_pair_energy_kernel.py`).
+For the field's own (γ, g), f = (h/2Θ) V(s a) + const to 1e-10 (`tests/test_pair_energy_kernel.py`).
 Three consequences.
 
 1. *The directed kernel and the symmetric pair energy are one model class.* Jérôme's question
@@ -101,17 +103,17 @@ Three consequences.
    same single free function. What differs is the algorithm: the directed form's normaliser is
    per column (no chain-wide log Z, concave M-step in the tilt), the symmetric form's is the
    Perron eigenvalue.
-2. *A fitted kernel reads as physics.* With a = φ/s, γ = Th/s² and f(a) = (h/2T) V(s a) + const, so
-   T̂ = γ̂ s²/h and V̂(φ) = (2T̂/h) f̂(φ/s) + const (`pair_energy_kernel.potential_readings`: the
+2. *A fitted kernel reads as physics.* With a = φ/s, γ = Θh/s² and f(a) = (h/2Θ) V(s a) + const, so
+   Θ̂ = γ̂ s²/h and V̂(φ) = (2Θ̂/h) f̂(φ/s) + const (`pair_energy_kernel.potential_readings`: the
    temperature, the barrier height, the well position). The temperature is identified by the
    bond variance alone, which is the one parameter that enters no tilt.
 3. *The physicist's parametrisation.* log g = log ψ_f − f is a transcendental function of the
    potential (hence the 7- and 25-parameter bases), while f itself is a quartic. `PairEnergyKernel`
    (`src/markov_score/pair_energy_kernel.py`) parametrises f = Σ_{m≤4} c_m (a/2)^m and log γ: five
-   parameters, exactly specified for the field, kernel by one dense eigensolve of T_f per
+   parameters, exactly specified for the field, kernel by one dense eigensolve of 𝖳_f per
    evaluation (15 ms on the 401-point grid), invariant law ψ_f² in closed form, M-step by L-BFGS-B
    with the analytic gradient of the Perron eigenvector (first-order perturbation theory in the
-   complete discretised eigenbasis; <ψ_n|∂T/∂c_m|ψ_0> = −(λ_0 + λ_n)<ψ_n|B_m ψ_0>), not concave.
+   complete discretised eigenbasis; <ψ_n|∂𝖳/∂c_m|ψ_0> = −(λ_0 + λ_n)<ψ_n|B_m ψ_0>), not concave.
    This is literally the pair energy W_θ of Jérôme's proposal with its Boltzmann learning
    written as a kernel. Arm `em_pair_quartic`, E33 amendment 1 (predictions P7, P8), its own
    cluster shards (`hpc_E33q_s*`).
@@ -146,22 +148,22 @@ fine physical grid (2401 points on [−12, 12]). For this smooth, super-exponent
 kernel the trapezoid rule converges faster than any power of the spacing: halving the
 spacing and widening the domain move λ₀, ρ₁ and s by less than 10⁻¹⁰ (`tests/test_field.py`).
 The far tail where ψ₀ falls below 10⁻¹³ of its maximum (stationary mass below 10⁻²⁶) is
-carried as log ψ₀ = −∞; a kernel column leaving such a state is the normalised T column.
+carried as log ψ₀ = −∞; a kernel column leaving such a state is the normalised 𝖳 column.
 
 Two samplers: continuum rejection (propose the Gaussian step, accept with g/max g, log ψ₀ by
 cubic spline; burn-in from the slowest mode's rate, as `stationary.py` does) and lattice
 inverse-CDF on the fine grid's finite-state chain (transfer-matrix sampling). They agree in
 variance, lag-one correlation and kurtosis within Monte Carlo error.
 
-The exact score is grid BP with the chain's kernel and stationary law on the operating
+The reference (oracle) score is grid BP with the chain's kernel and stationary law on the operating
 grid; E32's refinement part measures its quadrature error against (1601, 8). The step width
-√(Th)/s is at least 8 grid cells on every cell used, so the usual resolution condition is met.
+√(Θh)/s is at least 8 grid cells on every cell used, so the usual resolution condition is met.
 
 ## 5. Cells (E32 → E33)
 
-At h = 1 the iso-correlation line ρ₁ = 0.85 passes through T = 0.30 (ρ₁ = 0.848, marginal
-excess kurtosis −1.35). The temperature sweep keeps ρ₁ = 0.85 by solving h*(T) for
-T ∈ {0.3, 0.5, 1, 2}; the refinement sweep starts from the T = 0.3 cell and halves h twice
+At h = 1 the iso-correlation line ρ₁ = 0.85 passes through Θ = 0.30 (ρ₁ = 0.848, marginal
+excess kurtosis −1.35). The temperature sweep keeps ρ₁ = 0.85 by solving h*(Θ) for
+Θ ∈ {0.3, 0.5, 1, 2}; the refinement sweep starts from the Θ = 0.3 cell and halves h twice
 with L ∝ 1/h, so the physical length (32 lattice units) is fixed and the correlation length
 in sites grows 6 → 12 → 24. This is the reading of Jerome's prediction that the advantage of
 structure grows under refinement because a fixed window's receptive field does not.

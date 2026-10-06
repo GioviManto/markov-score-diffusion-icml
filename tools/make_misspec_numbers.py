@@ -25,8 +25,9 @@ sys.path.insert(0, str(ROOT / "tools"))
 import figstyle as fs  # noqa: E402
 SIZE_TAG = {64: "Q", 512: "C", 2048: "D"}
 # axis labels: every symbol in $...$ so the math engine sets it (FIGURE_TABLE_STANDARDS F2)
-MECH_NAME = {"global": r"rank-one latent $\beta$", "longrange": r"long-range coupling $\gamma$",
-             "ar2": r"AR(2) coefficient $\rho_2$", "sitevar": r"site-varying $\rho$ (amplitude)"}
+# One symbol for every strength, delta (docs/NOTATION.md: beta and gamma have other meanings)
+MECH_NAME = {"global": r"rank-one latent, $\delta$", "longrange": r"long-range coupling, $\delta$",
+             "ar2": r"second-lag coefficient $\delta=\rho_2$", "sitevar": r"site-varying $\rho$, amplitude $\delta$"}
 
 
 def _mac(s):
@@ -123,7 +124,7 @@ def main() -> int:
                     ax.plot(b.eps, b[col], color=fs.CAT[j], lw=1.1, ls=fs.LINESTYLES[j],
                             label=r"$\sqrt{b^2+v/M}$" if j == 0 else None)
             if len(b):
-                ax.plot(b.eps, b.bias_kl.clip(lower=1e-4), color=fs.INK2, lw=0.9, ls=(0, (1, 1.2)), label=r"$b(\varepsilon)$")
+                ax.plot(b.eps, b.bias_kl.clip(lower=1e-4), color=fs.INK2, lw=0.9, ls=(0, (1, 1.2)), label=r"$b(\delta)$")
             ax.set_yscale("log"); ax.set_xlabel(MECH_NAME.get(mech, mech)); ax.margins(x=0.08)
             if k == 0:
                 ax.set_ylabel("EM–BP error")

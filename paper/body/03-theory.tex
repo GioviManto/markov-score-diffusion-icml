@@ -1,9 +1,9 @@
 \section{What survives diffusion noise: attenuation by statistical order}
 \label{sec:theory}
 
-Write $\gamma$ for the standard Gaussian on $\Reals^{\nsites}$, $\Hen{k}$ for the
+Write $\gref$ for the standard Gaussian on $\Reals^{\nsites}$, $\Hen{k}$ for the
 probabilists' Hermite polynomials and $H_\nu(\vx)=\prod_i\Hen{\nu_i}(x_i)$ for their
-products, of degree $|\nu|$, with $\E_\gamma[H_\nu H_\mu]=\nu!\,\delta_{\nu\mu}$. The
+products, of degree $|\nu|$, with $\E_{\gref}[H_\nu H_\mu]=\nu!\,\delta_{\nu\mu}$. The
 channel \cref{eq:channel} acts on Hermite moments diagonally.
 
 \begin{theorem}[Hermite attenuation]
@@ -17,7 +17,7 @@ $z\sim\normal{0}{1}$ follows from the generating function
 $e^{sx-s^2/2}=\sum_n\Hen{n}(x)s^n/n!$; coordinates are independent given $\va$, and
 $\alpha=e^{-t}$.
 \end{proof}
-Nothing here requires $\Pz/\gamma\in L^2(\gamma)$---which fails for the Laplace chain and,
+Nothing here requires $\Pz/\gref\in L^2(\gref)$---which fails for the Laplace chain and,
 because $\lmax(\Sig_0)>2$, for the Gaussian chain at $\corr=0.85$---only finite moments.
 Two consequences are exact at every $t$: cumulants of order $m\ge3$ scale as $e^{-mt}$
 (Gaussian noise has none), and the degree-4 Hermite moments of two variance-matched laws
@@ -34,7 +34,7 @@ statistical order.}
 The consequence for scores and for learning is an expansion in the signal-to-noise
 ratio $e^{-2t}$. Let $s=e^{-t}\vx/\Dt$, $b=e^{-2t}/\Dt$ and
 $\Lambda(s,b)=\log\E_{\Pz}\exp(s\cdot\va-b|\va|^2/2)$, so that
-$\log\Pt(\vx)=\log\gamma_{\Dt}(\vx)+\Lambda(s,b)$ and
+$\log\Pt(\vx)=\log\gref_{\Dt}(\vx)+\Lambda(s,b)$ and
 $\score=-\vx/\Dt+(e^{-t}/\Dt)\nabla_s\Lambda$ exactly. Grading $\Lambda$ by order in
 $e^{-t}$, its second-order part is the same for $\Pz$ and its covariance twin, and its
 fourth-order part differs by a term linear in $\kfour$. The expansion is legitimate when
@@ -44,7 +44,7 @@ theorem needs:
 \label{ass:exp}
 $\E_{\Pz}e^{\lambda|\va|}<\infty$ for some $\lambda>0$.
 \end{assumption}
-Every innovation law used below satisfies it except Student-$t$, for which
+Every driving-noise law used below satisfies it except Student-$t$, for which
 $\Lambda(s,0)=+\infty$ at every $s\neq0$; that family is discussed after
 \cref{thm:general}.
 
@@ -85,11 +85,11 @@ hypothesis under which the expansion is a theorem and what happens outside it; a
 exact verification and learning consequences that follow. The proof
 (\cref{app:proofs}) expands $\Lambda$ to fourth order on the bulk $\{|s|\le\lambda/2\}$,
 where \cref{ass:exp} makes it analytic with uniformly bounded tilted moments, takes the
-$\gamma$-second moment of the leading Hermite term by Wick's theorem, and bounds the
+$\gref$-second moment of the leading Hermite term by Wick's theorem, and bounds the
 tail, whose probability is $\exp(-c\,e^{2t})$ under \cref{ass:exp}; the scalar leading
 term of \cref{eq:scoregap} is $(\kfour/6)\Hen{3}(x)e^{-4t}$. The leading orders of a
 degree-2 and a degree-4 coordinate do not couple, because $\Hen{2}$ and $\Hen{4}$ are
-$\gamma$-orthogonal, so the \emph{efficient} information of a shape coordinate after
+$\gref$-orthogonal, so the \emph{efficient} information of a shape coordinate after
 lower-degree nuisance coordinates are estimated has the same rate and constant as its
 raw information; a nuisance of the same degree costs an $O(1)$ factor.
 
@@ -128,7 +128,7 @@ at a finite budget. All three caveats are visible in \cref{sec:learning}.
 \paragraph{Where the asymptote begins.}
 For the Gaussian chain the expansion parameter is $e^{-2t}\lmax(\Sig_0)$, with
 $\lmax\le(1+\corr)/(1-\corr)$, and $\tstar=\tfrac12\log\lmax(\Sig_0)$ is its scale, exact
-for the Gaussian chain in the sense that $\Pt/\gamma\in L^2(\gamma)$ iff $e^{2t}>\lmax-1$,
+for the Gaussian chain in the sense that $\Pt/\gref\in L^2(\gref)$ iff $e^{2t}>\lmax-1$,
 that is for $t>\tfrac12\log(\lmax-1)$, just below $\tstar$; below $\tstar$ the long-wavelength
 covariance modes are still of order one and the rates are shallower. For non-Gaussian
 laws the same scale is a heuristic that the measurements below support. At $\corr=0.85$,
@@ -137,7 +137,7 @@ information longer, and any measurement stopped near $\tstar$ sees slopes short 
 $-4$ and $-8$.
 
 \paragraph{Heavy tails.}
-Student-$t_\nu$ innovations violate \cref{ass:exp}. For a regularly varying tail of index
+Student-$t_\nu$ driving noise violates \cref{ass:exp}. For a regularly varying tail of index
 $\nu$ the expected squared gap acquires a term of order $e^{-\nu t}$ carried by
 sequences with $|\va|\gtrsim e^{t}$, whose probability is itself of order $e^{-\nu t}$:
 in expectation the tail term leads once it exceeds $\tfrac16\Frob{\kfour}^2e^{-8t}$, and
@@ -168,7 +168,7 @@ technical.
   $\shapeSlopeBetathree$ ($\beta$, at $\beta=3$).
   (c)~The price of second-order closure: $\E\lVert\score-\Sgauss\rVert^2$ measured by
   tree-exact BP, divided by the predicted $\tfrac16\Frob{\kfour}^2e^{-8t}$, for four
-  innovation families on a domain wide enough for their samples (\cref{app:numerics}).
+  driving-noise families on a domain wide enough for their samples (\cref{app:numerics}).
   Thin curves: $512$ sequences, paired across levels; bold markers with bars: the
   constant from $\audConstChains$ sequences with a bootstrap interval at $t=3$ and $4$;
   grey dotted: the same Student-$t_5$ sequences on the operating $(801,8)$ domain, where

@@ -8,14 +8,14 @@ A clean sequence $\va\in\Reals^{\nsites}$ is a first-order Markov chain,
   \kernel(a'\mid a)=\innov(a'\!-\!\corr a),
   \label{eq:prior}
 \end{equation}
-with $a_1\sim\normal{0}{1}$, $|\corr|<1$, and an innovation density $\innov$ of mean zero
+with $a_1\sim\normal{0}{1}$, $|\corr|<1$, and a driving-noise density $\innov$ of mean zero
 and variance $\ivar=1-\corr^2$. The variance choice makes $\Var(a_i)=1$ and
-$\Cov(a_i,a_j)=\corr^{|i-j|}$ exactly for \emph{every} innovation law, so the families we
+$\Cov(a_i,a_j)=\corr^{|i-j|}$ exactly for \emph{every} driving-noise law, so the families we
 use---Gaussian, Laplace, Student-$t$, uniform, a symmetric two-component mixture, and the
-generalised Gaussian $\innov_\beta(\varepsilon)\propto\exp(-|\varepsilon/s_\beta|^\beta)$
+generalised Gaussian $\innov(\varepsilon)\propto\exp(-|\varepsilon/s_\beta|^\beta)$
 whose exponent $\beta$ moves the excess kurtosis from $+3$ (Laplace) through $0$
 (Gaussian) to $-1$ at $\beta=6$, at fixed variance---share one covariance $\Sig_0$ and,
-every innovation law being symmetric, differ only through cumulants of order four and
+every driving-noise law being symmetric, differ only through cumulants of order four and
 higher.
 The forward process is the coordinatewise Ornstein--Uhlenbeck channel
 \begin{equation}
@@ -66,19 +66,19 @@ $e^{-t}\Sig_0\Sig_t^{-1}\vx$, the linear minimum-mean-square (LMMSE) estimator.
 Let $\Pgauss$ project a density onto the Gaussian with its mean and variance, and let
 moment-projected sum-product apply $\Pgauss$ to each message after every transition
 integral in \cref{eq:bp}. For the chain \cref{eq:prior} with $\corr\neq0$ and any
-innovation law of mean zero and variance $\ivar$, it returns exactly the LMMSE estimator
+driving-noise law of mean zero and variance $\ivar$, it returns exactly the LMMSE estimator
 $e^{-t}\Sig_0\Sig_t^{-1}\vx$, the same for every such law.
 \end{proposition}
 The proof (\cref{app:proofs}) is an induction over the two sweeps: a convolution's first
-two moments depend on the innovation only through its first two moments, so every
+two moments depend on the driving noise only through its first two moments, so every
 projected message equals the Gaussian chain's message. Two consequences are used as
 checks below. Sum-product with \emph{any} Gaussian kernel is a linear map of $\vx$, and
 the LMMSE of the true covariance minimises the posterior-mean error over linear maps,
 so the LMMSE floor bounds every linear estimator; and the Gaussian quasi-likelihood of
 noised data depends on the data only through their sample covariance, whose expectation
-is $e^{-2t}\Sig_0+\Dt\Id$, so a Gaussian-innovation kernel fitted by maximum likelihood is
+is $e^{-2t}\Sig_0+\Dt\Id$, so a linear-Gaussian kernel fitted by maximum likelihood is
 consistent for $(\corr,\ivar)$ and lands on that floor. \Cref{prop:lmmse} thus turns the
 gap between $\score$ and $\Sgauss$ into an interpretable object: it is precisely what
-any estimator that carries only second-order structure---a Gaussian innovation kernel, a
+any estimator that carries only second-order structure---a linear-Gaussian kernel, a
 linear denoiser, or the Kalman smoother---must leave on the table. \Cref{sec:theory}
 computes its size.
