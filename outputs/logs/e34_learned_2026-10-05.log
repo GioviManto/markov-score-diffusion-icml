@@ -1,0 +1,26 @@
+  physics_learned: 24 cells from 96 fitted kernels
+  [cells] 24 cells, 0 already on disk, 24 to run, workers=4
+  [E34 learned] T0.3_h0.25_L128 seed=1 M=2048: truth:kinks=0.0604/dom=11.1 em_mixture:kinks=0.1041/dom=7.6 em_tilted_poly:kinks=nan/dom=nan em_tilted_spline:kinks=0.0613/dom=10.9 em_mdn:kinks=0.0595/dom=11.2
+  [E34 learned] T0.3_h0.25_L128 seed=0 M=2048: truth:kinks=0.0603/dom=11.1 em_mixture:kinks=0.1039/dom=7.7 em_tilted_poly:kinks=nan/dom=nan em_tilted_spline:kinks=0.0622/dom=10.8 em_mdn:kinks=0.0731/dom=9.8
+  [E34 learned] T0.3_h0.25_L128 seed=3 M=2048: truth:kinks=0.0611/dom=11.0 em_mixture:kinks=0.1037/dom=7.6 em_tilted_poly:kinks=nan/dom=nan em_tilted_spline:kinks=0.0607/dom=11.0 em_mdn:kinks=0.0634/dom=10.5
+  [E34 learned] T0.3_h0.5_L64 seed=0 M=2048: truth:kinks=0.0874/dom=7.5 em_mixture:kinks=0.1399/dom=5.4 em_tilted_poly:kinks=0.0675/dom=7.4 em_tilted_spline:kinks=0.0897/dom=7.4 em_mdn:kinks=0.0888/dom=7.3
+  [E34 learned] T0.3_h0.5_L64 seed=2 M=2048: truth:kinks=0.0864/dom=7.5 em_mixture:kinks=0.1432/dom=5.3 em_tilted_poly:kinks=0.0900/dom=7.4 em_tilted_spline:kinks=0.0865/dom=7.4 em_mdn:kinks=0.0895/dom=7.2
+  [E34 learned] T0.3_h0.5_L64 seed=1 M=2048: truth:kinks=0.0864/dom=7.5 em_mixture:kinks=0.1404/dom=5.4 em_tilted_poly:kinks=0.0877/dom=7.4 em_tilted_spline:kinks=0.0842/dom=7.5 em_mdn:kinks=0.0848/dom=7.5
+  [E34 learned] T0.3_h0.5_L64 seed=3 M=2048: truth:kinks=0.0867/dom=7.4 em_mixture:kinks=0.1398/dom=5.4 em_tilted_poly:kinks=0.0909/dom=7.2 em_tilted_spline:kinks=0.0887/dom=7.5 em_mdn:kinks=0.0899/dom=7.3
+  [E34 learned] T0.3_h1_L32 seed=0 M=2048: truth:kinks=0.1225/dom=5.1 em_mixture:kinks=0.1868/dom=3.9 em_tilted_poly:kinks=0.1224/dom=4.9 em_tilted_spline:kinks=0.1229/dom=5.0 em_mdn:kinks=0.1257/dom=5.0
+  [E34 learned] T0.3_h1_L32 seed=2 M=2048: truth:kinks=0.1203/dom=5.1 em_mixture:kinks=0.1848/dom=3.9 em_tilted_poly:kinks=0.1229/dom=4.9 em_tilted_spline:kinks=0.1219/dom=5.1 em_mdn:kinks=0.1156/dom=5.1
+  [E34 learned] T0.3_h1_L32 seed=1 M=2048: truth:kinks=0.1197/dom=5.0 em_mixture:kinks=0.1884/dom=3.8 em_tilted_poly:kinks=0.1255/dom=4.9 em_tilted_spline:kinks=0.1204/dom=5.1 em_mdn:kinks=0.1190/dom=5.2
+  [E34 learned] T0.3_h1_L32 seed=3 M=2048: truth:kinks=0.1225/dom=5.0 em_mixture:kinks=0.1817/dom=3.9 em_tilted_poly:kinks=0.1219/dom=5.0 em_tilted_spline:kinks=0.1238/dom=4.9 em_mdn:kinks=0.1267/dom=4.9
+  [E34 learned] T0.3_h0.25_L128 seed=2 M=2048: truth:kinks=0.0614/dom=10.9 em_mixture:kinks=0.1028/dom=7.7 em_tilted_poly:kinks=nan/dom=nan em_tilted_spline:kinks=0.0616/dom=10.7 em_mdn:kinks=0.0592/dom=11.3
+  [E34 learned] T0.5_iso_L32 seed=0 M=2048: truth:kinks=0.1460/dom=4.4 em_mixture:kinks=0.1812/dom=3.9 em_tilted_poly:kinks=0.1512/dom=4.3 em_tilted_spline:kinks=0.1526/dom=4.3 em_mdn:kinks=0.1505/dom=4.3
+  [E34 learned] T0.5_iso_L32 seed=2 M=2048: truth:kinks=0.1448/dom=4.4 em_mixture:kinks=0.1778/dom=4.0 em_tilted_poly:kinks=0.1471/dom=4.3 em_tilted_spline:kinks=0.1443/dom=4.4 em_mdn:kinks=0.1449/dom=4.4
+  [E34 learned] T0.5_iso_L32 seed=3 M=2048: truth:kinks=0.1500/dom=4.4 em_mixture:kinks=0.1798/dom=3.9 em_tilted_poly:kinks=0.1460/dom=4.3 em_tilted_spline:kinks=0.1486/dom=4.4 em_mdn:kinks=0.1535/dom=4.3
+  [E34 learned] T0.5_iso_L32 seed=1 M=2048: truth:kinks=0.1473/dom=4.4 em_mixture:kinks=0.1758/dom=4.0 em_tilted_poly:kinks=0.1493/dom=4.4 em_tilted_spline:kinks=0.1474/dom=4.4 em_mdn:kinks=0.1445/dom=4.4
+  [E34 learned] T1_iso_L32 seed=0 M=2048: truth:kinks=0.1601/dom=4.1 em_mixture:kinks=0.1790/dom=3.9 em_tilted_poly:kinks=0.1619/dom=4.1 em_tilted_spline:kinks=0.1601/dom=4.2 em_mdn:kinks=0.1630/dom=4.1
+  [E34 learned] T1_iso_L32 seed=2 M=2048: truth:kinks=0.1601/dom=4.1 em_mixture:kinks=0.1773/dom=4.0 em_tilted_poly:kinks=0.1588/dom=4.1 em_tilted_spline:kinks=0.1606/dom=4.1 em_mdn:kinks=0.1513/dom=4.3
+  [E34 learned] T1_iso_L32 seed=1 M=2048: truth:kinks=0.1605/dom=4.1 em_mixture:kinks=0.1785/dom=4.0 em_tilted_poly:kinks=0.1536/dom=4.3 em_tilted_spline:kinks=0.1588/dom=4.1 em_mdn:kinks=0.1600/dom=4.1
+  [E34 learned] T1_iso_L32 seed=3 M=2048: truth:kinks=0.1576/dom=4.1 em_mixture:kinks=0.1771/dom=4.0 em_tilted_poly:kinks=0.1610/dom=4.1 em_tilted_spline:kinks=0.1596/dom=4.2 em_mdn:kinks=0.1588/dom=4.2
+  [E34 learned] T2_iso_L32 seed=0 M=2048: truth:kinks=0.1645/dom=4.1 em_mixture:kinks=0.1757/dom=3.9 em_tilted_poly:kinks=0.1641/dom=4.1 em_tilted_spline:kinks=0.1653/dom=4.0 em_mdn:kinks=0.1701/dom=3.9
+  [E34 learned] T2_iso_L32 seed=1 M=2048: truth:kinks=0.1654/dom=4.1 em_mixture:kinks=0.1796/dom=3.9 em_tilted_poly:kinks=0.1630/dom=4.1 em_tilted_spline:kinks=0.1618/dom=4.1 em_mdn:kinks=0.1618/dom=4.1
+  [E34 learned] T2_iso_L32 seed=2 M=2048: truth:kinks=0.1635/dom=4.0 em_mixture:kinks=0.1765/dom=4.0 em_tilted_poly:kinks=0.1672/dom=4.0 em_tilted_spline:kinks=0.1699/dom=4.0 em_mdn:kinks=0.1691/dom=4.0
+  [E34 learned] T2_iso_L32 seed=3 M=2048: truth:kinks=0.1617/dom=4.1 em_mixture:kinks=0.1778/dom=3.9 em_tilted_poly:kinks=0.1631/dom=4.2 em_tilted_spline:kinks=0.1654/dom=4.1 em_mdn:kinks=0.1601/dom=4.1

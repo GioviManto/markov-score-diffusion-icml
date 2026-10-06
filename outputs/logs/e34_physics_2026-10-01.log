@@ -1,0 +1,57 @@
+  [cells] 12 cells, 0 already on disk, 12 to run, workers=4
+  [E34 physics] T0.3_h1_L32 rep=0: kinks/bond=0.1196 mean domain=5.12 kurt=-1.356 (exact -1.352) max|dC|=0.0265 (max z=1.97)
+  [E34 physics] T0.3_h1_L32 rep=1: kinks/bond=0.1212 mean domain=5.07 kurt=-1.351 (exact -1.352) max|dC|=0.0226 (max z=1.72)
+  [E34 physics] T0.5_iso_L32 rep=0: kinks/bond=0.1470 mean domain=4.37 kurt=-0.884 (exact -0.881) max|dC|=0.0190 (max z=1.69)
+  [E34 physics] T0.5_iso_L32 rep=1: kinks/bond=0.1481 mean domain=4.36 kurt=-0.872 (exact -0.881) max|dC|=0.0177 (max z=1.49)
+  [E34 physics] T1_iso_L32 rep=0: kinks/bond=0.1602 mean domain=4.17 kurt=-0.590 (exact -0.588) max|dC|=0.0068 (max z=0.81)
+  [E34 physics] T1_iso_L32 rep=1: kinks/bond=0.1580 mean domain=4.16 kurt=-0.602 (exact -0.588) max|dC|=0.0215 (max z=1.53)
+  [E34 physics] T0.3_h0.5_L64 rep=0: kinks/bond=0.0877 mean domain=7.51 kurt=-1.250 (exact -1.253) max|dC|=0.0185 (max z=1.18)
+  [E34 physics] T2_iso_L32 rep=0: kinks/bond=0.1653 mean domain=4.09 kurt=-0.442 (exact -0.461) max|dC|=0.0244 (max z=1.73)
+  [E34 physics] T2_iso_L32 rep=1: kinks/bond=0.1641 mean domain=4.07 kurt=-0.481 (exact -0.461) max|dC|=0.0218 (max z=1.78)
+  [E34 physics] T0.3_h0.25_L128 rep=0: kinks/bond=0.0613 mean domain=10.97 kurt=-1.218 (exact -1.218) max|dC|=0.0156 (max z=1.49)
+  [E34 physics] T0.3_h0.25_L128 rep=1: kinks/bond=0.0621 mean domain=10.79 kurt=-1.212 (exact -1.218) max|dC|=0.0121 (max z=1.50)
+  [E34 physics] T0.3_h0.5_L64 rep=1: kinks/bond=0.0882 mean domain=7.42 kurt=-1.247 (exact -1.253) max|dC|=0.0228 (max z=2.86)
+Process SpawnPoolWorker-4:
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/pool.py", line 131, in worker
+    put((job, i, result))
+    ~~~^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/queues.py", line 397, in put
+    self._writer.send_bytes(obj)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/connection.py", line 207, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/connection.py", line 445, in _send_bytes
+    self._send(header + buf)
+    ~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/connection.py", line 401, in _send
+    n = write(self._handle, buf)
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/process.py", line 320, in _bootstrap
+    self.run()
+    ~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/pool.py", line 136, in worker
+    put((job, i, (False, wrapped)))
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/queues.py", line 397, in put
+    self._writer.send_bytes(obj)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/connection.py", line 207, in send_bytes
+    self._send_bytes(m[offset:offset + size])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/connection.py", line 445, in _send_bytes
+    self._send(header + buf)
+    ~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/connection.py", line 401, in _send
+    n = write(self._handle, buf)
+BrokenPipeError: [Errno 32] Broken pipe
+/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/resource_tracker.py:396: UserWarning: resource_tracker: There appear to be 6 leaked semaphore objects to clean up at shutdown: {'/mp-zvumfztk', '/mp-6uw0k0uz', '/mp-tzk4po3n', '/mp-wqf3f_05', '/mp-csxvy72c', '/mp-w8y708a0'}
+  warnings.warn(

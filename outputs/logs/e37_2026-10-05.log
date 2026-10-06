@@ -1,0 +1,26 @@
+  distribution: 24 cells from 120 fitted kernels
+  [cells] 24 cells, 0 already on disk, 24 to run, workers=4
+  [E37] T0.3_h0.25_L128 seed=1: truth:ks=0.000/q90=17.00 em_mixture:ks=0.098/q90=14.50 em_tilted_poly:ks=nan/q90=nan em_tilted_spline:ks=0.031/q90=16.75 em_mdn:ks=0.038/q90=17.00 em_pair_quartic:ks=0.030/q90=16.65
+  [E37] T0.3_h0.25_L128 seed=0: truth:ks=0.000/q90=17.00 em_mixture:ks=0.080/q90=15.00 em_tilted_poly:ks=nan/q90=nan em_tilted_spline:ks=0.016/q90=16.25 em_mdn:ks=0.021/q90=16.75 em_pair_quartic:ks=0.028/q90=16.50
+  [E37] T0.3_h0.25_L128 seed=3: truth:ks=0.000/q90=16.50 em_mixture:ks=0.082/q90=14.75 em_tilted_poly:ks=nan/q90=nan em_tilted_spline:ks=0.013/q90=17.25 em_mdn:ks=0.017/q90=17.00 em_pair_quartic:ks=0.018/q90=17.00
+  [E37] T0.3_h0.5_L64 seed=0: truth:ks=0.000/q90=16.00 em_mixture:ks=0.072/q90=14.00 em_tilted_poly:ks=0.024/q90=16.00 em_tilted_spline:ks=0.014/q90=16.00 em_mdn:ks=0.013/q90=16.50 em_pair_quartic:ks=0.018/q90=15.50
+  [E37] T0.3_h0.5_L64 seed=1: truth:ks=0.000/q90=15.50 em_mixture:ks=0.094/q90=14.00 em_tilted_poly:ks=0.011/q90=16.00 em_tilted_spline:ks=0.013/q90=16.50 em_mdn:ks=0.015/q90=16.00 em_pair_quartic:ks=0.012/q90=16.00
+  [E37] T0.3_h0.5_L64 seed=2: truth:ks=0.000/q90=16.00 em_mixture:ks=0.085/q90=13.50 em_tilted_poly:ks=0.012/q90=15.50 em_tilted_spline:ks=0.015/q90=16.00 em_mdn:ks=0.011/q90=16.00 em_pair_quartic:ks=0.015/q90=16.00
+  [E37] T0.3_h0.5_L64 seed=3: truth:ks=0.000/q90=16.00 em_mixture:ks=0.089/q90=14.00 em_tilted_poly:ks=0.013/q90=16.00 em_tilted_spline:ks=0.018/q90=15.50 em_mdn:ks=0.016/q90=16.00 em_pair_quartic:ks=0.030/q90=16.00
+  [E37] T0.3_h1_L32 seed=1: truth:ks=0.000/q90=16.00 em_mixture:ks=0.082/q90=15.00 em_tilted_poly:ks=0.011/q90=16.00 em_tilted_spline:ks=0.014/q90=17.00 em_mdn:ks=0.024/q90=17.00 em_pair_quartic:ks=0.006/q90=16.00
+  [E37] T0.3_h1_L32 seed=0: truth:ks=0.000/q90=17.00 em_mixture:ks=0.077/q90=14.00 em_tilted_poly:ks=0.014/q90=16.00 em_tilted_spline:ks=0.026/q90=16.00 em_mdn:ks=0.011/q90=16.00 em_pair_quartic:ks=0.031/q90=17.00
+  [E37] T0.3_h1_L32 seed=2: truth:ks=0.000/q90=16.00 em_mixture:ks=0.065/q90=14.00 em_tilted_poly:ks=0.015/q90=16.00 em_tilted_spline:ks=0.030/q90=17.00 em_mdn:ks=0.034/q90=16.00 em_pair_quartic:ks=0.023/q90=16.00
+  [E37] T0.3_h1_L32 seed=3: truth:ks=0.000/q90=16.00 em_mixture:ks=0.100/q90=14.00 em_tilted_poly:ks=0.013/q90=16.00 em_tilted_spline:ks=0.018/q90=16.00 em_mdn:ks=0.014/q90=16.00 em_pair_quartic:ks=0.014/q90=16.00
+  [E37] T0.3_h0.25_L128 seed=2: truth:ks=0.000/q90=16.50 em_mixture:ks=0.057/q90=15.00 em_tilted_poly:ks=nan/q90=nan em_tilted_spline:ks=0.024/q90=17.00 em_mdn:ks=0.032/q90=17.25 em_pair_quartic:ks=0.023/q90=16.75
+  [E37] T0.5_iso_L32 seed=0: truth:ks=0.000/q90=8.37 em_mixture:ks=0.030/q90=8.37 em_tilted_poly:ks=0.031/q90=8.37 em_tilted_spline:ks=0.019/q90=8.37 em_mdn:ks=0.028/q90=8.37 em_pair_quartic:ks=0.018/q90=8.37
+  [E37] T0.5_iso_L32 seed=2: truth:ks=0.000/q90=8.37 em_mixture:ks=0.017/q90=8.37 em_tilted_poly:ks=0.026/q90=7.95 em_tilted_spline:ks=0.037/q90=8.37 em_mdn:ks=0.049/q90=8.37 em_pair_quartic:ks=0.028/q90=8.37
+  [E37] T0.5_iso_L32 seed=1: truth:ks=0.000/q90=8.37 em_mixture:ks=0.016/q90=8.37 em_tilted_poly:ks=0.040/q90=8.37 em_tilted_spline:ks=0.020/q90=8.37 em_mdn:ks=0.016/q90=8.37 em_pair_quartic:ks=0.018/q90=8.37
+  [E37] T0.5_iso_L32 seed=3: truth:ks=0.000/q90=8.37 em_mixture:ks=0.023/q90=8.37 em_tilted_poly:ks=0.033/q90=7.95 em_tilted_spline:ks=0.013/q90=8.37 em_mdn:ks=0.011/q90=8.37 em_pair_quartic:ks=0.016/q90=8.37
+  [E37] T1_iso_L32 seed=0: truth:ks=0.000/q90=5.42 em_mixture:ks=0.092/q90=5.20 em_tilted_poly:ks=0.031/q90=5.42 em_tilted_spline:ks=0.048/q90=5.65 em_mdn:ks=0.045/q90=5.42 em_pair_quartic:ks=0.077/q90=5.42
+  [E37] T1_iso_L32 seed=1: truth:ks=0.000/q90=5.35 em_mixture:ks=0.072/q90=5.42 em_tilted_poly:ks=0.014/q90=5.42 em_tilted_spline:ks=0.023/q90=5.42 em_mdn:ks=0.035/q90=5.42 em_pair_quartic:ks=0.050/q90=5.42
+  [E37] T1_iso_L32 seed=2: truth:ks=0.000/q90=5.65 em_mixture:ks=0.043/q90=5.42 em_tilted_poly:ks=0.046/q90=5.20 em_tilted_spline:ks=0.044/q90=5.42 em_mdn:ks=0.062/q90=5.42 em_pair_quartic:ks=0.048/q90=5.20
+  [E37] T1_iso_L32 seed=3: truth:ks=0.000/q90=5.42 em_mixture:ks=0.040/q90=5.65 em_tilted_poly:ks=0.027/q90=5.42 em_tilted_spline:ks=0.022/q90=5.42 em_mdn:ks=0.028/q90=5.42 em_pair_quartic:ks=0.037/q90=5.42
+  [E37] T2_iso_L32 seed=0: truth:ks=0.000/q90=3.90 em_mixture:ks=0.029/q90=3.90 em_tilted_poly:ks=0.029/q90=3.90 em_tilted_spline:ks=0.084/q90=3.90 em_mdn:ks=0.046/q90=3.90 em_pair_quartic:ks=0.038/q90=3.90
+  [E37] T2_iso_L32 seed=1: truth:ks=0.000/q90=3.90 em_mixture:ks=0.102/q90=4.05 em_tilted_poly:ks=0.097/q90=3.90 em_tilted_spline:ks=0.038/q90=3.75 em_mdn:ks=0.049/q90=3.90 em_pair_quartic:ks=0.102/q90=3.90
+  [E37] T2_iso_L32 seed=2: truth:ks=0.000/q90=3.90 em_mixture:ks=0.043/q90=3.90 em_tilted_poly:ks=0.052/q90=3.90 em_tilted_spline:ks=0.075/q90=3.90 em_mdn:ks=0.035/q90=3.90 em_pair_quartic:ks=0.080/q90=3.90
+  [E37] T2_iso_L32 seed=3: truth:ks=0.000/q90=3.60 em_mixture:ks=0.103/q90=4.05 em_tilted_poly:ks=0.082/q90=3.90 em_tilted_spline:ks=0.065/q90=3.75 em_mdn:ks=0.056/q90=3.90 em_pair_quartic:ks=0.071/q90=3.90

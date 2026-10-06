@@ -1,0 +1,10 @@
+  kernels: 8 cells x 1 arms
+  [cells] 8 cells, 0 already on disk, 8 to run, workers=3
+  [E33 kernels] T2_iso_L32 seed=0 M=512: em_pair_quartic=0.0112
+  [E33 kernels] T0.3_h1_L32 seed=0 M=512: em_pair_quartic=0.0257
+  [E33 kernels] T0.3_h1_L32 seed=1 M=512: em_pair_quartic=0.0162
+  [E33 kernels] T0.3_h1_L32 seed=1 M=128: em_pair_quartic=0.0405
+  [E33 kernels] T2_iso_L32 seed=1 M=512: em_pair_quartic=0.0265
+  [E33 kernels] T0.3_h1_L32 seed=0 M=128: em_pair_quartic=0.0287
+  [E33 kernels] T2_iso_L32 seed=1 M=128: em_pair_quartic=0.0199
+  [E33 kernels] T2_iso_L32 seed=0 M=128: em_pair_quartic=0.0348

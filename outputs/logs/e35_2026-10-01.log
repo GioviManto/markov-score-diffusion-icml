@@ -1,0 +1,24 @@
+  augmented: 12 cells
+  [cells] 12 cells, 0 already on disk, 12 to run, workers=2
+  augmented: 12 cells
+  [cells] 12 cells, 0 already on disk, 12 to run, workers=3
+  [E35] b=0 seed=0 M=2048: lmmse_true=0.0000 isotropic=0.6580 em_first_order=0.0102 em_augmented=0.0111
+  [E35] b=1 seed=0 M=2048: lmmse_true=0.0196 isotropic=0.8383 em_first_order=0.0565 em_augmented=0.0383
+  [E35] b=0 seed=1 M=2048: lmmse_true=0.0000 isotropic=0.6578 em_first_order=0.0074 em_augmented=0.0046
+  [E35] b=2 seed=0 M=2048: lmmse_true=0.0184 isotropic=1.2144 em_first_order=0.0813 em_augmented=0.0629
+  augmented: 12 cells
+  [cells] 12 cells, 4 already on disk, 8 to run, workers=4
+/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/resource_tracker.py:396: UserWarning: resource_tracker: There appear to be 6 leaked semaphore objects to clean up at shutdown: {'/mp-ufq98rye', '/mp-pkeh_vva', '/mp-43o2er8a', '/mp-h1emxj7g', '/mp-64dbma3p', '/mp-ednnlfxg'}
+  warnings.warn(
+  augmented: 12 cells
+  [cells] 12 cells, 2 already on disk, 10 to run, workers=4
+  [E35] b=2 seed=0 M=2048: lmmse_true=0.0617 isotropic=1.2038 em_first_order=0.0988 em_augmented=0.0114
+  [E35] b=1 seed=0 M=2048: lmmse_true=0.0355 isotropic=0.8285 em_first_order=0.0594 em_augmented=0.0072
+  [E35] b=0 seed=0 M=512: lmmse_true=0.0000 isotropic=0.6580 em_first_order=0.0110 em_augmented=0.0028
+  [E35] b=1 seed=1 M=2048: lmmse_true=0.0352 isotropic=0.8308 em_first_order=0.0592 em_augmented=0.0067
+  [E35] b=2 seed=1 M=2048: lmmse_true=0.0612 isotropic=1.2002 em_first_order=0.0955 em_augmented=0.0053
+  [E35] b=0 seed=1 M=512: lmmse_true=0.0000 isotropic=0.6578 em_first_order=0.0276 em_augmented=0.0342
+  [E35] b=1 seed=0 M=512: lmmse_true=0.0355 isotropic=0.8285 em_first_order=0.0594 em_augmented=0.0183
+  [E35] b=2 seed=0 M=512: lmmse_true=0.0617 isotropic=1.2038 em_first_order=0.0930 em_augmented=0.0269
+  [E35] b=1 seed=1 M=512: lmmse_true=0.0352 isotropic=0.8308 em_first_order=0.0611 em_augmented=0.0140
+  [E35] b=2 seed=1 M=512: lmmse_true=0.0612 isotropic=1.2002 em_first_order=0.0923 em_augmented=0.0196

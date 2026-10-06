@@ -1,0 +1,131 @@
+% ============================================================
+% Appendix A -- Reproducibility: repository, build manifest, the figure-to-code
+% map, provenance of the frozen outputs, and the aggregation of the reported
+% ratios. The detailed working is in the research package
+% (research/CODE_README.md) and in the companion compendium.
+% ============================================================
+
+\chapter{Reproducibility}\label{app:repro}\label{app:aggregation}\label{app:aggregation-chapter}
+
+\setlength{\emergencystretch}{2em}
+
+\paragraph{Repository.}
+The thesis source, research code, frozen experimental outputs, and Lean files
+used for formal verification of selected mathematical results are publicly
+available at
+\begin{center}
+  \url{https://github.com/GioviManto/Markov_Score_Diffusion}
+\end{center}
+
+\paragraph{From experiment to printed number.}
+Every quantity in this thesis is computed by a script from frozen experiment
+outputs under \texttt{research/outputs/frozen/} and reaches the page as a
+macro defined once in \texttt{sections/}; none is typed by hand, so text,
+tables and figures share one aggregation rule by construction.
+Table~\ref{tab:figure-map} maps each computed figure and generated table to
+the script that builds it and the experiment it reads. The build manifest
+fixes the state this document was made from: repository revision
+\bmreposha{}, generated inputs \bmgenerated{} over \bmgeneratedcount{} files,
+figures \bmfigures{} over \bmfigurecount{} files, engine \bmtectonic{}.
+\Compendium{}, distributed with the sources, is the extended research record:
+the same results with every derivation written out.
+
+\begin{table}[tbp]\small\centering
+\caption[Figure-to-code map]{What builds each computed figure and generated
+table: the scripts under \texttt{tools/} (thesis) and \texttt{research/tools/}
+(research package), and the frozen experiments they read. The one figure not
+built here, Figure~\ref{fig:bp-messages}, is reproduced from the literature.}
+\label{tab:figure-map}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.24\linewidth}%
+                 >{\raggedright\arraybackslash}p{0.45\linewidth}%
+                 >{\raggedright\arraybackslash}p{0.23\linewidth}@{}}
+\toprule
+chapter & built by & reads \\
+\midrule
+\ref{ch:statmech}, diffusion background & \texttt{make\_thesis\_figures} & closed forms \\
+\ref{ch:gaussian}, Gaussian score & \texttt{fig\_ch05} & closed forms \\
+\ref{ch:gaussian-bp}, belief propagation & \texttt{fig\_ch06} & closed forms \\
+\ref{ch:laplace}, Laplace closure & \texttt{fig\_ch07}, \texttt{make\_laplace\_oracle} & quadrature, exp.~02 \\
+\ref{ch:em-method}, EM on the chain & \texttt{fig\_ch08} & exps.~01, 06, 18 \\
+\ref{ch:em-kernel}, convergence & \texttt{fig\_ch09}, \texttt{make\_convergence\_numbers} & exps.~06, 27 \\
+\ref{ch:em-results}, value of structure & \texttt{fig\_ch10}, \texttt{make\_tab\_efficiency}, \texttt{make\_tab\_screening}, \texttt{make\_tab\_structured}, \texttt{make\_tab\_capacity}, \texttt{make\_tab\_nonmarkov} & exps.~07, 21, 22, 31, 32 \\
+this appendix & \texttt{make\_aggregation\_structured} & exp.~31 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Implementations and their checks.}
+The recursions, the estimators and the baselines live in \texttt{research/},
+and the properties the text asserts of them are tested rather than assumed:
+that moment-projected message passing on a non-Gaussian chain returns the
+analytic Gaussian answer on the covariance-matched model, that the E-step is
+exact and its pairwise statistic conserves mass, that EM ascends the exact
+evidence, that the quadrature is converged in the grid, and that the
+non-Markov reference collapses onto plain belief propagation when its extra
+coupling is switched off. Fisher's identity is checked against a brute-force
+enumeration of the posterior that shares nothing with the recursion but the
+kernel and the grid, so a common error cannot satisfy both sides. The
+forward--backward recursion is implemented twice in the package and the two
+implementations are pinned against each other, which is what makes the
+agreement check of Chapter~\ref{ch:gaussian-bp} independent rather than
+self-confirming.
+
+\paragraph{Provenance of the frozen outputs.}
+The closed-form and quadrature studies are deterministic and run on a laptop;
+the estimator comparisons ran under SLURM from the scripts in \texttt{hpc/}.
+The confirmatory comparison and the capacity study (\texttt{exp\_31},
+\texttt{exp\_32}) were deployed by a script that refuses a dirty tree, ships a
+\texttt{git archive} of the commit and records its digest, and the non-Markov
+study (\texttt{exp\_21}) is a clean-deployment rerun whose Gaussian arm
+reproduces the run it replaces on every quoted number. The headline
+comparison (\texttt{exp\_07}) predates that script and is certified instead by
+an audit recomputed on every regeneration: the intersection of each run's
+recorded dirty-file list with its own import closure is empty, and the single
+row where it was not, $\nseq = 8192$, is withdrawn. The validation and
+diagnostic runs carry their resolved configuration and seeds but an empty
+revision field, and the claims resting on them are stated as measured curves
+and orderings rather than as certified numbers.
+
+\paragraph{Protocol.}
+Both arms of the headline comparison select their training budget on a
+disjoint validation bundle, which agrees with the test-set optimum in
+$\netagree\%$ and $\emagree\%$ of cells, and the screen that fixed the
+baseline configurations ran on development seeds disjoint from the
+confirmatory ones. Rerunning the smallest training set at the budget of the
+largest moves its pooled ratio by $\budgetdelta \pm \budgetdeltase$, in the
+direction that makes the reported table conservative for the structured arm.
+A resolution gate excludes $\ndropped$ of $\ncellstotal$ cells whose narrowest
+fitted component is under two grid cells wide; including them changes no ratio
+by more than $\dropshift$.
+
+\paragraph{Environment.}
+Python $\ge 3.10$ with NumPy, SciPy, pandas and Matplotlib, float64
+throughout, and the neural baselines in pure NumPy with an explicit random
+generator, so a run reproduces from its recorded seed on a fixed
+installation; the dependency list is a set of floors rather than a lock, and
+byte-level reproduction across installations is not claimed. The document
+compiles in one run of \texttt{tectonic main.tex}, and \texttt{check.sh}
+reports unresolved references, undefined citations, duplicate labels and
+overfull boxes.
+
+\paragraph{How the reported ratios were aggregated.}\label{sec:aggregation-headline}
+A ratio is a nonlinear function of two means, so it depends on the order in
+which the averaging is done, and both reported ratios were recomputed under
+alternative aggregations of the same frozen cells, refitting nothing. The
+headline estimand is the schedule-pooled paired per-seed ratio of
+\eqref{eq:em-pooling}. Its direction survives every alternative: each paired
+bootstrap interval over seeds sits well clear of one, no aggregation produces
+a reversal at any training-set size, and EM--BP is beaten outright in
+$\nreversed$ of $\ncellsused$ cells. For the structure-aware comparison the
+reported estimand is not the largest of the four, and the floor across them is
+$\structaggfloor\times$ with a spread of $\structaggspread$
+(Table~\ref{tab:aggregation-structured}), so the reading of a low single-digit
+multiple at the smallest training set growing to roughly six at the largest is
+a property of the data rather than of the summary.
+
+\providecommand{\headlinetable}{Table~\ref{tab:pointwise}}
+\providecommand{\structuredtable}{Table~\ref{tab:structured}}
+\input{sections/tab-aggregation-structured}
+
+\setlength{\emergencystretch}{0pt}

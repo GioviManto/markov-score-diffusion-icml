@@ -1,0 +1,5 @@
+  physics_learned: 3 cells from 3 fitted kernels
+  [cells] 3 cells, 0 already on disk, 3 to run, workers=1
+  [E34 learned] T0.3_h1_L32 seed=0 M=512: truth:kinks=0.1225/dom=5.1 em_pair_quartic:kinks=0.1232/dom=5.1
+  [E34 learned] T0.3_h1_L32 seed=1 M=512: truth:kinks=0.1197/dom=5.0 em_pair_quartic:kinks=0.1295/dom=4.9
+  [E34 learned] T2_iso_L32 seed=0 M=512: truth:kinks=0.1645/dom=4.1 em_pair_quartic:kinks=0.1629/dom=4.0

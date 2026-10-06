@@ -1,0 +1,169 @@
+% ============================================================
+% Preamble — Bocconi MSc thesis format (Guide to the University §10.3)
+%   A4, left/right margins 2.5 cm, 26–30 lines per page, 12 pt body,
+%   numbered pages, no title page/abstract in body, no personal info.
+% ============================================================
+
+% ---------- encoding & fonts ----------
+% Latin Modern at 12 pt, the same setting as the companion compendium, so
+% both documents compile with pdfLaTeX (Overleaf's default compiler) as well
+% as with tectonic. The university guide recommends Arial/Tahoma/Verdana but
+% makes only the size, margins and line density requirements; a fontspec
+% build in Arial was tried and abandoned because it needs a Unicode engine.
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ---------- geometry: 2.5 cm side margins, ~29 text lines/page ----------
+% headheight=15pt: fancyhdr needs 13.6pt for the \small running head; at the
+% LaTeX default of 12pt the head box overflowed downward into the text block.
+\usepackage[a4paper,hmargin=2.5cm,textheight=630pt,vcentering,headheight=15pt]{geometry}
+\usepackage{setspace}
+\setstretch{1.5}   % 12pt x 1.5 -> ~29 lines per page (within the 26-30 rule)
+
+% ---------- mathematics ----------
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\allowdisplaybreaks[2]
+
+% ---------- graphics, tables, captions ----------
+\usepackage{graphicx}
+% This folder is self-contained so it can be uploaded to Overleaf on its own:
+% figures/, sections/ and references.bib are local copies, refreshed from the
+% research repository by sync-assets.sh.
+\graphicspath{{figures/}}
+% Float policy: let a page be mostly float before LaTeX moves the float to a
+% page of its own, which otherwise leaves near-empty prose pages.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.7}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.8}
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{4}
+\usepackage{array}       % >{...} column specifiers in the appendix figure map
+\usepackage{booktabs}
+\usepackage{enumitem}      % compact lists (research questions, contributions)
+\usepackage[font=small,labelfont=bf,margin=1em]{caption}
+\usepackage{subcaption}
+\usepackage{capt-of}          % \captionof, used by the shared generated tables
+\usepackage{xcolor}
+\usepackage{etoolbox}
+% Chapter heads: the report class leaves 50pt above and 40pt below the
+% title block; tightened to 20pt/30pt so a chapter opening does not waste a
+% third of its page. Line spacing and font size are untouched.
+\makeatletter
+\patchcmd{\@makechapterhead}{\vspace*{50\p@}}{\vspace*{20\p@}}{}{}
+\patchcmd{\@makechapterhead}{\vskip 40\p@}{\vskip 30\p@}{}{}
+\patchcmd{\@makeschapterhead}{\vspace*{50\p@}}{\vspace*{20\p@}}{}{}
+\patchcmd{\@makeschapterhead}{\vskip 40\p@}{\vskip 30\p@}{}{}
+% Section and subsection heads: the class skips (3.5ex/2.3ex, 3.25ex/1.5ex)
+% are reduced by about a third; heading fonts are unchanged.
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+  {-2.6ex \@plus -1ex \@minus -.2ex}{1.6ex \@plus.2ex}%
+  {\normalfont\Large\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+  {-2.4ex\@plus -1ex \@minus -.2ex}{1.2ex \@plus .2ex}%
+  {\normalfont\large\bfseries}}
+\makeatother
+% Table bodies at \small with opened-up rows: at full body size against the
+% 1.5-spaced prose the tabulars read cramped, and \small also matches them to
+% their captions. Scoped to the float so math arrays are untouched, and
+% applied via AtBeginEnvironment so the shared generated tables need no edit.
+\AtBeginEnvironment{table}{\small\renewcommand{\arraystretch}{1.18}}
+
+% ---------- theorem environments ----------
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% ---------- citations: author-date (Bocconi writing guide, Attachment 2) ----------
+\usepackage[round,authoryear]{natbib}
+\setlength{\bibsep}{0.4em}
+
+% ---------- headers / page numbers ----------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\itshape\nouppercase{\leftmark}}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}%
+  \renewcommand{\headrulewidth}{0pt}}
+
+% ---------- hyperlinks ----------
+% Coloured rather than hidden: every cross-reference, equation number, figure
+% reference and citation is clickable, and the reader can see that it is.
+% The colours are dark enough to read as black on a monochrome printout.
+\definecolor{linkint}{RGB}{31,72,110}   % internal: chapters, figures, equations
+\definecolor{linkcite}{RGB}{31,95,91}   % citations
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=linkint,
+  citecolor=linkcite,
+  urlcolor=linkcite,
+  bookmarks=true,
+  bookmarksnumbered=true,
+  bookmarksopen=true,
+  bookmarksopenlevel=1,
+  pdfstartview={FitH},
+  pdfpagemode=UseOutlines,
+  pdftitle={Learning Scores for Markovian Dynamics in Generative Diffusion},
+  pdfsubject={MSc thesis, Data Science and Business Analytics, Bocconi University}
+}
+\urlstyle{same}
+% cleveref must be loaded after hyperref. It prints the object's name with the
+% number, so a reference cannot drift out of step with what it points at.
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+% ---------- notation macros (consistent with the research notes) ----------
+\providecommand{\codefile}[1]{\texttt{\small #1}}
+% The thesis writes the training-set size N where the paper writes M. Shared
+% generated sections use \nseq, so alias it here rather than forking the
+% generator: the numbers must be identical in both documents.
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, fit}
+\providecommand{\like}{\ell_t}                  % unary likelihood factor
+\providecommand{\lmsg}{\overrightarrow{m}}      % forward (left) message
+\providecommand{\rmsg}{\overleftarrow{m}}       % backward (right) message
+\providecommand{\kernel}{K}                     % transition kernel K(a'|a)
+\providecommand{\nsites}{L}                     % chain length
+\providecommand{\nseq}{N}
+% Same reason, for the autoregressive coefficient: shared/notation.tex sets
+% \corr to \rho, and the shared non-Markov table is written through it.
+\providecommand{\corr}{\alpha}
+% The innovation variance, one macro so the chapters cannot drift apart.
+\newcommand{\ivar}{\sigma_\eta^2}
+% Grid resolution, rendered as the shared figures label it.
+\providecommand{\ngrid}{N_{\mathrm{g}}}
+\providecommand{\Cov}{\operatorname{Cov}}
+% Where THIS document keeps its provenance discussion. Shared generated
+% sections cite it through this macro instead of a literal label.
+\providecommand{\provenanceappendix}{Appendix~\ref{app:repro}}
+% The companion compendium (compendium/) is the extended research record of
+% this thesis: every derivation written out, and the precursor studies.
+\newcommand{\compendium}{the companion compendium}
+\newcommand{\Compendium}{The companion compendium}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Nd}{\mathcal{N}}
+\newcommand{\Deltat}{\Delta_t}
+\newcommand{\Sig}{\Sigma}
+\newcommand{\Sigz}{\Sigma_0}
+\newcommand{\Sigt}{\Sigma_t}
+\newcommand{\Qz}{Q_0}
+\newcommand{\Qt}{Q_t}
+\newcommand{\score}{S}
+\newcommand{\kl}[2]{D_{\mathrm{KL}}\!\left(#1 \,\|\, #2\right)}
+\newcommand{\inner}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}

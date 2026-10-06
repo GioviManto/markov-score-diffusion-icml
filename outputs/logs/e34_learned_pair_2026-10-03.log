@@ -1,0 +1,26 @@
+  physics_learned: 24 cells from 24 fitted kernels
+  [cells] 24 cells, 0 already on disk, 24 to run, workers=2
+  [E34 learned] T0.3_h0.25_L128 seed=1 M=2048: truth:kinks=0.0604/dom=11.1 em_pair_quartic:kinks=0.0610/dom=10.8
+  [E34 learned] T0.3_h0.25_L128 seed=0 M=2048: truth:kinks=0.0603/dom=11.1 em_pair_quartic:kinks=0.0609/dom=10.8
+  [E34 learned] T0.3_h0.25_L128 seed=3 M=2048: truth:kinks=0.0611/dom=11.0 em_pair_quartic:kinks=0.0616/dom=10.8
+  [E34 learned] T0.3_h0.5_L64 seed=0 M=2048: truth:kinks=0.0874/dom=7.5 em_pair_quartic:kinks=0.0878/dom=7.4
+  [E34 learned] T0.3_h0.5_L64 seed=1 M=2048: truth:kinks=0.0864/dom=7.5 em_pair_quartic:kinks=0.0864/dom=7.5
+  [E34 learned] T0.3_h0.5_L64 seed=2 M=2048: truth:kinks=0.0864/dom=7.5 em_pair_quartic:kinks=0.0870/dom=7.6
+  [E34 learned] T0.3_h0.5_L64 seed=3 M=2048: truth:kinks=0.0867/dom=7.4 em_pair_quartic:kinks=0.0914/dom=7.3
+  [E34 learned] T0.3_h1_L32 seed=0 M=2048: truth:kinks=0.1225/dom=5.1 em_pair_quartic:kinks=0.1207/dom=5.1
+  [E34 learned] T0.3_h1_L32 seed=1 M=2048: truth:kinks=0.1197/dom=5.0 em_pair_quartic:kinks=0.1243/dom=4.9
+  [E34 learned] T0.3_h1_L32 seed=2 M=2048: truth:kinks=0.1203/dom=5.1 em_pair_quartic:kinks=0.1204/dom=5.1
+  [E34 learned] T0.3_h1_L32 seed=3 M=2048: truth:kinks=0.1225/dom=5.0 em_pair_quartic:kinks=0.1208/dom=5.1
+  [E34 learned] T0.3_h0.25_L128 seed=2 M=2048: truth:kinks=0.0614/dom=10.9 em_pair_quartic:kinks=0.0601/dom=11.1
+  [E34 learned] T0.5_iso_L32 seed=0 M=2048: truth:kinks=0.1460/dom=4.4 em_pair_quartic:kinks=0.1470/dom=4.4
+  [E34 learned] T0.5_iso_L32 seed=2 M=2048: truth:kinks=0.1448/dom=4.4 em_pair_quartic:kinks=0.1474/dom=4.4
+  [E34 learned] T0.5_iso_L32 seed=3 M=2048: truth:kinks=0.1500/dom=4.4 em_pair_quartic:kinks=0.1489/dom=4.4
+  [E34 learned] T0.5_iso_L32 seed=1 M=2048: truth:kinks=0.1473/dom=4.4 em_pair_quartic:kinks=0.1494/dom=4.3
+  [E34 learned] T1_iso_L32 seed=0 M=2048: truth:kinks=0.1601/dom=4.1 em_pair_quartic:kinks=0.1561/dom=4.2
+  [E34 learned] T1_iso_L32 seed=2 M=2048: truth:kinks=0.1601/dom=4.1 em_pair_quartic:kinks=0.1556/dom=4.2
+  [E34 learned] T1_iso_L32 seed=3 M=2048: truth:kinks=0.1576/dom=4.1 em_pair_quartic:kinks=0.1580/dom=4.2
+  [E34 learned] T1_iso_L32 seed=1 M=2048: truth:kinks=0.1605/dom=4.1 em_pair_quartic:kinks=0.1546/dom=4.2
+  [E34 learned] T2_iso_L32 seed=0 M=2048: truth:kinks=0.1645/dom=4.1 em_pair_quartic:kinks=0.1641/dom=4.0
+  [E34 learned] T2_iso_L32 seed=2 M=2048: truth:kinks=0.1635/dom=4.0 em_pair_quartic:kinks=0.1675/dom=4.0
+  [E34 learned] T2_iso_L32 seed=3 M=2048: truth:kinks=0.1617/dom=4.1 em_pair_quartic:kinks=0.1646/dom=4.0
+  [E34 learned] T2_iso_L32 seed=1 M=2048: truth:kinks=0.1654/dom=4.1 em_pair_quartic:kinks=0.1614/dom=4.2

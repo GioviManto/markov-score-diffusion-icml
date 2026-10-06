@@ -1,0 +1,77 @@
+  [spectrum] T=0.2 h=0.125: rho1=0.9930 xi=142.61 kurt=-1.557
+  [spectrum] T=0.2 h=0.25: rho1=0.9862 xi=71.74 kurt=-1.563
+  [spectrum] T=0.2 h=0.5: rho1=0.9731 xi=36.67 kurt=-1.582
+  [spectrum] T=0.2 h=1.0: rho1=0.9499 xi=19.47 kurt=-1.638
+  [spectrum] T=0.2 h=2.0: rho1=0.9068 xi=10.23 kurt=-1.747
+  [spectrum] T=0.3 h=0.125: rho1=0.9779 xi=44.71 kurt=-1.209
+  [spectrum] T=0.3 h=0.25: rho1=0.9565 xi=22.48 kurt=-1.218
+  [spectrum] T=0.3 h=0.5: rho1=0.9165 xi=11.47 kurt=-1.253
+  [spectrum] T=0.3 h=1.0: rho1=0.8484 xi=6.08 kurt=-1.352
+  [spectrum] T=0.3 h=2.0: rho1=0.7437 xi=3.38 kurt=-1.546
+  [spectrum] T=0.4 h=0.125: rho1=0.9636 xi=27.00 kurt=-0.975
+  [spectrum] T=0.4 h=0.25: rho1=0.9290 xi=13.57 kurt=-0.988
+  [spectrum] T=0.4 h=0.5: rho1=0.8655 xi=6.92 kurt=-1.033
+  [spectrum] T=0.4 h=1.0: rho1=0.7612 xi=3.66 kurt=-1.160
+  [spectrum] T=0.4 h=2.0: rho1=0.6161 xi=2.06 kurt=-1.399
+  [spectrum] T=0.5 h=0.125: rho1=0.9518 xi=20.24 kurt=-0.832
+  [spectrum] T=0.5 h=0.25: rho1=0.9064 xi=10.18 kurt=-0.848
+  [spectrum] T=0.5 h=0.5: rho1=0.8248 xi=5.19 kurt=-0.901
+  [spectrum] T=0.5 h=1.0: rho1=0.6952 xi=2.75 kurt=-1.044
+  [spectrum] T=0.5 h=2.0: rho1=0.5274 xi=1.56 kurt=-1.303
+  [spectrum] T=0.7 h=0.125: rho1=0.9334 xi=14.52 kurt=-0.677
+  [spectrum] T=0.7 h=0.25: rho1=0.8720 xi=7.30 kurt=-0.696
+  [spectrum] T=0.7 h=0.5: rho1=0.7648 xi=3.73 kurt=-0.761
+  [spectrum] T=0.7 h=1.0: rho1=0.6041 xi=1.98 kurt=-0.922
+  [spectrum] T=0.7 h=2.0: rho1=0.4169 xi=1.14 kurt=-1.189
+  [spectrum] T=1.0 h=0.125: rho1=0.9136 xi=11.06 kurt=-0.570
+  [spectrum] T=1.0 h=0.25: rho1=0.8356 xi=5.57 kurt=-0.594
+  [spectrum] T=1.0 h=0.5: rho1=0.7043 xi=2.85 kurt=-0.669
+  [spectrum] T=1.0 h=1.0: rho1=0.5199 xi=1.53 kurt=-0.844
+  [spectrum] T=1.0 h=2.0: rho1=0.3272 xi=0.90 kurt=-1.101
+  [spectrum] T=1.5 h=0.125: rho1=0.8903 xi=8.61 kurt=-0.492
+  [spectrum] T=1.5 h=0.25: rho1=0.7942 xi=4.34 kurt=-0.522
+  [spectrum] T=1.5 h=0.5: rho1=0.6391 xi=2.23 kurt=-0.611
+  [spectrum] T=1.5 h=1.0: rho1=0.4381 xi=1.21 kurt=-0.794
+  [spectrum] T=1.5 h=2.0: rho1=0.2514 xi=0.72 kurt=-1.030
+  [spectrum] T=2.0 h=0.125: rho1=0.8732 xi=7.38 kurt=-0.455
+  [spectrum] T=2.0 h=0.25: rho1=0.7646 xi=3.72 kurt=-0.490
+  [spectrum] T=2.0 h=0.5: rho1=0.5950 xi=1.93 kurt=-0.589
+  [spectrum] T=2.0 h=1.0: rho1=0.3876 xi=1.06 kurt=-0.774
+  [spectrum] T=2.0 h=2.0: rho1=0.2100 xi=0.64 kurt=-0.992
+  [iso] T=0.3: h*=0.9871 rho1=0.8500 kurt=-1.349
+  [iso] T=0.5: h*=0.4187 rho1=0.8500 kurt=-0.881
+  [iso] T=0.7: h*=0.2977 rho1=0.8500 kurt=-0.707
+  [iso] T=1.0: h*=0.2259 rho1=0.8500 kurt=-0.588
+  [iso] T=1.5: h*=0.1753 rho1=0.8500 kurt=-0.502
+  [iso] T=2.0: h*=0.1501 rho1=0.8500 kurt=-0.461
+  [cells] 12 cells, 0 already on disk, 12 to run, workers=4
+  [E32 ladder] T0.3_h1_L32 rep=1: lmmse_true=0.2703 projected=0.2616 isotropic=0.6739 edge_mass=0.416 (10s)
+  [E32 ladder] T0.3_h1_L32 rep=0: lmmse_true=0.2674 projected=0.2629 isotropic=0.6745 edge_mass=0.375 (11s)
+  [E32 ladder] T0.5_iso_L32 rep=1: lmmse_true=0.1137 projected=0.2794 isotropic=0.6571 edge_mass=0.999 (10s)
+  [E32 ladder] T0.5_iso_L32 rep=0: lmmse_true=0.1161 projected=0.2763 isotropic=0.6579 edge_mass=0.999 (10s)
+  [E32 ladder] T1_iso_L32 rep=0: lmmse_true=0.0561 projected=0.2134 isotropic=0.6557 edge_mass=0.994 (11s)
+  [E32 ladder] T1_iso_L32 rep=1: lmmse_true=0.0592 projected=0.2032 isotropic=0.6579 edge_mass=0.994 (11s)
+  [E32 ladder] T2_iso_L32 rep=0: lmmse_true=0.0416 projected=0.1655 isotropic=0.6578 edge_mass=0.983 (11s)
+  [E32 ladder] T2_iso_L32 rep=1: lmmse_true=0.0408 projected=0.1725 isotropic=0.6540 edge_mass=0.983 (11s)
+  [E32 ladder] T0.3_h0.5_L64 rep=1: lmmse_true=0.1620 projected=0.2881 isotropic=0.7136 edge_mass=1.000 (29s)
+  [E32 ladder] T0.3_h0.5_L64 rep=0: lmmse_true=0.1622 projected=0.2938 isotropic=0.7135 edge_mass=1.000 (30s)
+  [E32 ladder] T0.3_h0.25_L128 rep=1: lmmse_true=0.0978 projected=0.5239 isotropic=0.7504 edge_mass=1.000 (42s)
+  [E32 ladder] T0.3_h0.25_L128 rep=0: lmmse_true=0.0986 projected=0.5345 isotropic=0.7497 edge_mass=1.000 (43s)
+  [cells] 12 cells, 0 already on disk, 12 to run, workers=4
+  [E32 refine] T0.3_h1_L32 rep=0: worst rel error of the operating grid 9.60e-15
+  [E32 refine] T0.3_h1_L32 rep=1: worst rel error of the operating grid 9.36e-15
+  [E32 refine] T0.5_iso_L32 rep=0: worst rel error of the operating grid 1.27e-12
+  [E32 refine] T0.5_iso_L32 rep=1: worst rel error of the operating grid 1.24e-12
+  [E32 refine] T1_iso_L32 rep=0: worst rel error of the operating grid 1.24e-15
+  [E32 refine] T1_iso_L32 rep=1: worst rel error of the operating grid 1.25e-15
+  [E32 refine] T2_iso_L32 rep=0: worst rel error of the operating grid 1.63e-15
+  [E32 refine] T2_iso_L32 rep=1: worst rel error of the operating grid 1.62e-15
+  [E32 refine] T0.3_h0.5_L64 rep=0: worst rel error of the operating grid 2.21e-15
+  [E32 refine] T0.3_h0.5_L64 rep=1: worst rel error of the operating grid 2.29e-15
+  [E32 refine] T0.3_h0.25_L128 rep=0: worst rel error of the operating grid 1.13e-15
+  [E32 refine] T0.3_h0.25_L128 rep=1: worst rel error of the operating grid 1.13e-15
+  [cells] 4 cells, 0 already on disk, 4 to run, workers=4
+  [E32 theory] T0.3_h1_L32: C4=3882 t*=1.152 t=0.98:0.079 t=1.43:0.242 t=2.07:0.628 t=3.00:0.854 (1s)
+  [E32 theory] T0.5_iso_L32: C4=2350 t*=1.161 t=0.98:0.058 t=1.43:0.253 t=2.07:0.541 t=3.00:0.865 (1s)
+  [E32 theory] T1_iso_L32: C4=1261 t*=1.164 t=0.98:0.047 t=1.43:0.195 t=2.07:0.772 t=3.00:0.732 (0s)
+  [E32 theory] T2_iso_L32: C4=838.2 t*=1.165 t=0.98:0.044 t=1.43:0.169 t=2.07:0.748 t=3.00:0.938 (0s)

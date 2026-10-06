@@ -1,0 +1,22 @@
+  [cells] 6 cells, 0 already on disk, 6 to run, workers=2
+  [E36 oracles] stride=1 rep=0: lmmse_true=0.0969 projected=0.5146 isotropic=0.7528
+  [E36 oracles] stride=1 rep=1: lmmse_true=0.0982 projected=0.5284 isotropic=0.7501
+  [E36 oracles] stride=2 rep=0: lmmse_true=0.1573 projected=0.5202 isotropic=0.7076
+  [E36 oracles] stride=2 rep=1: lmmse_true=0.1582 projected=0.5419 isotropic=0.7084
+  [E36 oracles] stride=4 rep=0: lmmse_true=0.2358 projected=0.2536 isotropic=0.6554
+  [E36 oracles] stride=4 rep=1: lmmse_true=0.2335 projected=0.2532 isotropic=0.6544
+  [cells] 6 cells, 0 already on disk, 6 to run, workers=2
+  [E36 physics] stride=1 rep=1: coarse kinks/unit=0.0678 coarse domain=8.08 bimod=0.562
+  [E36 physics] stride=1 rep=0: coarse kinks/unit=0.0674 coarse domain=8.09 bimod=0.562
+  [E36 physics] stride=2 rep=1: coarse kinks/unit=0.0725 coarse domain=7.59 bimod=0.565
+  [E36 physics] stride=4 rep=0: coarse kinks/unit=0.0709 coarse domain=7.72 bimod=0.560
+  [E36 physics] stride=4 rep=1: coarse kinks/unit=0.0699 coarse domain=7.78 bimod=0.560
+  [E36 physics] stride=2 rep=0: coarse kinks/unit=0.0729 coarse domain=7.56 bimod=0.564
+  [cells] 6 cells, 0 already on disk, 6 to run, workers=2
+  [E36 clean] stride=1 seed=1: em_pair_quartic=0.0017 em_tilted_spline=0.0021 em_mixture=0.0999 em_mdn=0.0127
+  [E36 clean] stride=1 seed=0: em_pair_quartic=0.0013 em_tilted_spline=0.0018 em_mixture=0.1002 em_mdn=0.0156
+  [cells] 6 cells, 2 already on disk, 4 to run, workers=2
+  [E36 clean] stride=2 seed=1: em_pair_quartic=0.0123 em_tilted_spline=0.0113 em_mixture=0.1589 em_mdn=0.0338
+  [E36 clean] stride=2 seed=0: em_pair_quartic=0.0108 em_tilted_spline=0.0101 em_mixture=0.1590 em_mdn=0.0125
+  [E36 clean] stride=4 seed=0: em_pair_quartic=0.0404 em_tilted_spline=0.0362 em_mixture=0.2376 em_mdn=0.0229
+  [E36 clean] stride=4 seed=1: em_pair_quartic=0.0405 em_tilted_spline=0.0362 em_mixture=0.2371 em_mdn=0.0933

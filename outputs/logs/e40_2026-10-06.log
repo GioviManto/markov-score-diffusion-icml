@@ -1,0 +1,10 @@
+  [E40] accuracy N_g=201: worst FFT vs dense 2.67e-03
+  [E40] accuracy N_g=401: worst FFT vs dense 6.67e-04
+  [E40] accuracy N_g=801: worst FFT vs dense 1.67e-04
+  [E40] accuracy N_g=1601: worst FFT vs dense 4.17e-05
+  [E40] accuracy N_g=3201: worst FFT vs dense 1.04e-05
+  [E40] timing N_g=201: dense 0.066s, fft 0.450s, speed-up 0.15
+  [E40] timing N_g=401: dense 0.168s, fft 0.979s, speed-up 0.17
+  [E40] timing N_g=801: dense 0.429s, fft 1.950s, speed-up 0.22
+  [E40] timing N_g=1601: dense 1.387s, fft 4.796s, speed-up 0.29
+  [E40] timing N_g=3201: dense 4.823s, fft 10.723s, speed-up 0.45

@@ -1,0 +1,14 @@
+  clean: 12 cells x 1 arms
+  [cells] 12 cells, 0 already on disk, 12 to run, workers=1
+  [E34 clean] T0.3_h1_L32 seed=0 M=2048: em_pair_quartic=0.0037
+  [E34 clean] T0.3_h1_L32 seed=1 M=2048: em_pair_quartic=0.0056
+  [E34 clean] T2_iso_L32 seed=0 M=2048: em_pair_quartic=0.0043
+  [E34 clean] T2_iso_L32 seed=1 M=2048: em_pair_quartic=0.0034
+  [E34 clean] T0.3_h1_L32 seed=0 M=512: em_pair_quartic=0.0103
+  [E34 clean] T0.3_h1_L32 seed=1 M=512: em_pair_quartic=0.0099
+  [E34 clean] T2_iso_L32 seed=0 M=512: em_pair_quartic=0.0071
+  [E34 clean] T2_iso_L32 seed=1 M=512: em_pair_quartic=0.0126
+  [E34 clean] T0.3_h1_L32 seed=0 M=128: em_pair_quartic=0.0189
+  [E34 clean] T0.3_h1_L32 seed=1 M=128: em_pair_quartic=0.0211
+  [E34 clean] T2_iso_L32 seed=0 M=128: em_pair_quartic=0.0178
+  [E34 clean] T2_iso_L32 seed=1 M=128: em_pair_quartic=0.0146

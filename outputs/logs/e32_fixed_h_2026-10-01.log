@@ -1,0 +1,33 @@
+  [cells] 16 cells, 0 already on disk, 16 to run, workers=2
+  [E32 ladder] T0.2_h1_L32 rep=1: lmmse_true=0.2975 projected=0.2697 isotropic=0.7508 edge_mass=0.360 (27s)
+  [E32 fixed_h] T0.2_h1_L32 rep=1: xi=19.47 kinks/bond=0.0404 coarse=0.0154 bimod=0.734
+  [E32 ladder] T0.2_h1_L32 rep=0: lmmse_true=0.2944 projected=0.2717 isotropic=0.7506 edge_mass=0.355 (31s)
+  [E32 fixed_h] T0.2_h1_L32 rep=0: xi=19.47 kinks/bond=0.0406 coarse=0.0162 bimod=0.734
+  [E32 ladder] T0.3_h1_L32 rep=0: lmmse_true=0.2674 projected=0.2629 isotropic=0.6745 edge_mass=0.375 (30s)
+  [E32 fixed_h] T0.3_h1_L32 rep=0: xi=6.08 kinks/bond=0.1217 coarse=0.0661 bimod=0.607
+  [E32 ladder] T0.3_h1_L32 rep=1: lmmse_true=0.2703 projected=0.2616 isotropic=0.6739 edge_mass=0.416 (31s)
+  [E32 fixed_h] T0.3_h1_L32 rep=1: xi=6.08 kinks/bond=0.1220 coarse=0.0658 bimod=0.606
+  [E32 ladder] T0.4_h1_L32 rep=0: lmmse_true=0.2399 projected=0.2399 isotropic=0.6109 edge_mass=0.418 (31s)
+  [E32 fixed_h] T0.4_h1_L32 rep=0: xi=3.66 kinks/bond=0.1811 coarse=0.0988 bimod=0.544
+  [E32 ladder] T0.4_h1_L32 rep=1: lmmse_true=0.2424 projected=0.2376 isotropic=0.6095 edge_mass=0.368 (34s)
+  [E32 fixed_h] T0.4_h1_L32 rep=1: xi=3.66 kinks/bond=0.1820 coarse=0.0984 bimod=0.541
+  [E32 ladder] T0.5_h1_L32 rep=0: lmmse_true=0.2242 projected=0.2223 isotropic=0.5612 edge_mass=0.354 (33s)
+  [E32 fixed_h] T0.5_h1_L32 rep=0: xi=2.75 kinks/bond=0.2188 coarse=0.1181 bimod=0.511
+  [E32 ladder] T0.5_h1_L32 rep=1: lmmse_true=0.2251 projected=0.2226 isotropic=0.5628 edge_mass=0.388 (31s)
+  [E32 fixed_h] T0.5_h1_L32 rep=1: xi=2.75 kinks/bond=0.2191 coarse=0.1190 bimod=0.511
+  [E32 ladder] T0.7_h1_L32 rep=0: lmmse_true=0.2049 projected=0.2101 isotropic=0.4971 edge_mass=0.386 (31s)
+  [E32 fixed_h] T0.7_h1_L32 rep=0: xi=1.98 kinks/bond=0.2666 coarse=0.1386 bimod=0.481
+  [E32 ladder] T0.7_h1_L32 rep=1: lmmse_true=0.2043 projected=0.2087 isotropic=0.4966 edge_mass=0.428 (31s)
+  [E32 fixed_h] T0.7_h1_L32 rep=1: xi=1.98 kinks/bond=0.2668 coarse=0.1382 bimod=0.481
+  [E32 ladder] T1_h1_L32 rep=0: lmmse_true=0.1941 projected=0.2080 isotropic=0.4376 edge_mass=0.367 (31s)
+  [E32 fixed_h] T1_h1_L32 rep=0: xi=1.53 kinks/bond=0.3037 coarse=0.1498 bimod=0.466
+  [E32 ladder] T1_h1_L32 rep=1: lmmse_true=0.1944 projected=0.2097 isotropic=0.4377 edge_mass=0.351 (33s)
+  [E32 fixed_h] T1_h1_L32 rep=1: xi=1.53 kinks/bond=0.3057 coarse=0.1513 bimod=0.464
+  [E32 ladder] T1.5_h1_L32 rep=0: lmmse_true=0.1842 projected=0.2063 isotropic=0.3804 edge_mass=0.379 (33s)
+  [E32 fixed_h] T1.5_h1_L32 rep=0: xi=1.21 kinks/bond=0.3379 coarse=0.1608 bimod=0.455
+  [E32 ladder] T1.5_h1_L32 rep=1: lmmse_true=0.1879 projected=0.2111 isotropic=0.3819 edge_mass=0.363 (31s)
+  [E32 fixed_h] T1.5_h1_L32 rep=1: xi=1.21 kinks/bond=0.3402 coarse=0.1603 bimod=0.456
+  [E32 ladder] T2_h1_L32 rep=0: lmmse_true=0.1851 projected=0.2149 isotropic=0.3464 edge_mass=0.390 (31s)
+  [E32 fixed_h] T2_h1_L32 rep=0: xi=1.06 kinks/bond=0.3599 coarse=0.1656 bimod=0.450
+  [E32 ladder] T2_h1_L32 rep=1: lmmse_true=0.1837 projected=0.2120 isotropic=0.3475 edge_mass=0.367 (27s)
+  [E32 fixed_h] T2_h1_L32 rep=1: xi=1.06 kinks/bond=0.3602 coarse=0.1655 bimod=0.451

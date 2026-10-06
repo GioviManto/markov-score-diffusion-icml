@@ -1,0 +1,124 @@
+{
+  "timestamp": "2026-10-01 13:16:30",
+  "git_commit": "87a40939c32c221ab622da3ae34bbf091ae6a24d",
+  "git_branch": "claude/phi4-field-2026-10-01",
+  "git_dirty": "?? outputs/E33_preview_laptop/\n?? outputs/E33_preview_laptop_pair/\n?? outputs/E34_preview_laptop/\n?? outputs/E34_preview_laptop_learned/\n?? outputs/E34_preview_laptop_pairclean/\n?? outputs/logs/e32_2026-10-01.log\n?? outputs/logs/e33_preview_2026-10-01.log\n?? outputs/logs/e33_preview_M2048_2026-10-01.log\n?? outputs/logs/e33_preview_pair_2026-10-01.log\n?? outputs/logs/e33_preview_pair_M2048_2026-10-01.log\n?? outputs/logs/e34_clean_preview_2026-10-01.log\n?? outputs/logs/e34_learned_preview_2026-10-01.log\n?? outputs/logs/e34_pairclean_preview_2026-10-01.log\n?? outputs/logs/e34_physics_2026-10-01.log\n?? reports/figures/fig-field-potential.png",
+  "source_archive_sha256": "",
+  "source_is_clean": false,
+  "revision_source": "git",
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "platform": "macOS-14.1.1-arm64-arm-64bit-Mach-O",
+  "hostname": "MacBook-Air-160.local",
+  "slurm_job_id": "",
+  "slurm_array_task_id": "",
+  "cpu_count": "8",
+  "blas_threads": "1",
+  "settings": {
+    "cells": [
+      "T0.3_h1_L32",
+      "T2_iso_L32"
+    ],
+    "sizes": [
+      512,
+      128
+    ],
+    "net_sizes": [
+      2048,
+      128
+    ],
+    "n_chains": 2048,
+    "n_val": 1024,
+    "n_test": 2048,
+    "seeds": [
+      0,
+      1
+    ],
+    "dev_seeds": [
+      10000,
+      10001
+    ],
+    "grid_size": 401,
+    "half_width": 8.0,
+    "arms": [
+      "em_pair_quartic"
+    ],
+    "components": 8,
+    "poly_degree": 6,
+    "spline_basis": 24,
+    "mdn_components": 4,
+    "mdn_hidden": 32,
+    "em_checkpoints": [
+      10,
+      20,
+      40,
+      60,
+      80,
+      120,
+      160,
+      220,
+      300,
+      400,
+      600,
+      800,
+      1200
+    ],
+    "em_init_rho": 0.3,
+    "em_init_var": 0.8,
+    "archs": [
+      "window",
+      "transformer"
+    ],
+    "net_steps": 32000,
+    "net_checkpoints": [
+      500,
+      1000,
+      2000,
+      4000,
+      8000,
+      16000,
+      32000
+    ],
+    "screen_steps": 8000,
+    "mode": "eps",
+    "lrs_by_arch": {
+      "window": 0.001,
+      "transformer": 0.003
+    },
+    "trace_by_arch": {
+      "window": "coloured",
+      "transformer": "hutchinson"
+    },
+    "batch_size": 64,
+    "grad_clip": 1.0,
+    "winners": null,
+    "torch_threads": 1,
+    "device": "auto"
+  },
+  "cells": [
+    {
+      "cell": "T0.3_h1_L32",
+      "T": 0.3,
+      "h": 1.0,
+      "n_sites": 32,
+      "role": "base",
+      "rho1": 0.8484152418557108,
+      "corr_length_sites": 6.083276735551957,
+      "scale": 0.8207443286253951,
+      "excess_kurtosis": -1.3520905648554649
+    },
+    {
+      "cell": "T2_iso_L32",
+      "T": 2.0,
+      "h": 0.1500690371555632,
+      "n_sites": 32,
+      "role": "tsweep",
+      "rho1": 0.8500022377450388,
+      "corr_length_sites": 6.1532290565378815,
+      "scale": 0.9496460067159037,
+      "excess_kurtosis": -0.46053858848481743
+    }
+  ],
+  "quick": false,
+  "workers": 3
+}

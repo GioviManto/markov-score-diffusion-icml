@@ -1,0 +1,2 @@
+  kernels: 1 cells x 1 arms
+  [cells] 1 cells, 0 already on disk, 1 to run, workers=1

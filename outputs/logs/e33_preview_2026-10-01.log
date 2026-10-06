@@ -1,0 +1,18 @@
+  kernels: 8 cells x 3 arms
+  [cells] 8 cells, 0 already on disk, 8 to run, workers=5
+/Users/gloriabagnato/Code/Thesis/markov-score-diffusion-icml/experiments/e33_field_learning.py:155: RuntimeWarning: invariant law unavailable for tilted_legendre6: invariant eigenvector of 'tilted_legendre6' has a negative component (-1.358e-01 against max 5.686e-01).; standard normal used
+  """The kernel's own invariant density as the initial law (direct eigensolve), with a loud
+/Users/gloriabagnato/Code/Thesis/markov-score-diffusion-icml/experiments/e33_field_learning.py:155: RuntimeWarning: invariant law unavailable for tilted_legendre6: invariant eigenvector of 'tilted_legendre6' has a negative component (-2.279e-01 against max 7.469e-01).; standard normal used
+  """The kernel's own invariant density as the initial law (direct eigensolve), with a loud
+  [E33 kernels] T2_iso_L32 seed=0 M=512: em_mixture=0.0421 em_tilted_poly=0.0112 em_tilted_spline=0.0278
+  [E33 kernels] T2_iso_L32 seed=1 M=512: em_mixture=0.0444 em_tilted_poly=0.0411 em_tilted_spline=0.0560
+  [E33 kernels] T0.3_h1_L32 seed=0 M=512: em_mixture=0.2717 em_tilted_poly=0.0450 em_tilted_spline=0.0392
+  [E33 kernels] T0.3_h1_L32 seed=0 M=128: em_mixture=0.2763 em_tilted_poly=0.0298 em_tilted_spline=0.0339
+  [E33 kernels] T0.3_h1_L32 seed=1 M=512: em_mixture=0.2716 em_tilted_poly=0.0163 em_tilted_spline=0.0263
+  kernels: 8 cells x 3 arms
+  [cells] 8 cells, 5 already on disk, 3 to run, workers=1
+  [E33 kernels] T0.3_h1_L32 seed=1 M=128: em_mixture=0.2707 em_tilted_poly=0.3491 em_tilted_spline=0.0616
+  kernels: 8 cells x 3 arms
+  [cells] 8 cells, 6 already on disk, 2 to run, workers=2
+  [E33 kernels] T2_iso_L32 seed=1 M=128: em_mixture=0.0441 em_tilted_poly=0.0287 em_tilted_spline=0.0611
+  [E33 kernels] T2_iso_L32 seed=0 M=128: em_mixture=0.0583 em_tilted_poly=0.0358 em_tilted_spline=0.0411

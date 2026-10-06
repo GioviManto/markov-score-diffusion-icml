@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-10-01 12:41:20",
+  "git_commit": "a8547503f827d99a54c19dcc248595690b4dc732",
+  "git_branch": "claude/phi4-field-2026-10-01",
+  "git_dirty": "?? outputs/E33_preview_laptop/\n?? outputs/E33_preview_laptop_pair/\n?? outputs/E34_preview_laptop/\n?? outputs/E34_preview_laptop_learned/\n?? outputs/logs/e32_2026-10-01.log\n?? outputs/logs/e33_preview_2026-10-01.log\n?? outputs/logs/e33_preview_M2048_2026-10-01.log\n?? outputs/logs/e33_preview_pair_2026-10-01.log\n?? outputs/logs/e33_preview_pair_M2048_2026-10-01.log\n?? outputs/logs/e34_clean_preview_2026-10-01.log\n?? outputs/logs/e34_learned_preview_2026-10-01.log\n?? outputs/logs/e34_physics_2026-10-01.log\n?? reports/figures/fig-field-potential.png",
+  "source_archive_sha256": "",
+  "source_is_clean": false,
+  "revision_source": "git",
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "platform": "macOS-14.1.1-arm64-arm-64bit-Mach-O",
+  "hostname": "MacBook-Air-160.local",
+  "slurm_job_id": "",
+  "slurm_array_task_id": "",
+  "cpu_count": "8",
+  "blas_threads": "1",
+  "settings": {
+    "cells": [
+      "T0.3_h1_L32",
+      "T2_iso_L32"
+    ],
+    "n_physics": 4096,
+    "reps": [
+      0,
+      1
+    ],
+    "sizes": [
+      32,
+      128,
+      512,
+      2048
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "n_val": 1024,
+    "n_test": 2048,
+    "grid_size": 401,
+    "half_width": 8.0,
+    "arms": [
+      "em_mixture",
+      "em_tilted_poly",
+      "em_tilted_spline",
+      "em_mdn"
+    ],
+    "components": 8,
+    "poly_degree": 6,
+    "spline_basis": 24,
+    "mdn_components": 4,
+    "mdn_hidden": 32,
+    "em_init_rho": 0.3,
+    "em_init_var": 0.8,
+    "clean_checkpoints": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      120,
+      220,
+      400
+    ],
+    "learned_sizes": [
+      512
+    ],
+    "learned_seeds": [
+      0,
+      1
+    ],
+    "n_learned": 2048,
+    "kernels_csv": [
+      "outputs/E33_preview_laptop_pair/kernels.csv"
+    ]
+  },
+  "cells": [
+    {
+      "cell": "T0.3_h1_L32",
+      "T": 0.3,
+      "h": 1.0,
+      "n_sites": 32,
+      "role": "base",
+      "rho1": 0.8484152418557108,
+      "corr_length_sites": 6.083276735551957,
+      "scale": 0.8207443286253951,
+      "excess_kurtosis": -1.3520905648554649
+    },
+    {
+      "cell": "T2_iso_L32",
+      "T": 2.0,
+      "h": 0.1500690371555632,
+      "n_sites": 32,
+      "role": "tsweep",
+      "rho1": 0.8500022377450388,
+      "corr_length_sites": 6.1532290565378815,
+      "scale": 0.9496460067159037,
+      "excess_kurtosis": -0.46053858848481743
+    }
+  ],
+  "quick": false,
+  "workers": 1
+}
