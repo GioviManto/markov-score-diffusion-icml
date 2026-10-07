@@ -1,0 +1,22 @@
+{
+ "id": "E41",
+ "script": "experiments/e33_field_learning.py",
+ "hypothesis": "In E33 the MDN kernel's EM ladder (checkpoints 10..1200) ended at its last checkpoint in 295 of 768 fits and in 149 of 192 at M = 2048, whereas only 18 of 768 network fits hit their cap; the MDN's 2.0-6.2x gap to the spline (E33 P3) is therefore an upper bound that a larger budget may narrow. E41 raises the MDN's ladder to 4800 updates and asks whether the budget was the limit.",
+ "design": "The frozen e33 driver, part kernels, unmodified, at other settings: arm em_mdn only; cells T0.3_h1_L32, T0.5_iso_L32, T1_iso_L32, T2_iso_L32 (the two refinement cells are left out: a fit there took 2-3.5 h at 1200 updates); M = 2048; seeds 0-7; em_checkpoints = E33's thirteen plus (1800, 2400, 3600, 4800); risk selection as E33. Comparators: E33's em_mixture, em_tilted_spline and em_pair_quartic (hpc_E33k_s*, hpc_E33q_s*) on the same seeds. Four shards of two seeds (e41-s0, s2, s4, s6), 8 workers each, defq.",
+ "predeclared_predictions": {
+  "P1": "The budget was binding: paired per seed against E33's MDN at M = 2048, the E41 MDN's seed-mean risk is lower on all four cells, and lower by more than 10% on at least three.",
+  "P2": "The budget is no longer binding: at most 30% of E41's fits select the last checkpoint (E33: 149/192 = 78% at M = 2048).",
+  "P3": "The gap persists: MDN / spline (ratio of seed means) is at least 1.5 on every cell, and the MDN's risk is above the spline's in at least 7 of 8 seeds on every cell (E33: 2.0-6.2).",
+  "P4": "The MDN still beats the mixture: MDN below mixture in at least 7 of 8 seeds on every cell (E33: mdn/mixture 0.23-0.82 at M = 2048).",
+  "P5": "The MDN does not reach the 5-parameter site energy: MDN above em_pair_quartic in at least 7 of 8 seeds on every cell."
+ },
+ "predeclared_analysis": "kernels.csv (risk-selected rows) per (cell, seed); paired ratios against E33's frozen risks at M = 2048, same seeds; at_cap from the driver's own flag; read by tools/make_extension_numbers.py (pinned before the data).",
+ "seeds": {
+  "confirmatory": "0-7",
+  "dev": "10000 (smoke only)"
+ },
+ "provenance_note": "NOT a pre-data registration in the strict sense: the design and the thresholds below were written after E33's results at the same cells were read (which is what motivated them), and before any E41/E42 cell ran. The comparators are E33's frozen fits on the same seeds and the same test bundles (checked by hash at read time), not new fits.",
+ "resources": "cluster, defq, 4 x 8 cpus, 24G, 16 h; a fit takes about 1 h at 1200 updates on a shared node, so up to about 4-5 h at 4800",
+ "status": "REGISTERED and PREDECLARED 2026-10-08, before any E41 cell ran; not yet submitted",
+ "registered": "2026-10-08"
+}

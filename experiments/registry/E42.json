@@ -1,0 +1,23 @@
+{
+ "id": "E42",
+ "script": "experiments/e33_field_learning.py",
+ "hypothesis": "E33 reads the barrier height from the fitted 5-parameter site energy: within 20% in 14/16 seeds at T = 1 but only 6/16 at T = 2 (M = 2048), and 'unresolved' at T = 2 in the clean-data run too. Over M = 32..2048 the mean |barrier error| falls like M^-0.61 (T = 1) and M^-0.47 (T = 2). If that is the 1/sqrt(M) law of an identified parameter, the barrier resolves at larger M; if it is a floor (bias, a flat likelihood in the barrier), it does not. E42 asks which.",
+ "design": "The frozen e33 driver, part kernels, unmodified, at other settings: arm em_pair_quartic only; cells T1_iso_L32 and T2_iso_L32; M in (8192, 32768); seeds 0-15 (the E33 seeds); E33's EM ladder; risk selection. The barrier, the temperature and the well are read from the fitted parameters exactly as E33's P8 does (tools/make_field_potential_figs._readings). Four shards of four seeds (e42-s0, s4, s8, s12), 8 workers each, defq. The series is extended with E33q's M = 32, 128, 512, 2048 on the same cells and seeds.",
+ "predeclared_predictions": {
+  "P1": "Identified, not floored: over M = 512, 2048, 8192, 32768 the log-log slope of the seed-mean |barrier - 1/4| against M lies in [-0.65, -0.35] at both T = 1 and T = 2.",
+  "P2": "T = 1: the barrier is within 20% (|barrier - 1/4| <= 0.05) in 16 of 16 seeds at M = 8192 and at M = 32768.",
+  "P3": "T = 2 resolves: the barrier is within 20% in at least 15 of 16 seeds at M = 32768 (E33: 6/16 at M = 2048).",
+  "P4": "Monotone: at both temperatures the number of seeds within 20% does not fall along M = 2048, 8192, 32768.",
+  "P5": "Variance, not bias: at T = 2 the seed-mean signed barrier error (E33: +0.03 at M = 2048) is below 0.01 in absolute value at M = 32768.",
+  "P6": "The temperature stays read within 10%: |Theta_hat / Theta - 1| <= 0.10 in 16 of 16 seeds at both temperatures and both sizes."
+ },
+ "predeclared_analysis": "kernels.csv of the four shards merged, risk-selected rows; readings via _readings; slopes by ordinary least squares on log-log of the seed means; counts per (cell, M); read by tools/make_extension_numbers.py (pinned before the data).",
+ "seeds": {
+  "confirmatory": "0-15",
+  "dev": "10000 (smoke only)"
+ },
+ "provenance_note": "NOT a pre-data registration in the strict sense: the design and the thresholds below were written after E33's results at the same cells were read (which is what motivated them), and before any E41/E42 cell ran. The comparators are E33's frozen fits on the same seeds and the same test bundles (checked by hash at read time), not new fits.",
+ "resources": "cluster, defq, 4 x 8 cpus, 24G, 12 h; a site-energy fit takes about 8-10 min at M = 2048 on these cells, so about 0.6 h at 8192 and 2-3 h at 32768",
+ "status": "REGISTERED and PREDECLARED 2026-10-08, before any E42 cell ran; not yet submitted",
+ "registered": "2026-10-08"
+}

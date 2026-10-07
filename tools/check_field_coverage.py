@@ -49,6 +49,13 @@ SHARDS = {
     **{f"hpc_E36x_s{k}": ("clean.csv", ["stride", "seed", "arm"],
                           {(st, s, a) for st in (1, 2, 4) for s in range(k, k + 8)
                            for a in ("em_pair_quartic", "em_tilted_spline", "em_mixture", "em_mdn")}) for k in (0, 8)},
+    # E41 / E42 (registered 8 Oct): the MDN at four times the EM budget; the site energy's barrier at larger M
+    **{f"hpc_E41_s{k}": ("kernels.csv", ["cell", "seed", "n_chains", "arm", "selection"],
+                         {(c, s, 2048, "em_mdn", sel) for c in ("T0.3_h1_L32", "T0.5_iso_L32", "T1_iso_L32", "T2_iso_L32")
+                          for s in range(k, k + 2) for sel in ("risk", "evidence")}) for k in (0, 2, 4, 6)},
+    **{f"hpc_E42_s{k}": ("kernels.csv", ["cell", "seed", "n_chains", "arm", "selection"],
+                         {(c, s, n, "em_pair_quartic", sel) for c in ("T1_iso_L32", "T2_iso_L32") for s in range(k, k + 4)
+                          for n in (8192, 32768) for sel in ("risk", "evidence")}) for k in (0, 4, 8, 12)},
 }
 
 

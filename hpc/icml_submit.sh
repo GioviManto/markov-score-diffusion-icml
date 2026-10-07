@@ -36,7 +36,7 @@ THREADS=${MSD_HPC_THREADS:-1}
 SERIAL_CPUS=${MSD_HPC_SERIAL_CPUS:-4}
 AFTER=""; WHAT=${1:-}; shift || true
 while [[ $# -gt 0 ]]; do case "$1" in --after) AFTER="$2"; shift 2;; *) echo "unknown arg $1" >&2; exit 2;; esac; done
-[[ -n "$WHAT" ]] || { echo "usage: $0 <e38-memory|e35x-s0|e35x-s8|e36x-s0|e36x-s8|e32|e33-q-s0..s12|e34-clean|e34-physics|e33-oracles|e33-k-s0..s12|e33-screen|e33-nets-s0|e33-nets-s8|e23|e24c-capacity|e26|e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
+[[ -n "$WHAT" ]] || { echo "usage: $0 <e41-s0|e41-s2|e41-s4|e41-s6|e42-s0|e42-s4|e42-s8|e42-s12|e38-memory|e35x-s0|e35x-s8|e36x-s0|e36x-s8|e32|e33-q-s0..s12|e34-clean|e34-physics|e33-oracles|e33-k-s0..s12|e33-screen|e33-nets-s0|e33-nets-s8|e23|e24c-capacity|e26|e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
 
 partition() {
   if [[ -n "${MSD_HPC_PARTITION:-}" ]]; then echo "$MSD_HPC_PARTITION"; return; fi
@@ -208,6 +208,16 @@ cmd_for() {
     e36x-s8)     echo "e36_stride_protocol.py --only clean --set 'seeds=(8, 9, 10, 11, 12, 13, 14, 15)' --set 'clean_checkpoints=(1, 2, 4, 8, 16, 32, 64, 120, 220, 400, 700, 1200, 2000)' --output-dir {OUT}/E36x_s8";;
     # --- 6 Oct: E38, peak memory per call (the note's section 9.8); one measurement at a time, Linux for /proc/self/statm
     e38-memory)  echo "e38_memory.py --output-dir {OUT}/E38";;
+    # --- 8 Oct: E41 (the MDN kernel at four times E33's EM budget) and E42 (the site energy's barrier read-out at larger M);
+    # both are the frozen e33 driver at other settings (registry E41.json, E42.json). Shards are disjoint seeds, one directory each.
+    e41-s0)     echo "e33_field_learning.py --only kernels --set 'arms=(\"em_mdn\",)' --set 'cells=(\"T0.3_h1_L32\", \"T0.5_iso_L32\", \"T1_iso_L32\", \"T2_iso_L32\")' --set 'sizes=(2048,)' --set 'seeds=(0, 1)' --set 'em_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600, 4800)' --output-dir {OUT}/E41_s0";;
+    e41-s2)     echo "e33_field_learning.py --only kernels --set 'arms=(\"em_mdn\",)' --set 'cells=(\"T0.3_h1_L32\", \"T0.5_iso_L32\", \"T1_iso_L32\", \"T2_iso_L32\")' --set 'sizes=(2048,)' --set 'seeds=(2, 3)' --set 'em_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600, 4800)' --output-dir {OUT}/E41_s2";;
+    e41-s4)     echo "e33_field_learning.py --only kernels --set 'arms=(\"em_mdn\",)' --set 'cells=(\"T0.3_h1_L32\", \"T0.5_iso_L32\", \"T1_iso_L32\", \"T2_iso_L32\")' --set 'sizes=(2048,)' --set 'seeds=(4, 5)' --set 'em_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600, 4800)' --output-dir {OUT}/E41_s4";;
+    e41-s6)     echo "e33_field_learning.py --only kernels --set 'arms=(\"em_mdn\",)' --set 'cells=(\"T0.3_h1_L32\", \"T0.5_iso_L32\", \"T1_iso_L32\", \"T2_iso_L32\")' --set 'sizes=(2048,)' --set 'seeds=(6, 7)' --set 'em_checkpoints=(10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1800, 2400, 3600, 4800)' --output-dir {OUT}/E41_s6";;
+    e42-s0)     echo "e33_field_learning.py --only kernels --set 'arms=(\"em_pair_quartic\",)' --set 'cells=(\"T1_iso_L32\", \"T2_iso_L32\")' --set 'sizes=(8192, 32768)' --set 'seeds=(0, 1, 2, 3)' --output-dir {OUT}/E42_s0";;
+    e42-s4)     echo "e33_field_learning.py --only kernels --set 'arms=(\"em_pair_quartic\",)' --set 'cells=(\"T1_iso_L32\", \"T2_iso_L32\")' --set 'sizes=(8192, 32768)' --set 'seeds=(4, 5, 6, 7)' --output-dir {OUT}/E42_s4";;
+    e42-s8)     echo "e33_field_learning.py --only kernels --set 'arms=(\"em_pair_quartic\",)' --set 'cells=(\"T1_iso_L32\", \"T2_iso_L32\")' --set 'sizes=(8192, 32768)' --set 'seeds=(8, 9, 10, 11)' --output-dir {OUT}/E42_s8";;
+    e42-s12)     echo "e33_field_learning.py --only kernels --set 'arms=(\"em_pair_quartic\",)' --set 'cells=(\"T1_iso_L32\", \"T2_iso_L32\")' --set 'sizes=(8192, 32768)' --set 'seeds=(12, 13, 14, 15)' --output-dir {OUT}/E42_s12";;
     e34-physics) echo "e34_field_physics.py --only physics_truth --output-dir {OUT}/E34p";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
