@@ -15,6 +15,13 @@
  },
  "provenance_note": "Written after E35x was read (that is what motivated it) and before any E46 cell ran; the explanation tested is a hypothesis, and a falsified P1 would mean the gain comes from something else, which would then be the open question.",
  "resources": "cluster, defq, 2 x 8 cpus, 24G, 8 h; about 0.4 h per fit at M = 512 and 1-2 h at 2048 (twice the chains)",
- "status": "REGISTERED and PREDECLARED 2026-10-08, before any E46 cell ran; not yet submitted",
- "registered": "2026-10-08"
+ "status": "REGISTERED and PREDECLARED 2026-10-08, before any E46 cell ran; SUBMITTED 2026-10-08 (689099, 689100), queued",
+ "registered": "2026-10-08",
+ "hpc_runs": {
+  "deployment": "22f7a79-20261007T225411Z (hpc/.deploy_22f7a79.env)",
+  "submitted": "2026-10-08 ~00:58 CEST",
+  "e46-s0": "689099, defq, 8 cpus, 24G, 08:00:00 -> outputs/hpc_E46_s0",
+  "e46-s8": "689100, defq, 8 cpus, 24G, 08:00:00 -> outputs/hpc_E46_s8",
+  "smoke": "the driver at --quick (exit 0); its bundles hash identically to the laptop E35's (same platform) and differently from the cluster's E35x (platform-specific BLAS), hence the cluster run"
+ }
 }
