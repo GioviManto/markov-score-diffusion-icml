@@ -10,7 +10,7 @@ Every panel reads frozen outputs only:
                                and E02a EM-BP (C = 8) with the LMMSE floor (the paper's Table "baselines"); (b) the phi^4
                                field at Theta = 0.3, h = 1, E33 kernels (risk selection) and networks, with E33's floor
   fig 7  ff-misspec-repair     E35: the first-order kernel and the same kernel on the augmented state against the linear
-                               floor, over the latent strength b, at M = 512 and 2048 (two seeds; E35x adds sixteen)
+                               floor, over the latent strength b, at M = 512 and 2048 (E35x: sixteen seeds)
   summary ff-summary           four panels: non-Gaussian gain per level, sample efficiency, the field scoreboard across
                                Theta, accuracy against inference cost across h
 Figures 2, 5 and 6 are paper/figures/fig_gaussian_sanity.pdf, reports/figures/fig-field-sweep.pdf and
@@ -95,7 +95,8 @@ def scoreboard():
 
 
 def misspec_table():
-    d = pd.read_csv(ROOT / "outputs/E35/augmented.csv")
+    # the sixteen-seed replication E35x (two shards, frozen); E35 is the same design at two seeds
+    d = pd.concat([pd.read_csv(f) for f in sorted((ROOT / "outputs").glob("hpc_E35x_s*/augmented.csv"))], ignore_index=True)
     return d.groupby(["b", "n_chains", "arm"]).risk.mean().reset_index()
 
 

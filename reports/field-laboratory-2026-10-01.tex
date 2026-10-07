@@ -885,6 +885,18 @@ two arms agree on average, but at this small risk either one moves by a factor o
 a $10\,\%$ band cannot hold at two seeds. Not predicted, and the sharpest number: under the latent the
 paper's first-order estimator is $1.5$--$1.7$ times \emph{worse} than the linear floor at both sizes.
 
+E35x repeats the design at sixteen seeds (jobs 684969 and 684970, both shards complete and frozen) and registered
+four predictions, three of which hold. P2: at $b=2$ the first-order risk moves by $+0.2\,\%$ when $M$ quadruples
+($0.0964\to0.0966$) while the augmented arm's falls by $52\,\%$ ($0.0203\to0.0098$), in all sixteen seeds. P3: at
+$M=2048$ first-order over augmented is $1.55$, $7.64$, $13.1$ at $b=0,1,2$, above two in every seed at $b=1$ and $2$,
+and at $b=2$ the linear floor is $6.3$ times the augmented risk (in five of the sixteen seeds the augmented fit
+stopped at its last checkpoint, so these ratios are lower bounds). P4: the first-order estimator is worse than the
+linear floor in all sixteen seeds in all four cells, by $1.56$ to $1.71$. P1 fails as written, in the favourable
+direction: at $b=0$ the augmented arm is \emph{lower}, by $18\,\%$ at $M=512$ and $27\,\%$ at $M=2048$ in the
+geometric mean over seeds (intervals for the mean log ratio $[-0.40,-0.05]$ and $[-0.56,-0.08]$, lower in $11$ of $16$
+seeds, and not the work of one seed), so augmenting a state that carries no latent costs nothing; the two-seed
+``agree on average'' above had the same sign. Why it gains is not investigated.
+
 \section{Alignment with the consolidated note}
 
 \begin{table}[h]\centering\footnotesize
@@ -907,7 +919,7 @@ posterior sampling (\S9.7) & \code{markov\_score.ffbs}: forward filtering, backw
 figures-first (\S28) & all seven and a summary figure: \code{reports/figures-first-2026-10-06.pdf} \\
 Gaussian score / Kalman smoother (\S29 step 3) & the paper's appendix B, a proposition with its proof; measured by E39 (grid BP within $1.9\times10^{-13}$ of both) \\
 notation; metric definitions (\S29 steps 1, 2) & \code{docs/NOTATION.md} (code, paper, this report; thesis concordance); \code{docs/METRICS.md} \\
-global latent and its repair (\S8, fig.~7) & E35 (\S\ref{sec:conf}): bias measured, repair by state augmentation confirmed (P2, P3) \\
+global latent and its repair (\S8, fig.~7) & E35 (\S\ref{sec:conf}): bias measured, repair by state augmentation confirmed (P2, P3); E35x at sixteen seeds: P2--P4 confirmed, P1 favourably falsified \\
 subsampling a fine lattice & E36 (\S\ref{sec:stride}): kernel $K^s$ exact; P1, P2 confirmed \\
 \bottomrule
 \end{tabular}

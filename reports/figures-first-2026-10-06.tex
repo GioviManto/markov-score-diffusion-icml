@@ -42,8 +42,8 @@ notation \code{docs/NOTATION.md}, metrics \code{docs/METRICS.md}}
 \noindent The consolidated note (section 28) and the call of 25 September ask for five or six decisive figures before
 the prose, and a summary figure that ``really shows everything you want to show''. This document is that selection,
 for choosing: the seven figures of the note's plan, each built from frozen outputs only and named by the experiment
-that produced it, and the summary. Nothing here is new data except E39 (figure 2); E40 (the FFT transition) and the
-sixteen-seed replications E35x/E36x are reported in the field report.
+that produced it, and the summary. Nothing here is new data except E39 (figure 2) and E35x (figure 7, sixteen seeds); E40 (the FFT
+transition) is reported in the field report.
 
 \noindent\textbf{In one paragraph.} The estimator learns the local law of a Markov chain from noisy sequences by EM and
 turns it into a score by exact inference on the chain (figure~1); on the Gaussian chain it reproduces the closed-form
@@ -147,16 +147,19 @@ $5.8$ times slower than the dense one there on one core; tuned, it breaks even o
 \section*{7. Misspecification and its repair}
 \begin{figure}[H]\centering
 \includegraphics[width=0.86\textwidth]{ff-misspec-repair.pdf}
-\caption{\textbf{A global latent the first-order kernel cannot see, and the repair by state augmentation} (E35:
-$X_i=Gb+U_i$, $G=\pm1$ per sequence, $U$ the Gaussian linear chain at $\rho=0.85$; closed-form exact score; two
-seeds, frozen). The mixture kernel on $X$ (first order) and the same kernel on the state $(X_i,G)$ tied by
+\caption{\textbf{A global latent the first-order kernel cannot see, and the repair by state augmentation} (E35x:
+$X_i=Gb+U_i$, $G=\pm1$ per sequence, $U$ the Gaussian linear chain at $\rho=0.85$; closed-form exact score; mean
+of sixteen seeds, frozen). The mixture kernel on $X$ (first order) and the same kernel on the state $(X_i,G)$ tied by
 reflection (augmented), against the linear floor, over the latent strength $b$. (a) $M=512$;
 (b) $M=2048$.}
 \end{figure}
-\noindent At $b=0$ the arms agree and the floor is the exact score (the chain is Gaussian). With the latent the
-first-order kernel's risk grows with $b$ and does not fall when $M$ quadruples: it is 1.5 to 1.7 times worse than the
-linear floor at $b=1$ and $2$. The augmented kernel, with the same parameter count, stays flat; at $b=2$, $M=2048$ its
-risk is $8.6$ and $17.9$ times smaller than the first-order one in the two seeds. Sixteen seeds (E35x) are queued on
-the cluster, and the figure will be redrawn from them.
+\noindent At $b=0$ the floor is the exact score (the chain is Gaussian) and both kernels sit close to it; the
+augmented one is slightly lower (by $18\,\%$ at $M=512$ and $27\,\%$ at $M=2048$ in the geometric mean over
+seeds, better in $11$ of $16$ seeds), so the latent costs nothing. With the latent the first-order kernel's risk
+grows with $b$ and does not fall when $M$ quadruples: it is $1.56$ to $1.71$ times worse than the linear floor at
+$b=1$ and $2$, in all sixteen seeds. The augmented kernel, with the same parameter count, stays flat; at $b=2$,
+$M=2048$ its risk is $13$ times smaller than the first-order one (mean of the per-seed ratios; above $2$ in all
+sixteen seeds). At $M=2048$ the augmented fit stopped at the last checkpoint in five of the sixteen seeds at $b=1$ and in five at
+$b=2$, so these ratios are lower bounds.
 
 \end{document}

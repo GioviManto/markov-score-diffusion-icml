@@ -16,7 +16,7 @@
  },
  "provenance_note": "NOT a pre-data registration in the strict sense: E35's two-seed result is frozen and known, and P1 and P4 are written with that knowledge (P1 because E35's band was too tight for two seeds, P4 because E35 showed it unregistered). It is an extension of the seed count on the same driver, cells, arms and analysis; registered before any E35x cell ran.",
  "resources": "cluster, defq, 2 x 24 cpus, 64G, 12 h; per cell about 1.5-2 laptop-hours for the two EM arms",
- "status": "REGISTERED and PREDECLARED 2026-10-05 (evening), before submission; the user asked to 'send all the jobs we need'; SUBMITTED 2026-10-05 (684969, 684970)",
+ "status": "FROZEN hpc_E35x_s0 2026-10-07T22:13:54Z; REGISTERED and PREDECLARED 2026-10-05 (evening), before submission; the user asked to 'send all the jobs we need'; SUBMITTED 2026-10-05 (684969, 684970); BOTH SHARDS COMPLETE 2026-10-07 (684969 and 684970, cnode06, 2 h 57 min each, 192/192 keys), FROZEN 2026-10-07T22:13Z, READ 2026-10-08 ~00:40 CEST: P2, P3, P4 CONFIRMED; P1 FALSIFIED AS WRITTEN (the direction is favourable)",
  "registered": "2026-10-05",
  "hpc_runs": {
   "deployment": "7e850ba-20261005T203204Z (hpc/.deploy_7e850ba.env)",
@@ -24,5 +24,35 @@
   "e35x-s0": "684969, defq, 24 cpus, 64G, 12:00 -> outputs/hpc_E35x_s0",
   "e35x-s8": "684970, defq, 24 cpus, 64G, 12:00 -> outputs/hpc_E35x_s8",
   "smoke": "both argument strings run on the laptop at --quick before deployment (E35x: 8 seeds, exit 0; E36x: one complete cell, then stopped)"
+ },
+ "frozen_outputs": {
+  "outputs/hpc_E35x_s0/augmented.csv": "25a924710468e0668147cecaf7c55de23f6c151b9d56a829895e281cf975283e",
+  "outputs/hpc_E35x_s0/params_augmented.json": "030f6616393a23495a7017ba58b74ecc146276025f9fa9c348eefedfc210cd06",
+  "outputs/hpc_E35x_s8/augmented.csv": "029847408896dbc477faef2a9584f64dd0be6531fde2c1adcdea3f4ffa61878e",
+  "outputs/hpc_E35x_s8/params_augmented.json": "9ea89fa22ad7642322b2f5f28ee98fd0cf02f3f147f77c44cbaf1ecc308583ae"
+ },
+ "frozen_at": {
+  "hpc_E35x_s0": "2026-10-07T22:13:54Z",
+  "hpc_E35x_s8": "2026-10-07T22:13:55Z"
+ },
+ "frozen_commit": {
+  "hpc_E35x_s0": "11edd9a4721b8d763d322ec7bc1eed403c95e74c",
+  "hpc_E35x_s8": "11edd9a4721b8d763d322ec7bc1eed403c95e74c"
+ },
+ "frozen_run_commits": {
+  "hpc_E35x_s0": [
+   "7e850ba"
+  ],
+  "hpc_E35x_s8": [
+   "7e850ba"
+  ]
+ },
+ "outcome": {
+  "read": "2026-10-08 ~00:40 CEST, outputs/hpc_E35x_s0 and hpc_E35x_s8 (sixteen seeds, 384 rows, commit 7e850ba, source clean), tools/make_replication_numbers.py as pinned before the data; bootstrap 200,000 draws, seed 20260912.",
+  "P1": "FALSIFIED AS WRITTEN, in the favourable direction. The interval does not contain 0 because the augmented arm is LOWER at b = 0: mean log(augmented / first-order) is -0.201 [-0.396, -0.050] at M = 512 and -0.321 [-0.559, -0.083] at M = 2048, i.e. a geometric-mean ratio 0.82 and 0.73, augmented lower in 11 of 16 seeds at both sizes (per-seed ratio 0.26-1.24 at M = 512, 0.25-2.17 at M = 2048). So there is no cost of augmentation, and a modest gain the prediction did not allow for. The verdict does not rest on one seed (dropping any single seed leaves the upper bound at -0.025 or below), and it has the same sign as E35's two-seed means (0.96, 0.89). Both arms are at the checkpoint cap in a few b = 0 cells (first-order 1 and 2 seeds, augmented 2 and 4, at M = 512 and 2048), so the augmented risk is, if anything, an upper bound. The cause is not investigated.",
+  "P2": "CONFIRMED. At b = 2 the first-order arm's seed-mean risk changes by +0.2% from M = 512 to 2048 (0.0964 -> 0.0966; predicted: under 15%); the augmented arm's falls by 51.7% (0.0203 -> 0.0098; predicted: over 30%) and falls in 16 of 16 seeds (predicted: at least 14).",
+  "P3": "CONFIRMED. At M = 2048 first-order / augmented (seed mean of the per-seed ratios) is 1.55, 7.64, 13.08 at b = 0, 1, 2 (rising), above 2 in 16/16 seeds at b = 1 and at b = 2; at b = 2 the linear floor is 6.3 times the augmented risk (0.0617 / 0.0098; predicted: at least 3). The augmented arm stopped at the last checkpoint in 5 of 16 seeds at b = 1 and in 5 at b = 2 (M = 2048), so its risk is an upper bound there and every ratio is a lower bound.",
+  "P4": "CONFIRMED. First-order / linear floor exceeds 1 in 16 of 16 seeds in all four cells: 1.71 (b = 1, M = 512), 1.67 (b = 1, 2048), 1.56 (b = 2, 512), 1.57 (b = 2, 2048); E35's two seeds gave 1.5-1.7.",
+  "unregistered": "At b = 0 the linear floor is the exact score (risk 0 to rounding), so ratios to it are undefined there and P4 is read at b > 0 only. One of the 192 EM fits (first-order, b = 0, M = 512, seed 7) has a monotonicity violation of 7.2e-5; every other is below 2e-8 (E35: below 2e-8 throughout); the P1 verdict is unchanged without that seed (interval [-0.400, -0.033]). Seed-mean risks (first / augmented / floor): b = 1: 0.0604 / 0.0207 / 0.0354 (M = 512), 0.0590 / 0.0083 / 0.0354 (M = 2048); b = 2: 0.0964 / 0.0203 / 0.0617, 0.0966 / 0.0098 / 0.0617."
  }
 }
