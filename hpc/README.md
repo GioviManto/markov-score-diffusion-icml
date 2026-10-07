@@ -131,3 +131,24 @@ Environment is pinned by `gpu_env.sh`: `CUDA_PATH=/software/cuda/12.4` (the modu
 
 Also note `/tmp` is **not** shared between login and compute nodes -- scripts must live under
 `$HOME`.
+
+## Cluster layout and the home quota (7 October 2026)
+
+On the Bocconi account everything of this project lives under `~/msd-icml/`: `src/<tag>/` (one code copy per
+deployment, from `icml_deploy.sh`), `outputs/<tag>/` (what the jobs wrote), `logs/`, `venv/` and `venv-cuda/`, and
+`src-archive/` (see below). `quota -s` shows two limits that both matter: **blocks** (soft 180 GB, hard 200 GB) and
+**files** (soft 1,250,000, hard 1,500,000). Every deployment is about 2,100 files, so thirty-five of them, with the
+virtual environments and the older thesis-era folders, took the account to 1,315,000 files on 7 October, over the soft
+limit with a six-day grace period.
+
+Old deployments are therefore kept as one archive each, `~/msd-icml/src-archive/<tag>.tar.gz`, not as loose folders.
+Nothing is lost: each archive was checked (`gzip -t`, and the number of non-directory entries in the archive equal to
+the number of files in the folder) before the folder was removed, and the commit a deployment was built from is in
+its `REVISION` file. `outputs/` is never archived, so `icml_fetch.sh` and `fetch_field.sh` are unaffected. Only
+re-running or resubmitting from an old deployment needs it unpacked:
+
+    tar xzf ~/msd-icml/src-archive/<tag>.tar.gz -C ~/msd-icml/src
+
+Rules that follow: keep loose the deployment that any queued or running job names (`scontrol write batch_script <id> -`
+shows its `PYTHONPATH` and working directory), and archive the rest after a campaign. Other projects in the same
+account share the quota; do not touch them.
