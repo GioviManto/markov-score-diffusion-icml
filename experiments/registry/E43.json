@@ -19,6 +19,17 @@
  },
  "provenance_note": "Written after E33 was read (the question comes from its report) and before any E43 cell ran. The thresholds are judgements, not derived: P1, P2 and P4 are about a variance price the data have not yet shown for this kernel, so a falsified clause is information, not a failure. The lab-B parameters (bond 0.40, depth 2.0) were chosen from the chain's own variance, lag-1 correlation and kurtosis, never from a fit.",
  "resources": "cluster, defq, 6 x 8 cpus, 24G; lab A 8 h (24 fits per shard), lab B 10 h (12 cells of four arms per shard; M = 2048 about 3 h)",
- "status": "REGISTERED and PREDECLARED 2026-10-08, before any E43 cell ran; not yet submitted",
- "registered": "2026-10-08"
+ "status": "REGISTERED and PREDECLARED 2026-10-08, before any E43 cell ran; SUBMITTED 2026-10-08 (689109-689113, 689115), queued",
+ "registered": "2026-10-08",
+ "hpc_runs": {
+  "deployment": "962bb5d-20261007T230828Z (hpc/.deploy_962bb5d.env)",
+  "submitted": "2026-10-08 ~01:15 CEST",
+  "e43a-s0": "689109, defq, 8 cpus, 24G, 08:00:00 -> outputs/hpc_E43a_s0",
+  "e43a-s4": "689110, defq, 8 cpus, 24G, 08:00:00 -> outputs/hpc_E43a_s4",
+  "e43a-s8": "689111, defq, 8 cpus, 24G, 08:00:00 -> outputs/hpc_E43a_s8",
+  "e43a-s12": "689112, defq, 8 cpus, 24G, 08:00:00 -> outputs/hpc_E43a_s12",
+  "e43b-s0": "689113, defq, 8 cpus, 24G, 10:00:00 -> outputs/hpc_E43b_s0",
+  "e43b-s4": "689115, defq, 8 cpus, 24G, 10:00:00 -> outputs/hpc_E43b_s4",
+  "smoke": "both argument strings, as written in hpc/icml_submit.sh, run end to end on the laptop at tiny settings (lab B on the registered 401-point grid), exit 0"
+ }
 }
