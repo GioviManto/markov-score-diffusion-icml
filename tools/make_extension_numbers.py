@@ -17,6 +17,11 @@ E42 (experiments/registry/E42.json): the site energy's barrier read-out at M = 8
   P5  T = 2: |seed-mean signed barrier error| < 0.01 at 32768
   P6  |Theta_hat / Theta - 1| <= 0.10 in 16/16 seeds, both T, both new sizes
 
+E46 (experiments/registry/E46.json): the b = 0 gain of the augmented kernel, tested with the first-order kernel on mirrored data.
+  P1  the mean per-seed log(sym / augmented) has a 95% interval containing 0 at both M
+  P2  the mean log(sym / first-order) has an interval entirely below 0 at both M
+  P3  the upper end of the interval of the mean log(sym / 2m) is below log 1.1 at both M
+
 A fit that raised in EM is a FAILED row (E33 amendment 3): it counts against every clause it touches and never for one.
 The test bundles of E41 and E33 are compared by hash; a mismatch stops the reading.
 """
@@ -145,6 +150,33 @@ def read_e42(tab, failed):
     return rows
 
 
+# --------------------------------------------------------------------------- E46
+def read_e46(d46, d35):
+    """d46: symmetry.csv rows (arms em_first_order_sym, em_first_order_2m); d35: E35x's frozen rows (b = 0)."""
+    from make_replication_numbers import boot_ci
+    rows = []
+    for n in sorted(d46.n_chains.unique()):
+        new = d46[d46.n_chains == n].pivot_table(index="seed", columns="arm", values="risk", dropna=False)
+        old = d35[(d35.b == 0) & (d35.n_chains == n)].pivot_table(index="seed", columns="arm", values="risk")
+        bund = d35[(d35.b == 0) & (d35.n_chains == n) & (d35.arm == "em_first_order")].set_index("seed").test_bundle
+        mine = d46[(d46.n_chains == n) & (d46.arm == "em_first_order_sym")].set_index("seed").test_bundle
+        if (bund.reindex(mine.index) != mine).any():
+            raise ValueError("E46 and E35x were scored on different test bundles; the paired reading is not valid")
+        p = new.join(old, how="inner")
+        for pred, num, den, test in (("P1", "em_first_order_sym", "em_augmented", "contains0"),
+                                     ("P2", "em_first_order_sym", "em_first_order", "below0"),
+                                     ("P3", "em_first_order_sym", "em_first_order_2m", "below1.1")):
+            x = np.log(p[num] / p[den])
+            if x.isna().any():
+                rows.append(row("E46", pred, f"M = {n}: mean log({num} / {den}); a failed fit counts against", np.nan, int(x.notna().sum()), len(x), False, "missing risks"))
+                continue
+            lo, hi = boot_ci(x.values)
+            ok = {"contains0": lo <= 0 <= hi, "below0": hi < 0, "below1.1": hi < math.log(1.1)}[test]
+            rows.append(row("E46", pred, f"M = {n}: mean log({num} / {den}), 95% interval {test}", float(x.mean()), int((x < 0).sum()), len(x), bool(ok),
+                            f"CI [{lo:.3f}, {hi:.3f}]; geometric-mean ratio {math.exp(x.mean()):.3f}"))
+    return rows
+
+
 def load_e42_table(d33q, d42):
     sys.path.insert(0, str(ROOT / "tools")); sys.path.insert(0, str(ROOT / "experiments")); sys.path.insert(0, str(ROOT / "src"))
     from make_field_potential_figs import _readings
@@ -165,15 +197,20 @@ def main() -> int:
     ap.add_argument("--e42", default="outputs/hpc_E42_s*/kernels.csv")
     ap.add_argument("--e33k", default="outputs/hpc_E33k_s*/kernels.csv")
     ap.add_argument("--e33q", default="outputs/hpc_E33q_s*/kernels.csv")
+    ap.add_argument("--e46", default="outputs/hpc_E46_s*/symmetry.csv")
+    ap.add_argument("--e35x", default="outputs/hpc_E35x_s*/augmented.csv")
     ap.add_argument("--out", default="reports/numbers")
     a = ap.parse_args()
     rows = []
     d41, d33k, d33q, d42 = _load(a.e41), _load(a.e33k), _load(a.e33q), _load(a.e42)
+    d46, d35x = _load(a.e46), _load(a.e35x)
     if not d41.empty:
         rows += read_e41(d41, pd.concat([d33k, d33q], ignore_index=True))
     if not d42.empty:
         tab, failed = load_e42_table(d33q, d42)
         rows += read_e42(tab, failed)
+    if not d46.empty:
+        rows += read_e46(d46, d35x)
     if not rows:
         print("nothing to read yet"); return 0
     R = pd.DataFrame(rows)

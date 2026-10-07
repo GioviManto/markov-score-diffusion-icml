@@ -48,7 +48,7 @@ def _sha(p: Path) -> str:
 EXTRA_OWNERS = {"hpc_E33o": "E33", "hpc_E33n": "E33", "E34_learned": "E34", "E34_learned_pair": "E34",
                 "hpc_E24x": "E24", "hpc_E24x_gpu": "E24", "hpc_E27x": "E27", "hpc_E27big_excl": "E27",
                 "hpc_E35x_s0": "E35x", "hpc_E35x_s8": "E35x", "hpc_E36x_s0": "E36x", "hpc_E36x_s8": "E36x",
-                "hpc_E41_s0": "E41", "hpc_E41_s2": "E41", "hpc_E41_s4": "E41", "hpc_E41_s6": "E41", "hpc_E42_s0": "E42", "hpc_E42_s4": "E42", "hpc_E42_s8": "E42", "hpc_E42_s12": "E42"}
+                "hpc_E41_s0": "E41", "hpc_E41_s2": "E41", "hpc_E41_s4": "E41", "hpc_E41_s6": "E41", "hpc_E42_s0": "E42", "hpc_E42_s4": "E42", "hpc_E42_s8": "E42", "hpc_E42_s12": "E42", "hpc_E46_s0": "E46", "hpc_E46_s8": "E46"}
 
 
 def _registry_file(out_id: str) -> Path:

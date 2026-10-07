@@ -1,0 +1,20 @@
+{
+ "id": "E46",
+ "script": "experiments/e46_symmetry_diagnostic.py",
+ "hypothesis": "E35x (frozen, 16 seeds) found the augmented kernel LOWER than the first-order one at b = 0 (geometric mean 0.82 at M = 512, 0.73 at M = 2048; interval of the mean log ratio excludes 0) although there is no latent. The augmented model is a mixture of the kernel and its reflection with shared parameters, so its E-step feeds the kernel every sequence and its mirror image, and the b = 0 truth is reflection-symmetric. Hypothesis: the gain is the use of the symmetry, not the latent state.",
+ "design": "New driver, importing E35's data builders unchanged (same training chains, validation and test bundles, same initialisation as the first-order arm). b = 0 only; M in (512, 2048); seeds 0-15. Arms: em_first_order_sym (the first-order kernel fitted on the sequences and their mirror images, nothing else) and em_first_order_2m (the first-order kernel on twice as many INDEPENDENT sequences: the control for 'only more data'). Comparators: E35x's frozen em_first_order and em_augmented, same seeds and bundles (hashes compared at read time; E35x ran on the cluster and the hashes are platform-specific, so E46 runs there too). Two shards of eight seeds (e46-s0, e46-s8), defq.",
+ "predeclared_predictions": {
+  "P1": "The symmetrised first-order kernel matches the augmented one: the 95% bootstrap interval of the mean per-seed log(sym / augmented) contains 0 at both M.",
+  "P2": "The mirror data alone give the gain: the interval of the mean log(sym / first-order) lies entirely below 0 at both M.",
+  "P3": "Reflection is at least nearly as good as doubling the data: the upper end of the interval of the mean log(sym / 2m) is below log 1.1 at both M."
+ },
+ "predeclared_analysis": "symmetry.csv merged over the two shards plus E35x's frozen b = 0 rows; per (M) the paired per-seed log ratios; bootstrap by Monte Carlo (200,000 draws, seed 20260912) on the mean log ratio; at_cap and converged read beside every risk; read by tools/make_extension_numbers.py.",
+ "seeds": {
+  "confirmatory": "0-15",
+  "dev": "10000 (smoke only)"
+ },
+ "provenance_note": "Written after E35x was read (that is what motivated it) and before any E46 cell ran; the explanation tested is a hypothesis, and a falsified P1 would mean the gain comes from something else, which would then be the open question.",
+ "resources": "cluster, defq, 2 x 8 cpus, 24G, 8 h; about 0.4 h per fit at M = 512 and 1-2 h at 2048 (twice the chains)",
+ "status": "REGISTERED and PREDECLARED 2026-10-08, before any E46 cell ran; not yet submitted",
+ "registered": "2026-10-08"
+}

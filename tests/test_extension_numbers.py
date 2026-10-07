@@ -113,3 +113,49 @@ def test_e42_a_failed_fit_counts_against():
 
 def test_e42_p6_falls_when_the_temperature_drifts():
     assert _verdicts(men.read_e42(_tab(GOOD, signed=True, theta=1.2), {}))["P6"] == "FALSIFIED"
+
+
+# --------------------------------------------------------------------------- E46
+def _e46(sym_vs_aug=0.0, sym_vs_first=-0.2, sym_vs_2m=0.0, n=16, bundle_ok=True, nan_seed=None):
+    """Synthetic b = 0 tables: per-seed first-order risk 0.02 (jittered); the other arms follow from the log ratios."""
+    rng = np.random.default_rng(1)
+    d35, d46 = [], []
+    for M in (512, 2048):
+        for s in range(n):
+            first = 0.02 * np.exp(rng.normal(0, 0.1))
+            sym = first * np.exp(sym_vs_first + rng.normal(0, 0.05))
+            aug = sym * np.exp(-sym_vs_aug + rng.normal(0, 0.05))
+            two = sym * np.exp(-sym_vs_2m + rng.normal(0, 0.05))
+            bnd = f"t{M}{s}"
+            d35 += [dict(b=0.0, n_chains=M, seed=s, arm="em_first_order", risk=first, test_bundle=bnd),
+                    dict(b=0.0, n_chains=M, seed=s, arm="em_augmented", risk=aug, test_bundle=bnd)]
+            sr = np.nan if nan_seed == s else sym
+            d46 += [dict(b=0.0, n_chains=M, seed=s, arm="em_first_order_sym", risk=sr, test_bundle=bnd if bundle_ok else "x"),
+                    dict(b=0.0, n_chains=M, seed=s, arm="em_first_order_2m", risk=two, test_bundle=bnd if bundle_ok else "x")]
+    return pd.DataFrame(d46), pd.DataFrame(d35)
+
+
+def test_e46_all_confirmed_when_the_symmetry_explains_the_gain():
+    assert set(_verdicts(men.read_e46(*_e46())).values()) == {"CONFIRMED"}
+
+
+def test_e46_p1_falls_when_augmented_is_still_better_than_the_symmetrised_fit():
+    assert _verdicts(men.read_e46(*_e46(sym_vs_aug=0.3)))["P1"] == "FALSIFIED"      # augmented 26% below sym
+
+
+def test_e46_p2_falls_when_mirror_data_do_not_help():
+    assert _verdicts(men.read_e46(*_e46(sym_vs_first=0.0)))["P2"] == "FALSIFIED"
+
+
+def test_e46_p3_falls_when_doubling_the_data_is_much_better_than_reflection():
+    assert _verdicts(men.read_e46(*_e46(sym_vs_2m=0.5)))["P3"] == "FALSIFIED"        # sym 65% above the 2m fit
+
+
+def test_e46_a_missing_fit_counts_against():
+    v = _verdicts(men.read_e46(*_e46(nan_seed=3)))
+    assert v["P1"] == "FALSIFIED" and v["P2"] == "FALSIFIED"
+
+
+def test_e46_refuses_different_test_bundles():
+    with pytest.raises(ValueError):
+        men.read_e46(*_e46(bundle_ok=False))
