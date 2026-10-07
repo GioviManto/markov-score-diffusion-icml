@@ -40,6 +40,12 @@ E45 (experiments/registry/E45.json): inpainting with E33's frozen fitted kernels
   P4  (T0.3_h1_L32, gap16): linear error / oracle error (seed means) in [0.9, 1.1]
   P5  (T0.3_h1_L32, gap16): linear 90% interval width / oracle width (seed means) >= 1.1
 
+E44 (experiments/registry/E44.json): non-equilibrium snapshots; R = arm risk / linear_empirical risk, paired per seed.
+  P1  tau = infinity: the site energy beats the empirical linear estimator in 8/8 seeds
+  P2  the site energy's R < 1 in >= 7/8 seeds at EVERY tau
+  P3  tau = 1.5, 3, 6: the spline's risk is below the site energy's in >= 7/8 seeds, at each
+  P4  tau = infinity: the site energy's risk is below the spline's in >= 7/8 seeds
+
 A fit that raised in EM is a FAILED row (E33 amendment 3): it counts against every clause it touches and never for one.
 The test bundles of E41 and E33 are compared by hash; a mismatch stops the reading.
 """
@@ -165,6 +171,40 @@ def read_e42(tab, failed):
             ok6 &= (k == tt == 16)
             notes.append(f"T = {T:g}, M = {n}: {k}/{tt}")
     rows.append(row("E42", "P6", "|Theta_hat / Theta - 1| <= 0.10 in 16/16, both T, both sizes", np.nan, None, 4, bool(ok6), "; ".join(notes)))
+    return rows
+
+
+# --------------------------------------------------------------------------- E44
+def read_e44(d):
+    rows = []
+    d = d[d.selection == "risk"]
+    taus = sorted(d.tau.unique())
+    piv = {tau: g.pivot_table(index="seed", columns="arm", values="risk", dropna=False) for tau, g in d.groupby("tau")}
+    ns = d.seed.nunique()
+    need = _need(ns, 7 / 8)
+    inf = float("inf")
+    if inf in piv:
+        p = piv[inf]
+        k = int((p.em_pair_quartic < p.linear_empirical).sum())
+        rows.append(row("E44", "P1", f"tau = inf: site energy beats the empirical linear estimator in {ns}/{ns} seeds", float((p.em_pair_quartic / p.linear_empirical).mean()), k, ns, bool(k == ns)))
+        k = int((p.em_pair_quartic < p.em_tilted_spline).sum())
+        rows.append(row("E44", "P4", f"tau = inf: site energy below the spline in >= {need}/{ns} seeds", float((p.em_pair_quartic / p.em_tilted_spline).mean()), k, ns, bool(k >= need)))
+    ok, notes = True, []
+    for tau in taus:
+        p = piv[tau]
+        k = int((p.em_pair_quartic < p.linear_empirical).sum())
+        ok &= k >= need
+        notes.append(f"tau {tau:g}: {k}/{ns} (R {float((p.em_pair_quartic / p.linear_empirical).mean()):.2f})")
+    rows.append(row("E44", "P2", f"site energy R < 1 in >= {need}/{ns} seeds at every tau", np.nan, None, len(taus), bool(ok), "; ".join(notes)))
+    ok, notes = True, []
+    for tau in (1.5, 3.0, 6.0):
+        if tau not in piv:
+            continue
+        p = piv[tau]
+        k = int((p.em_tilted_spline < p.em_pair_quartic).sum())
+        ok &= k >= need
+        notes.append(f"tau {tau:g}: {k}/{ns} (spline / site {float((p.em_tilted_spline / p.em_pair_quartic).mean()):.2f})")
+    rows.append(row("E44", "P3", f"tau = 1.5, 3, 6: spline below the site energy in >= {need}/{ns} seeds, at each", np.nan, None, len(notes), bool(ok), "; ".join(notes)))
     return rows
 
 
@@ -305,6 +345,7 @@ def main() -> int:
     ap.add_argument("--e33q", default="outputs/hpc_E33q_s*/kernels.csv")
     ap.add_argument("--e46", default="outputs/hpc_E46_s*/symmetry.csv")
     ap.add_argument("--e45", default="outputs/E45/inpainting.csv")
+    ap.add_argument("--e44", default="outputs/hpc_E44_s*/quench.csv")
     ap.add_argument("--e43a", default="outputs/hpc_E43a_s*/kernels.csv")
     ap.add_argument("--e43b", default="outputs/hpc_E43b_s*/kernels.csv")
     ap.add_argument("--e35x", default="outputs/hpc_E35x_s*/augmented.csv")
@@ -315,6 +356,7 @@ def main() -> int:
     d46, d35x = _load(a.e46), _load(a.e35x)
     d43a, d43b = _load(a.e43a), _load(a.e43b)
     d45 = _load(a.e45)
+    d44 = _load(a.e44)
     if not d41.empty:
         rows += read_e41(d41, pd.concat([d33k, d33q], ignore_index=True))
     if not d42.empty:
@@ -322,6 +364,8 @@ def main() -> int:
         rows += read_e42(tab, failed)
     if not d46.empty:
         rows += read_e46(d46, d35x)
+    if not d44.empty:
+        rows += read_e44(d44)
     if not d45.empty:
         rows += read_e45(d45)
     if not d43a.empty or not d43b.empty:

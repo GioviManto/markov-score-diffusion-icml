@@ -64,6 +64,11 @@ SHARDS = {
                           {("LAP_B_L32", s, n, a, sel) for s in range(k, k + 4) for n in (128, 512, 2048)
                            for a in ("em_loglinear", "em_pair_quartic", "em_tilted_spline", "em_mixture") for sel in ("risk", "evidence")}
                           | {("LAP_B_L32", s, n, "lmmse_true", "risk") for s in range(k, k + 4) for n in (128, 512, 2048)}) for k in (0, 4)},
+    # E44 (registered 8 Oct): non-equilibrium snapshots, two shards of four seeds
+    **{f"hpc_E44_s{k}": ("quench.csv", ["tau", "seed", "n_chains", "arm", "selection"],
+                         {(tau, s, 512, a, sel) for tau in (1.5, 3.0, 6.0, 12.0, float("inf")) for s in range(k, k + 4)
+                          for a in ("em_pair_quartic", "em_tilted_spline") for sel in ("risk", "evidence")}
+                         | {(tau, s, 512, "linear_empirical", "risk") for tau in (1.5, 3.0, 6.0, 12.0, float("inf")) for s in range(k, k + 4)}) for k in (0, 4)},
     # E46 (registered 8 Oct): the b = 0 symmetry diagnostic, two shards of eight seeds
     **{f"hpc_E46_s{k}": ("symmetry.csv", ["b", "seed", "n_chains", "arm"],
                          {(0.0, s, n, a) for s in range(k, k + 8) for n in (512, 2048) for a in ("em_first_order_sym", "em_first_order_2m")}) for k in (0, 8)},

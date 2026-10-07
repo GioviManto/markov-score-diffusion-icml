@@ -273,3 +273,38 @@ def test_e45_p5_falls_when_the_linear_interval_is_not_wider():
 
 def test_e45_a_failed_rebuild_counts_against():
     assert _verdicts(men.read_e45(_e45(fail_site_seed=3)))["P2"] == "FALSIFIED"
+
+
+# --------------------------------------------------------------------------- E44
+def _e44(site=0.85, spline_off=0.80, spline_eq=1.2, n=8, fail=None):
+    """Risks as ratios of the linear arm (risk 1.0): site energy = `site`; the spline is `spline_off` x site off equilibrium, `spline_eq` x at equilibrium."""
+    rows = []
+    for tau in (1.5, 3.0, 6.0, 12.0, float("inf")):
+        for s in range(n):
+            j = 1 + 0.01 * s
+            sp = spline_eq if np.isinf(tau) else spline_off
+            for arm, r in (("linear_empirical", 1.0), ("em_pair_quartic", site * j), ("em_tilted_spline", site * j * sp)):
+                rows.append(dict(tau=tau, seed=s, arm=arm, selection="risk", risk=np.nan if (fail == (tau, s) and arm == "em_pair_quartic") else r))
+    return pd.DataFrame(rows)
+
+
+def test_e44_all_confirmed_on_a_constructed_table():
+    assert set(_verdicts(men.read_e44(_e44())).values()) == {"CONFIRMED"}
+
+
+def test_e44_p1_and_p2_fall_when_the_site_energy_loses_to_linear():
+    v = _verdicts(men.read_e44(_e44(site=1.1)))
+    assert v["P1"] == "FALSIFIED" and v["P2"] == "FALSIFIED"
+
+
+def test_e44_p3_falls_when_the_site_energy_stays_ahead_of_the_spline():
+    assert _verdicts(men.read_e44(_e44(spline_off=1.3)))["P3"] == "FALSIFIED"
+
+
+def test_e44_p4_falls_when_the_spline_wins_at_equilibrium():
+    assert _verdicts(men.read_e44(_e44(spline_eq=0.8)))["P4"] == "FALSIFIED"
+
+
+def test_e44_a_failed_fit_counts_against():
+    v = _verdicts(men.read_e44(_e44(fail=(float("inf"), 2))))
+    assert v["P1"] == "FALSIFIED"                                      # 7/8 is not 8/8

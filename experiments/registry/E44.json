@@ -1,0 +1,21 @@
+{
+ "id": "E44",
+ "script": "experiments/e44_quench.py",
+ "hypothesis": "The paper's estimator assumes a stationary Markov chain in space. The physical model's stationary states are Gibbs, but snapshots taken during coarsening after a quench from high temperature are not. E44 trains and tests on snapshots at several times after a quench of the lattice stochastic Allen-Cahn dynamics (markov_score.allen_cahn, validated against the exact chain: after a long run the variance is 0.997 of the equilibrium value, the lag-1 correlation 0.84 against 0.848, the excess kurtosis -1.34 against -1.35) and asks whether the Gibbs-class kernels still help, and which one.",
+ "design": "The frozen e33 fitting path (e33._fit_arm, ladder, risk selection) on new data. Cell T = 0.3, h = 1, L = 32 (E33's base cell), standardised by the equilibrium scale; M = 512; seeds 0-7; times after the quench tau in (1.5, 3, 6, 12) from phi = 0.1 N(0, 1) on a 256-site ring (dt = 0.02, windows of 32 sites every 64 sites), and tau = infinity = the exact Gibbs chain as the control. Validation bundle 512 and test bundle 1024 chains. The reference is the CLEAN sequence (no exact score exists off equilibrium), so the risk is E33's pooled relative score error against the clean-sequence score: not zero for a perfect denoiser, hence the readings are ratios R = risk / linear_empirical, paired per seed, where linear_empirical is the Gaussian posterior mean with the training snapshots' own sample covariance. Arms: em_pair_quartic (5 parameters), em_tilted_spline (25), linear_empirical. Two shards of four seeds (e44-s0, e44-s4), defq. Data statistics (variance, lag-1 correlation, kurtosis of the training snapshots) are recorded beside every row. Scouting before registration (no fit): at T = 0.3, h = 1 the simulated field is indistinguishable from equilibrium in variance, correlation and kurtosis by tau = 50, which is why the times stop at 12.",
+ "predeclared_predictions": {
+  "P1": "At tau = infinity (the Gibbs control) the site energy beats the empirical linear estimator in 8 of 8 seeds (R < 1).",
+  "P2": "The advantage survives the quench: R < 1 for the site energy in at least 7 of 8 seeds at every tau.",
+  "P3": "The order flips off equilibrium: at tau = 1.5, 3 and 6 the tilted spline's risk is below the site energy's in at least 7 of 8 seeds, at each.",
+  "P4": "At equilibrium the site energy's risk is below the spline's in at least 7 of 8 seeds (E33's order)."
+ },
+ "predeclared_analysis": "quench.csv (risk-selected rows); per (tau, seed) the paired ratios R and the pairwise orderings; failed fits count against every clause they touch; read by tools/make_extension_numbers.py.",
+ "seeds": {
+  "confirmatory": "0-7",
+  "dev": "10000 (smoke only)"
+ },
+ "provenance_note": "Written after E33 was read and after a SCOUTING run of the simulator alone (no estimator fitted) that fixed the range of tau; the smoke run at M = 32, tau = 3 printed one risk pair (site energy 0.69, linear 0.81) before this entry was finalised. P2 and P3 are judgements about a regime nobody has measured; a falsified P3 would mean the Gibbs-class kernel is robust, which is a result.",
+ "resources": "cluster, defq, 2 x 8 cpus, 24G, 6 h; about 20-25 min per (tau, seed) cell for the two EM arms at M = 512, plus about 2 min of simulation",
+ "status": "REGISTERED and PREDECLARED 2026-10-08, before any E44 cell ran; not yet submitted",
+ "registered": "2026-10-08"
+}

@@ -36,7 +36,7 @@ THREADS=${MSD_HPC_THREADS:-1}
 SERIAL_CPUS=${MSD_HPC_SERIAL_CPUS:-4}
 AFTER=""; WHAT=${1:-}; shift || true
 while [[ $# -gt 0 ]]; do case "$1" in --after) AFTER="$2"; shift 2;; *) echo "unknown arg $1" >&2; exit 2;; esac; done
-[[ -n "$WHAT" ]] || { echo "usage: $0 <e43a-s0|e43a-s4|e43a-s8|e43a-s12|e43b-s0|e43b-s4|e46-s0|e46-s8|e41-s0|e41-s2|e41-s4|e41-s6|e42-s0|e42-s4|e42-s8|e42-s12|e38-memory|e35x-s0|e35x-s8|e36x-s0|e36x-s8|e32|e33-q-s0..s12|e34-clean|e34-physics|e33-oracles|e33-k-s0..s12|e33-screen|e33-nets-s0|e33-nets-s8|e23|e24c-capacity|e26|e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
+[[ -n "$WHAT" ]] || { echo "usage: $0 <e44-s0|e44-s4|e43a-s0|e43a-s4|e43a-s8|e43a-s12|e43b-s0|e43b-s4|e46-s0|e46-s8|e41-s0|e41-s2|e41-s4|e41-s6|e42-s0|e42-s4|e42-s8|e42-s12|e38-memory|e35x-s0|e35x-s8|e36x-s0|e36x-s8|e32|e33-q-s0..s12|e34-clean|e34-physics|e33-oracles|e33-k-s0..s12|e33-screen|e33-nets-s0|e33-nets-s8|e23|e24c-capacity|e26|e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
 
 partition() {
   if [[ -n "${MSD_HPC_PARTITION:-}" ]]; then echo "$MSD_HPC_PARTITION"; return; fi
@@ -228,6 +228,9 @@ cmd_for() {
     e43a-s12)     echo "e43_free_kernel.py --only kernels --set 'seeds=(12, 13, 14, 15)' --output-dir {OUT}/E43a_s12";;
     e43b-s0)     echo "e43_free_kernel.py --only kernels --set 'cells=(\"LAP_B_L32\",)' --set 'arms=(\"em_loglinear\", \"em_pair_quartic\", \"em_tilted_spline\", \"em_mixture\")' --set 'seeds=(0, 1, 2, 3)' --output-dir {OUT}/E43b_s0";;
     e43b-s4)     echo "e43_free_kernel.py --only kernels --set 'cells=(\"LAP_B_L32\",)' --set 'arms=(\"em_loglinear\", \"em_pair_quartic\", \"em_tilted_spline\", \"em_mixture\")' --set 'seeds=(4, 5, 6, 7)' --output-dir {OUT}/E43b_s4";;
+    # --- 8 Oct: E44, non-equilibrium snapshots (registry E44.json); two shards of four seeds
+    e44-s0)      echo "e44_quench.py --set 'seeds=(0, 1, 2, 3)' --output-dir {OUT}/E44_s0";;
+    e44-s4)      echo "e44_quench.py --set 'seeds=(4, 5, 6, 7)' --output-dir {OUT}/E44_s4";;
     e34-physics) echo "e34_field_physics.py --only physics_truth --output-dir {OUT}/E34p";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
