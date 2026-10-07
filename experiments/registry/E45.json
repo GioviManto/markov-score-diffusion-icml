@@ -17,6 +17,30 @@
  },
  "provenance_note": "Written after E33 was read and after ONE tiny smoke run (seed 0, 16 chains, gap8 only, grid 201, --quick) had been looked at: its hidden-site errors were within 1% across all arms and the linear interval was wider (2.76 against 2.30). P4 was ORIGINALLY 'linear error >= 1.3 x oracle on gap16'; that glimpse made it implausible, so P4 and P5 were rewritten to what is actually expected (the benefit is the uncertainty, not the mean) before the full run. P1-P3 were written before that glimpse and are unchanged.",
  "resources": "laptop, one core per cell; about 15 minutes in all (BP and FFBS only, no EM)",
- "status": "REGISTERED and PREDECLARED 2026-10-08, before the confirmatory run; not yet run",
- "registered": "2026-10-08"
+ "status": "REGISTERED and PREDECLARED 2026-10-08, before the confirmatory run; RUN and FROZEN 2026-10-08 (laptop, 480 rows, commit 34e8d3a, clean) and READ: P1, P2, P4 CONFIRMED; P3 and P5 FALSIFIED, both narrowly",
+ "registered": "2026-10-08",
+ "frozen_outputs": {
+  "outputs/E45/inpainting.csv": "992b245d2c07453817bf7d95f6115b3291be54655b122fff7cf2aba864872660",
+  "outputs/E45/params_inpainting.json": "faf2ecca9cbbe19ed86fbb9c5662bb767660639825ef4acf96173fb6d213e2ab"
+ },
+ "frozen_at": {
+  "E45": "2026-10-07T23:27:37Z"
+ },
+ "frozen_commit": {
+  "E45": "dd4a52e4eac47a3497a15e4e780d0c535330cb02"
+ },
+ "frozen_run_commits": {
+  "E45": [
+   "34e8d3a"
+  ]
+ },
+ "outcome": {
+  "read": "2026-10-08 ~00:40 CEST, outputs/E45/inpainting.csv (32 cells x 3 patterns x 5 arms, no failed rebuild), tools/make_extension_numbers.py as pinned before the run.",
+  "P1": "CONFIRMED. The oracle's 90% intervals cover the truth with frequency 0.890-0.893 on every (cell, pattern), pooled over seeds (per-seed range 0.873-0.911).",
+  "P2": "CONFIRMED. The learned site energy covers 0.890-0.893 on all six (cell, pattern) and its hidden-site error is within 10% of the oracle's in 16 of 16 seeds on all six; the ratio to the oracle's error is 1.000 and the interval width ratio 1.00 (to three digits). The learned tilted spline is the same.",
+  "P3": "FALSIFIED, narrowly, and in the other direction from the mechanism I had in mind. The linear conditional's coverage on (T0.3_h1_L32, gap16) is 0.926, a deviation of +0.026 from 0.90 (threshold 0.03): it OVER-covers, because its intervals are wider, not because they are miscalibrated downwards.",
+  "P4": "CONFIRMED. On (T0.3_h1_L32, gap16) the linear / oracle hidden-site error is 1.015.",
+  "P5": "FALSIFIED, narrowly. The linear 90% interval is 1.094 times as wide as the oracle's on (T0.3_h1_L32, gap16) (threshold 1.10).",
+  "unregistered": "The nonlinear posterior is close to the Gaussian one here. Hidden-site error against the oracle, base cell: linear 1.015 (gap16), 1.028 (gap8), 1.046 (random half); mixture 1.016, 1.029, 1.047 (it sits on the linear floor, as in E33); site energy and spline 1.000. T = 1 cell: every arm within 0.9% of the oracle, interval width within 2.1%. Coverage of the learned and oracle intervals is 0.89 everywhere (not 0.90): the FFBS grid and the 200-sample quantiles cost about 0.01. At t = 0.5 and these patterns the benefit of the exact nonlinear posterior over a Gaussian smoother is small (at most 4.6% in error, 9% in interval width, on the base cell); what the experiment establishes is that the fitted kernels lose nothing to the oracle, so the machinery (BP, FFBS, the learned kernel) is sound for missing data. A noise level lower than 0.5 or longer gaps would be the place to look for a larger gap; not run."
+ }
 }

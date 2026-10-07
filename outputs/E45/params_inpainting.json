@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-10-08 00:26:06",
+  "git_commit": "34e8d3a78a4b160c9cdd842a151abedf9a520d78",
+  "git_branch": "claude/phi4-field-2026-10-01",
+  "git_dirty": "?? outputs/E45/\n?? outputs/logs/E45.log",
+  "source_archive_sha256": "",
+  "source_is_clean": false,
+  "revision_source": "git",
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "platform": "macOS-14.1.1-arm64-arm-64bit-Mach-O",
+  "hostname": "MacBook-Air-160.local",
+  "slurm_job_id": "",
+  "slurm_array_task_id": "",
+  "cpu_count": "8",
+  "blas_threads": "1",
+  "settings": {
+    "cells": [
+      "T0.3_h1_L32",
+      "T1_iso_L32"
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "level": 0.5,
+    "n_test": 256,
+    "n_samples": 200,
+    "patterns": [
+      "random50",
+      "gap8",
+      "gap16"
+    ],
+    "fit_size": 2048,
+    "e33_k": "outputs/hpc_E33k_s*/kernels.csv",
+    "e33_q": "outputs/hpc_E33q_s*/kernels.csv",
+    "grid_size": 401,
+    "half_width": 8.0,
+    "components": 8
+  },
+  "quick": false,
+  "workers": 4
+}

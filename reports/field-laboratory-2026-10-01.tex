@@ -897,6 +897,11 @@ geometric mean over seeds (intervals for the mean log ratio $[-0.40,-0.05]$ and 
 seeds, and not the work of one seed), so augmenting a state that carries no latent costs nothing; the two-seed
 ``agree on average'' above had the same sign. Why it gains is not investigated.
 
+\subsection{E45: inpainting with posterior uncertainty}
+
+The note's section 9.7 asks for posterior sampling, and a missing site is a site with no likelihood. E45 hides part of a noisy sequence (a random half, or a gap of $8$ or $16$ sites; noise level $t=0.5$) and asks what E33's \emph{frozen} fitted kernels do, with no refit: the posterior mean by grid BP and $200$ forward-filter backward-sample draws for the $90\,\%$ interval, against the oracle (the true kernel) and the Gaussian conditional with the true covariance. Three predictions hold and two fail narrowly. The oracle's intervals cover the truth $0.89$ of the time on both cells and all patterns; the learned site energy and the learned spline are indistinguishable from the oracle (error ratio $1.000$, coverage $0.89$, width ratio $1.00$, in all sixteen seeds), so the machinery is sound for missing data. What fails is the expectation that the Gaussian conditional would be visibly worse: on the base cell its hidden-site error is $1.5$, $2.8$ and $4.6\,\%$ above the oracle's for the long gap, the short gap and the random half, its interval is $9\,\%$ wider at the long gap and over-covers ($0.926$, not under-covers; the predicted miscalibration of more than $0.03$ is $+0.026$, the predicted width excess of $10\,\%$ is $9.4\,\%$), and on the $T=1$ cell every arm is within $1\,\%$. The mixture kernel sits with the linear estimator, as in E33. At this noise level the exact nonlinear posterior buys little over a Gaussian smoother; a lower noise level or longer gaps is where a larger gap would be, and was not run.
+
+\clearpage
 \section{Alignment with the consolidated note}
 
 \begin{table}[h]\centering\footnotesize
@@ -914,7 +919,7 @@ clean-data learning (\S16.1) & E34 \code{clean} \\
 symmetric $W_\theta$, reversibility & by construction: every tilted walk is reversible (Proposition~\ref{prop:rev}); the symmetric site energy is learned directly by \code{em\_pair\_quartic} (\S\ref{sec:pair}) \\
 $\Th$ read from the data & Corollary~\ref{cor:read}: $\hat\Th=\hat\gamma s^2/h$ from any kernel of the class; P8 \\
 FFT transition (\S9.2, \S29 step 5) & E40: implemented (\code{bp\_fft}); second-order accurate ($6.7\times10^{-4}$ from dense BP at $N_g=401$) and $5.8\times$ slower on one core there; tuned, it breaks even near $N_g=3200$ \\
-posterior sampling (\S9.7) & \code{markov\_score.ffbs}: forward filtering, backward sampling on the grid, tested against enumeration \\
+posterior sampling (\S9.7) & \code{markov\_score.ffbs}: forward filtering, backward sampling on the grid, tested against enumeration; E45 inpaints with E33's frozen kernels: the learned kernels equal the oracle, the Gaussian conditional is within $5\,\%$ \\
 ``minimal decisive experiment'' & E32 (floor across $\Th$, $h$) plus E33's window arm \\
 figures-first (\S28) & all seven and a summary figure: \code{reports/figures-first-2026-10-06.pdf} \\
 Gaussian score / Kalman smoother (\S29 step 3) & the paper's appendix B, a proposition with its proof; measured by E39 (grid BP within $1.9\times10^{-13}$ of both) \\
