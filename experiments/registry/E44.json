@@ -16,6 +16,13 @@
  },
  "provenance_note": "Written after E33 was read and after a SCOUTING run of the simulator alone (no estimator fitted) that fixed the range of tau; the smoke run at M = 32, tau = 3 printed one risk pair (site energy 0.69, linear 0.81) before this entry was finalised. P2 and P3 are judgements about a regime nobody has measured; a falsified P3 would mean the Gibbs-class kernel is robust, which is a result.",
  "resources": "cluster, defq, 2 x 8 cpus, 24G, 6 h; about 20-25 min per (tau, seed) cell for the two EM arms at M = 512, plus about 2 min of simulation",
- "status": "REGISTERED and PREDECLARED 2026-10-08, before any E44 cell ran; not yet submitted",
- "registered": "2026-10-08"
+ "status": "REGISTERED and PREDECLARED 2026-10-08, before any E44 cell ran; SUBMITTED 2026-10-08 (689136, 689137), queued",
+ "registered": "2026-10-08",
+ "hpc_runs": {
+  "deployment": "34e8d3a-20261007T232343Z (hpc/.deploy_34e8d3a.env)",
+  "submitted": "2026-10-08 ~01:25 CEST",
+  "e44-s0": "689136, defq, 8 cpus, 24G, 06:00:00 -> outputs/hpc_E44_s0",
+  "e44-s4": "689137, defq, 8 cpus, 24G, 06:00:00 -> outputs/hpc_E44_s4",
+  "smoke": "the exact argument string, as written in hpc/icml_submit.sh, run end to end on the laptop at tiny settings (tau = 3, M = 32; exit 0)"
+ }
 }
