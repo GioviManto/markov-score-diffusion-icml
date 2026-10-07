@@ -18,6 +18,15 @@
  },
  "provenance_note": "NOT a pre-data registration in the strict sense: the design and the thresholds below were written after E33's results at the same cells were read (which is what motivated them), and before any E41/E42 cell ran. The comparators are E33's frozen fits on the same seeds and the same test bundles (checked by hash at read time), not new fits.",
  "resources": "cluster, defq, 4 x 8 cpus, 24G, 12 h; a site-energy fit takes about 8-10 min at M = 2048 on these cells, so about 0.6 h at 8192 and 2-3 h at 32768",
- "status": "REGISTERED and PREDECLARED 2026-10-08, before any E42 cell ran; not yet submitted",
- "registered": "2026-10-08"
+ "status": "REGISTERED and PREDECLARED 2026-10-08, before any E42 cell ran; SUBMITTED 2026-10-08 (689086-689089), queued",
+ "registered": "2026-10-08",
+ "hpc_runs": {
+  "deployment": "ecc3c13-20261007T224446Z (hpc/.deploy_ecc3c13.env)",
+  "submitted": "2026-10-08 ~00:50 CEST",
+  "e42-s0": "689086, defq, 8 cpus, 24G, 12:00:00 -> outputs/hpc_E42_s0",
+  "e42-s4": "689087, defq, 8 cpus, 24G, 12:00:00 -> outputs/hpc_E42_s4",
+  "e42-s8": "689088, defq, 8 cpus, 24G, 12:00:00 -> outputs/hpc_E42_s8",
+  "e42-s12": "689089, defq, 8 cpus, 24G, 12:00:00 -> outputs/hpc_E42_s12",
+  "smoke": "both argument strings, as written in hpc/icml_submit.sh, run end to end on the laptop with size, checkpoints, cells and seeds overridden to one tiny cell (exit 0)"
+ }
 }
