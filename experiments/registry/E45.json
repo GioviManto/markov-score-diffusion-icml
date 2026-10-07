@@ -1,0 +1,22 @@
+{
+ "id": "E45",
+ "script": "experiments/e45_inpainting.py",
+ "hypothesis": "The note's section 9.7 asks for posterior sampling; the missing-data case was 'cheap, not asked'. A missing site is a site with no likelihood, and forward-filter backward-sample returns whole posterior sequences, so an exact-BP denoiser gives calibrated uncertainty inside a gap, where a Gaussian conditional cannot (a gap in a bimodal field spans a kink). E45 asks what E33's frozen fitted kernels do when part of a noisy sequence is hidden.",
+ "design": "No refit and no cluster. Kernels: E33's FROZEN fits at M = 2048 (risk-selected checkpoints, seeds 0-15) for em_pair_quartic (hpc_E33q), em_tilted_spline and em_mixture (hpc_E33k), rebuilt from the theta column by e34_field_physics.kernel_from_row; plus the oracle (the true kernel) and the linear Gaussian conditional with the TRUE covariance (the Kalman smoother with missing data). Cells T0.3_h1_L32 and T1_iso_L32; 256 fresh exact sequences per (cell, seed), noised at t = 0.5; hidden patterns random50 (16 of 32 sites, a fixed random subset per seed), gap8 (sites 12-19) and gap16 (sites 8-23); a hidden site has variance 1e8 (flat likelihood; verified: changing a hidden observation changes the posterior by exactly 0). Posterior mean by grid BP; 200 FFBS samples with jitter; per (cell, seed, arm, pattern) the relative squared error at the hidden sites and the coverage and mean width of the 90% central interval (linear: mean +- 1.645 sd). Laptop.",
+ "predeclared_predictions": {
+  "P1": "The machinery is calibrated: the oracle's 90% intervals cover the truth with frequency in [0.87, 0.93] on every (cell, pattern), pooled over seeds.",
+  "P2": "The learned site energy keeps it: its coverage is within 0.03 of 0.90 on every (cell, pattern) pooled over seeds, and its hidden-site error is within 10% of the oracle's in at least 14 of 16 seeds on every (cell, pattern).",
+  "P3": "The linear conditional is miscalibrated where a gap spans a kink: |coverage - 0.90| > 0.03 on (T0.3_h1_L32, gap16), pooled over seeds.",
+  "P4": "The posterior MEAN is not where the nonlinear model wins: on (T0.3_h1_L32, gap16) the ratio of the linear to the oracle hidden-site error (seed means) is in [0.9, 1.1].",
+  "P5": "The UNCERTAINTY is: on (T0.3_h1_L32, gap16) the linear 90% interval is at least 10% wider than the oracle's (ratio of seed-mean widths >= 1.1)."
+ },
+ "predeclared_analysis": "inpainting.csv: per (cell, pattern, arm) pooled coverage and mean width over seeds; hidden-site error ratios per seed and of seed means; a failed rebuild (a failed E33 fit) counts against every clause it touches; read by tools/make_extension_numbers.py.",
+ "seeds": {
+  "confirmatory": "0-15",
+  "dev": "0 (smoke only, --quick: 16 chains, grid 201)"
+ },
+ "provenance_note": "Written after E33 was read and after ONE tiny smoke run (seed 0, 16 chains, gap8 only, grid 201, --quick) had been looked at: its hidden-site errors were within 1% across all arms and the linear interval was wider (2.76 against 2.30). P4 was ORIGINALLY 'linear error >= 1.3 x oracle on gap16'; that glimpse made it implausible, so P4 and P5 were rewritten to what is actually expected (the benefit is the uncertainty, not the mean) before the full run. P1-P3 were written before that glimpse and are unchanged.",
+ "resources": "laptop, one core per cell; about 15 minutes in all (BP and FFBS only, no EM)",
+ "status": "REGISTERED and PREDECLARED 2026-10-08, before the confirmatory run; not yet run",
+ "registered": "2026-10-08"
+}

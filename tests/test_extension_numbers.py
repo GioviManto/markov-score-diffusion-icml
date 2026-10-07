@@ -228,3 +228,48 @@ def test_e43_refuses_different_test_bundles():
     dA["test_bundle"] = "x"
     with pytest.raises(ValueError):
         men.read_e43(dA, d33, dB)
+
+
+# --------------------------------------------------------------------------- E45
+def _e45(oracle_cov=0.90, site_cov=0.90, lin_cov=0.80, site_err=1.02, lin_err=1.0, lin_width=1.25, n=16, fail_site_seed=None):
+    rows = []
+    for cell in ("T0.3_h1_L32", "T1_iso_L32"):
+        for pattern in ("random50", "gap8", "gap16"):
+            for s in range(n):
+                base = 0.5 * (1 + 0.01 * s)
+                for arm, cov, err, wid in (("oracle", oracle_cov, 1.0, 2.0), ("em_pair_quartic", site_cov, site_err, 2.05),
+                                           ("em_tilted_spline", site_cov, 1.05, 2.1), ("em_mixture", 0.88, 1.2, 2.3),
+                                           ("linear", lin_cov, lin_err, 2.0 * lin_width)):
+                    failed = int(arm == "em_pair_quartic" and fail_site_seed == s)
+                    rows.append(dict(cell=cell, seed=s, pattern=pattern, arm=arm, failed=failed, rel_err=np.nan if failed else base * err,
+                                     coverage90=np.nan if failed else cov, width90=wid))
+    return pd.DataFrame(rows)
+
+
+def test_e45_all_confirmed_on_a_constructed_table():
+    assert set(_verdicts(men.read_e45(_e45())).values()) == {"CONFIRMED"}
+
+
+def test_e45_p1_falls_when_the_oracle_is_miscalibrated():
+    assert _verdicts(men.read_e45(_e45(oracle_cov=0.80)))["P1"] == "FALSIFIED"
+
+
+def test_e45_p2_falls_on_a_coverage_miss_or_an_error_miss():
+    assert _verdicts(men.read_e45(_e45(site_cov=0.80)))["P2"] == "FALSIFIED"
+    assert _verdicts(men.read_e45(_e45(site_err=1.3)))["P2"] == "FALSIFIED"
+
+
+def test_e45_p3_falls_when_the_linear_intervals_are_calibrated():
+    assert _verdicts(men.read_e45(_e45(lin_cov=0.90)))["P3"] == "FALSIFIED"
+
+
+def test_e45_p4_falls_when_the_linear_mean_is_much_worse():
+    assert _verdicts(men.read_e45(_e45(lin_err=1.5)))["P4"] == "FALSIFIED"
+
+
+def test_e45_p5_falls_when_the_linear_interval_is_not_wider():
+    assert _verdicts(men.read_e45(_e45(lin_width=1.02)))["P5"] == "FALSIFIED"
+
+
+def test_e45_a_failed_rebuild_counts_against():
+    assert _verdicts(men.read_e45(_e45(fail_site_seed=3)))["P2"] == "FALSIFIED"

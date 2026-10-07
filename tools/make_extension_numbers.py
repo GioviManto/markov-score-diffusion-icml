@@ -33,6 +33,13 @@ E43 (experiments/registry/E43.json): the price and the benefit of an unrestricte
   P6  M = 2048: loglinear below the tilted spline and below the mixture, each in >= 7/8 seeds
   P7  the seed-mean ratio loglinear / site energy is above 1 at M = 128 and below 1 at M = 2048
 
+E45 (experiments/registry/E45.json): inpainting with E33's frozen fitted kernels (laptop, FFBS).
+  P1  oracle 90% interval coverage in [0.87, 0.93] on every (cell, pattern), pooled over seeds
+  P2  site energy: coverage within 0.03 of 0.90 on every (cell, pattern), and hidden-site error within 10% of the oracle's in >= 14/16 seeds
+  P3  linear conditional: |coverage - 0.90| > 0.03 on (T0.3_h1_L32, gap16)
+  P4  (T0.3_h1_L32, gap16): linear error / oracle error (seed means) in [0.9, 1.1]
+  P5  (T0.3_h1_L32, gap16): linear 90% interval width / oracle width (seed means) >= 1.1
+
 A fit that raised in EM is a FAILED row (E33 amendment 3): it counts against every clause it touches and never for one.
 The test bundles of E41 and E33 are compared by hash; a mismatch stops the reading.
 """
@@ -161,6 +168,40 @@ def read_e42(tab, failed):
     return rows
 
 
+# --------------------------------------------------------------------------- E45
+def read_e45(d):
+    rows = []
+    cp = sorted(set(zip(d.cell, d.pattern)))
+    cov = d.groupby(["cell", "pattern", "arm"]).coverage90.mean()                 # NaN rows (failed rebuilds) are skipped by mean
+    wid = d.groupby(["cell", "pattern", "arm"]).width90.mean()
+    n_failed = d[d.failed == 1].groupby(["cell", "pattern", "arm"]).size()
+    err = {k: g.pivot_table(index="seed", columns="arm", values="rel_err", dropna=False) for k, g in d.groupby(["cell", "pattern"])}
+    ns = d.seed.nunique()
+    # P1
+    ok, notes = True, []
+    for c, p in cp:
+        v = float(cov[(c, p, "oracle")]); ok &= 0.87 <= v <= 0.93; notes.append(f"{c}/{p}: {v:.3f}")
+    rows.append(row("E45", "P1", "oracle 90% interval coverage in [0.87, 0.93] on every (cell, pattern)", np.nan, None, len(cp), bool(ok), "; ".join(notes)))
+    # P2
+    ok, notes = True, []
+    for c, p in cp:
+        v = float(cov[(c, p, "em_pair_quartic")]) if (c, p, "em_pair_quartic") in cov.index else np.nan
+        e = err[(c, p)]
+        k = int((e["em_pair_quartic"] <= 1.10 * e["oracle"]).sum())
+        good = bool(abs(v - 0.90) <= 0.03 and k >= _need(ns, 14 / 16) and n_failed.get((c, p, "em_pair_quartic"), 0) == 0)
+        ok &= good; notes.append(f"{c}/{p}: coverage {v:.3f}, error within 10% in {k}/{ns}")
+    rows.append(row("E45", "P2", "site energy: coverage within 0.03 of 0.90 and error within 10% of the oracle's in >= 14/16 seeds, every (cell, pattern)", np.nan, None, len(cp), bool(ok), "; ".join(notes)))
+    key = ("T0.3_h1_L32", "gap16")
+    if key in err:
+        v = float(cov[(*key, "linear")])
+        rows.append(row("E45", "P3", "linear: |coverage - 0.90| > 0.03 on (T0.3_h1_L32, gap16)", v, None, ns, bool(abs(v - 0.90) > 0.03), f"oracle {float(cov[(*key, 'oracle')]):.3f}"))
+        r = float(err[key]["linear"].mean() / err[key]["oracle"].mean())
+        rows.append(row("E45", "P4", "linear error / oracle error in [0.9, 1.1] on (T0.3_h1_L32, gap16)", r, None, ns, bool(0.9 <= r <= 1.1)))
+        wr = float(wid[(*key, "linear")] / wid[(*key, "oracle")])
+        rows.append(row("E45", "P5", "linear 90% interval width / oracle width >= 1.1 on (T0.3_h1_L32, gap16)", wr, None, ns, bool(wr >= 1.1)))
+    return rows
+
+
 # --------------------------------------------------------------------------- E43
 def _need(ns, frac):
     return max(1, math.ceil(frac * ns))
@@ -263,6 +304,7 @@ def main() -> int:
     ap.add_argument("--e33k", default="outputs/hpc_E33k_s*/kernels.csv")
     ap.add_argument("--e33q", default="outputs/hpc_E33q_s*/kernels.csv")
     ap.add_argument("--e46", default="outputs/hpc_E46_s*/symmetry.csv")
+    ap.add_argument("--e45", default="outputs/E45/inpainting.csv")
     ap.add_argument("--e43a", default="outputs/hpc_E43a_s*/kernels.csv")
     ap.add_argument("--e43b", default="outputs/hpc_E43b_s*/kernels.csv")
     ap.add_argument("--e35x", default="outputs/hpc_E35x_s*/augmented.csv")
@@ -272,6 +314,7 @@ def main() -> int:
     d41, d33k, d33q, d42 = _load(a.e41), _load(a.e33k), _load(a.e33q), _load(a.e42)
     d46, d35x = _load(a.e46), _load(a.e35x)
     d43a, d43b = _load(a.e43a), _load(a.e43b)
+    d45 = _load(a.e45)
     if not d41.empty:
         rows += read_e41(d41, pd.concat([d33k, d33q], ignore_index=True))
     if not d42.empty:
@@ -279,6 +322,8 @@ def main() -> int:
         rows += read_e42(tab, failed)
     if not d46.empty:
         rows += read_e46(d46, d35x)
+    if not d45.empty:
+        rows += read_e45(d45)
     if not d43a.empty or not d43b.empty:
         rows += read_e43(d43a, pd.concat([d33k, d33q], ignore_index=True), d43b)
     if not rows:
