@@ -56,6 +56,14 @@ SHARDS = {
     **{f"hpc_E42_s{k}": ("kernels.csv", ["cell", "seed", "n_chains", "arm", "selection"],
                          {(c, s, n, "em_pair_quartic", sel) for c in ("T1_iso_L32", "T2_iso_L32") for s in range(k, k + 4)
                           for n in (8192, 32768) for sel in ("risk", "evidence")}) for k in (0, 4, 8, 12)},
+    # E43 (registered 8 Oct): lab A on E33's cells, lab B on the Laplace-bond chain
+    **{f"hpc_E43a_s{k}": ("kernels.csv", ["cell", "seed", "n_chains", "arm", "selection"],
+                          {(c, s, n, "em_loglinear", sel) for c in ("T0.3_h1_L32", "T1_iso_L32") for s in range(k, k + 4)
+                           for n in (128, 512, 2048) for sel in ("risk", "evidence")}) for k in (0, 4, 8, 12)},
+    **{f"hpc_E43b_s{k}": ("kernels.csv", ["cell", "seed", "n_chains", "arm", "selection"],
+                          {("LAP_B_L32", s, n, a, sel) for s in range(k, k + 4) for n in (128, 512, 2048)
+                           for a in ("em_loglinear", "em_pair_quartic", "em_tilted_spline", "em_mixture") for sel in ("risk", "evidence")}
+                          | {("LAP_B_L32", s, n, "lmmse_true", "risk") for s in range(k, k + 4) for n in (128, 512, 2048)}) for k in (0, 4)},
     # E46 (registered 8 Oct): the b = 0 symmetry diagnostic, two shards of eight seeds
     **{f"hpc_E46_s{k}": ("symmetry.csv", ["b", "seed", "n_chains", "arm"],
                          {(0.0, s, n, a) for s in range(k, k + 8) for n in (512, 2048) for a in ("em_first_order_sym", "em_first_order_2m")}) for k in (0, 8)},

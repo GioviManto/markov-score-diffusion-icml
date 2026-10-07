@@ -1,0 +1,24 @@
+{
+ "id": "E43",
+ "script": "experiments/e43_free_kernel.py",
+ "hypothesis": "The field report's open question to Jerome and Marc: the Gaussian-bond-plus-site-energy kernel is the whole class of discretised gradient SPDEs and is exactly specified for phi^4 with five parameters; would an unrestricted pair kernel be worth its parameters? E43 fits the most agnostic family (a log-linear conditional kernel with a 2D cubic-spline score, 10 x 10 = 100 coefficients, exact EM, no penalty; markov_score.loglinear_kernel) where the site energy is exactly specified (what generality costs) and on a chain outside the tilted-walk class (what it buys).",
+ "design": "The frozen e33 driver with two in-process additions (the arm em_loglinear and the cell LAP_B_L32; e33_field_learning.py itself is unchanged), sizes M in (128, 512, 2048), the E33 EM ladder, risk selection. Lab A: E33's cells T0.3_h1_L32 and T1_iso_L32, arm em_loglinear only, seeds 0-15 (four shards of four: e43a-s0, s4, s8, s12); comparators are E33's frozen em_pair_quartic, em_tilted_spline and em_mixture on the same seeds (bundle hashes compared at read time). Lab B: a Laplace bond on a double-well site energy, W(a, a') = -|a' - a| / 0.40 - 2.0 (V(a) + V(a')) / 2, V = (a^2 - 1)^2 / 4 on the registered 401-point grid (markov_score.grid_pair_chain: exact sampler, exact oracle), calibrated BEFORE any fit to the phi^4 base cell's scale (variance 0.66, lag-1 correlation 0.84, excess kurtosis -1.29 against 0.85 and -1.35); L = 32; seeds 0-7 (two shards of four: e43b-s0, s4); arms em_loglinear, em_pair_quartic, em_tilted_spline, em_mixture fitted fresh, with the linear floor lmmse_true of the chain's own covariance.",
+ "predeclared_predictions": {
+  "P1": "Lab A, the price of generality: at M = 128 loglinear / site energy is at least 2 in at least 14 of 16 seeds on both cells.",
+  "P2": "Lab A, it converges toward the specified model: the seed-mean ratio loglinear / site energy is smaller at M = 2048 than at M = 128 on both cells, and below 2 at M = 2048.",
+  "P3": "Lab A, it still represents the nonlinear drift: at M = 2048 loglinear is below the mixture in at least 14 of 16 seeds on both cells.",
+  "P4": "Lab A, parameters cost: at M = 128 loglinear is above the 25-parameter tilted spline in at least 12 of 16 seeds on both cells.",
+  "P5": "Lab B, the benefit of generality: at M = 2048 loglinear is below the site energy in at least 7 of 8 seeds, and the seed-mean ratio site energy / loglinear is at least 1.25.",
+  "P6": "Lab B: at M = 2048 loglinear is below the tilted spline and below the mixture, each in at least 7 of 8 seeds.",
+  "P7": "Lab B, the crossover: the seed-mean ratio loglinear / site energy is above 1 at M = 128 and below 1 at M = 2048."
+ },
+ "predeclared_analysis": "kernels.csv (risk-selected rows) of the shards; lab A paired per (cell, seed) with E33's frozen fits at the same M (test-bundle hashes compared), lab B within the run; counts scale with the seeds present; a failed fit (NaN risk) counts against every clause it touches; read by tools/make_extension_numbers.py.",
+ "seeds": {
+  "confirmatory": "lab A 0-15, lab B 0-7",
+  "dev": "10000 (smoke only)"
+ },
+ "provenance_note": "Written after E33 was read (the question comes from its report) and before any E43 cell ran. The thresholds are judgements, not derived: P1, P2 and P4 are about a variance price the data have not yet shown for this kernel, so a falsified clause is information, not a failure. The lab-B parameters (bond 0.40, depth 2.0) were chosen from the chain's own variance, lag-1 correlation and kurtosis, never from a fit.",
+ "resources": "cluster, defq, 6 x 8 cpus, 24G; lab A 8 h (24 fits per shard), lab B 10 h (12 cells of four arms per shard; M = 2048 about 3 h)",
+ "status": "REGISTERED and PREDECLARED 2026-10-08, before any E43 cell ran; not yet submitted",
+ "registered": "2026-10-08"
+}

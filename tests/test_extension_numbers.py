@@ -159,3 +159,72 @@ def test_e46_a_missing_fit_counts_against():
 def test_e46_refuses_different_test_bundles():
     with pytest.raises(ValueError):
         men.read_e46(*_e46(bundle_ok=False))
+
+
+# --------------------------------------------------------------------------- E43
+def _rows(cell, arm, n, risks, bundle="h"):
+    return [dict(cell=cell, seed=i, n_chains=n, arm=arm, selection="risk", risk=r, test_bundle=f"{bundle}{cell}{n}{i}") for i, r in enumerate(risks)]
+
+
+def _e43(price128=3.0, price2048=1.3, vs_mixture=0.5, vs_spline128=1.5, lab_b=(1.4, 0.7, 1.3), n=16, nb=8):
+    """Lab A: pair risk 0.01 (jittered), loglinear = ratio x pair; mixture and spline from the given ratios. Lab B: ratios site-energy-relative."""
+    rng = np.random.default_rng(2)
+    dA, d33 = [], []
+    for cell in ("T0.3_h1_L32", "T1_iso_L32"):
+        for M, ratio in ((128, price128), (2048, price2048)):
+            pair = 0.01 * np.exp(rng.normal(0, 0.05, n))
+            dA += _rows(cell, "em_loglinear", M, pair * ratio)
+            d33 += _rows(cell, "em_pair_quartic", M, pair)
+            d33 += _rows(cell, "em_tilted_spline", M, pair * ratio / vs_spline128 if M == 128 else pair * 2)
+            d33 += _rows(cell, "em_mixture", M, pair * ratio / vs_mixture if M == 2048 else pair * 9)
+    dB = []
+    r128, r2048, vs = lab_b
+    for M, ratio in ((128, r128), (2048, r2048)):
+        pair = 0.02 * np.exp(rng.normal(0, 0.05, nb))
+        ll = pair * ratio
+        dB += _rows("LAP_B_L32", "em_pair_quartic", M, pair, "b") + _rows("LAP_B_L32", "em_loglinear", M, ll, "b")
+        dB += _rows("LAP_B_L32", "em_tilted_spline", M, ll * vs, "b") + _rows("LAP_B_L32", "em_mixture", M, ll * vs, "b")
+    return pd.DataFrame(dA), pd.DataFrame(d33), pd.DataFrame(dB)
+
+
+def test_e43_all_confirmed_on_a_constructed_table():
+    assert set(_verdicts(men.read_e43(*_e43())).values()) == {"CONFIRMED"}
+
+
+def test_e43_p1_falls_when_generality_is_cheap_at_small_data():
+    assert _verdicts(men.read_e43(*_e43(price128=1.2)))["P1"] == "FALSIFIED"
+
+
+def test_e43_p2_falls_when_the_price_does_not_shrink():
+    assert _verdicts(men.read_e43(*_e43(price128=3.0, price2048=3.5)))["P2"] == "FALSIFIED"
+
+
+def test_e43_p3_falls_when_the_mixture_is_better_at_2048():
+    assert _verdicts(men.read_e43(*_e43(vs_mixture=2.0)))["P3"] == "FALSIFIED"
+
+
+def test_e43_p4_falls_when_loglinear_beats_the_spline_at_128():
+    assert _verdicts(men.read_e43(*_e43(vs_spline128=0.5)))["P4"] == "FALSIFIED"
+
+
+def test_e43_lab_b_p5_falls_when_the_site_energy_still_wins():
+    v = _verdicts(men.read_e43(*_e43(lab_b=(1.4, 1.1, 1.3))))
+    assert v["P5"] == "FALSIFIED" and v["P7"] == "FALSIFIED"
+
+
+def test_e43_lab_b_p6_falls_when_the_mixture_is_better():
+    assert _verdicts(men.read_e43(*_e43(lab_b=(1.4, 0.7, 0.8))))["P6"] == "FALSIFIED"
+
+
+def test_e43_a_failed_fit_counts_against():
+    dA, d33, dB = _e43()
+    bad = dA.index[(dA.cell == "T0.3_h1_L32") & (dA.n_chains == 2048) & (dA.seed < 3)]
+    dA.loc[bad, "risk"] = np.nan                                  # 13/16 < 14/16 below the mixture
+    assert _verdicts(men.read_e43(dA, d33, dB))["P3"] == "FALSIFIED"
+
+
+def test_e43_refuses_different_test_bundles():
+    dA, d33, dB = _e43()
+    dA["test_bundle"] = "x"
+    with pytest.raises(ValueError):
+        men.read_e43(dA, d33, dB)

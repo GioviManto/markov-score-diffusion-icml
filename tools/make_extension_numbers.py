@@ -22,6 +22,17 @@ E46 (experiments/registry/E46.json): the b = 0 gain of the augmented kernel, tes
   P2  the mean log(sym / first-order) has an interval entirely below 0 at both M
   P3  the upper end of the interval of the mean log(sym / 2m) is below log 1.1 at both M
 
+E43 (experiments/registry/E43.json): the price and the benefit of an unrestricted kernel (em_loglinear).
+  Lab A (E33's cells T0.3_h1_L32, T1_iso_L32; comparators are E33's frozen fits on the same seeds)
+  P1  M = 128: loglinear / site energy >= 2 in >= 14/16 seeds on both cells
+  P2  the seed-mean ratio loglinear / site energy is smaller at 2048 than at 128 on both cells, and below 2 at 2048
+  P3  M = 2048: loglinear below the mixture in >= 14/16 seeds on both cells
+  P4  M = 128: loglinear above the tilted spline in >= 12/16 seeds on both cells
+  Lab B (the Laplace-bond chain, all arms in the run)
+  P5  M = 2048: loglinear below the site energy in >= 7/8 seeds, seed-mean ratio site energy / loglinear >= 1.25
+  P6  M = 2048: loglinear below the tilted spline and below the mixture, each in >= 7/8 seeds
+  P7  the seed-mean ratio loglinear / site energy is above 1 at M = 128 and below 1 at M = 2048
+
 A fit that raised in EM is a FAILED row (E33 amendment 3): it counts against every clause it touches and never for one.
 The test bundles of E41 and E33 are compared by hash; a mismatch stops the reading.
 """
@@ -150,6 +161,60 @@ def read_e42(tab, failed):
     return rows
 
 
+# --------------------------------------------------------------------------- E43
+def _need(ns, frac):
+    return max(1, math.ceil(frac * ns))
+
+
+def read_e43(dA, d33, dB):
+    rows = []
+    if not dA.empty:
+        loglin = {n: _risk_rows(dA, "em_loglinear", n) for n in (128, 512, 2048)}
+        comp = {a: {n: _risk_rows(d33, a, n) for n in (128, 2048)} for a in ("em_tilted_spline", "em_mixture", "em_pair_quartic")}
+        cells = sorted(set(dA.cell))
+        for n in (128, 2048):
+            ref = comp["em_pair_quartic"][n].reindex(loglin[n].index)
+            if (ref.test_bundle.values != loglin[n].test_bundle.values).any():
+                raise ValueError("E43 lab A and E33 were scored on different test bundles; the paired reading is not valid")
+        ns = loglin[128].index.get_level_values("seed").nunique()
+        # P1
+        ok, notes = True, []
+        for c in cells:
+            m, o = loglin[128].loc[c].risk, comp["em_pair_quartic"][128].reindex(loglin[128].index).loc[c].risk
+            k = int((m / o >= 2).sum()); ok &= k >= _need(ns, 14 / 16); notes.append(f"{c}: {k}/{len(m)}")
+        rows.append(row("E43", "P1", f"lab A, M = 128: loglinear / site energy >= 2 in >= {_need(ns, 14 / 16)}/{ns} seeds on both cells", np.nan, None, len(cells), bool(ok), "; ".join(notes)))
+        # P2
+        ok, notes = True, []
+        for c in cells:
+            r = {n: float(loglin[n].loc[c].risk.mean() / comp["em_pair_quartic"][n].reindex(loglin[n].index).loc[c].risk.mean()) for n in (128, 2048)}
+            ok &= bool(r[2048] < r[128] and r[2048] < 2.0); notes.append(f"{c}: {r[128]:.2f} -> {r[2048]:.2f}")
+        rows.append(row("E43", "P2", "lab A: seed-mean loglinear / site energy smaller at 2048 than at 128, and < 2 at 2048", np.nan, None, len(cells), bool(ok), "; ".join(notes)))
+        # P3, P4
+        for pred, arm, n, sign, frac, label in (("P3", "em_mixture", 2048, -1, 14 / 16, "below the mixture"), ("P4", "em_tilted_spline", 128, +1, 12 / 16, "above the tilted spline")):
+            ok, notes = True, []
+            for c in cells:
+                m = loglin[n].loc[c].risk
+                o = comp[arm][n].reindex(loglin[n].index).loc[c].risk
+                k = int((m < o).sum()) if sign < 0 else int((m > o).sum())
+                ok &= k >= _need(ns, frac); notes.append(f"{c}: {k}/{len(m)}")
+            rows.append(row("E43", pred, f"lab A, M = {n}: loglinear {label} in >= {_need(ns, frac)}/{ns} seeds on both cells", np.nan, None, len(cells), bool(ok), "; ".join(notes)))
+    if not dB.empty:
+        R = {a: {n: _risk_rows(dB, a, n) for n in (128, 2048)} for a in ("em_loglinear", "em_pair_quartic", "em_tilted_spline", "em_mixture")}
+        ns = R["em_loglinear"][2048].index.get_level_values("seed").nunique()
+        need = _need(ns, 7 / 8)
+        ll, pq = R["em_loglinear"][2048].risk, R["em_pair_quartic"][2048].reindex(R["em_loglinear"][2048].index).risk
+        k5, ratio = int((ll < pq).sum()), float(pq.mean() / ll.mean())
+        rows.append(row("E43", "P5", f"lab B, M = 2048: loglinear below the site energy in >= {need}/{ns} seeds and mean ratio site energy / loglinear >= 1.25", ratio, k5, len(ll), bool(k5 >= need and ratio >= 1.25)))
+        ok, notes = True, []
+        for a in ("em_tilted_spline", "em_mixture"):
+            o = R[a][2048].reindex(R["em_loglinear"][2048].index).risk
+            k = int((ll < o).sum()); ok &= k >= need; notes.append(f"{a}: {k}/{len(ll)}")
+        rows.append(row("E43", "P6", f"lab B, M = 2048: loglinear below the tilted spline and the mixture, each in >= {need}/{ns} seeds", np.nan, None, 2, bool(ok), "; ".join(notes)))
+        r = {n: float(R["em_loglinear"][n].risk.mean() / R["em_pair_quartic"][n].reindex(R["em_loglinear"][n].index).risk.mean()) for n in (128, 2048)}
+        rows.append(row("E43", "P7", "lab B: seed-mean loglinear / site energy above 1 at M = 128 and below 1 at M = 2048", r[2048], None, 2, bool(r[128] > 1 > r[2048]), f"M = 128: {r[128]:.2f}; M = 2048: {r[2048]:.2f}"))
+    return rows
+
+
 # --------------------------------------------------------------------------- E46
 def read_e46(d46, d35):
     """d46: symmetry.csv rows (arms em_first_order_sym, em_first_order_2m); d35: E35x's frozen rows (b = 0)."""
@@ -198,12 +263,15 @@ def main() -> int:
     ap.add_argument("--e33k", default="outputs/hpc_E33k_s*/kernels.csv")
     ap.add_argument("--e33q", default="outputs/hpc_E33q_s*/kernels.csv")
     ap.add_argument("--e46", default="outputs/hpc_E46_s*/symmetry.csv")
+    ap.add_argument("--e43a", default="outputs/hpc_E43a_s*/kernels.csv")
+    ap.add_argument("--e43b", default="outputs/hpc_E43b_s*/kernels.csv")
     ap.add_argument("--e35x", default="outputs/hpc_E35x_s*/augmented.csv")
     ap.add_argument("--out", default="reports/numbers")
     a = ap.parse_args()
     rows = []
     d41, d33k, d33q, d42 = _load(a.e41), _load(a.e33k), _load(a.e33q), _load(a.e42)
     d46, d35x = _load(a.e46), _load(a.e35x)
+    d43a, d43b = _load(a.e43a), _load(a.e43b)
     if not d41.empty:
         rows += read_e41(d41, pd.concat([d33k, d33q], ignore_index=True))
     if not d42.empty:
@@ -211,6 +279,8 @@ def main() -> int:
         rows += read_e42(tab, failed)
     if not d46.empty:
         rows += read_e46(d46, d35x)
+    if not d43a.empty or not d43b.empty:
+        rows += read_e43(d43a, pd.concat([d33k, d33q], ignore_index=True), d43b)
     if not rows:
         print("nothing to read yet"); return 0
     R = pd.DataFrame(rows)
