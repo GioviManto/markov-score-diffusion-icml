@@ -13,7 +13,7 @@
   "dev": "--quick"
  },
  "resources": "laptop (primary, task_info-sampled) and cluster job 686874 (cross-check, statm-sampled)",
- "status": "FROZEN E38 2026-10-06T20:48:12Z; REGISTERED and PREDECLARED 2026-10-06, before any measurement; the last quantity in the note's section 9.8 not yet measured; SUBMITTED 2026-10-06 (686874); laptop run COMPLETE and read 2026-10-06: P1, P2 confirmed",
+ "status": "FROZEN E38 2026-10-06T20:48:12Z; REGISTERED and PREDECLARED 2026-10-06, before any measurement; the last quantity in the note's section 9.8 not yet measured; SUBMITTED 2026-10-06 (686874); laptop run COMPLETE and read 2026-10-06: P1, P2 confirmed; Linux cross-check 686874 COMPLETE and read 2026-10-07: same verdicts",
  "registered": "2026-10-06",
  "design_refinement": "2026-10-06, before any measurement: the method first written (ru_maxrss before and after) is a high-water mark and read +0.0 MB for a small transformer in the laptop smoke run, because the import had peaked higher; replaced by sampling the current RSS, which needs Linux's /proc/self/statm, hence a small cluster job instead of the laptop. Predictions unchanged.",
  "hpc_runs": {
@@ -27,21 +27,28 @@
   "P1": "CONFIRMED: grid BP's peak inference memory has log-log slope 0.955 in the batch (65.6, 266.0, 926.9 MB at B = 128, 512, 2048; L = 32) and 0.862 in the length (266.0, 512.7, 879.2 MB at L = 32, 64, 128; B = 512), both in [0.8, 1.2]. It is about five message-sized arrays: peak / (B L N_g x 8 bytes) = 4.4-5.3 on every cell; and linear in the grid too (slope 0.988 over N_g = 201, 401, 801).",
   "P2": "CONFIRMED: at B = 512, L = 32, N_g = 401 grid BP takes 266.0 MB per posterior-mean call, 1.8x the largest network (transformer 146.6 MB; window 40.9, unet 55.8, bigru 58.7, tcn 63.3, mlp 1.9).",
   "unregistered": "Training: one EM E-step over M chains takes 234 MB at M = 512 and 252 MB at M = 2048 -- flat in M, because the protocol's E-step runs in chunks of 256 chains; one network training step at the protocol's batch of 64 takes 2-66 MB. Grid BP's inference memory could be cut the same way (chunk) at no cost in the answer; E24 timed it unchunked.",
-  "cross_check": "job 686874 (Linux, statm-sampled, all nine inference cells) is queued; when it lands it is compared, not used to choose."
+  "cross_check": "Read 2026-10-07 ~09:50 CEST: job 686874 (Linux cnode08, deployment b3e9b34, statm-sampled, all nine inference cells; outputs/hpc_E38, frozen) COMPLETED 02:28, 73/73 measurements, empty stderr. The same predeclared analysis gives the same verdicts: P1 CONFIRMED, slope 1.012 in the batch (63.0, 256.9, 1041.8 MB) and 0.990 in the length (256.9, 512.1, 1013.6 MB); P2 CONFIRMED, grid BP 256.9 MB = 4.2x the largest network (unet 60.9 MB). Grid BP agrees with the laptop cell by cell to within 0.93-1.15x; peak / (B L N_g x 8 bytes) = 5.0-5.2 on every cell; slope 0.992 in the grid. The two cells the laptop left out: 2036.5 MB at (L, B) = (64, 2048) and 4041.4 MB at (128, 2048), slope 0.978 in L at B = 2048, so the linear law holds up to 4 GB. The networks read lower on Linux (transformer 51.7 vs 146.6 MB), so the gap widens there; grid BP is above every network in all nine cells (2.2-4.9x). The laptop's lower length slope (0.862) is the only visible platform difference: its (128, 512) cell reads 879 MB against Linux's 1014, consistent with the compression caveat of design_refinement_2. Reported, not used to choose."
  },
  "frozen_outputs": {
   "outputs/E38/memory.csv": "fbc43e9b3febc0276961cf05fe371e002d1683baa37c30b091557bcc0fdee76c",
-  "outputs/E38/params_memory.json": "92e60b43086f48373b166302f8ce5e3cc1f870175a64fb299266ab2b29ea6ec0"
+  "outputs/E38/params_memory.json": "92e60b43086f48373b166302f8ce5e3cc1f870175a64fb299266ab2b29ea6ec0",
+  "outputs/hpc_E38/memory.csv": "4d845e24b1781588b8b5fd129e0ea55871ef124dc68f374db959ad32a203a39f",
+  "outputs/hpc_E38/params_memory.json": "920b7c4b47cd7ebae725650d9cdf3085b9503a8dbbe60ff91839723a5a7b3c02"
  },
  "frozen_at": {
-  "E38": "2026-10-06T20:48:12Z"
+  "E38": "2026-10-06T20:48:12Z",
+  "hpc_E38": "2026-10-07T07:44:25Z"
  },
  "frozen_commit": {
-  "E38": "fdfb159336fc98500ab5dbc07d16b99470d9762c"
+  "E38": "fdfb159336fc98500ab5dbc07d16b99470d9762c",
+  "hpc_E38": "ea14e1dc5364bb19864732c75622732db140d450"
  },
  "frozen_run_commits": {
   "E38": [
    "fdfb159"
+  ],
+  "hpc_E38": [
+   "b3e9b34"
   ]
  }
 }

@@ -823,7 +823,10 @@ note's list, was measured by E38 (peak resident memory of one call, sampled duri
 process): grid BP needs about five message-sized arrays, $266$\,MB per posterior-mean call at $B=512$, $L=32$,
 $N_g=401$, linear in $B$, $L$ and $N_g$ (slopes $0.96$, $0.86$, $0.99$; both predictions confirmed), against
 $2$ to $147$\,MB for the six networks; an EM E-step stays at about $250$\,MB whatever $M$, because it runs in
-chunks of $256$ chains, while a network training step takes $2$ to $66$\,MB.
+chunks of $256$ chains, while a network training step takes $2$ to $66$\,MB. A Linux node, sampling
+\texttt{/proc/self/statm} instead of macOS's \texttt{task\_info}, gives the same verdicts (slopes $1.01$ and $0.99$; grid BP
+$257$\,MB against at most $61$\,MB) and measures the two cells the laptop could not hold: $2.0$\,GB at $L=64$ and $4.0$\,GB at
+$L=128$ for $B=2048$, still linear.
 
 \subsection{The clean-data interface (E34, P2 and P3)}\label{sec:conf-clean}
 

@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-10-07 02:28:35",
+  "git_commit": "b3e9b346bbd9ff2b2b363cbb8dcc8e863c466076",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "49889c4430ab66eb97d51e066368fecacd0242899dd088c6056ef914c7dc402b",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode08",
+  "slurm_job_id": "686874",
+  "slurm_array_task_id": "",
+  "cpu_count": "40",
+  "blas_threads": "1",
+  "settings": {
+    "lengths": [
+      32,
+      64,
+      128
+    ],
+    "batches": [
+      128,
+      512,
+      2048
+    ],
+    "grids": [
+      201,
+      401,
+      801
+    ],
+    "base_grid": 401,
+    "base_batch": 512,
+    "base_length": 32,
+    "em_sizes": [
+      512,
+      2048
+    ],
+    "net_train_steps": 20,
+    "level_index": 6
+  },
+  "quick": false,
+  "workers": 1
+}
