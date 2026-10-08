@@ -15,7 +15,7 @@
  },
  "provenance_note": "NOT a pre-data registration in the strict sense: E36's two seeds are frozen and known (MDN 0.0229 against the site energy's 0.0404 on seed 0, 0.0933 against 0.0405 on seed 1). The 12/16 threshold and the at-cap rule for P2 are written with that knowledge; registered before any E36x cell ran.",
  "resources": "cluster, defq, 2 x 24 cpus, 64G, 23:50; the stride-1 cell with the MDN and the mixture to 2000 iterations is the longest, about 8 laptop-hours",
- "status": "REGISTERED and PREDECLARED 2026-10-05 (evening), before submission; the user asked to 'send all the jobs we need'; SUBMITTED 2026-10-05 (684971, 684972)",
+ "status": "FROZEN hpc_E36x_s0 2026-10-08T00:10:42Z; REGISTERED and PREDECLARED 2026-10-05 (evening), before submission; the user asked to 'send all the jobs we need'; SUBMITTED 2026-10-05 (684971, 684972); BOTH SHARDS COMPLETE 2026-10-07/08 (684971 3 h 03, 684972 2 h 13; 96/96 keys each, clean at 7e850ba), FROZEN 2026-10-08, READ: P1 and P3 CONFIRMED; P2 UNRESOLVED as registered (the MDN is capped in 15/16 stride-4 fits), in the direction of its clause",
  "registered": "2026-10-05",
  "hpc_runs": {
   "deployment": "7e850ba-20261005T203204Z (hpc/.deploy_7e850ba.env)",
@@ -23,5 +23,34 @@
   "e36x-s0": "684971, defq, 24 cpus, 64G, 23:50 -> outputs/hpc_E36x_s0",
   "e36x-s8": "684972, defq, 24 cpus, 64G, 23:50 -> outputs/hpc_E36x_s8",
   "smoke": "both argument strings run on the laptop at --quick before deployment (E35x: 8 seeds, exit 0; E36x: one complete cell, then stopped)"
+ },
+ "frozen_outputs": {
+  "outputs/hpc_E36x_s0/clean.csv": "f84ba20f2cb8e486a697851fb17bee4a504560f5ffc0ec90c447a26b6c0a7265",
+  "outputs/hpc_E36x_s0/params_clean.json": "6dfd32b26d79f81076579570a72114480a4819845027add2aaa7f0b44b5a1d2b",
+  "outputs/hpc_E36x_s8/clean.csv": "3e96b3eb007b9690a7ddb69fc6063e5eba9709efcf6da651e87bb3df4788deee",
+  "outputs/hpc_E36x_s8/params_clean.json": "828dc3f71432cf8179403a37e92d1f24f3e625d1f90f99fdfa8f9a8809c99b7a"
+ },
+ "frozen_at": {
+  "hpc_E36x_s0": "2026-10-08T00:10:42Z",
+  "hpc_E36x_s8": "2026-10-08T00:10:42Z"
+ },
+ "frozen_commit": {
+  "hpc_E36x_s0": "4e70aeb053dc26e0bd4ed4d0ff00f446b8c3a87d",
+  "hpc_E36x_s8": "4e70aeb053dc26e0bd4ed4d0ff00f446b8c3a87d"
+ },
+ "frozen_run_commits": {
+  "hpc_E36x_s0": [
+   "7e850ba"
+  ],
+  "hpc_E36x_s8": [
+   "7e850ba"
+  ]
+ },
+ "outcome": {
+  "read": "2026-10-08 ~01:45 CEST, outputs/hpc_E36x_s0 and hpc_E36x_s8 (sixteen seeds), tools/make_replication_numbers.py as pinned before the data.",
+  "P1": "CONFIRMED, all four clauses. Stride 1: the site energy (seed mean 0.00185) and the tilted spline (0.00270) are below 0.02 in 16/16 seeds. Stride-4 / stride-1: 25.2 for the site energy and 14.2 for the spline, at least 2 in 16/16 seeds (E36's two seeds: 18-30).",
+  "P2": "UNRESOLVED, as registered: the MDN selected its last checkpoint (2000) in 15 of 16 stride-4 fits (and 16/16 at strides 1 and 2); none of the 48 converged. The registered rule therefore does not allow a verdict. The numbers are one-sided in the clause's direction: the MDN's stride-4 risk is 0.0199 against 0.0403 for the site energy and 0.0362 for the spline (ratios 0.495 and 0.551), below the site energy in 16 of 16 seeds (range 0.0095-0.0227 against 0.0393-0.0408). Because a capped fit is still improving, 0.0199 is an UPPER bound on the MDN's converged risk, so more budget can only widen the margin; the extension from 1200 to 2000 updates already took the MDN from 0.058 (E36, two seeds) to 0.020.",
+  "P3": "CONFIRMED at all three strides: the mixture's seed-mean risk is 1.026, 1.008 and 1.008 times E36's frozen floor (0.0975, 0.1578, 0.2347) at strides 1, 2, 4.",
+  "unregistered": "Seed means of the clean risk (site energy / spline / mixture / MDN) at stride 1: 0.0019 / 0.0027 / 0.100 / 0.0103; stride 2: 0.0108 / 0.0101 / 0.159 / 0.0104; stride 4: 0.0403 / 0.0362 / 0.237 / 0.0199. At stride 4 the spline is 10% BELOW the site energy (mean ratio 0.90), the first place the exactly specified 5-parameter kernel is not the best of the gradient class: K^s is no longer in the tilted-walk class, which is the misspecification the stride protocol was designed to create. The MDN is the best arm at strides 2 and 4 despite its cap, and the worst of the learned arms at stride 1 (5x the site energy)."
  }
 }

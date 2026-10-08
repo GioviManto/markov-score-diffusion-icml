@@ -568,6 +568,8 @@ the linear floor at every stride (ratio $1.007$ to $1.026$): on the field, the p
 closure even with clean data, because its drift is linear. And subsampling costs the gradient-class
 kernels a factor of $20$ to $30$ in risk but not their advantage: at stride 4 they are still at $15$ to $17\,\%$ of the floor.
 
+E36x repeats the clean part at sixteen seeds (jobs 684971 and 684972, frozen) with the neural kernel's ladder extended from $1200$ to $2000$ updates. P1 holds in all four clauses: at stride 1 the site energy ($0.0019$) and the spline ($0.0027$) are below $0.02$ in all sixteen seeds, and their stride-4 risk is $25$ and $14$ times their stride-1 risk. P3 holds: the mixture sits within $3\,\%$ of the floor at every stride ($1.026$, $1.008$, $1.008$). P2 is unresolved again, as registered, because the neural kernel still selected its last checkpoint in $15$ of the $16$ stride-4 fits and in none converged. The numbers lean one way and do so conservatively: at stride 4 the neural kernel's risk is $0.020$ against $0.040$ for the site energy and $0.036$ for the spline, below the site energy in all sixteen seeds; a fit still improving reports an upper bound, so more budget can only widen the margin (the extension from $1200$ to $2000$ updates alone cut it from $0.058$ to $0.020$). It is also the first place the exactly specified site energy is not the best gradient-class kernel: at stride 4 the spline is $10\,\%$ below it, because $K^s$ is no longer a tilted walk. At stride 1, where the clean problem is exactly specified, the neural kernel is five times worse than the site energy.
+
 \section{E33 and E34: the design}\label{sec:e33}
 
 \subsection{E33, learning through noise}
@@ -925,7 +927,7 @@ figures-first (\S28) & all seven and a summary figure: \code{reports/figures-fir
 Gaussian score / Kalman smoother (\S29 step 3) & the paper's appendix B, a proposition with its proof; measured by E39 (grid BP within $1.9\times10^{-13}$ of both) \\
 notation; metric definitions (\S29 steps 1, 2) & \code{docs/NOTATION.md} (code, paper, this report; thesis concordance); \code{docs/METRICS.md} \\
 global latent and its repair (\S8, fig.~7) & E35 (\S\ref{sec:conf}): bias measured, repair by state augmentation confirmed (P2, P3); E35x at sixteen seeds: P2--P4 confirmed, P1 favourably falsified \\
-subsampling a fine lattice & E36 (\S\ref{sec:stride}): kernel $K^s$ exact; P1, P2 confirmed \\
+subsampling a fine lattice & E36 (\S\ref{sec:stride}): kernel $K^s$ exact; P1, P2 confirmed; E36x at sixteen seeds: P1, P3 confirmed, P2 unresolved (neural kernel capped) but below the site energy in 16/16 \\
 \bottomrule
 \end{tabular}
 \end{table}
