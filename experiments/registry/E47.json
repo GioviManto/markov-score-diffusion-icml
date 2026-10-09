@@ -23,7 +23,7 @@
  },
  "provenance_note": "Written after the oracle SCOUTING described under predeclared_predictions['oracle'] and after the E24x timings at N_g >= 101 were read; the learned-estimator and fit-time predictions (P1-P5) and the sub-101 timings (P6, P7) are not scouted. P1-P4 are tight (1% and 3%) because the oracle's discretisation error at 101 is 1e-11: a learned risk that moves by more than 1% would mean the kernel fit, not the quadrature, is what changes with the grid. Part (d) was added after E23's quadrature table was read (the family-by-family trapezoid errors above) and before E04 was re-run on the coarse ladder; nothing about the coarse headline risks has been seen.",
  "resources": "learned: cluster, defq, 2 x 8 cpus, 24G, 8 h (about 15 CPU-hours a shard); time: one exclusive node (--exclusive), minutes; oracle: laptop; (d) laptop, minutes (frozen kernels from outputs/E02a, not on the cluster)",
- "status": "FROZEN E47a 2026-10-09T16:33:17Z; REGISTERED and PREDECLARED 2026-10-09, before any E47 learned or time cell ran; SUBMITTED 2026-10-09 (learned 691998, 691999; time 691997 on an exclusive node), queued; the oracle part is a laptop run",
+ "status": "REGISTERED and PREDECLARED 2026-10-09, before any E47 learned or time cell ran; parts (a) oracle and (d) headline kernels RUN on the laptop and FROZEN 2026-10-09 (E47a, E47c); part (c) time RUN on an exclusive node (691997, cnode01, 1 min 58 s, clean 3fed270) and FROZEN 2026-10-09 (hpc_E47t); part (b) learned SUBMITTED (691998, 691999), PENDING behind the cluster maintenance window (no start before 10 Oct 12:00)",
  "registered": "2026-10-09",
  "hpc_runs": {
   "deployment": "3fed270-20261009T160824Z (hpc/.deploy_3fed270.env)",
@@ -37,15 +37,20 @@
   "outputs/E47a/refinement.csv": "299031887735a86225214fe6773092cc1684c5c5958d95bb9242df1459217dea",
   "outputs/E47a/params_refinement.json": "6aa75f186fd9752ed7ca06a5016ddc440c2592fef852c45d04519f24aa7e231f",
   "outputs/E47c/refinement.csv": "aa768067e5c8478c01987f9d514d595d1c80de8fd1bfcdcbc1366da82fb6668c",
-  "outputs/E47c/params_refine.json": "8dd09a7d1e7cc2733a7f43991883cb7bb451b8f086b618a26d3c4827c099f77a"
+  "outputs/E47c/params_refine.json": "8dd09a7d1e7cc2733a7f43991883cb7bb451b8f086b618a26d3c4827c099f77a",
+  "outputs/hpc_E47t/scaling.csv": "44d63ec58ae304e7e2d4e2d33863db28e617855612360708c18c65d744c5cc19",
+  "outputs/hpc_E47t/slopes.csv": "f7d2eea4eabf94002880196fc8e06837000d0fabe092fd1b8fdd359c873e516b",
+  "outputs/hpc_E47t/params_scaling.json": "726becaa7398949e77540e892f86baa8c53ff6b353825dc7403402668f053ff1"
  },
  "frozen_at": {
   "E47a": "2026-10-09T16:33:17Z",
-  "E47c": "2026-10-09T16:33:17Z"
+  "E47c": "2026-10-09T16:33:17Z",
+  "hpc_E47t": "2026-10-09T17:16:27Z"
  },
  "frozen_commit": {
   "E47a": "db0ff62c6162c40b44e1a687b1b1ad9712e93d90",
-  "E47c": "db0ff62c6162c40b44e1a687b1b1ad9712e93d90"
+  "E47c": "db0ff62c6162c40b44e1a687b1b1ad9712e93d90",
+  "hpc_E47t": "938d0098c766bd3082303b1d06d7278757a73703"
  },
  "frozen_run_commits": {
   "E47a": [
@@ -53,6 +58,19 @@
   ],
   "E47c": [
    "db0ff62"
+  ],
+  "hpc_E47t": [
+   "3fed270"
   ]
+ },
+ "outcome": {
+  "read": "2026-10-09 ~19:20 CEST, parts (a), (c), (d): outputs/E47a/refinement.csv, outputs/hpc_E47t/scaling.csv, outputs/E47c/refinement.csv, tools/make_extension_numbers.py as pinned before the runs (read_e47_oracle, read_e47_time, read_e47_headline). Part (b) (P1-P5) not yet run.",
+  "oracle": "DESCRIPTIVE. Worst relative score error of the true-kernel BP against (1601, 8), over levels and replicates, at N_g = 101: 1.8e-11 (base cell), 1.0e-11 (h = 0.5), 4.7e-12 (h = 0.25, the finest lattice), 1.3e-12, 3.0e-12, 4.3e-13 (T = 0.5, 1, 2); at N_g = 51: 4.6e-4, 2.4e-4, 7.2e-4, 2.9e-5, 1.7e-5, 1.7e-5; at N_g = 41: 1.6e-3 to 1.5e-2; at 21: 0.51-0.67. Super-exponential in N_g, as scouted. The finest lattice has the largest error at 41 and 51 (1.5e-2, 7.2e-4), but not at 101 (all six are below 2e-11 there).",
+  "P6": "CONFIRMED. BP time per sequence (B = 512, L = 32, one thread, exclusive node, median of 9) is 0.053 ms at N_g = 51 (threshold 0.07) and 0.107 ms at 101 (E24x: 0.114; ratio 0.94, inside the 20% band). Full ladder: 41: 0.042, 51: 0.053, 61: 0.063, 81: 0.084, 101: 0.107, 151: 0.173, 201: 0.249, 401: 0.667 ms.",
+  "P7": "CONFIRMED. Log-log slope of time against N_g over 41-401 is 1.20 (over the top four grids 1.33): elementwise work dominates at these sizes, the N_g^2 law is not reached by 401.",
+  "P8": "CONFIRMED. Headline kernels at N_g = 201: every arm's seed-mean pooled risk within 0.01% of N_g = 401 (worst seed 0.02%).",
+  "P9": "CONFIRMED. At N_g = 101: C = 1 within 0.07% (M = 32 and 2048), C = 8 within 0.12% at M = 32 and 2.2% at M = 2048 (worst seed 7.6%). At N_g = 51 the C = 8 M = 2048 kernels move +70% (worst seed +188%); C = 1 moves 2.5-2.8%. At N_g = 151: every arm within 0.08% (worst seed 0.23%).",
+  "P10": "FALSIFIED. Only 22% of the C = 8 kernels are flagged 'resolved' at N_g = 101 (44% at M = 32, 0% at M = 2048; 94% at 151, 100% at 201); 0% at 51. The learned mixtures at large M contain components narrower than a 101-point spacing (0.16): the coarse grid is safe for the smooth phi^4 chain at 101 and for the AR(1) headline kernels only from about 151.",
+  "unregistered": "Thread count. E24x (the comparator the hypothesis quoted, 0.03-0.04 ms for the transformer, the GRU and the U-Net) ran with 8 BLAS/torch threads on cnode07; part (c) ran with ONE thread, as designed. BP barely uses threads (0.107 vs 0.114 ms at N_g = 101; 0.667 vs 0.524 ms at 401: the matmul is a small share), the networks do: at one thread, per sequence, mlp 0.002, window 0.023, bigru 0.063, unet 0.152, transformer 0.208, tcn 0.216 ms. Per core, BP at N_g = 101 (0.107 ms) is faster than the transformer, the U-Net and the TCN and 1.7 times the bigru; at 151 (0.173 ms) it is within 15% of the U-Net. Not a prediction; the comparison is at matched threads (one) on one node, inference only, B = 512, L = 32."
  }
 }

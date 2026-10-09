@@ -1,0 +1,2 @@
+device,arm,factor,slope_full,slope_top,n_top,predicted,n_points,value_min,value_max
+cpu,bp_grid,grid_size,1.19864252496551,1.331556961723901,4,2.0,8,41,401

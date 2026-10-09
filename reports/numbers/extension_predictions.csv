@@ -17,6 +17,17 @@ E46,P3,"M = 512: mean log(em_first_order_sym / em_first_order_2m), 95% interval 
 E46,P1,"M = 2048: mean log(em_first_order_sym / em_augmented), 95% interval contains0",-0.1691,12.0000,16,FALSIFIED,"CI [-0.298, -0.058]; geometric-mean ratio 0.844"
 E46,P2,"M = 2048: mean log(em_first_order_sym / em_first_order), 95% interval below0",-0.4903,15.0000,16,CONFIRMED,"CI [-0.755, -0.271]; geometric-mean ratio 0.612"
 E46,P3,"M = 2048: mean log(em_first_order_sym / em_first_order_2m), 95% interval below1.1",-0.0747,8.0000,16,FALSIFIED,"CI [-0.347, 0.187]; geometric-mean ratio 0.928"
+E47,oracle,T0.3_h0.25_L128: worst relative score error vs 1601,0.0000,,11,DESCRIPTIVE,"21: 6.7e-01, 31: 1.5e-01, 41: 1.5e-02, 51: 7.2e-04, 61: 1.8e-05, 81: 1.9e-09, 101: 4.7e-12, 201: 1.8e-14, 401: 1.1e-15"
+E47,oracle,T0.3_h0.5_L64: worst relative score error vs 1601,0.0000,,11,DESCRIPTIVE,"21: 5.7e-01, 31: 8.8e-02, 41: 6.3e-03, 51: 2.4e-04, 61: 5.2e-06, 81: 6.5e-10, 101: 1.0e-11, 201: 2.8e-13, 401: 2.3e-15"
+E47,oracle,T0.3_h1_L32: worst relative score error vs 1601,0.0000,,11,DESCRIPTIVE,"21: 5.5e-01, 31: 8.5e-02, 41: 7.8e-03, 51: 4.6e-04, 61: 2.0e-05, 81: 1.3e-08, 101: 1.8e-11, 201: 1.7e-13, 401: 9.6e-15"
+E47,oracle,T0.5_iso_L32: worst relative score error vs 1601,0.0000,,11,DESCRIPTIVE,"21: 5.1e-01, 31: 5.2e-02, 41: 1.9e-03, 51: 2.9e-05, 61: 2.2e-07, 81: 2.3e-12, 101: 1.3e-12, 201: 1.3e-12, 401: 1.3e-12"
+E47,oracle,T1_iso_L32: worst relative score error vs 1601,0.0000,,11,DESCRIPTIVE,"21: 5.1e-01, 31: 5.1e-02, 41: 1.6e-03, 51: 1.7e-05, 61: 6.6e-08, 81: 1.8e-13, 101: 3.0e-12, 201: 1.0e-13, 401: 1.3e-15"
+E47,oracle,T2_iso_L32: worst relative score error vs 1601,0.0000,,11,DESCRIPTIVE,"21: 5.1e-01, 31: 5.2e-02, 41: 1.6e-03, 51: 1.7e-05, 61: 5.7e-08, 81: 4.6e-13, 101: 4.3e-13, 201: 2.0e-15, 401: 1.7e-15"
+E47,P8,headline kernels at N_g = 201: every arm's seed-mean risk within 1% of N_g = 401,0.0001,,16,CONFIRMED,M32/C1: 1.0000; M32/C8: 1.0000; M2048/C1: 1.0000; M2048/C8: 1.0001
+E47,P9,headline kernels at N_g = 101: within 5% of N_g = 401,0.0221,,16,CONFIRMED,M32/C1: 1.0006; M32/C8: 1.0012; M2048/C1: 1.0007; M2048/C8: 1.0221
+E47,P10,C = 8 kernels resolved: >= 90% at N_g = 101 and a lower fraction at 51,0.2188,,32,FALSIFIED,"resolved fraction by N_g: 51: 0.00, 101: 0.22, 201: 1.00, 401: 1.00"
+E47,P6,BP time per sequence <= 0.07 ms at N_g = 51 and within 20% of 0.114 ms at 101,0.0528,,8,CONFIRMED,"ms: 41: 0.042, 51: 0.053, 61: 0.063, 81: 0.084, 101: 0.107, 151: 0.173, 201: 0.249, 401: 0.667"
+E47,P7,log-log slope of time vs N_g over 41-401 < 1.5,1.1986,,8,CONFIRMED,
 E44,P1,tau = inf: site energy beats the empirical linear estimator in 8/8 seeds,0.9501,8.0000,8,CONFIRMED,
 E44,P4,tau = inf: site energy below the spline in >= 7/8 seeds,0.9992,8.0000,8,CONFIRMED,
 E44,P2,site energy R < 1 in >= 7/8 seeds at every tau,,,5,CONFIRMED,tau 1.5: 8/8 (R 0.99); tau 3: 8/8 (R 0.97); tau 6: 8/8 (R 0.96); tau 12: 8/8 (R 0.95); tau inf: 8/8 (R 0.95)
