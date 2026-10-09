@@ -23,7 +23,7 @@
  },
  "provenance_note": "Written after the oracle SCOUTING described under predeclared_predictions['oracle'] and after the E24x timings at N_g >= 101 were read; the learned-estimator and fit-time predictions (P1-P5) and the sub-101 timings (P6, P7) are not scouted. P1-P4 are tight (1% and 3%) because the oracle's discretisation error at 101 is 1e-11: a learned risk that moves by more than 1% would mean the kernel fit, not the quadrature, is what changes with the grid. Part (d) was added after E23's quadrature table was read (the family-by-family trapezoid errors above) and before E04 was re-run on the coarse ladder; nothing about the coarse headline risks has been seen.",
  "resources": "learned: cluster, defq, 2 x 8 cpus, 24G, 8 h (about 15 CPU-hours a shard); time: one exclusive node (--exclusive), minutes; oracle: laptop; (d) laptop, minutes (frozen kernels from outputs/E02a, not on the cluster)",
- "status": "REGISTERED and PREDECLARED 2026-10-09, before any E47 learned or time cell ran; SUBMITTED 2026-10-09 (learned 691998, 691999; time 691997 on an exclusive node), queued; the oracle part is a laptop run",
+ "status": "FROZEN E47a 2026-10-09T16:33:17Z; REGISTERED and PREDECLARED 2026-10-09, before any E47 learned or time cell ran; SUBMITTED 2026-10-09 (learned 691998, 691999; time 691997 on an exclusive node), queued; the oracle part is a laptop run",
  "registered": "2026-10-09",
  "hpc_runs": {
   "deployment": "3fed270-20261009T160824Z (hpc/.deploy_3fed270.env)",
@@ -32,5 +32,27 @@
   "e47b-s4": "691999, defq, 8 cpus, 24G, 08:00:00 -> outputs/hpc_E47b_s4",
   "e47-time": "691997, defq, --exclusive (MSD_HPC_EXCLUSIVE=1), 4 cpus, 01:00:00 -> outputs/hpc_E47t",
   "smoke": "all three argument strings, as written in hpc/icml_submit.sh, run end to end at tiny settings (exit 0)"
+ },
+ "frozen_outputs": {
+  "outputs/E47a/refinement.csv": "299031887735a86225214fe6773092cc1684c5c5958d95bb9242df1459217dea",
+  "outputs/E47a/params_refinement.json": "6aa75f186fd9752ed7ca06a5016ddc440c2592fef852c45d04519f24aa7e231f",
+  "outputs/E47c/refinement.csv": "aa768067e5c8478c01987f9d514d595d1c80de8fd1bfcdcbc1366da82fb6668c",
+  "outputs/E47c/params_refine.json": "8dd09a7d1e7cc2733a7f43991883cb7bb451b8f086b618a26d3c4827c099f77a"
+ },
+ "frozen_at": {
+  "E47a": "2026-10-09T16:33:17Z",
+  "E47c": "2026-10-09T16:33:17Z"
+ },
+ "frozen_commit": {
+  "E47a": "db0ff62c6162c40b44e1a687b1b1ad9712e93d90",
+  "E47c": "db0ff62c6162c40b44e1a687b1b1ad9712e93d90"
+ },
+ "frozen_run_commits": {
+  "E47a": [
+   "db0ff62"
+  ],
+  "E47c": [
+   "db0ff62"
+  ]
  }
 }
