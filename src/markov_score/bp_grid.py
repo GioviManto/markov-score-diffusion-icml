@@ -205,8 +205,14 @@ def grid_bp_batch(
     return_evidence: bool = False,
     boundary_frac: float | None = None,
     chunk: int | None = 256,
+    return_sign_prob: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Vectorized grid BP over a batch of observations X of shape (B, L).
+
+    ``return_sign_prob=True`` returns (means, variances, p_pos) instead, p_pos[b, i] the
+    posterior mass of a_i > 0 (a grid point at exactly 0 counts one half), read off the same
+    beliefs: E50's commitment of each site to a sign. It cannot be combined with
+    ``return_evidence`` or ``boundary_frac``.
 
     ``chunk`` bounds the rows processed at once (memory knob, default 256): the chains are
     independent, so the recursion is run on consecutive blocks of ``chunk`` rows and the
@@ -239,9 +245,12 @@ def grid_bp_batch(
     """
     if xp is None:
         xp = np
+    if return_sign_prob and (return_evidence or boundary_frac):
+        raise ValueError("return_sign_prob cannot be combined with return_evidence or boundary_frac.")
     if chunk is not None and X.shape[0] > chunk:
         parts = [grid_bp_batch(grid, weights, log_K, X[s : s + chunk], alpha, delta, log_mu, xp,
-                               return_evidence=return_evidence, boundary_frac=boundary_frac, chunk=None)
+                               return_evidence=return_evidence, boundary_frac=boundary_frac, chunk=None,
+                               return_sign_prob=return_sign_prob)
                  for s in range(0, X.shape[0], chunk)]
         return tuple(xp.concatenate([pt[i] for pt in parts], axis=0) for i in range(len(parts[0])))
     grid = to_device(grid, xp)
@@ -291,6 +300,9 @@ def grid_bp_batch(
     means = xp.empty((b_size, n_sites))
     variances = xp.empty((b_size, n_sites))
     bel_edge = xp.zeros((b_size, n_sites)) if boundary_frac else None
+    if return_sign_prob:
+        p_pos = xp.empty((b_size, n_sites))
+        pos_weights = weights * xp.where(grid > 0.0, 1.0, xp.where(grid == 0.0, 0.5, 0.0))
     for i in range(n_sites):
         raw = fwd[i] * ell[:, i, :] * bwd[i]
         mass = raw @ weights
@@ -299,6 +311,8 @@ def grid_bp_batch(
         bel = raw / mass[:, None]
         means[:, i] = bel @ (grid * weights)
         variances[:, i] = bel @ (grid**2 * weights) - means[:, i] ** 2
+        if return_sign_prob:
+            p_pos[:, i] = bel @ pos_weights
         if boundary_frac:
             e = max(1, int(boundary_frac * n_grid))
             bel_edge[:, i] = (bel[:, :e] @ weights[:e]) + (bel[:, -e:] @ weights[-e:])
@@ -339,6 +353,8 @@ def grid_bp_batch(
         tail = (fwd[-1] * ell[:, -1, :]) @ weights
         log_const = row_shift.sum(axis=1) + n_sites * (-0.5 * xp.log(2.0 * xp.pi * delta))
         return means, variances, log_z_fwd + xp.log(tail) + log_const
+    if return_sign_prob:
+        return means, variances, p_pos
     return means, variances
 
 

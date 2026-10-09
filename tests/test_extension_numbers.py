@@ -467,3 +467,77 @@ def test_e47_headline_confirmed_and_each_clause_falsified():
     assert _verdicts(men.read_e47_headline(_e47c(move101=0.08)))["P9"] == "FALSIFIED"
     assert _verdicts(men.read_e47_headline(_e47c(resolved101=0.5)))["P10"] == "FALSIFIED"
     assert _verdicts(men.read_e47_headline(_e47c(resolved51=1.0)))["P10"] == "FALSIFIED"      # not lower at 51 than at 101
+
+
+# --------------------------------------------------------------------------- E50
+E50_LEVELS = np.geomspace(0.02, 4.0, 48)
+E50_AXIS_T0 = dict(zip(men.E50_AXIS, (1.50, 1.30, 1.15, 1.05, 0.95, 0.85, 0.75, 0.70)))
+E50_AXIS_EXCESS = dict(zip(men.E50_AXIS, (0.20, 0.15, 0.10, 0.06, 0.04, 0.03, 0.02, 0.01)))
+E50_SERIES_T0 = {4: 0.60, 8: 0.80, 16: 1.00, 32: 1.20, 64: 1.30, 128: 1.35, 256: 1.36}
+
+
+def _curve(t0):
+    return 1.0 / (1.0 + (E50_LEVELS / t0) ** 4)
+
+
+def _e50(axis_t0=None, excess=None, series_t0=None, dev=0.0, dev_cell=None, slope_scale=1.0, never=None):
+    axis_t0, excess, series_t0 = axis_t0 or E50_AXIS_T0, excess or E50_AXIS_EXCESS, series_t0 or E50_SERIES_T0
+    cells = {c: (t0, t0 - excess[c], t0, 10.0) for c, t0 in axis_t0.items()}
+    for L, t0 in series_t0.items():
+        lam = np.expm1(2.0 * (0.4 + (t0 - 0.6) / slope_scale))          # (1/2) ln(1 + lam) moves 1/slope_scale per unit t_c
+        tb = cells[f"T0.2_h1_L{L}"][0] if L == 32 else t0
+        cells[f"T0.2_h1_L{L}"] = (tb, tb - 0.1, t0, lam)
+    rows = []
+    for cell, (t_all, t_twin, t_bulk, lam) in cells.items():
+        for rep in (0, 1):
+            c_all = np.zeros_like(E50_LEVELS) + 0.4 if cell == never else _curve(t_all)
+            for lev, ca, cb, ct in zip(E50_LEVELS, c_all, _curve(t_bulk), _curve(t_twin)):
+                rows.append(dict(cell=cell, rep=rep, level=lev, commit_all=ca, commit_bulk=cb, twin_commit_all=ct, lambda_max=lam,
+                                 correct_all=0.5 * (1 + ca) + (dev if cell == dev_cell else 0.0)))
+    return pd.DataFrame(rows)
+
+
+def test_e50_commitment_all_confirmed_on_a_constructed_table():
+    v = {k: x for k, x in _verdicts(men.read_e50_commitment(_e50())).items() if k != "commitment"}
+    assert v == {"P1": "CONFIRMED", "P2": "CONFIRMED", "P3": "CONFIRMED", "P4": "CONFIRMED", "P5": "CONFIRMED"}
+
+
+def test_e50_p1_falls_on_a_miscalibrated_cell():
+    assert _verdicts(men.read_e50_commitment(_e50(dev=0.02, dev_cell="T1_h1_L32")))["P1"] == "FALSIFIED"
+
+
+def test_e50_p2_falls_when_the_order_breaks():
+    t0 = {**E50_AXIS_T0, "T1_h1_L32": 0.97}
+    assert _verdicts(men.read_e50_commitment(_e50(axis_t0=t0)))["P2"] == "FALSIFIED"
+
+
+def test_e50_a_curve_that_never_crosses_counts_against():
+    assert _verdicts(men.read_e50_commitment(_e50(never="T0.7_h1_L32")))["P2"] == "FALSIFIED"
+
+
+def test_e50_p3_falls_when_the_twin_commits_first():
+    ex = {**E50_AXIS_EXCESS, "T0.3_h1_L32": -0.05}
+    assert _verdicts(men.read_e50_commitment(_e50(excess=ex)))["P3"] == "FALSIFIED"
+    ex = {**E50_AXIS_EXCESS, "T2_h1_L32": 0.5}
+    assert _verdicts(men.read_e50_commitment(_e50(excess=ex)))["P3"] == "FALSIFIED"
+
+
+def test_e50_p4_falls_without_saturation_or_without_growth():
+    assert _verdicts(men.read_e50_commitment(_e50(series_t0={**E50_SERIES_T0, 256: 1.42})))["P4"] == "FALSIFIED"
+    assert _verdicts(men.read_e50_commitment(_e50(series_t0={**E50_SERIES_T0, 8: 0.61})))["P4"] == "FALSIFIED"
+
+
+def test_e50_p5_falls_on_a_shallow_slope():
+    assert _verdicts(men.read_e50_commitment(_e50(slope_scale=0.5)))["P5"] == "FALSIFIED"
+
+
+def _kink(a=men.KINK_ENERGY, b=0.5):
+    T = np.array([0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25, 0.275, 0.3])
+    rows = [dict(T=t, h=h, n_fine=2401, xi_phys=np.exp(a / t + b * np.log(t) + 0.3 + 0.2 * t)) for h in (1 / 16, 1 / 32) for t in T]
+    return pd.DataFrame(rows)
+
+
+def test_e50_kink_confirmed_and_falsified():
+    assert set(_verdicts(men.read_e50_kink(_kink())).values()) == {"CONFIRMED"}
+    assert _verdicts(men.read_e50_kink(_kink(a=0.85)))["P6"] == "FALSIFIED"
+    assert _verdicts(men.read_e50_kink(_kink(b=1.0)))["P7"] == "FALSIFIED"

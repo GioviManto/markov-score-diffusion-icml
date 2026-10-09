@@ -355,6 +355,96 @@ def read_e49(d, dB):
     return rows
 
 
+# --------------------------------------------------------------------------- E50
+E50_AXIS = tuple(f"T{T:g}_h1_L32" for T in (0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.5, 2.0))
+KINK_ENERGY = 2.0 * math.sqrt(2.0) / 3.0
+
+
+def e50_crossings(d):
+    """Per cell: the rep-pooled commitment curves' crossing times (all sites, central sites, Gaussian twin)."""
+    sys.path.insert(0, str(ROOT / "src"))
+    from markov_score.commitment import crossing_time
+    g = d.groupby(["cell", "level"]).mean(numeric_only=True).reset_index()
+    out = {}
+    for cell, h in g.groupby("cell"):
+        h = h.sort_values("level")
+        out[cell] = dict(all=crossing_time(h.level, h.commit_all), bulk=crossing_time(h.level, h.commit_bulk),
+                         twin=crossing_time(h.level, h.twin_commit_all), lam=float(h.lambda_max.iloc[0]))
+    return g, out
+
+
+def read_e50_commitment(d):
+    nan = float("nan")
+    g, tc = e50_crossings(d)
+    rows = []
+    dev = (g.correct_all - 0.5 * (1.0 + g.commit_all)).abs()
+    per = dev.groupby(g.cell).agg(["mean", "max"])
+    good = (per["mean"] <= 0.01) & (per["max"] <= 0.05)
+    rows.append(row("E50", "P1", "calibration: |share right - (1 + commitment) / 2| <= 0.01 on average over levels and <= 0.05 at every level, every cell",
+                    float(per["mean"].max()), int(good.sum()), len(per), bool(len(per) > 0 and good.all()),
+                    f"worst mean {per['mean'].max():.4f} ({per['mean'].idxmax()}); worst level {per['max'].max():.4f} ({per['max'].idxmax()})"))
+    t = [tc.get(c, {}).get("all", nan) for c in E50_AXIS]
+    k = sum(1 for x, y in zip(t, t[1:]) if np.isfinite(x) and np.isfinite(y) and x > y)
+    rows.append(row("E50", "P2", "fixed spacing: t_c falls strictly as Theta rises (7/7 consecutive pairs)", nan, k, 7, k == 7,
+                    "t_c: " + ", ".join(f"{c.split('_')[0]}: {v:.3f}" for c, v in zip(E50_AXIS, t))))
+    ex = {c: tc.get(c, {}).get("all", nan) - tc.get(c, {}).get("twin", nan) for c in E50_AXIS}
+    low = E50_AXIS[:4]
+    k = sum(1 for c in low if np.isfinite(ex[c]) and ex[c] > 0)
+    ends = np.isfinite(ex["T0.2_h1_L32"]) and np.isfinite(ex["T2_h1_L32"]) and ex["T0.2_h1_L32"] > ex["T2_h1_L32"]
+    rows.append(row("E50", "P3", "exact posterior commits earlier in the reverse process than its Gaussian twin (t_c > t_c^twin) at Theta <= 0.5 (4/4); excess at 0.2 > at 2",
+                    ex["T0.2_h1_L32"], k, 4, bool(k == 4 and ends), "excess: " + ", ".join(f"{c.split('_')[0]}: {v:+.3f}" for c, v in ex.items())))
+    series = [f"T0.2_h1_L{L}" for L in (4, 8, 16, 32, 64)]
+    tb = [tc.get(c, {}).get("bulk", nan) for c in series]
+    k = sum(1 for x, y in zip(tb, tb[1:]) if np.isfinite(x) and np.isfinite(y) and y - x > 0.02)
+    t128, t256 = tc.get("T0.2_h1_L128", {}).get("bulk", nan), tc.get("T0.2_h1_L256", {}).get("bulk", nan)
+    sat = bool(np.isfinite(t128) and np.isfinite(t256) and abs(t256 - t128) < 0.03)
+    rows.append(row("E50", "P4", "Theta = 0.2, central sites: t_c rises by > 0.02 at each step L = 4 -> 64 (4/4) and moves < 0.03 from L = 128 to 256",
+                    t256 - t128, k, 4, bool(k == 4 and sat), "t_c: " + ", ".join(f"L{c.split('_L')[1]}: {v:.3f}" for c, v in zip(series + ["T0.2_h1_L128", "T0.2_h1_L256"], tb + [t128, t256]))))
+    below = [f"T0.2_h1_L{L}" for L in (4, 8, 16)]
+    x = np.array([0.5 * np.log1p(tc.get(c, {}).get("lam", nan)) for c in below])
+    y = np.array([tc.get(c, {}).get("bulk", nan) for c in below])
+    slope = float(np.polyfit(x, y, 1)[0]) if np.all(np.isfinite(x)) and np.all(np.isfinite(y)) else nan
+    rows.append(row("E50", "P5", "L = 4, 8, 16 (central sites): slope of t_c against (1/2) ln(1 + Lambda_max) in [0.8, 1.2]", slope, None, 3,
+                    bool(np.isfinite(slope) and 0.8 <= slope <= 1.2)))
+    for c in sorted(tc):
+        v = tc[c]
+        rows.append(dict(experiment="E50", prediction="commitment", clause=f"{c}: t_c all / central / twin; (1/2) ln(1 + Lambda_max)", value=v["all"], k=None,
+                         n=None, verdict="DESCRIPTIVE", note=f"{v['all']:.3f} / {v['bulk']:.3f} / {v['twin']:.3f}; {0.5 * np.log1p(v['lam']):.3f}"))
+    return rows
+
+
+def e50_kink_fits(d, n_fine=2401):
+    """Per spacing h: least squares of ln xi_phys on [1/T, ln T, 1, T] over the temperatures at that h."""
+    fits = {}
+    for h, g in d[d.n_fine == n_fine].groupby("h"):
+        g = g.sort_values("T")
+        T, y = g["T"].to_numpy(float), np.log(g.xi_phys.to_numpy(float))
+        if len(T) >= 5 and np.all(np.isfinite(y)):
+            fits[float(h)] = np.linalg.lstsq(np.column_stack([1.0 / T, np.log(T), np.ones_like(T), T]), y, rcond=None)[0]
+        else:
+            fits[float(h)] = np.full(4, np.nan)
+    return fits
+
+
+def read_e50_kink(d):
+    fits = e50_kink_fits(d)
+    fine = (1 / 16, 1 / 32)
+    a = [fits.get(h, np.full(4, np.nan))[0] for h in fine]
+    b = [fits.get(h, np.full(4, np.nan))[1] for h in fine]
+    note = "a, b by h: " + "; ".join(f"{h:g}: {f[0]:.4f}, {f[1]:.3f}" for h, f in sorted(fits.items(), reverse=True))
+    ka = sum(1 for v in a if np.isfinite(v) and abs(v / KINK_ENERGY - 1) <= 0.02)
+    rows = [row("E50", "P6", "h = 1/16 and 1/32: kink energy a within 2% of 2 sqrt(2) / 3 = 0.9428", a[-1], ka, 2, ka == 2, note)]
+    kb = sum(1 for v in b if np.isfinite(v) and 0.35 <= v <= 0.65)
+    rows.append(row("E50", "P7", "h = 1/16 and 1/32: prefactor exponent b in [0.35, 0.65]", b[-1], kb, 2, kb == 2))
+    chk = d[d.n_fine != 2401]
+    if not chk.empty:
+        base = d[d.n_fine == 2401].set_index(["T", "h"]).xi_phys
+        diff = (np.log(chk.set_index(["T", "h"]).xi_phys) - np.log(base.reindex(chk.set_index(["T", "h"]).index))).abs()
+        rows.append(dict(experiment="E50", prediction="kink check", clause="max |ln xi_phys(4801 points) - ln xi_phys(2401)| at h = 1/16, 1/32",
+                         value=float(diff.max()), k=None, n=len(diff), verdict="DESCRIPTIVE", note=""))
+    return rows
+
+
 # --------------------------------------------------------------------------- E45
 def read_e45(d):
     rows = []
@@ -503,6 +593,8 @@ def main() -> int:
     ap.add_argument("--e43a", default="outputs/hpc_E43a_s*/kernels.csv")
     ap.add_argument("--e43b", default="outputs/hpc_E43b_s*/kernels.csv")
     ap.add_argument("--e35x", default="outputs/hpc_E35x_s*/augmented.csv")
+    ap.add_argument("--e50c", default="outputs/E50/commitment.csv")
+    ap.add_argument("--e50k", default="outputs/E50/kink.csv")
     ap.add_argument("--out", default="reports/numbers")
     a = ap.parse_args()
     rows = []
@@ -515,6 +607,7 @@ def main() -> int:
     d47c = _load(a.e47c)
     d48, d36x = _load(a.e48), _load(a.e36x)
     d49 = _load(a.e49)
+    d50c, d50k = _load(a.e50c), _load(a.e50k)
     if not d41.empty:
         rows += read_e41(d41, pd.concat([d33k, d33q], ignore_index=True))
     if not d42.empty:
@@ -534,6 +627,10 @@ def main() -> int:
         rows += read_e48(d48, d36x)
     if not d49.empty:
         rows += read_e49(d49, d43b)
+    if not d50c.empty:
+        rows += read_e50_commitment(d50c)
+    if not d50k.empty:
+        rows += read_e50_kink(d50k)
     if not d44.empty:
         rows += read_e44(d44)
     if not d45.empty:

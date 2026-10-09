@@ -935,6 +935,17 @@ E46 fits the \emph{first-order} kernel on the sequences and their mirror images,
 the whole gain is the symmetry, and a first-order fit on the data and their mirror images uses it better than the mixture does (P2 holds; P1, which predicted equality with the augmented arm, fails in this favourable direction). Its seed-mean risk equals that of a fit on twice as many \emph{independent} sequences ($0.0162$ against $0.0161$ at $M=512$, $0.0066$ against $0.0066$ at $2048$), although the registered interval criterion for that clause (P3) fails
 because the seed-to-seed variation is large (per-seed ratios $0.10$ to $2.25$).
 
+\subsection{E47: how coarse can the grid be?}
+
+Jérôme called the grid updates the bottleneck of the method. Every run so far uses $N_g=401$ points on $[-8,8]$, a choice checked only from above ($801$ and $1601$ change nothing). E47 checks it from below, in four parts registered before the learned and the timing parts ran.
+(a) The oracle: the true-kernel BP on the six $\phi^4$ cells against the $1601$-point reference. The error falls faster than any power of $N_g$: $0.5$--$0.7$ at $21$ points, $2\times10^{-5}$ to $7\times10^{-4}$ at $51$, below $2\times10^{-11}$ at $101$ on every cell, because the trapezoid rule on an analytic integrand converges super-exponentially (descriptive: this was scouted before registration).
+(d) The paper's headline kernels (the Laplace AR(1) laboratory, E02a's frozen fits, no refit), where the innovation is not smooth and the convergence is algebraic (E23). At $201$ points every arm is within $0.01\,\%$ of its $401$-point risk and at $151$ within $0.08\,\%$; at $101$ the single-Gaussian kernel is within $0.07\,\%$, but the eight-component mixture at $M=2048$ moves by $2.2\,\%$ ($7.6\,\%$ in the worst seed), and by $70\,\%$ at $51$ (P8, P9 hold). The prediction that most mixtures would be resolved at $101$ points fails (P10): at large $M$ they learn components narrower than the spacing, so none of the $M=2048$ mixtures is resolved at $101$, and $94\,\%$ are at $151$.
+(c) Time, on an exclusive node with one thread ($B=512$, $L=32$): $0.053$\,ms per sequence at $N_g=51$, $0.107$ at $101$, $0.173$ at $151$, $0.249$ at $201$, $0.667$ at $401$. The cost grows like $N_g^{1.2}$ over this range, not $N_g^2$, because the elementwise work dominates; both timing predictions hold (P6, P7).
+(b) The learned estimator, refitted on the coarse grid on the base cell and the finest lattice, is queued on the cluster (P1--P5).
+So far the practical answer to the bottleneck is a coarser grid, not a new solver: $101$ points for the true $\phi^4$ kernel and about $151$ for the headline kernels, six and four times cheaper than $401$ on one thread; part (b) will say whether the learned $\phi^4$ kernels agree.
+
+The thread count matters for the comparison with the networks. E24x's figures, used in Figure~\ref{fig:runtime}, gave every method eight threads; grid BP uses almost none of them ($0.114$ against $0.107$\,ms at $101$ points, $0.52$ against $0.67$ at $401$), while the networks use them well. Measured in the same job with one thread, the networks cost $0.06$ (GRU), $0.15$ (U-Net) and $0.21$\,ms (transformer, TCN) per sequence, so per core grid BP at $401$ points is $3$ to $11$ times slower than these four, and at $101$ points it is faster than three of them (not a registered prediction). BP is independent across sequences, so a node could run it as parallel processes; that was not measured.
+
 \clearpage
 \section{Alignment with the consolidated note}
 
@@ -948,7 +959,7 @@ exact transfer-matrix sampling & \code{field.py}: eigensolve on 2401 points, con
 score error, posterior-mean error & E33's estimand; the posterior-mean error is the same quantity per level up to $e^{-t}/\Delta_t$ \\
 $C(r)$, $\xi$, kinks, domains, bimodality & E34 \code{physics\_truth} and \code{physics\_learned} \\
 generated-sample quality & E34 \code{physics\_learned}; the direct sampler of E27 \\
-runtime, memory (\S9.8) & E24x (uncontended reruns) and E38: Figure~\ref{fig:runtime}; the field adds nothing to BP's cost, which depends on $N_g$, $L$, $B$ only \\
+runtime, memory (\S9.8) & E24x (uncontended reruns) and E38: Figure~\ref{fig:runtime}; the field adds nothing to BP's cost, which depends on $N_g$, $L$, $B$ only; E47: the grid can be coarsened ($101$ points for the true $\phi^4$ kernel, about $151$ for the headline kernels), timed on one thread against the networks \\
 clean-data learning (\S16.1) & E34 \code{clean} \\
 symmetric $W_\theta$, reversibility & by construction: every tilted walk is reversible (Proposition~\ref{prop:rev}); the symmetric site energy is learned directly by \code{em\_pair\_quartic} (\S\ref{sec:pair}) \\
 $\Th$ read from the data & Corollary~\ref{cor:read}: $\hat\Th=\hat\gamma s^2/h$ from any kernel of the class; P8 \\
