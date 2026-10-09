@@ -1,0 +1,126 @@
+{
+  "timestamp": "2026-10-08 08:56:19",
+  "git_commit": "ecc3c13a2c3ebf18a557b8e42e692f4f68cbd3a2",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "62480055ef25ad3dc9fdd0fbd17c7dfb8b23cea27b56218474bd892fe7b4ea52",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode02",
+  "slurm_job_id": "689088",
+  "slurm_array_task_id": "",
+  "cpu_count": "24",
+  "blas_threads": "1",
+  "settings": {
+    "cells": [
+      "T1_iso_L32",
+      "T2_iso_L32"
+    ],
+    "sizes": [
+      8192,
+      32768
+    ],
+    "net_sizes": [
+      2048,
+      128
+    ],
+    "n_chains": 2048,
+    "n_val": 1024,
+    "n_test": 2048,
+    "seeds": [
+      8,
+      9,
+      10,
+      11
+    ],
+    "dev_seeds": [
+      10000,
+      10001
+    ],
+    "grid_size": 401,
+    "half_width": 8.0,
+    "arms": [
+      "em_pair_quartic"
+    ],
+    "components": 8,
+    "poly_degree": 6,
+    "spline_basis": 24,
+    "mdn_components": 4,
+    "mdn_hidden": 32,
+    "em_checkpoints": [
+      10,
+      20,
+      40,
+      60,
+      80,
+      120,
+      160,
+      220,
+      300,
+      400,
+      600,
+      800,
+      1200
+    ],
+    "em_init_rho": 0.3,
+    "em_init_var": 0.8,
+    "archs": [
+      "window",
+      "transformer"
+    ],
+    "net_steps": 32000,
+    "net_checkpoints": [
+      500,
+      1000,
+      2000,
+      4000,
+      8000,
+      16000,
+      32000
+    ],
+    "screen_steps": 8000,
+    "mode": "eps",
+    "lrs_by_arch": {
+      "window": 0.001,
+      "transformer": 0.003
+    },
+    "trace_by_arch": {
+      "window": "coloured",
+      "transformer": "hutchinson"
+    },
+    "batch_size": 64,
+    "grad_clip": 1.0,
+    "winners": null,
+    "torch_threads": 1,
+    "device": "auto"
+  },
+  "cells": [
+    {
+      "cell": "T1_iso_L32",
+      "T": 1.0,
+      "h": 0.22588550373104435,
+      "n_sites": 32,
+      "role": "tsweep",
+      "rho1": 0.8500011201175544,
+      "corr_length_sites": 6.153179273666709,
+      "scale": 0.8180063055091414,
+      "excess_kurtosis": -0.5879412818900462
+    },
+    {
+      "cell": "T2_iso_L32",
+      "T": 2.0,
+      "h": 0.1500690371555632,
+      "n_sites": 32,
+      "role": "tsweep",
+      "rho1": 0.8500022377450391,
+      "corr_length_sites": 6.153229056537897,
+      "scale": 0.9496460067159048,
+      "excess_kurtosis": -0.46053858848482143
+    }
+  ],
+  "quick": false,
+  "workers": 8
+}

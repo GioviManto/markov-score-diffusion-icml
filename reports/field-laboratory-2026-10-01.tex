@@ -897,11 +897,43 @@ linear floor in all sixteen seeds in all four cells, by $1.56$ to $1.71$. P1 fai
 direction: at $b=0$ the augmented arm is \emph{lower}, by $18\,\%$ at $M=512$ and $27\,\%$ at $M=2048$ in the
 geometric mean over seeds (intervals for the mean log ratio $[-0.40,-0.05]$ and $[-0.56,-0.08]$, lower in $11$ of $16$
 seeds, and not the work of one seed), so augmenting a state that carries no latent costs nothing; the two-seed
-``agree on average'' above had the same sign. Why it gains is not investigated.
+``agree on average'' above had the same sign. Why it gains is the subject of E46, below.
 
 \subsection{E45: inpainting with posterior uncertainty}
 
 The note's section 9.7 asks for posterior sampling, and a missing site is a site with no likelihood. E45 hides part of a noisy sequence (a random half, or a gap of $8$ or $16$ sites; noise level $t=0.5$) and asks what E33's \emph{frozen} fitted kernels do, with no refit: the posterior mean by grid BP and $200$ forward-filter backward-sample draws for the $90\,\%$ interval, against the oracle (the true kernel) and the Gaussian conditional with the true covariance. Three predictions hold and two fail narrowly. The oracle's intervals cover the truth $0.89$ of the time on both cells and all patterns; the learned site energy and the learned spline are indistinguishable from the oracle (error ratio $1.000$, coverage $0.89$, width ratio $1.00$, in all sixteen seeds), so the machinery is sound for missing data. What fails is the expectation that the Gaussian conditional would be visibly worse: on the base cell its hidden-site error is $1.5$, $2.8$ and $4.6\,\%$ above the oracle's for the long gap, the short gap and the random half, its interval is $9\,\%$ wider at the long gap and over-covers ($0.926$, not under-covers; the predicted miscalibration of more than $0.03$ is $+0.026$, the predicted width excess of $10\,\%$ is $9.4\,\%$), and on the $T=1$ cell every arm is within $1\,\%$. The mixture kernel sits with the linear estimator, as in E33. At this noise level the exact nonlinear posterior buys little over a Gaussian smoother; a lower noise level or longer gaps is where a larger gap would be, and was not run.
+
+\subsection{E41 and E42: closing two caveats}
+
+\emph{The neural kernel's budget (E41).} E33's neural kernel ended at its last checkpoint in $149$ of $192$ fits at $M=2048$, so its $2$--$6\times$ gap to the spline could have been a budget artefact. E41 refits it at four times the budget
+(up to $4800$ updates; four cells, $M=2048$, eight seeds). It was not: the risk fell on all four cells but by only $0.4$ to $4.5\,\%$ (from $0.066$ to $0.065$ on the base cell), the share of fits at the last checkpoint fell from $78$ to $16\,\%$,
+and the ranking is unchanged: the neural kernel stays $1.9$ to $4.3$ times above the spline, $4.3$ to $9.2$ times above the site energy, and below the mixture. Prediction P1 (a drop of more than $10\,\%$ on three cells) fails; P2 to P5 hold.
+E33's neural-kernel numbers stand.
+
+\emph{The barrier at high temperature (E42).} In E33 the barrier height read from the site energy was within $20\,\%$ in $14/16$ seeds at $\Theta=1$ but $6/16$ at $\Theta=2$ ($M=2048$). E42 extends the same fits to $M=8192$ and $32768$ on sixteen seeds. At $\Theta=2$ the error keeps falling
+like $M^{-0.54}$ (mean $|\text{barrier}-1/4|$: $0.155$, $0.072$, $0.039$, $0.016$ at $M=512$ to $32768$) and the barrier is within $20\,\%$ in $16/16$ seeds at $M=32768$: a sample-size limit, not a floor, and the signed bias disappears ($+0.027\to-0.005$). The temperature itself is read within $2\,\%$ from $M=8192$ on. One prediction fails: at $\Theta=1$ the count within $20\,\%$ is
+$14/16$ at $M=8192$ (two seeds miss by at most $0.009$), against the registered $16/16$, and the error stalls between $2048$ and $8192$ before reaching $16/16$ at $32768$; the stall is not explained.
+
+\subsection{E43: is the site-energy form wide enough?}
+
+Question 1 below asks whether the paper needs a general pair kernel. E43 fits the most agnostic family there is: a log-linear conditional kernel with a two-dimensional cubic-spline score ($100$ coefficients, exact EM, no penalty; a penalty and a ridge were tried and removed because they break exact EM).
+Laboratory A is E33's $\phi^4$ cells, where the site energy is exactly specified: the unrestricted kernel is $2.8\times$ the site energy at $M=128$ and $5.5\times$ at $M=2048$ on the base cell ($2.5\times$ and $3.0\times$ on the $\Theta=1$ cell), so the price of generality \emph{grows} with the data rather than shrinking (predictions P1 and P2 fail),
+and it is also worse than the $25$-parameter spline ($1.5$ to $3.1\times$ at $M=2048$) while still far better than the mixture ($0.18$ and $0.42\times$, in $16/16$ seeds). Laboratory B is a chain outside the tilted-walk class, a Laplace bond on a double well calibrated beforehand to the base cell's correlation and kurtosis, with exact samples and an exact oracle:
+the site energy and the spline stall at about $0.103$--$0.108$ while the unrestricted kernel keeps improving ($0.121$, $0.080$, $0.068$ at $M=128$, $512$, $2048$), overtaking them between $128$ and $512$ and ending $1.5\times$ below the site energy in $8/8$ seeds. The answer to the question is therefore conditional: keep the five-parameter site energy when the physics is a gradient flow,
+and use the unrestricted kernel as a misspecification test, since it only wins once the Gaussian-bond families have stopped improving.
+
+\subsection{E44: non-equilibrium snapshots}
+
+Snapshots taken while a field coarsens after a quench are not Gibbs. E44 evolves the lattice Allen--Cahn dynamics from a small random start (the simulator reproduces the exact chain after a long run: variance $0.997$, lag-1 correlation $0.84$ against $0.848$, kurtosis $-1.34$ against $-1.35$) and trains and tests at $\tau=1.5$, $3$, $6$, $12$ after the quench and at equilibrium
+(at this temperature and spacing the field is equilibrium-like by $\tau\approx50$). With no exact score off equilibrium the reference is the clean sequence, so the readings are ratios against the empirical linear estimator. The site energy beats it in $8/8$ seeds at every time, with a ratio that moves smoothly from $0.986$ at $\tau=1.5$ to $0.950$ at equilibrium (compressed by the irreducible noise in this metric);
+the tilted spline equals it to three digits at every time, so the predicted flip in their order does not happen (P3 fails; P1, P2 and P4 hold). The Gibbs-class kernels are robust to data of this kind. Not tested: slower quenches (lower temperature, finer spacing).
+
+\subsection{E46: why the augmented kernel gains with no latent}
+
+E35x found the augmented kernel $18$ to $27\,\%$ below the first-order one at $b=0$, where there is no latent. The augmented model is a mixture of the kernel and its \emph{reflection} with shared parameters, so its E-step feeds the kernel every sequence and its mirror image, and the truth is reflection-symmetric.
+E46 fits the \emph{first-order} kernel on the sequences and their mirror images, on E35's own data, sixteen seeds. That fit is $32$ and $39\,\%$ below the plain first-order one at $M=512$ and $2048$ (below it in $16/16$ and $15/16$ seeds), and $16$ and $17\,\%$ below the augmented one:
+the whole gain is the symmetry, and a first-order fit on the data and their mirror images uses it better than the mixture does (P2 holds; P1, which predicted equality with the augmented arm, fails in this favourable direction). Its seed-mean risk equals that of a fit on twice as many \emph{independent} sequences ($0.0162$ against $0.0161$ at $M=512$, $0.0066$ against $0.0066$ at $2048$), although the registered interval criterion for that clause (P3) fails
+because the seed-to-seed variation is large (per-seed ratios $0.10$ to $2.25$).
 
 \clearpage
 \section{Alignment with the consolidated note}
@@ -941,7 +973,7 @@ subsampling a fine lattice & E36 (\S\ref{sec:stride}): kernel $K^s$ exact; P1, P
   gradient SPDEs, and the quartic site energy is exactly specified for $\phi^4$ with five parameters;
   a general symmetric $W(a,a')$ would also cover non-gradient couplings at the price of a
   two-dimensional function to learn. Is that generality wanted for the paper, or is the site-energy
-  form the right level, with the tilt bases as the agnostic alternative?
+  form the right level, with the tilt bases as the agnostic alternative? (E43 now measures the price: an unrestricted kernel is $2.8$ to $5.5$ times the site energy on $\phi^4$, and wins, by $1.5\times$ at $M=2048$, only on a chain outside the class.)
 \item Gaussian closure of the messages is not well-posed on the field (\S\ref{sec:closure}); the
   closure arm is the covariance twin. Does that match what Marc had in mind by ``Gaussian closure''
   for this benchmark, or did he mean the Kalman smoother of the linearised dynamics?

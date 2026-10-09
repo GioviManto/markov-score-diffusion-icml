@@ -1,0 +1,35 @@
+experiment,prediction,clause,value,k,n,verdict,note
+E41,P1,"MDN seed-mean risk lower than E33's on all cells, by > 10% on >= 3",0.0000,4.0000,4,FALSIFIED,T0.3_h1_L32: 0.0652 vs 0.0662; T0.5_iso_L32: 0.0453 vs 0.0474; T1_iso_L32: 0.0475 vs 0.0477; T2_iso_L32: 0.0323 vs 0.0328
+E41,P2,share of fits at the last checkpoint <= 0.30,0.1562,5.0000,32,CONFIRMED,E33: 149/192 = 0.78 at M = 2048
+E41,P3,MDN above spline in >= 7/8 seeds on every cell and seed-mean ratio >= 1.5,,,4,CONFIRMED,"T0.3_h1_L32: 8/8, ratio 4.33; T0.5_iso_L32: 8/8, ratio 3.12; T1_iso_L32: 8/8, ratio 3.01; T2_iso_L32: 8/8, ratio 1.86"
+E41,P4,MDN below mixture in >= 7/8 seeds on every cell,,,4,CONFIRMED,"T0.3_h1_L32: 8/8, ratio 0.24; T0.5_iso_L32: 8/8, ratio 0.40; T1_iso_L32: 7/8, ratio 0.80; T2_iso_L32: 8/8, ratio 0.77"
+E41,P5,MDN above site energy in >= 7/8 seeds on every cell,,,4,CONFIRMED,"T0.3_h1_L32: 8/8, ratio 9.16; T0.5_iso_L32: 8/8, ratio 5.14; T1_iso_L32: 8/8, ratio 5.95; T2_iso_L32: 8/8, ratio 4.28"
+E42,P1,"T = 1: log-log slope of the seed-mean |barrier error| over M = 512..32768 in [-0.65, -0.35]",-0.4545,,4,CONFIRMED,"mean error: 512: 0.0685, 2048: 0.0279, 8192: 0.0263, 32768: 0.0085"
+E42,P1,"T = 2: log-log slope of the seed-mean |barrier error| over M = 512..32768 in [-0.65, -0.35]",-0.5409,,4,CONFIRMED,"mean error: 512: 0.1552, 2048: 0.0716, 8192: 0.0390, 32768: 0.0156"
+E42,P2,T = 1: within 20% in 16/16 at M = 8192 and 32768,,14.0000,16,FALSIFIED,"8192: 14/16, 32768: 16/16"
+E42,P3,T = 2: within 20% in >= 15/16 at M = 32768,,16.0000,16,CONFIRMED,E33: 6/16 at M = 2048
+E42,P4,"count within 20% does not fall along M = 2048, 8192, 32768",,,2,CONFIRMED,"T = 1: [14, 14, 16]; T = 2: [6, 13, 16]"
+E42,P5,T = 2: |seed-mean signed barrier error| < 0.01 at M = 32768,-0.0052,,16,CONFIRMED,E33: about +0.03 at M = 2048
+E42,P6,"|Theta_hat / Theta - 1| <= 0.10 in 16/16, both T, both sizes",,,4,CONFIRMED,"T = 1, M = 8192: 16/16; T = 1, M = 32768: 16/16; T = 2, M = 8192: 16/16; T = 2, M = 32768: 16/16"
+E46,P1,"M = 512: mean log(em_first_order_sym / em_augmented), 95% interval contains0",-0.1898,14.0000,16,FALSIFIED,"CI [-0.280, -0.105]; geometric-mean ratio 0.827"
+E46,P2,"M = 512: mean log(em_first_order_sym / em_first_order), 95% interval below0",-0.3903,16.0000,16,CONFIRMED,"CI [-0.619, -0.214]; geometric-mean ratio 0.677"
+E46,P3,"M = 512: mean log(em_first_order_sym / em_first_order_2m), 95% interval below1.1",-0.1371,8.0000,16,FALSIFIED,"CI [-0.500, 0.139]; geometric-mean ratio 0.872"
+E46,P1,"M = 2048: mean log(em_first_order_sym / em_augmented), 95% interval contains0",-0.1691,12.0000,16,FALSIFIED,"CI [-0.298, -0.058]; geometric-mean ratio 0.844"
+E46,P2,"M = 2048: mean log(em_first_order_sym / em_first_order), 95% interval below0",-0.4903,15.0000,16,CONFIRMED,"CI [-0.755, -0.271]; geometric-mean ratio 0.612"
+E46,P3,"M = 2048: mean log(em_first_order_sym / em_first_order_2m), 95% interval below1.1",-0.0747,8.0000,16,FALSIFIED,"CI [-0.347, 0.187]; geometric-mean ratio 0.928"
+E44,P1,tau = inf: site energy beats the empirical linear estimator in 8/8 seeds,0.9501,8.0000,8,CONFIRMED,
+E44,P4,tau = inf: site energy below the spline in >= 7/8 seeds,0.9992,8.0000,8,CONFIRMED,
+E44,P2,site energy R < 1 in >= 7/8 seeds at every tau,,,5,CONFIRMED,tau 1.5: 8/8 (R 0.99); tau 3: 8/8 (R 0.97); tau 6: 8/8 (R 0.96); tau 12: 8/8 (R 0.95); tau inf: 8/8 (R 0.95)
+E44,P3,"tau = 1.5, 3, 6: spline below the site energy in >= 7/8 seeds, at each",,,3,FALSIFIED,tau 1.5: 0/8 (spline / site 1.00); tau 3: 0/8 (spline / site 1.00); tau 6: 0/8 (spline / site 1.00)
+E45,P1,"oracle 90% interval coverage in [0.87, 0.93] on every (cell, pattern)",,,6,CONFIRMED,T0.3_h1_L32/gap16: 0.893; T0.3_h1_L32/gap8: 0.892; T0.3_h1_L32/random50: 0.890; T1_iso_L32/gap16: 0.891; T1_iso_L32/gap8: 0.890; T1_iso_L32/random50: 0.892
+E45,P2,"site energy: coverage within 0.03 of 0.90 and error within 10% of the oracle's in >= 14/16 seeds, every (cell, pattern)",,,6,CONFIRMED,"T0.3_h1_L32/gap16: coverage 0.893, error within 10% in 16/16; T0.3_h1_L32/gap8: coverage 0.891, error within 10% in 16/16; T0.3_h1_L32/random50: coverage 0.890, error within 10% in 16/16; T1_iso_L32/gap16: coverage 0.892, error within 10% in 16/16; T1_iso_L32/gap8: coverage 0.892, error within 10% in 16/16; T1_iso_L32/random50: coverage 0.892, error within 10% in 16/16"
+E45,P3,"linear: |coverage - 0.90| > 0.03 on (T0.3_h1_L32, gap16)",0.9261,,16,FALSIFIED,oracle 0.893
+E45,P4,"linear error / oracle error in [0.9, 1.1] on (T0.3_h1_L32, gap16)",1.0146,,16,CONFIRMED,
+E45,P5,"linear 90% interval width / oracle width >= 1.1 on (T0.3_h1_L32, gap16)",1.0936,,16,FALSIFIED,
+E43,P1,"lab A, M = 128: loglinear / site energy >= 2 in >= 14/16 seeds on both cells",,,2,FALSIFIED,T0.3_h1_L32: 14/16; T1_iso_L32: 12/16
+E43,P2,"lab A: seed-mean loglinear / site energy smaller at 2048 than at 128, and < 2 at 2048",,,2,FALSIFIED,T0.3_h1_L32: 2.78 -> 5.49; T1_iso_L32: 2.51 -> 3.04
+E43,P3,"lab A, M = 2048: loglinear below the mixture in >= 14/16 seeds on both cells",,,2,CONFIRMED,T0.3_h1_L32: 16/16; T1_iso_L32: 16/16
+E43,P4,"lab A, M = 128: loglinear above the tilted spline in >= 12/16 seeds on both cells",,,2,CONFIRMED,T0.3_h1_L32: 16/16; T1_iso_L32: 14/16
+E43,P5,"lab B, M = 2048: loglinear below the site energy in >= 7/8 seeds and mean ratio site energy / loglinear >= 1.25",1.5244,8.0000,8,CONFIRMED,
+E43,P6,"lab B, M = 2048: loglinear below the tilted spline and the mixture, each in >= 7/8 seeds",,,2,CONFIRMED,em_tilted_spline: 8/8; em_mixture: 8/8
+E43,P7,lab B: seed-mean loglinear / site energy above 1 at M = 128 and below 1 at M = 2048,0.6560,,2,CONFIRMED,M = 128: 1.11; M = 2048: 0.66

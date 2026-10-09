@@ -15,7 +15,7 @@
  },
  "provenance_note": "Written after E35x was read (that is what motivated it) and before any E46 cell ran; the explanation tested is a hypothesis, and a falsified P1 would mean the gain comes from something else, which would then be the open question.",
  "resources": "cluster, defq, 2 x 8 cpus, 24G, 8 h; about 0.4 h per fit at M = 512 and 1-2 h at 2048 (twice the chains)",
- "status": "REGISTERED and PREDECLARED 2026-10-08, before any E46 cell ran; SUBMITTED 2026-10-08 (689099, 689100), queued",
+ "status": "FROZEN hpc_E46_s0 2026-10-09T15:50:51Z; REGISTERED and PREDECLARED 2026-10-08, before any E46 cell ran; SUBMITTED 2026-10-08 (689099, 689100); BOTH SHARDS COMPLETE (2.2 h, 1.9 h), FROZEN, READ 2026-10-09: P2 CONFIRMED, P1 and P3 FALSIFIED (as written), the hypothesis supported",
  "registered": "2026-10-08",
  "hpc_runs": {
   "deployment": "22f7a79-20261007T225411Z (hpc/.deploy_22f7a79.env)",
@@ -23,5 +23,34 @@
   "e46-s0": "689099, defq, 8 cpus, 24G, 08:00:00 -> outputs/hpc_E46_s0",
   "e46-s8": "689100, defq, 8 cpus, 24G, 08:00:00 -> outputs/hpc_E46_s8",
   "smoke": "the driver at --quick (exit 0); its bundles hash identically to the laptop E35's (same platform) and differently from the cluster's E35x (platform-specific BLAS), hence the cluster run"
+ },
+ "frozen_outputs": {
+  "outputs/hpc_E46_s0/symmetry.csv": "c7737d6e6a5030bc40677b093a02e4609a89c7fd601e84e023bcfa05c45adcc6",
+  "outputs/hpc_E46_s0/params_symmetry.json": "8615af0f0547650e67b7da1b1f40470a7128713fd275424c897090c07e428069",
+  "outputs/hpc_E46_s8/symmetry.csv": "990ad96ea5810f8443e24255dd36b0b7cfe0805e3d0e425f397dd2fe700bdeff",
+  "outputs/hpc_E46_s8/params_symmetry.json": "96320736c9648cef81bc08e153bd9d84c438a0279049d79eabc04fdf7c78f650"
+ },
+ "frozen_at": {
+  "hpc_E46_s0": "2026-10-09T15:50:51Z",
+  "hpc_E46_s8": "2026-10-09T15:50:51Z"
+ },
+ "frozen_commit": {
+  "hpc_E46_s0": "bec9439d8ac18fccdcd4d2e8df9cbefa4013afc3",
+  "hpc_E46_s8": "bec9439d8ac18fccdcd4d2e8df9cbefa4013afc3"
+ },
+ "frozen_run_commits": {
+  "hpc_E46_s0": [
+   "22f7a79"
+  ],
+  "hpc_E46_s8": [
+   "22f7a79"
+  ]
+ },
+ "outcome": {
+  "read": "2026-10-09 ~18:00 CEST, all shards COMPLETE (exit 0), clean provenance, frozen; tools/make_extension_numbers.py as pinned before submission. Test-bundle hashes of E46 and E35x agree (both on the cluster).",
+  "P1": "FALSIFIED, and in the direction that strengthens the hypothesis: the symmetrised first-order kernel is not equal to the augmented one, it is BETTER. Mean log(sym / augmented) = -0.190 [-0.280, -0.105] at M = 512 (geometric ratio 0.827, sym lower in 14/16 seeds) and -0.169 [-0.298, -0.058] at 2048 (0.844, 12/16).",
+  "P2": "CONFIRMED. Mean log(sym / first-order) = -0.390 [-0.619, -0.214] at M = 512 (ratio 0.677, sym lower in 16/16) and -0.490 [-0.755, -0.271] at 2048 (0.612, 15/16): the mirror data alone give the whole gain E35x saw, and more (E35x: augmented / first-order 0.82 and 0.73).",
+  "P3": "FALSIFIED as written, by the interval's width, not by the estimate. Mean log(sym / 2m) = -0.137 [-0.500, +0.139] at M = 512 and -0.075 [-0.347, +0.187] at 2048; the registered criterion was an upper end below log 1.1 = +0.095. The seed-mean risks are the same: 0.0162 (sym) against 0.0161 (2m) at 512, 0.0066 against 0.0066 at 2048; sym lower in 8/16 seeds at both sizes, per-seed ratios 0.10-2.25 (heavy seed-to-seed variation).",
+  "unregistered": "Seed-mean risks (first-order / sym / augmented / 2m): M = 512: 0.0211 / 0.0162 / 0.0191 / 0.0161; M = 2048: 0.0099 / 0.0066 / 0.0076 / 0.0066. Doubling the data with independent sequences gives log(2m / first-order) = -0.253 [-0.418, -0.088] and -0.416 [-0.641, -0.170]. Using the reflection of every sequence is, in seed mean, as good as drawing as many new sequences again; the augmented model's mixture of the kernel and its reflection captures about 60-70% of that gain (it adds a responsibility to estimate per sequence). Fits at the last checkpoint (first-order sym / 2m): 3 and 3 of 16 at 512, 5 and 7 at 2048 (E35x first-order / augmented: 1/2 and 2/4). Reading: the b = 0 gain of the augmented kernel is the reflection symmetry of the truth, not the latent state; a first-order fit on the data and their mirror images is the cheaper and better way to use it."
  }
 }

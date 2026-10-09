@@ -19,7 +19,7 @@
  },
  "provenance_note": "Written after E33 was read (the question comes from its report) and before any E43 cell ran. The thresholds are judgements, not derived: P1, P2 and P4 are about a variance price the data have not yet shown for this kernel, so a falsified clause is information, not a failure. The lab-B parameters (bond 0.40, depth 2.0) were chosen from the chain's own variance, lag-1 correlation and kurtosis, never from a fit.",
  "resources": "cluster, defq, 6 x 8 cpus, 24G; lab A 8 h (24 fits per shard), lab B 10 h (12 cells of four arms per shard; M = 2048 about 3 h)",
- "status": "REGISTERED and PREDECLARED 2026-10-08, before any E43 cell ran; SUBMITTED 2026-10-08 (689109-689113, 689115), queued",
+ "status": "FROZEN hpc_E43a_s0 2026-10-09T15:50:50Z; REGISTERED and PREDECLARED 2026-10-08, before any E43 cell ran; SUBMITTED 2026-10-08 (689109-689113, 689115); ALL SIX SHARDS COMPLETE (2.3-7.5 h), FROZEN, READ 2026-10-09: P3-P7 CONFIRMED, P1 and P2 FALSIFIED",
  "registered": "2026-10-08",
  "hpc_runs": {
   "deployment": "962bb5d-20261007T230828Z (hpc/.deploy_962bb5d.env)",
@@ -31,5 +31,66 @@
   "e43b-s0": "689113, defq, 8 cpus, 24G, 10:00:00 -> outputs/hpc_E43b_s0",
   "e43b-s4": "689115, defq, 8 cpus, 24G, 10:00:00 -> outputs/hpc_E43b_s4",
   "smoke": "both argument strings, as written in hpc/icml_submit.sh, run end to end on the laptop at tiny settings (lab B on the registered 401-point grid), exit 0"
+ },
+ "frozen_outputs": {
+  "outputs/hpc_E43a_s0/kernels.csv": "cdd702be8a853c09955091358f98a217296641a8a8498eaabd4091272c4efabf",
+  "outputs/hpc_E43a_s0/params_kernels.json": "b7d3729f6edd8f30e7d8efd00bf7384671864c11865c7fa8ce6945abb98727f9",
+  "outputs/hpc_E43a_s4/kernels.csv": "092f8314740a665521821fe81d1b70ad122bb7fdae00580a1b697c01e109ca78",
+  "outputs/hpc_E43a_s4/params_kernels.json": "3b6bbc53fa58184531e31c0caf9ed6e982e5394e77134da663845194863b16cc",
+  "outputs/hpc_E43a_s8/kernels.csv": "f8dd7fa09e2bf88212c4fe93ddab0077ced9798f3ae0b8603e60b9839d04a7a2",
+  "outputs/hpc_E43a_s8/params_kernels.json": "dde930494798c486399d6b01bc355ef9778688e7d37c45e8dcf3ab1d09a051ad",
+  "outputs/hpc_E43a_s12/kernels.csv": "b946075b57a97b70b12e69002b8202c1ded137e5ff36910132fe69c7e91cf488",
+  "outputs/hpc_E43a_s12/params_kernels.json": "9580be670cd6ffbd905e6c0f6087fc58b987aced5a2faff8cf5ca60601563cec",
+  "outputs/hpc_E43b_s0/kernels.csv": "978a0d3678c175356906aad9f91fcd2b4464013e1363d0d39dbd32c4a980df92",
+  "outputs/hpc_E43b_s0/params_kernels.json": "affa0f91599ea6b7b999e8bedb42e3635a58ec83cc3631c40b60b0cfabad1e28",
+  "outputs/hpc_E43b_s4/kernels.csv": "9bb83ded693b146556d388d5560d7438a068e4e10c7331e6c99176cfdbe139a0",
+  "outputs/hpc_E43b_s4/params_kernels.json": "65608275aec9077bd002653e7191cfa514aacb01c47e0a487690df3a6bfe1267"
+ },
+ "frozen_at": {
+  "hpc_E43a_s0": "2026-10-09T15:50:50Z",
+  "hpc_E43a_s4": "2026-10-09T15:50:50Z",
+  "hpc_E43a_s8": "2026-10-09T15:50:50Z",
+  "hpc_E43a_s12": "2026-10-09T15:50:50Z",
+  "hpc_E43b_s0": "2026-10-09T15:50:51Z",
+  "hpc_E43b_s4": "2026-10-09T15:50:51Z"
+ },
+ "frozen_commit": {
+  "hpc_E43a_s0": "bec9439d8ac18fccdcd4d2e8df9cbefa4013afc3",
+  "hpc_E43a_s4": "bec9439d8ac18fccdcd4d2e8df9cbefa4013afc3",
+  "hpc_E43a_s8": "bec9439d8ac18fccdcd4d2e8df9cbefa4013afc3",
+  "hpc_E43a_s12": "bec9439d8ac18fccdcd4d2e8df9cbefa4013afc3",
+  "hpc_E43b_s0": "bec9439d8ac18fccdcd4d2e8df9cbefa4013afc3",
+  "hpc_E43b_s4": "bec9439d8ac18fccdcd4d2e8df9cbefa4013afc3"
+ },
+ "frozen_run_commits": {
+  "hpc_E43a_s0": [
+   "962bb5d"
+  ],
+  "hpc_E43a_s4": [
+   "962bb5d"
+  ],
+  "hpc_E43a_s8": [
+   "962bb5d"
+  ],
+  "hpc_E43a_s12": [
+   "962bb5d"
+  ],
+  "hpc_E43b_s0": [
+   "962bb5d"
+  ],
+  "hpc_E43b_s4": [
+   "962bb5d"
+  ]
+ },
+ "outcome": {
+  "read": "2026-10-09 ~18:00 CEST, all shards COMPLETE (exit 0), clean provenance, frozen; tools/make_extension_numbers.py as pinned before submission. Lab A paired with E33's frozen fits (test-bundle hashes equal); no failed fit in either lab.",
+  "P1": "FALSIFIED (narrowly on one cell). Lab A, M = 128: loglinear / site energy is 2.78 on the base cell (at least 2 in 14/16 seeds: holds) but 2.51 on T1_iso with only 12/16 seeds at least 2 (needs 14): the clause fails on the second cell.",
+  "P2": "FALSIFIED, and in the opposite direction: the price of generality GROWS with M on the φ^4 cells where the site energy is exact. Base cell 2.78 (M = 128) -> 5.49 (M = 2048); T1_iso 2.51 -> 3.04. The loglinear risk does fall with M (0.1036 -> 0.0654 -> 0.0494 on the base cell) but the site energy's falls faster (0.0373 -> 0.0090).",
+  "P3": "CONFIRMED. At M = 2048 loglinear / mixture is 0.183 (base) and 0.422 (T1_iso), below the mixture in 16/16 seeds on both: the unrestricted kernel does represent the nonlinear drift.",
+  "P4": "CONFIRMED. At M = 128 loglinear is above the 25-parameter spline in 16/16 (base, ratio 1.76) and 14/16 (T1_iso, 1.20).",
+  "P5": "CONFIRMED. Lab B, M = 2048: loglinear below the site energy in 8/8 seeds, seed-mean ratio site energy / loglinear 1.52 (>= 1.25).",
+  "P6": "CONFIRMED. Lab B, M = 2048: loglinear below the tilted spline and below the mixture in 8/8 seeds each.",
+  "P7": "CONFIRMED. Lab B crossover: loglinear / site energy 1.11 at M = 128 (4/8 seeds below), 0.75 at 512 (8/8 below), 0.66 at 2048 (8/8 below).",
+  "unregistered": "Lab B seed-mean risks (loglinear / site energy / spline / mixture / linear floor 0.2434): M = 128: 0.121 / 0.109 / 0.114 / 0.238; M = 512: 0.080 / 0.106 / 0.108 / 0.233; M = 2048: 0.068 / 0.103 / 0.104 / 0.231. The two Gaussian-bond families stall at about 0.103-0.108 (a misspecification floor) while the unrestricted kernel keeps improving: the textbook crossover, between 128 and 512. Lab A at M = 2048 (loglinear / site / spline / mixture): base 0.0494 / 0.0090 / 0.0162 / 0.2703; T1_iso 0.0251 / 0.0083 / 0.0164 / 0.0594: the unrestricted kernel is also worse than the 25-parameter spline there (3.05x and 1.53x). On the hot cell at M = 128 it is not below the mixture (below in 5/16; ratio 1.13). It selected the last checkpoint in at most 2 of 8 or 16 fits: validation, not the budget, stopped it. Reading: use the 5-parameter site energy when the physics is gradient; the unrestricted kernel is worth its parameters only when the Gaussian-bond families have stopped improving (here by M = 512), and it is therefore also a misspecification test."
  }
 }
