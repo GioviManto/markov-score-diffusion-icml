@@ -7,12 +7,25 @@
  "seeds": {
   "confirmatory": "0-3, as registered in E05.json"
  },
- "status": "REGISTERED as E05 on 15 Sep (PRE-REGISTERED, smoke-tested, never run); SUBMITTED 25 Sep as E26 to answer Q8. Reads the fitted kernels from the E02a run of the 15 Sep deployment (ea0435a-20260915T104955Z), an absolute path because that output lives under a different deployment tag.",
+ "status": "FROZEN hpc_E26 2026-10-09T16:34:45Z; REGISTERED as E05 on 15 Sep (PRE-REGISTERED, smoke-tested, never run); SUBMITTED 25 Sep as E26 to answer Q8. Reads the fitted kernels from the E02a run of the 15 Sep deployment (ea0435a-20260915T104955Z), an absolute path because that output lives under a different deployment tag.; FROZEN 2026-10-09 (clean at 343ec92; it had been run and read but never frozen, found in the 9 Oct audit)",
  "registered": "2026-09-25 (as E26; the config was registered 15 Sep as E05)",
  "script_sha256": "96d99ccc8f0652860d661644e8ee384347f9ff78a8d798638b68ab88597edfa8",
  "scope_note": "This answers the WEAK form of Q8 -- that BP can drive generation -- not the strong form Jerome actually proposed, which is one forward-backward sweep from a flat marginal with no reverse SDE and no score at all. The strong form is a separate sampler that does not exist yet and is the natural follow-up; recorded here so the distinction is not lost when the results land.",
- "frozen_outputs": {},
- "frozen_at": {},
- "frozen_commit": {},
- "frozen_run_commits": {}
+ "frozen_outputs": {
+  "outputs/hpc_E26/generation.csv": "3664a61cee0731af8b514d779655ec538d92ab7431c0f5d89ce8d301b39fee4b",
+  "outputs/hpc_E26/steps.csv": "0f32e07f0b0d8909aeaf83483ec9934db0a5eb2645d392c4018e50a4c8b98441",
+  "outputs/hpc_E26/params_generate.json": "0817521555cd15a5053ab1c62215f2f5d5f2f572bb5e094de131f909e6ad43cb",
+  "outputs/hpc_E26/params_steps.json": "5a2f59361aaf1d5d71f1aeb1f0ac5363cd86bbd48aff46c5cfefd929bca2cb86"
+ },
+ "frozen_at": {
+  "hpc_E26": "2026-10-09T16:34:45Z"
+ },
+ "frozen_commit": {
+  "hpc_E26": "7a0fc9b208e348f03d14d540e7ffc6e4f666e02b"
+ },
+ "frozen_run_commits": {
+  "hpc_E26": [
+   "343ec92"
+  ]
+ }
 }
