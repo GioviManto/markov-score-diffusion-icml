@@ -7,13 +7,38 @@
  "seeds": {
   "confirmatory": "deterministic, rng_for('e23-repr'|'e23-quad', family, level, rho)"
  },
- "status": "REGISTERED 2026-09-25, submitted to the Bocconi HPC. Quick-settings smoke already indicates R3 (cumulant non-monotone in 4/4 cells: KL 9.7e-4 at order 9, 3.2e+02 at order 21) and that the quadrature rules rank trapezoid > Gauss-Legendre ~ Clenshaw-Curtis by ~10x. It also showed fourier_adapted at 47 dof (4.3e-5) beating grid at 45 dof (1.1e-3) by 26x, so the ADAPTED variant is where any win would come from.",
+ "status": "FROZEN hpc_E23 2026-10-09T16:15:23Z; REGISTERED 2026-09-25, submitted to the Bocconi HPC. Quick-settings smoke already indicates R3 (cumulant non-monotone in 4/4 cells: KL 9.7e-4 at order 9, 3.2e+02 at order 21) and that the quadrature rules rank trapezoid > Gauss-Legendre ~ Clenshaw-Curtis by ~10x. It also showed fourier_adapted at 47 dof (4.3e-5) beating grid at 45 dof (1.1e-3) by 26x, so the ADAPTED variant is where any win would come from.; RUN 2026-09-26 (job 669838, commit bd7ad42, clean); FROZEN 2026-10-09 (nine days after the run: it had never been frozen, found in the 9 Oct audit of Jerome's questions); READ 2026-10-09 against R1-R4: R2 and R3 CONFIRMED, R1 partly, R4 FALSIFIED",
  "registered": "2026-09-25",
  "script_sha256": "b098b56eb3d1a374a64446e285ff80a2c455808c35e97551df5bd44d918e336c",
  "fairness_note": "The first version measured Fourier truncation only on the solver's shared [-12, 12] domain, where the lowest harmonics are ~48x wider than a typical message and 'the first 20 modes' describes mostly empty space. Reporting that alone would have been a strawman of the proposal. `fourier_adapted` was added before submission; the gap between the two variants is the price of the SHARED DOMAIN, reported separately from the price of the representation, and it is that distinction which decides whether an adaptive-domain solver is worth building even if a drop-in is not.",
  "measurement_floor": "Both Fourier variants are scored by interpolating back onto the reference grid, which puts a floor of order 1e-5 on the measured KL and makes their curves flatten at high dof. The production reference is 3201 points, pushing the floor below the low-dof region where the comparison is decided. A flat tail near 1e-5 is the instrument, not the method.",
- "frozen_outputs": {},
- "frozen_at": {},
- "frozen_commit": {},
- "frozen_run_commits": {}
+ "frozen_outputs": {
+  "outputs/hpc_E23/dstar.csv": "d7938ea85e8c4eb7a87347f0fe1fb7c1573e670488b80e8bdf6a2de3d905e927",
+  "outputs/hpc_E23/quadrature.csv": "5a92830630f759fb4fe4ac0af940d37cb6cb51cb8afe3d1349c4856ac09e1d5b",
+  "outputs/hpc_E23/quadrature_summary.csv": "4cfbf543ea48f1a37f3d2de4904aa7292914683fdc4e0c740c1330579e22eeb2",
+  "outputs/hpc_E23/representation.csv": "0cd696bb901386e5564ba4314f30cb1207bd11576e69be8968849494d9f911a2",
+  "outputs/hpc_E23/representation_summary.csv": "ca66365c9a8ef91cdc8726bc6f904bb0cd4ed31bbdfeed2d6b82f70b3c9f66d4",
+  "outputs/hpc_E23/params_quadrature.json": "4c35961c3f7d984eebb27020d3aad37d9dd4894eb9d4efcd9f1b8e0a1a2e3512",
+  "outputs/hpc_E23/params_representation.json": "e88a3aa45d1c50cea57e6ed655957d9fd7454530c876d5278166451c0fda0dd2"
+ },
+ "frozen_at": {
+  "hpc_E23": "2026-10-09T16:15:23Z"
+ },
+ "frozen_commit": {
+  "hpc_E23": "92c32b259a1ba9323eb74eb20be65fdd36ce824b"
+ },
+ "frozen_run_commits": {
+  "hpc_E23": [
+   "bd7ad42"
+  ]
+ },
+ "outcome": {
+  "read": "2026-10-09, outputs/hpc_E23/dstar.csv and representation_summary.csv (576 cells per representation: 4 families x 3 correlations x 12 levels x 4 sites; 64 chains each), quadrature_summary.csv (144 cells per rule).",
+  "R1": "PARTLY. The grid reaches KL 1e-2 and 1e-4 in all 576 cells (median D* 45 and 151) but 1e-6 in only 227/576 (median 401 among those): a few hundred dof where it gets there, and it does not get there in 61% of cells within 401.",
+  "R2": "CONFIRMED. The Fourier truncation on the solver's shared domain needs MORE than 20 modes: median D* 65 for 1e-2 and 101 for 1e-4 (reached in 576/576 and 557/576 cells).",
+  "R3": "CONFIRMED. The cumulant (Gram-Charlier) representation is non-monotone in 358/576 cells and reaches 1e-2 in 421/576, 1e-4 in 259/576 and 1e-6 in 157/576 (median order 5): the 'one dial from the Gaussian closure to exact' has a ceiling.",
+  "R4": "FALSIFIED. The adapted Fourier basis (a per-message window, +2 dof) needs 23 dof for 1e-2 and 33 for 1e-4 against the grid's 45 and 151, 1.9 and 4.6 times fewer; at matched dof its median KL is 1.7e-4 at 47 dof against the grid's 6.6e-3 at 45 (39 times). The shared-domain Fourier basis loses at 45 dof (1.7e-1 against 6.6e-3) and wins at 101 (7.6e-6 against 3.1e-4). Both Fourier variants are non-monotone in 186-188 of 576 cells, and their curves flatten near 1e-5, the interpolation floor stated in measurement_floor.",
+  "quadrature": "Median relative score error of grid BP against the reference, uniform trapezoid / Gauss-Legendre / Clenshaw-Curtis: 51 nodes 1.8e-2 / 8.4e-2 / 1.1e-1; 101 nodes 1.4e-3 / 6.3e-3 / 6.8e-3; 201 nodes 2.7e-4 / 1.2e-3 / 1.2e-3 (the trapezoid is 4-6 times better, not the 10 times the smoke run suggested). By family, trapezoid at 101 / 201 / 401 nodes: Gaussian 0, Student-t 6e-5 / 0 / 0, Laplace 8.2e-3 / 5.4e-4 / 7e-5, uniform 1.8e-2 / 1.2e-2 / 3.3e-3: non-smooth innovations (the Laplace cusp, the uniform edge) converge at an algebraic rate, smooth ones almost instantly.",
+  "reading": "Jerome's guess (about 20 Fourier modes) is close for a well-chosen window (23-33) but not for a fixed domain (65-101); the adaptive-window representation is about 4.6 times more economical than the grid at 1e-4. That is a representation result, not a solver: E24's anatomy puts the N_g^2 matmul at 12-24% of a sweep, and the pointwise likelihood product is a convolution in mode space. E47 measures the cheaper alternative on the same question, a coarser grid."
+ }
 }

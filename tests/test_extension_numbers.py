@@ -449,3 +449,21 @@ def test_e49_refuses_different_test_bundles():
     d49["test_bundle"] = "x"
     with pytest.raises(ValueError):
         men.read_e49(d49, dB)
+
+
+def _e47c(move201=0.0, move101=0.0, resolved101=1.0, resolved51=0.5, n=16):
+    rows = []
+    for M in (32, 2048):
+        for seed in range(n):
+            for ng, mv, res in ((401, 0.0, 1.0), (201, move201, 1.0), (101, move101, resolved101), (51, 0.1, resolved51)):
+                rows.append(dict(seed=seed, n_chains=M, n_grid=ng, half_width=8.0, risk_em_C1=0.1 * (1 + mv), risk_em_C8=0.08 * (1 + mv),
+                                 resolved_C1=True, resolved_C8=bool(seed < res * n)))
+    return pd.DataFrame(rows)
+
+
+def test_e47_headline_confirmed_and_each_clause_falsified():
+    assert set(_verdicts(men.read_e47_headline(_e47c())).values()) == {"CONFIRMED"}
+    assert _verdicts(men.read_e47_headline(_e47c(move201=0.02)))["P8"] == "FALSIFIED"
+    assert _verdicts(men.read_e47_headline(_e47c(move101=0.08)))["P9"] == "FALSIFIED"
+    assert _verdicts(men.read_e47_headline(_e47c(resolved101=0.5)))["P10"] == "FALSIFIED"
+    assert _verdicts(men.read_e47_headline(_e47c(resolved51=1.0)))["P10"] == "FALSIFIED"      # not lower at 51 than at 101

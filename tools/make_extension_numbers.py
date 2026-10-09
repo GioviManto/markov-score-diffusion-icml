@@ -54,6 +54,8 @@ E47 (experiments/registry/E47.json): the coarse grid. Oracle part descriptive (s
   P5  site-energy EM fit time, base cell, M = 2048: median wall at 101 <= 1/4 and at 51 <= 1/8 of E33's at 401
   P6  BP time per sequence at N_g = 51 <= 0.07 ms; at 101 within 20% of 0.114 ms
   P7  log-log slope of time vs N_g over 41-401 < 1.5
+  P8  headline kernels (E04 on frozen E02a kernels, no refit): at N_g = 201 each arm's seed-mean risk within 1% of N_g = 401; P9  at 101 within 5%
+  P10 at least 90% of the C = 8 kernels 'resolved' at N_g = 101, and a lower fraction at 51
 E48 (experiments/registry/E48.json): the MDN with a clean ladder to 16000, against E36x's frozen fits.
   P1  stride 4: the MDN selects a checkpoint below the last in >= 12/16 seeds
   P2  stride 4: MDN below the site energy in >= 14/16 seeds
@@ -265,6 +267,30 @@ def read_e47_learned(d, d33):
     return rows
 
 
+def read_e47_headline(d):
+    d = d[d.half_width == 8.0]
+    rows = []
+    arms = [("risk_em_C1", "C1"), ("risk_em_C8", "C8")]
+    def worst(ng):
+        w, notes = 0.0, []
+        for n in sorted(d.n_chains.unique()):
+            for col, lab in arms:
+                a = d[(d.n_chains == n) & (d.n_grid == ng)].set_index("seed")[col].sort_index()
+                b = d[(d.n_chains == n) & (d.n_grid == 401)].set_index("seed")[col].reindex(a.index)
+                r = float(a.mean() / b.mean()) if len(a) and b.notna().all() and a.notna().all() else np.nan
+                w = max(w, abs(r - 1)) if np.isfinite(r) else np.nan
+                notes.append(f"M{n}/{lab}: {r:.4f}")
+        return w, "; ".join(notes)
+    w201, n201 = worst(201)
+    rows.append(row("E47", "P8", "headline kernels at N_g = 201: every arm's seed-mean risk within 1% of N_g = 401", w201, None, d.seed.nunique(), None if np.isnan(w201) else bool(w201 < 0.01), n201))
+    w101, n101 = worst(101)
+    rows.append(row("E47", "P9", "headline kernels at N_g = 101: within 5% of N_g = 401", w101, None, d.seed.nunique(), None if np.isnan(w101) else bool(w101 < 0.05), n101))
+    f = {ng: float(d[d.n_grid == ng].resolved_C8.mean()) for ng in (51, 101, 201, 401) if (d.n_grid == ng).any()}
+    rows.append(row("E47", "P10", "C = 8 kernels resolved: >= 90% at N_g = 101 and a lower fraction at 51", f.get(101, np.nan), None, len(d[d.n_grid == 101]),
+                    bool(f.get(101, 0) >= 0.9 and f.get(51, 1) < f.get(101, 0)), "resolved fraction by N_g: " + ", ".join(f"{k}: {v:.2f}" for k, v in f.items())))
+    return rows
+
+
 def read_e47_time(d):
     b = d[(d.arm == "bp_grid") & (d.factor == "grid_size") & (d.batch == 512) & (d.n_sites == 32)]
     ms = (b.groupby("grid_size").wall_median.median() / 512 * 1000).sort_index()
@@ -470,6 +496,7 @@ def main() -> int:
     ap.add_argument("--e47a", default="outputs/E47a/refinement.csv")
     ap.add_argument("--e47b", default="outputs/hpc_E47b_s*/kernels.csv")
     ap.add_argument("--e47t", default="outputs/hpc_E47t/scaling.csv")
+    ap.add_argument("--e47c", default="outputs/E47c/refinement.csv")
     ap.add_argument("--e48", default="outputs/hpc_E48_s*/clean.csv")
     ap.add_argument("--e36x", default="outputs/hpc_E36x_s*/clean.csv")
     ap.add_argument("--e49", default="outputs/hpc_E49_s*/kernels.csv")
@@ -485,6 +512,7 @@ def main() -> int:
     d45 = _load(a.e45)
     d44 = _load(a.e44)
     d47b, d47t, d47a = _load(a.e47b), _load(a.e47t), _load(a.e47a)
+    d47c = _load(a.e47c)
     d48, d36x = _load(a.e48), _load(a.e36x)
     d49 = _load(a.e49)
     if not d41.empty:
@@ -498,6 +526,8 @@ def main() -> int:
         rows += read_e47_oracle(d47a)
     if not d47b.empty:
         rows += read_e47_learned(d47b, pd.concat([d33k, d33q], ignore_index=True))
+    if not d47c.empty:
+        rows += read_e47_headline(d47c)
     if not d47t.empty:
         rows += read_e47_time(d47t)
     if not d48.empty:
