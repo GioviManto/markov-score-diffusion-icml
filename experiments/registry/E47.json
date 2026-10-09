@@ -20,6 +20,14 @@
  },
  "provenance_note": "Written after the oracle SCOUTING described under predeclared_predictions['oracle'] and after the E24x timings at N_g >= 101 were read; the learned-estimator and fit-time predictions (P1-P5) and the sub-101 timings (P6, P7) are not scouted. P1-P4 are tight (1% and 3%) because the oracle's discretisation error at 101 is 1e-11: a learned risk that moves by more than 1% would mean the kernel fit, not the quadrature, is what changes with the grid.",
  "resources": "learned: cluster, defq, 2 x 8 cpus, 24G, 8 h (about 15 CPU-hours a shard); time: one exclusive node (--exclusive), minutes; oracle: laptop",
- "status": "REGISTERED and PREDECLARED 2026-10-09, before any E47 learned or time cell ran; not yet submitted",
- "registered": "2026-10-09"
+ "status": "REGISTERED and PREDECLARED 2026-10-09, before any E47 learned or time cell ran; SUBMITTED 2026-10-09 (learned 691998, 691999; time 691997 on an exclusive node), queued; the oracle part is a laptop run",
+ "registered": "2026-10-09",
+ "hpc_runs": {
+  "deployment": "3fed270-20261009T160824Z (hpc/.deploy_3fed270.env)",
+  "submitted": "2026-10-09 ~18:10 CEST",
+  "e47b-s0": "691998, defq, 8 cpus, 24G, 08:00:00 -> outputs/hpc_E47b_s0",
+  "e47b-s4": "691999, defq, 8 cpus, 24G, 08:00:00 -> outputs/hpc_E47b_s4",
+  "e47-time": "691997, defq, --exclusive (MSD_HPC_EXCLUSIVE=1), 4 cpus, 01:00:00 -> outputs/hpc_E47t",
+  "smoke": "all three argument strings, as written in hpc/icml_submit.sh, run end to end at tiny settings (exit 0)"
+ }
 }

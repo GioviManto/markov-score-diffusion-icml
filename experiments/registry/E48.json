@@ -17,6 +17,15 @@
  },
  "provenance_note": "Written after E36x was read (that is what motivated it) and before any E48 cell ran. P3 and P4 are judgements about what a flexible kernel does against the exactly specified one; a falsified P3 would be the more interesting outcome.",
  "resources": "cluster, defq, 4 x 8 cpus, 24G, 10 h; a clean MDN fit took 6-15 min at 2000 updates, so up to about 2 h at 16000",
- "status": "REGISTERED and PREDECLARED 2026-10-09, before any E48 cell ran; not yet submitted",
- "registered": "2026-10-09"
+ "status": "REGISTERED and PREDECLARED 2026-10-09, before any E48 cell ran; SUBMITTED 2026-10-09 (692000-692003), queued",
+ "registered": "2026-10-09",
+ "hpc_runs": {
+  "deployment": "3fed270-20261009T160824Z (hpc/.deploy_3fed270.env)",
+  "submitted": "2026-10-09 ~18:10 CEST",
+  "e48-s0": "692000, defq, 8 cpus, 24G, 10:00:00 -> outputs/hpc_E48_s0",
+  "e48-s4": "692001, defq, 8 cpus, 24G, 10:00:00 -> outputs/hpc_E48_s4",
+  "e48-s8": "692002, defq, 8 cpus, 24G, 10:00:00 -> outputs/hpc_E48_s8",
+  "e48-s12": "692003, defq, 8 cpus, 24G, 10:00:00 -> outputs/hpc_E48_s12",
+  "smoke": "the argument string run end to end at tiny settings (exit 0)"
+ }
 }

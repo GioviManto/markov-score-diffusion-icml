@@ -16,6 +16,13 @@
  },
  "provenance_note": "Written after E43 and E41 were read and before any E49 cell ran. P3 is the one I am least sure of: the MDN has fifteen times the parameters but is a very different family.",
  "resources": "cluster, defq, 2 x 8 cpus, 24G, 12 h; an MDN fit took about 1 h at M = 2048 in E33 (shared nodes)",
- "status": "REGISTERED and PREDECLARED 2026-10-09, before any E49 cell ran; not yet submitted",
- "registered": "2026-10-09"
+ "status": "REGISTERED and PREDECLARED 2026-10-09, before any E49 cell ran; SUBMITTED 2026-10-09 (692004, 692007), queued",
+ "registered": "2026-10-09",
+ "hpc_runs": {
+  "deployment": "3fed270-20261009T160824Z (hpc/.deploy_3fed270.env)",
+  "submitted": "2026-10-09 ~18:10 CEST",
+  "e49-s0": "692004, defq, 8 cpus, 24G, 12:00:00 -> outputs/hpc_E49_s0",
+  "e49-s4": "692007, defq, 8 cpus, 24G, 12:00:00 -> outputs/hpc_E49_s4",
+  "smoke": "the argument string run end to end at tiny settings (exit 0)"
+ }
 }

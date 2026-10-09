@@ -35,6 +35,7 @@ for x in E41_s0 E41_s2 E41_s4 E41_s6 E42_s0 E42_s4 E42_s8 E42_s12; do fetch ecc3
 for x in E46_s0 E46_s8; do fetch 22f7a79 "$x"; done      # E46 (8 Oct): the b = 0 symmetry diagnostic
 for x in E43a_s0 E43a_s4 E43a_s8 E43a_s12 E43b_s0 E43b_s4; do fetch 962bb5d "$x"; done   # E43 (8 Oct): the unrestricted kernel, labs A and B
 for x in E44_s0 E44_s4; do fetch 34e8d3a "$x"; done   # E44 (8 Oct): non-equilibrium snapshots
+for x in E47b_s0 E47b_s4 E47t E48_s0 E48_s4 E48_s8 E48_s12 E49_s0 E49_s4; do fetch 3fed270 "$x"; done   # E47-E49 (9 Oct): coarse grid, MDN ladder, MDN on the out-of-class chain
 rm -f /tmp/msd_fetch_$$.log
 echo "--- coverage"
 .venv/bin/python tools/check_field_coverage.py || status=1
