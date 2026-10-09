@@ -36,7 +36,7 @@ THREADS=${MSD_HPC_THREADS:-1}
 SERIAL_CPUS=${MSD_HPC_SERIAL_CPUS:-4}
 AFTER=""; WHAT=${1:-}; shift || true
 while [[ $# -gt 0 ]]; do case "$1" in --after) AFTER="$2"; shift 2;; *) echo "unknown arg $1" >&2; exit 2;; esac; done
-[[ -n "$WHAT" ]] || { echo "usage: $0 <e44-s0|e44-s4|e43a-s0|e43a-s4|e43a-s8|e43a-s12|e43b-s0|e43b-s4|e46-s0|e46-s8|e41-s0|e41-s2|e41-s4|e41-s6|e42-s0|e42-s4|e42-s8|e42-s12|e38-memory|e35x-s0|e35x-s8|e36x-s0|e36x-s8|e32|e33-q-s0..s12|e34-clean|e34-physics|e33-oracles|e33-k-s0..s12|e33-screen|e33-nets-s0|e33-nets-s8|e23|e24c-capacity|e26|e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
+[[ -n "$WHAT" ]] || { echo "usage: $0 <e47b-s0|e47b-s4|e47-time|e48-s0|e48-s4|e48-s8|e48-s12|e49-s0|e49-s4|e44-s0|e44-s4|e43a-s0|e43a-s4|e43a-s8|e43a-s12|e43b-s0|e43b-s4|e46-s0|e46-s8|e41-s0|e41-s2|e41-s4|e41-s6|e42-s0|e42-s4|e42-s8|e42-s12|e38-memory|e35x-s0|e35x-s8|e36x-s0|e36x-s8|e32|e33-q-s0..s12|e34-clean|e34-physics|e33-oracles|e33-k-s0..s12|e33-screen|e33-nets-s0|e33-nets-s8|e23|e24c-capacity|e26|e22c|e24c-cpu|e24c-gpu|e25-s0|e25-s4|e25-s8|e25-s12|e24-cpu|e24-gpu|e06c|e07b|e07c|e11b|e12b|e14|e14-seeds|e14b-screen|e14b-confirm|e13x|e02a|e02b|e03-screen|e03-confirm|e03-matched|e03-length|e06|e06b|e08|e09|e04|e05|all> [--after JOBID]" >&2; exit 2; }
 
 partition() {
   if [[ -n "${MSD_HPC_PARTITION:-}" ]]; then echo "$MSD_HPC_PARTITION"; return; fi
@@ -231,6 +231,17 @@ cmd_for() {
     # --- 8 Oct: E44, non-equilibrium snapshots (registry E44.json); two shards of four seeds
     e44-s0)      echo "e44_quench.py --set 'seeds=(0, 1, 2, 3)' --output-dir {OUT}/E44_s0";;
     e44-s4)      echo "e44_quench.py --set 'seeds=(4, 5, 6, 7)' --output-dir {OUT}/E44_s4";;
+    # --- 9 Oct: E47 (the coarse grid: learned estimator and exclusive-node timing), E48 (the MDN with ten times the clean ladder), E49 (the MDN on the out-of-class chain)
+    e47b-s0)     echo "e47_coarse_grid.py --only learned --set 'seeds=(0, 1, 2, 3)' --output-dir {OUT}/E47b_s0";;
+    e47b-s4)     echo "e47_coarse_grid.py --only learned --set 'seeds=(4, 5, 6, 7)' --output-dir {OUT}/E47b_s4";;
+    # timing: submit with MSD_HPC_EXCLUSIVE=1 (N-29); E24's own scaling part, at the grid sizes E24x never covered
+    e47-time)    echo "e24_inference_cost.py --only scaling --set \"devices=('cpu',)\" --set 'scale_grids=(41, 51, 61, 81, 101, 151, 201, 401)' --set 'scale_batches=(512,)' --set 'scale_sites=(32,)' --set scale_repeat=9 --output-dir {OUT}/E47t";;
+    e48-s0)      echo "e36_stride_protocol.py --only clean --set 'arms=(\"em_mdn\",)' --set 'seeds=(0, 1, 2, 3)' --set 'clean_checkpoints=(1, 2, 4, 8, 16, 32, 64, 120, 220, 400, 700, 1200, 2000, 3200, 5000, 8000, 12000, 16000)' --output-dir {OUT}/E48_s0";;
+    e48-s4)      echo "e36_stride_protocol.py --only clean --set 'arms=(\"em_mdn\",)' --set 'seeds=(4, 5, 6, 7)' --set 'clean_checkpoints=(1, 2, 4, 8, 16, 32, 64, 120, 220, 400, 700, 1200, 2000, 3200, 5000, 8000, 12000, 16000)' --output-dir {OUT}/E48_s4";;
+    e48-s8)      echo "e36_stride_protocol.py --only clean --set 'arms=(\"em_mdn\",)' --set 'seeds=(8, 9, 10, 11)' --set 'clean_checkpoints=(1, 2, 4, 8, 16, 32, 64, 120, 220, 400, 700, 1200, 2000, 3200, 5000, 8000, 12000, 16000)' --output-dir {OUT}/E48_s8";;
+    e48-s12)      echo "e36_stride_protocol.py --only clean --set 'arms=(\"em_mdn\",)' --set 'seeds=(12, 13, 14, 15)' --set 'clean_checkpoints=(1, 2, 4, 8, 16, 32, 64, 120, 220, 400, 700, 1200, 2000, 3200, 5000, 8000, 12000, 16000)' --output-dir {OUT}/E48_s12";;
+    e49-s0)      echo "e43_free_kernel.py --only kernels --set 'cells=(\"LAP_B_L32\",)' --set 'arms=(\"em_mdn\",)' --set 'seeds=(0, 1, 2, 3)' --output-dir {OUT}/E49_s0";;
+    e49-s4)      echo "e43_free_kernel.py --only kernels --set 'cells=(\"LAP_B_L32\",)' --set 'arms=(\"em_mdn\",)' --set 'seeds=(4, 5, 6, 7)' --output-dir {OUT}/E49_s4";;
     e34-physics) echo "e34_field_physics.py --only physics_truth --output-dir {OUT}/E34p";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac

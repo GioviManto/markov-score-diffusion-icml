@@ -308,3 +308,144 @@ def test_e44_p4_falls_when_the_spline_wins_at_equilibrium():
 def test_e44_a_failed_fit_counts_against():
     v = _verdicts(men.read_e44(_e44(fail=(float("inf"), 2))))
     assert v["P1"] == "FALSIFIED"                                      # 7/8 is not 8/8
+
+
+# --------------------------------------------------------------------------- E47
+def _e47(r101=1.0, r201=1.0, r51_base=1.01, r51_fine=1.05, r101_fine=1.0, wall101=0.2, wall51=0.1, n=8, fail=None):
+    """E33's N_g = 401 rows (risk 0.01, wall 100) and E47's coarse rows as constructed ratios of them."""
+    cells = ("T0.3_h1_L32", "T0.3_h0.25_L128")
+    d33, d47 = [], []
+    for cell in cells:
+        for arm in ("em_pair_quartic", "em_tilted_spline"):
+            for M in (128, 2048):
+                for s in range(n):
+                    bnd = f"b{cell}{M}{s}"
+                    d33.append(dict(cell=cell, arm=arm, selection="risk", n_chains=M, seed=s, risk=0.01, wall=100.0, test_bundle=bnd))
+                    for ng in (51, 101, 201):
+                        if cell == cells[0]:
+                            r = {51: r51_base, 101: r101, 201: r201}[ng]
+                        else:
+                            r = {51: r51_fine, 101: r101_fine, 201: 1.0}[ng]
+                        w = {51: wall51, 101: wall101, 201: 0.5}[ng] * 100.0
+                        risk = np.nan if fail == (cell, arm, M, ng, s) else 0.01 * r
+                        d47.append(dict(cell=cell, arm=arm, selection="risk", n_chains=M, seed=s, grid_size=ng, risk=risk, wall=w, test_bundle=bnd))
+    return pd.DataFrame(d47), pd.DataFrame(d33)
+
+
+def test_e47_learned_all_confirmed_on_a_constructed_table():
+    assert set(_verdicts(men.read_e47_learned(*_e47())).values()) == {"CONFIRMED"}
+
+
+def test_e47_p1_falls_when_n101_moves_the_risk():
+    assert _verdicts(men.read_e47_learned(*_e47(r101=1.03)))["P1"] == "FALSIFIED"
+
+
+def test_e47_p2_and_p3_fall_on_a_degraded_coarse_grid():
+    v = _verdicts(men.read_e47_learned(*_e47(r51_base=1.08, r51_fine=1.25)))
+    assert v["P2"] == "FALSIFIED" and v["P3"] == "FALSIFIED"
+
+
+def test_e47_p4_falls_when_the_small_data_fit_depends_on_the_grid():
+    assert _verdicts(men.read_e47_learned(*_e47(r101_fine=1.05)))["P4"] == "FALSIFIED"
+
+
+def test_e47_p5_falls_when_the_fit_is_not_faster():
+    assert _verdicts(men.read_e47_learned(*_e47(wall101=0.4)))["P5"] == "FALSIFIED"
+
+
+def test_e47_a_failed_fit_counts_against():
+    d47, d33 = _e47(fail=("T0.3_h1_L32", "em_pair_quartic", 2048, 101, 3))
+    assert _verdicts(men.read_e47_learned(d47, d33))["P1"] == "FALSIFIED"
+
+
+def test_e47_refuses_different_test_bundles():
+    d47, d33 = _e47()
+    d47["test_bundle"] = "x"
+    with pytest.raises(ValueError):
+        men.read_e47_learned(d47, d33)
+
+
+def _e47t(ms):
+    return pd.DataFrame([dict(arm="bp_grid", factor="grid_size", batch=512, n_sites=32, grid_size=g, wall_median=v * 512 / 1000) for g, v in ms.items()])
+
+
+GOODT = {41: 0.040, 51: 0.050, 61: 0.058, 81: 0.075, 101: 0.114, 151: 0.17, 201: 0.237, 401: 0.524}
+
+
+def test_e47_time_confirmed_and_falsified():
+    assert set(_verdicts(men.read_e47_time(_e47t(GOODT))).values()) == {"CONFIRMED"}
+    slow = {**GOODT, 51: 0.09}
+    assert _verdicts(men.read_e47_time(_e47t(slow)))["P6"] == "FALSIFIED"
+    steep = {g: 0.001 * (g / 41) ** 2 for g in GOODT}
+    assert _verdicts(men.read_e47_time(_e47t(steep)))["P7"] == "FALSIFIED"
+
+
+# --------------------------------------------------------------------------- E48
+def _e48(mdn4=0.5, mdn1=3.0, mdn2=0.9, at_cap4=0, n=16, fail=None):
+    rng = np.random.default_rng(3)
+    d48, d36 = [], []
+    for st, ratio in ((1, mdn1), (2, mdn2), (4, mdn4)):
+        for s in range(n):
+            site = 0.01 * np.exp(rng.normal(0, 0.05))
+            d36.append(dict(stride=st, seed=s, arm="em_pair_quartic", risk=site, test_bundle=f"t{st}{s}"))
+            d48.append(dict(stride=st, seed=s, arm="em_mdn", risk=np.nan if fail == (st, s) else site * ratio * np.exp(rng.normal(0, 0.03)),
+                            at_cap=int(st == 4 and s < at_cap4), checkpoint=16000 if (st == 4 and s < at_cap4) else 5000, test_bundle=f"t{st}{s}"))
+    return pd.DataFrame(d48), pd.DataFrame(d36)
+
+
+def test_e48_all_confirmed_on_a_constructed_table():
+    assert set(_verdicts(men.read_e48(*_e48())).values()) == {"CONFIRMED"}
+
+
+def test_e48_p1_falls_when_the_mdn_is_still_capped():
+    assert _verdicts(men.read_e48(*_e48(at_cap4=8)))["P1"] == "FALSIFIED"
+
+
+def test_e48_p2_p3_p4_p5_fall_in_their_directions():
+    assert _verdicts(men.read_e48(*_e48(mdn4=1.2)))["P2"] == "FALSIFIED"
+    assert _verdicts(men.read_e48(*_e48(mdn1=0.8)))["P3"] == "FALSIFIED"
+    assert _verdicts(men.read_e48(*_e48(mdn1=6.0)))["P4"] == "FALSIFIED"
+    assert _verdicts(men.read_e48(*_e48(mdn2=1.2)))["P5"] == "FALSIFIED"
+
+
+def test_e48_a_failed_fit_counts_against():
+    v = _verdicts(men.read_e48(*_e48(fail=(1, 2))))
+    assert v["P3"] == "FALSIFIED"                                  # 15/16 above is not 16/16
+
+
+def test_e48_refuses_different_test_bundles():
+    d48, d36 = _e48()
+    d48["test_bundle"] = "x"
+    with pytest.raises(ValueError):
+        men.read_e48(d48, d36)
+
+
+# --------------------------------------------------------------------------- E49
+def _e49(mdn_vs_site=0.8, mdn_vs_mix=0.5, ll_vs_mdn=0.8, at_cap=0, n=8):
+    rng = np.random.default_rng(4)
+    d49, dB = [], []
+    for s in range(n):
+        site = 0.10 * np.exp(rng.normal(0, 0.03)); b = f"b{s}"
+        mdn = site * mdn_vs_site
+        for arm, risk in (("em_pair_quartic", site), ("em_mixture", mdn / mdn_vs_mix), ("em_loglinear", mdn * ll_vs_mdn)):
+            dB.append(dict(cell="LAP_B_L32", seed=s, n_chains=2048, arm=arm, selection="risk", risk=risk, test_bundle=b))
+        d49.append(dict(cell="LAP_B_L32", seed=s, n_chains=2048, arm="em_mdn", selection="risk", risk=mdn, at_cap=int(s < at_cap), test_bundle=b))
+    return pd.DataFrame(d49), pd.DataFrame(dB)
+
+
+def test_e49_all_confirmed_on_a_constructed_table():
+    assert set(_verdicts(men.read_e49(*_e49())).values()) == {"CONFIRMED"}
+
+
+def test_e49_clauses_fall_in_their_directions():
+    assert _verdicts(men.read_e49(*_e49(mdn_vs_site=1.2)))["P1"] == "FALSIFIED"
+    assert _verdicts(men.read_e49(*_e49(mdn_vs_mix=1.5)))["P2"] == "FALSIFIED"
+    assert _verdicts(men.read_e49(*_e49(ll_vs_mdn=1.3)))["P3"] == "FALSIFIED"
+    assert _verdicts(men.read_e49(*_e49(at_cap=4)))["P4"] == "FALSIFIED"
+
+
+def test_e49_refuses_different_test_bundles():
+    d49, dB = _e49()
+    d49["test_bundle"] = "x"
+    with pytest.raises(ValueError):
+        men.read_e49(d49, dB)

@@ -1,0 +1,21 @@
+{
+ "id": "E49",
+ "script": "experiments/e43_free_kernel.py",
+ "hypothesis": "Jerome's Q6 asked whether the kernel can be a neural network fitted by EM and whether it overfits. On the AR(1) and phi^4 laboratories the answer was no: a 25-parameter kernel beats the MDN (E25-E31, E33, E41), but the MDN's only win came where the Gibbs class is misspecified (E36x, stride 4). E43's second laboratory, a Laplace bond on a double well outside the tilted-walk class, is the clean test of whether the neural kernel earns its parameters there, and whether the 100-parameter log-linear kernel (E43) is a better answer than the 1,516-parameter MDN.",
+ "design": "The frozen E43 driver, part kernels, unmodified, at other settings: cell LAP_B_L32, arm em_mdn only, M in (128, 512, 2048), seeds 0-7 (two shards of four: e49-s0, s4), E33's EM ladder. Comparators: E43's frozen lab-B fits (site energy, tilted spline, mixture, log-linear) on the same seeds and bundles (hashes compared at read time).",
+ "predeclared_predictions": {
+  "P1": "At M = 2048 the MDN is below the site energy in at least 7 of 8 seeds (a state-dependent mixture can represent what a Gaussian bond cannot).",
+  "P2": "At M = 2048 the MDN is below the mixture in at least 7 of 8 seeds (E33's order).",
+  "P3": "At M = 2048 the 100-parameter log-linear kernel (E43) is below the MDN in at least 6 of 8 seeds: parsimony against the neural kernel again.",
+  "P4": "At M = 2048 at most 30% of the MDN fits select the last checkpoint (E41: the budget does not bind)."
+ },
+ "predeclared_analysis": "kernels.csv (risk-selected rows) merged over the shards, paired per seed with E43's frozen lab-B rows at the same M (test-bundle hashes compared); a failed fit counts against; read by tools/make_extension_numbers.py.",
+ "seeds": {
+  "confirmatory": "0-7",
+  "dev": "10000 (smoke only)"
+ },
+ "provenance_note": "Written after E43 and E41 were read and before any E49 cell ran. P3 is the one I am least sure of: the MDN has fifteen times the parameters but is a very different family.",
+ "resources": "cluster, defq, 2 x 8 cpus, 24G, 12 h; an MDN fit took about 1 h at M = 2048 in E33 (shared nodes)",
+ "status": "REGISTERED and PREDECLARED 2026-10-09, before any E49 cell ran; not yet submitted",
+ "registered": "2026-10-09"
+}

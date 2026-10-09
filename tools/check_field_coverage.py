@@ -64,6 +64,13 @@ SHARDS = {
                           {("LAP_B_L32", s, n, a, sel) for s in range(k, k + 4) for n in (128, 512, 2048)
                            for a in ("em_loglinear", "em_pair_quartic", "em_tilted_spline", "em_mixture") for sel in ("risk", "evidence")}
                           | {("LAP_B_L32", s, n, "lmmse_true", "risk") for s in range(k, k + 4) for n in (128, 512, 2048)}) for k in (0, 4)},
+    # E47 / E48 / E49 (registered 9 Oct): the coarse grid, the MDN with a long clean ladder, the MDN on the out-of-class chain
+    **{f"hpc_E47b_s{k}": ("kernels.csv", ["cell", "seed", "n_chains", "grid_size", "arm", "selection"],
+                          {(c, s, n, ng, a, sel) for c in ("T0.3_h1_L32", "T0.3_h0.25_L128") for s in range(k, k + 4) for n in (128, 2048)
+                           for ng in (51, 101, 201) for a in ("em_pair_quartic", "em_tilted_spline") for sel in ("risk", "evidence")}) for k in (0, 4)},
+    **{f"hpc_E48_s{k}": ("clean.csv", ["stride", "seed", "arm"], {(st, s, "em_mdn") for st in (1, 2, 4) for s in range(k, k + 4)}) for k in (0, 4, 8, 12)},
+    **{f"hpc_E49_s{k}": ("kernels.csv", ["cell", "seed", "n_chains", "arm", "selection"],
+                         {("LAP_B_L32", s, n, "em_mdn", sel) for s in range(k, k + 4) for n in (128, 512, 2048) for sel in ("risk", "evidence")}) for k in (0, 4)},
     # E44 (registered 8 Oct): non-equilibrium snapshots, two shards of four seeds
     **{f"hpc_E44_s{k}": ("quench.csv", ["tau", "seed", "n_chains", "arm", "selection"],
                          {(tau, s, 512, a, sel) for tau in (1.5, 3.0, 6.0, 12.0, float("inf")) for s in range(k, k + 4)

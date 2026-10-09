@@ -46,6 +46,23 @@ E44 (experiments/registry/E44.json): non-equilibrium snapshots; R = arm risk / l
   P3  tau = 1.5, 3, 6: the spline's risk is below the site energy's in >= 7/8 seeds, at each
   P4  tau = infinity: the site energy's risk is below the spline's in >= 7/8 seeds
 
+E47 (experiments/registry/E47.json): the coarse grid. Oracle part descriptive (scouted before registration); learned part against E33's N_g = 401 fits:
+  P1  base cell, M = 2048: N_g = 101 and 201: seed-mean risk ratio vs 401 in [0.99, 1.01], both arms
+  P2  base cell, M = 2048, N_g = 51: both arms in [0.97, 1.03]
+  P3  finest lattice, M = 2048: N_g = 101 in [0.99, 1.01] and N_g = 51 in [0.90, 1.10], both arms
+  P4  M = 128, both cells: N_g = 101 in [0.99, 1.01], both arms
+  P5  site-energy EM fit time, base cell, M = 2048: median wall at 101 <= 1/4 and at 51 <= 1/8 of E33's at 401
+  P6  BP time per sequence at N_g = 51 <= 0.07 ms; at 101 within 20% of 0.114 ms
+  P7  log-log slope of time vs N_g over 41-401 < 1.5
+E48 (experiments/registry/E48.json): the MDN with a clean ladder to 16000, against E36x's frozen fits.
+  P1  stride 4: the MDN selects a checkpoint below the last in >= 12/16 seeds
+  P2  stride 4: MDN below the site energy in >= 14/16 seeds
+  P3  stride 1: MDN above the site energy in 16/16 seeds
+  P4  stride 1: seed-mean ratio MDN / site energy < 5
+  P5  stride 2: MDN below the site energy in >= 10/16 seeds
+E49 (experiments/registry/E49.json): the MDN on E43's out-of-class chain, against E43's frozen lab-B fits at M = 2048.
+  P1  MDN below the site energy in >= 7/8 seeds;  P2  below the mixture in >= 7/8;  P3  the log-linear kernel below the MDN in >= 6/8;  P4  <= 30% of MDN fits at the last checkpoint
+
 A fit that raised in EM is a FAILED row (E33 amendment 3): it counts against every clause it touches and never for one.
 The test bundles of E41 and E33 are compared by hash; a mismatch stops the reading.
 """
@@ -208,6 +225,110 @@ def read_e44(d):
     return rows
 
 
+# --------------------------------------------------------------------------- E47, E48, E49
+def _within(x, lo, hi):
+    return bool(np.isfinite(x) and lo <= x <= hi)
+
+
+def read_e47_learned(d, d33):
+    rows = []
+    n_seeds = d.seed.nunique()
+
+    def ratio(arm, cell, n, ng):
+        a = d[(d.arm == arm) & (d.selection == "risk") & (d.cell == cell) & (d.n_chains == n) & (d.grid_size == ng)].set_index("seed").sort_index()
+        b = d33[(d33.arm == arm) & (d33.selection == "risk") & (d33.cell == cell) & (d33.n_chains == n)].set_index("seed").reindex(a.index)
+        if len(a) == 0:
+            return np.nan, np.nan
+        if (a.test_bundle.values != b.test_bundle.values).any():
+            raise ValueError("E47 and E33 were scored on different test bundles; the paired reading is not valid")
+        if a.risk.isna().any() or b.risk.isna().any():
+            return np.nan, np.nan                                      # a failed fit counts against
+        return float(a.risk.mean() / b.risk.mean()), float(a.wall.median() / b.wall.median())
+
+    base, fine = "T0.3_h1_L32", "T0.3_h0.25_L128"
+    arms = ("em_pair_quartic", "em_tilted_spline")
+    def clause(pred, label, cells_n_ng_lo_hi):
+        ok, notes = True, []
+        for cell, n, ng, lo, hi in cells_n_ng_lo_hi:
+            for a in arms:
+                r, _ = ratio(a, cell, n, ng)
+                ok &= _within(r, lo, hi); notes.append(f"{cell[:8]}/M{n}/N{ng}/{a[3:7]}: {r:.3f}")
+        rows.append(row("E47", pred, label, np.nan, None, n_seeds, bool(ok), "; ".join(notes)))
+    clause("P1", "base cell, M = 2048: N_g = 101 and 201 within 1% of 401, both arms", [(base, 2048, 101, .99, 1.01), (base, 2048, 201, .99, 1.01)])
+    clause("P2", "base cell, M = 2048, N_g = 51 within 3% of 401, both arms", [(base, 2048, 51, .97, 1.03)])
+    clause("P3", "finest lattice, M = 2048: N_g = 101 within 1%, N_g = 51 within 10%, both arms", [(fine, 2048, 101, .99, 1.01), (fine, 2048, 51, .90, 1.10)])
+    clause("P4", "M = 128, both cells: N_g = 101 within 1% of 401, both arms", [(base, 128, 101, .99, 1.01), (fine, 128, 101, .99, 1.01)])
+    w101 = ratio("em_pair_quartic", base, 2048, 101)[1]
+    w51 = ratio("em_pair_quartic", base, 2048, 51)[1]
+    rows.append(row("E47", "P5", "site-energy EM fit time, base cell, M = 2048: <= 1/4 at N_g = 101 and <= 1/8 at 51 of E33's at 401", w101, None, n_seeds,
+                    bool(np.isfinite(w101) and np.isfinite(w51) and w101 <= 0.25 and w51 <= 0.125), f"N_g = 101: {w101:.3f}; N_g = 51: {w51:.3f}"))
+    return rows
+
+
+def read_e47_time(d):
+    b = d[(d.arm == "bp_grid") & (d.factor == "grid_size") & (d.batch == 512) & (d.n_sites == 32)]
+    ms = (b.groupby("grid_size").wall_median.median() / 512 * 1000).sort_index()
+    rows = []
+    t51, t101 = float(ms.get(51, np.nan)), float(ms.get(101, np.nan))
+    rows.append(row("E47", "P6", "BP time per sequence <= 0.07 ms at N_g = 51 and within 20% of 0.114 ms at 101", t51, None, len(ms),
+                    bool(np.isfinite(t51) and np.isfinite(t101) and t51 <= 0.07 and 0.114 * 0.8 <= t101 <= 0.114 * 1.2), "ms: " + ", ".join(f"{int(g)}: {v:.3f}" for g, v in ms.items())))
+    sub_ = ms[(ms.index >= 41) & (ms.index <= 401)]
+    slope = float(np.polyfit(np.log(sub_.index.values.astype(float)), np.log(sub_.values), 1)[0]) if len(sub_) >= 3 else float("nan")
+    rows.append(row("E47", "P7", "log-log slope of time vs N_g over 41-401 < 1.5", slope, None, len(sub_), None if np.isnan(slope) else bool(slope < 1.5)))
+    return rows
+
+
+def read_e47_oracle(d):
+    rows = []
+    for cell, g in d.groupby("cell"):
+        w = g.groupby("grid_size").rel_error.max()
+        rows.append(dict(experiment="E47", prediction="oracle", clause=f"{cell}: worst relative score error vs 1601", value=float(w.get(101, np.nan)), k=None, n=len(w),
+                         verdict="DESCRIPTIVE", note=", ".join(f"{int(n)}: {v:.1e}" for n, v in w.items() if n in (21, 31, 41, 51, 61, 81, 101, 201, 401))))
+    return rows
+
+
+def read_e48(d, d36x):
+    rows = []
+    mdn = d[d.arm == "em_mdn"].set_index(["stride", "seed"]).sort_index()
+    ref = d36x[(d36x.arm == "em_pair_quartic")].set_index(["stride", "seed"]).sort_index().reindex(mdn.index)
+    if "test_bundle" in mdn and "test_bundle" in ref and (mdn.test_bundle.values != ref.test_bundle.values).any():
+        raise ValueError("E48 and E36x were scored on different test bundles; the paired reading is not valid")
+    ns = mdn.index.get_level_values("seed").nunique()
+    m4, r4 = mdn.loc[4], ref.loc[4]
+    k = int((m4.at_cap == 0).sum())
+    rows.append(row("E48", "P1", f"stride 4: MDN selects a checkpoint below the last in >= {_need(ns, 12 / 16)}/{ns} seeds", np.nan, k, ns, bool(k >= _need(ns, 12 / 16)), f"largest selected {int(m4.checkpoint.max())}"))
+    k = int((m4.risk < r4.risk).sum())
+    rows.append(row("E48", "P2", f"stride 4: MDN below the site energy in >= {_need(ns, 14 / 16)}/{ns} seeds", float((m4.risk / r4.risk).mean()), k, ns, bool(k >= _need(ns, 14 / 16))))
+    m1, r1 = mdn.loc[1], ref.loc[1]
+    k = int((m1.risk > r1.risk).sum())
+    rows.append(row("E48", "P3", f"stride 1: MDN above the site energy in {ns}/{ns} seeds", float((m1.risk / r1.risk).mean()), k, ns, bool(k == ns)))
+    ratio = float(m1.risk.mean() / r1.risk.mean())
+    rows.append(row("E48", "P4", "stride 1: seed-mean ratio MDN / site energy < 5", ratio, None, ns, bool(np.isfinite(ratio) and ratio < 5)))
+    m2, r2 = mdn.loc[2], ref.loc[2]
+    k = int((m2.risk < r2.risk).sum())
+    rows.append(row("E48", "P5", f"stride 2: MDN below the site energy in >= {_need(ns, 10 / 16)}/{ns} seeds", float((m2.risk / r2.risk).mean()), k, ns, bool(k >= _need(ns, 10 / 16))))
+    return rows
+
+
+def read_e49(d, dB):
+    rows = []
+    n = 2048
+    mdn = _risk_rows(d, "em_mdn", n).loc["LAP_B_L32"]
+    R = {a: _risk_rows(dB, a, n).loc["LAP_B_L32"].reindex(mdn.index) for a in ("em_pair_quartic", "em_mixture", "em_loglinear")}
+    if (R["em_pair_quartic"].test_bundle.values != mdn.test_bundle.values).any():
+        raise ValueError("E49 and E43 were scored on different test bundles; the paired reading is not valid")
+    ns = len(mdn)
+    k = int((mdn.risk < R["em_pair_quartic"].risk).sum())
+    rows.append(row("E49", "P1", f"M = 2048: MDN below the site energy in >= {_need(ns, 7 / 8)}/{ns} seeds", float((mdn.risk / R["em_pair_quartic"].risk).mean()), k, ns, bool(k >= _need(ns, 7 / 8))))
+    k = int((mdn.risk < R["em_mixture"].risk).sum())
+    rows.append(row("E49", "P2", f"M = 2048: MDN below the mixture in >= {_need(ns, 7 / 8)}/{ns} seeds", float((mdn.risk / R["em_mixture"].risk).mean()), k, ns, bool(k >= _need(ns, 7 / 8))))
+    k = int((R["em_loglinear"].risk < mdn.risk).sum())
+    rows.append(row("E49", "P3", f"M = 2048: log-linear below the MDN in >= {_need(ns, 6 / 8)}/{ns} seeds", float((R["em_loglinear"].risk / mdn.risk).mean()), k, ns, bool(k >= _need(ns, 6 / 8))))
+    share = float((mdn.at_cap == 1).mean())
+    rows.append(row("E49", "P4", "M = 2048: at most 30% of MDN fits at the last checkpoint", share, int((mdn.at_cap == 1).sum()), ns, bool(share <= 0.30)))
+    return rows
+
+
 # --------------------------------------------------------------------------- E45
 def read_e45(d):
     rows = []
@@ -346,6 +467,12 @@ def main() -> int:
     ap.add_argument("--e46", default="outputs/hpc_E46_s*/symmetry.csv")
     ap.add_argument("--e45", default="outputs/E45/inpainting.csv")
     ap.add_argument("--e44", default="outputs/hpc_E44_s*/quench.csv")
+    ap.add_argument("--e47a", default="outputs/E47a/refinement.csv")
+    ap.add_argument("--e47b", default="outputs/hpc_E47b_s*/kernels.csv")
+    ap.add_argument("--e47t", default="outputs/hpc_E47t/scaling.csv")
+    ap.add_argument("--e48", default="outputs/hpc_E48_s*/clean.csv")
+    ap.add_argument("--e36x", default="outputs/hpc_E36x_s*/clean.csv")
+    ap.add_argument("--e49", default="outputs/hpc_E49_s*/kernels.csv")
     ap.add_argument("--e43a", default="outputs/hpc_E43a_s*/kernels.csv")
     ap.add_argument("--e43b", default="outputs/hpc_E43b_s*/kernels.csv")
     ap.add_argument("--e35x", default="outputs/hpc_E35x_s*/augmented.csv")
@@ -357,6 +484,9 @@ def main() -> int:
     d43a, d43b = _load(a.e43a), _load(a.e43b)
     d45 = _load(a.e45)
     d44 = _load(a.e44)
+    d47b, d47t, d47a = _load(a.e47b), _load(a.e47t), _load(a.e47a)
+    d48, d36x = _load(a.e48), _load(a.e36x)
+    d49 = _load(a.e49)
     if not d41.empty:
         rows += read_e41(d41, pd.concat([d33k, d33q], ignore_index=True))
     if not d42.empty:
@@ -364,6 +494,16 @@ def main() -> int:
         rows += read_e42(tab, failed)
     if not d46.empty:
         rows += read_e46(d46, d35x)
+    if not d47a.empty:
+        rows += read_e47_oracle(d47a)
+    if not d47b.empty:
+        rows += read_e47_learned(d47b, pd.concat([d33k, d33q], ignore_index=True))
+    if not d47t.empty:
+        rows += read_e47_time(d47t)
+    if not d48.empty:
+        rows += read_e48(d48, d36x)
+    if not d49.empty:
+        rows += read_e49(d49, d43b)
     if not d44.empty:
         rows += read_e44(d44)
     if not d45.empty:

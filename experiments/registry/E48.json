@@ -1,0 +1,22 @@
+{
+ "id": "E48",
+ "script": "experiments/e36_stride_protocol.py",
+ "hypothesis": "E36x left one clause unresolved by the registered rule: at stride 4 the neural kernel (MDN) beats the site energy, but it selected its last checkpoint (2000) in 15 of 16 fits and none converged, so the clause could not be called, although its risk (0.020 against 0.040) is an upper bound pointing the right way. A clean-data MDN fit costs 6-15 minutes at 2000 updates, so the ladder can be extended eight-fold. E48 does that at all three strides, and also asks (Jerome's Q6: can a neural kernel be fitted by EM, and does it overfit) whether, with enough budget, it ever beats the exactly specified model.",
+ "design": "The frozen e36 driver, part clean, unmodified, at other settings: arm em_mdn only; strides (1, 2, 4); seeds 0-15 (four shards of four: e48-s0, s4, s8, s12); the ladder extended to (1, 2, 4, 8, 16, 32, 64, 120, 220, 400, 700, 1200, 2000, 3200, 5000, 8000, 12000, 16000). Comparators: E36x's frozen em_pair_quartic, em_tilted_spline and em_mixture on the same seeds and bundles (test-bundle hashes compared at read time).",
+ "predeclared_predictions": {
+  "P1": "Resolved: at stride 4 the MDN selects a checkpoint below the last one (16000) in at least 12 of 16 seeds.",
+  "P2": "At stride 4 the MDN's clean risk is below the site energy's in at least 14 of 16 seeds (E36x, capped: 16/16).",
+  "P3": "At stride 1, where the problem is exactly specified, the MDN stays ABOVE the site energy in 16 of 16 seeds even at 16000 updates.",
+  "P4": "At stride 1 the seed-mean ratio MDN / site energy is below 5 (E36x at 2000 updates: 5.4): more budget closes part of the gap.",
+  "P5": "At stride 2 (E36x: a tie, 0.0104 against 0.0108) the MDN is below the site energy in at least 10 of 16 seeds."
+ },
+ "predeclared_analysis": "clean.csv of the four shards; per (stride, seed) the MDN's risk against E36x's frozen em_pair_quartic; at_cap from the driver's own flag; a failed fit counts against every clause it touches; read by tools/make_extension_numbers.py.",
+ "seeds": {
+  "confirmatory": "0-15",
+  "dev": "10000 (smoke only)"
+ },
+ "provenance_note": "Written after E36x was read (that is what motivated it) and before any E48 cell ran. P3 and P4 are judgements about what a flexible kernel does against the exactly specified one; a falsified P3 would be the more interesting outcome.",
+ "resources": "cluster, defq, 4 x 8 cpus, 24G, 10 h; a clean MDN fit took 6-15 min at 2000 updates, so up to about 2 h at 16000",
+ "status": "REGISTERED and PREDECLARED 2026-10-09, before any E48 cell ran; not yet submitted",
+ "registered": "2026-10-09"
+}
