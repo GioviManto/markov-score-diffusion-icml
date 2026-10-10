@@ -23,11 +23,21 @@ E47,oracle,T0.3_h1_L32: worst relative score error vs 1601,0.0000,,11.0000,DESCR
 E47,oracle,T0.5_iso_L32: worst relative score error vs 1601,0.0000,,11.0000,DESCRIPTIVE,"21: 5.1e-01, 31: 5.2e-02, 41: 1.9e-03, 51: 2.9e-05, 61: 2.2e-07, 81: 2.3e-12, 101: 1.3e-12, 201: 1.3e-12, 401: 1.3e-12"
 E47,oracle,T1_iso_L32: worst relative score error vs 1601,0.0000,,11.0000,DESCRIPTIVE,"21: 5.1e-01, 31: 5.1e-02, 41: 1.6e-03, 51: 1.7e-05, 61: 6.6e-08, 81: 1.8e-13, 101: 3.0e-12, 201: 1.0e-13, 401: 1.3e-15"
 E47,oracle,T2_iso_L32: worst relative score error vs 1601,0.0000,,11.0000,DESCRIPTIVE,"21: 5.1e-01, 31: 5.2e-02, 41: 1.6e-03, 51: 1.7e-05, 61: 5.7e-08, 81: 4.6e-13, 101: 4.3e-13, 201: 2.0e-15, 401: 1.7e-15"
+E47,P1,"base cell, M = 2048: N_g = 101 and 201 within 1% of 401, both arms",,,8.0000,CONFIRMED,T0.3_h1_/M2048/N101/pair: 1.000; T0.3_h1_/M2048/N101/tilt: 1.000; T0.3_h1_/M2048/N201/pair: 1.000; T0.3_h1_/M2048/N201/tilt: 1.000
+E47,P2,"base cell, M = 2048, N_g = 51 within 3% of 401, both arms",,,8.0000,CONFIRMED,T0.3_h1_/M2048/N51/pair: 1.000; T0.3_h1_/M2048/N51/tilt: 1.006
+E47,P3,"finest lattice, M = 2048: N_g = 101 within 1%, N_g = 51 within 10%, both arms",,,8.0000,CONFIRMED,T0.3_h0./M2048/N101/pair: 1.000; T0.3_h0./M2048/N101/tilt: 1.000; T0.3_h0./M2048/N51/pair: 1.012; T0.3_h0./M2048/N51/tilt: 0.995
+E47,P4,"M = 128, both cells: N_g = 101 within 1% of 401, both arms",,,8.0000,CONFIRMED,T0.3_h1_/M128/N101/pair: 1.000; T0.3_h1_/M128/N101/tilt: 1.000; T0.3_h0./M128/N101/pair: 1.000; T0.3_h0./M128/N101/tilt: 1.001
+E47,P5,"site-energy EM fit time, base cell, M = 2048: <= 1/4 at N_g = 101 and <= 1/8 at 51 of E33's at 401",0.0710,,8.0000,CONFIRMED,N_g = 101: 0.071; N_g = 51: 0.031
 E47,P8,headline kernels at N_g = 201: every arm's seed-mean risk within 1% of N_g = 401,0.0001,,16.0000,CONFIRMED,M32/C1: 1.0000; M32/C8: 1.0000; M2048/C1: 1.0000; M2048/C8: 1.0001
 E47,P9,headline kernels at N_g = 101: within 5% of N_g = 401,0.0221,,16.0000,CONFIRMED,M32/C1: 1.0006; M32/C8: 1.0012; M2048/C1: 1.0007; M2048/C8: 1.0221
 E47,P10,C = 8 kernels resolved: >= 90% at N_g = 101 and a lower fraction at 51,0.2188,,32.0000,FALSIFIED,"resolved fraction by N_g: 51: 0.00, 101: 0.22, 201: 1.00, 401: 1.00"
 E47,P6,BP time per sequence <= 0.07 ms at N_g = 51 and within 20% of 0.114 ms at 101,0.0528,,8.0000,CONFIRMED,"ms: 41: 0.042, 51: 0.053, 61: 0.063, 81: 0.084, 101: 0.107, 151: 0.173, 201: 0.249, 401: 0.667"
 E47,P7,log-log slope of time vs N_g over 41-401 < 1.5,1.1986,,8.0000,CONFIRMED,
+E48,P1,stride 4: MDN selects a checkpoint below the last in >= 12/16 seeds,,5.0000,16.0000,FALSIFIED,largest selected 16000
+E48,P2,stride 4: MDN below the site energy in >= 14/16 seeds,0.4046,16.0000,16.0000,CONFIRMED,
+E48,P3,stride 1: MDN above the site energy in 16/16 seeds,3.7069,16.0000,16.0000,CONFIRMED,
+E48,P4,stride 1: seed-mean ratio MDN / site energy < 5,2.9812,,16.0000,CONFIRMED,
+E48,P5,stride 2: MDN below the site energy in >= 10/16 seeds,0.9129,14.0000,16.0000,CONFIRMED,
 E50,P1,"calibration: |share right - (1 + commitment) / 2| <= 0.01 on average over levels and <= 0.05 at every level, every cell",0.0025,19.0000,19.0000,CONFIRMED,worst mean 0.0025 (T0.2_h1_L4); worst level 0.0157 (T0.2_h1_L4)
 E50,P2,fixed spacing: t_c falls strictly as Theta rises (7/7 consecutive pairs),,7.0000,7.0000,CONFIRMED,"t_c: T0.2: 1.611, T0.3: 1.087, T0.4: 0.847, T0.5: 0.716, T0.7: 0.595, T1: 0.519, T1.5: 0.475, T2: 0.455"
 E50,P3,exact posterior commits earlier in the reverse process than its Gaussian twin (t_c > t_c^twin) at Theta <= 0.5 (4/4); excess at 0.2 > at 2,0.4655,4.0000,4.0000,CONFIRMED,"excess: T0.2: +0.466, T0.3: +0.320, T0.4: +0.227, T0.5: +0.169, T0.7: +0.118, T1: +0.086, T1.5: +0.072, T2: +0.066"

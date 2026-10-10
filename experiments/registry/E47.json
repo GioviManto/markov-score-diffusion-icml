@@ -23,7 +23,7 @@
  },
  "provenance_note": "Written after the oracle SCOUTING described under predeclared_predictions['oracle'] and after the E24x timings at N_g >= 101 were read; the learned-estimator and fit-time predictions (P1-P5) and the sub-101 timings (P6, P7) are not scouted. P1-P4 are tight (1% and 3%) because the oracle's discretisation error at 101 is 1e-11: a learned risk that moves by more than 1% would mean the kernel fit, not the quadrature, is what changes with the grid. Part (d) was added after E23's quadrature table was read (the family-by-family trapezoid errors above) and before E04 was re-run on the coarse ladder; nothing about the coarse headline risks has been seen.",
  "resources": "learned: cluster, defq, 2 x 8 cpus, 24G, 8 h (about 15 CPU-hours a shard); time: one exclusive node (--exclusive), minutes; oracle: laptop; (d) laptop, minutes (frozen kernels from outputs/E02a, not on the cluster)",
- "status": "REGISTERED and PREDECLARED 2026-10-09, before any E47 learned or time cell ran; parts (a) oracle and (d) headline kernels RUN on the laptop and FROZEN 2026-10-09 (E47a, E47c); part (c) time RUN on an exclusive node (691997, cnode01, 1 min 58 s, clean 3fed270) and FROZEN 2026-10-09 (hpc_E47t); part (b) learned SUBMITTED (691998, 691999), PENDING behind the cluster maintenance window (no start before 10 Oct 12:00)",
+ "status": "REGISTERED and PREDECLARED 2026-10-09, before any E47 learned or time cell ran; parts (a) and (d) laptop, FROZEN 2026-10-09; part (c) exclusive node (691997), FROZEN 2026-10-09; part (b) learned (691998, 691999; cnode06/cnode01, 4 h 10 min and 1 h 28 min, clean 3fed270; started 10 Oct after the maintenance window), FROZEN 2026-10-10 (hpc_E47b_s0, s4). READ: P1-P9 CONFIRMED, P10 FALSIFIED",
  "registered": "2026-10-09",
  "hpc_runs": {
   "deployment": "3fed270-20261009T160824Z (hpc/.deploy_3fed270.env)",
@@ -40,17 +40,25 @@
   "outputs/E47c/params_refine.json": "8dd09a7d1e7cc2733a7f43991883cb7bb451b8f086b618a26d3c4827c099f77a",
   "outputs/hpc_E47t/scaling.csv": "44d63ec58ae304e7e2d4e2d33863db28e617855612360708c18c65d744c5cc19",
   "outputs/hpc_E47t/slopes.csv": "f7d2eea4eabf94002880196fc8e06837000d0fabe092fd1b8fdd359c873e516b",
-  "outputs/hpc_E47t/params_scaling.json": "726becaa7398949e77540e892f86baa8c53ff6b353825dc7403402668f053ff1"
+  "outputs/hpc_E47t/params_scaling.json": "726becaa7398949e77540e892f86baa8c53ff6b353825dc7403402668f053ff1",
+  "outputs/hpc_E47b_s0/kernels.csv": "1a0b5bc387dd2f96b3715238b1713fc7510ccbb7dfff7ee83de1dc61ceb29ed5",
+  "outputs/hpc_E47b_s0/params_learned.json": "fcb9b1641be072bb89eaa8313deaa3fd2019ed7ed6021e83f134fbbf7636a65d",
+  "outputs/hpc_E47b_s4/kernels.csv": "26635a34b99a713bbb2b847b4e2a0acacdeff3d574e14514c12e087735d02250",
+  "outputs/hpc_E47b_s4/params_learned.json": "c087db5ae12fc57b4848ccf69136c94a2ec4d2436474727bd3884ee2b92e11ff"
  },
  "frozen_at": {
   "E47a": "2026-10-09T16:33:17Z",
   "E47c": "2026-10-09T16:33:17Z",
-  "hpc_E47t": "2026-10-09T17:16:27Z"
+  "hpc_E47t": "2026-10-09T17:16:27Z",
+  "hpc_E47b_s0": "2026-10-10T17:32:52Z",
+  "hpc_E47b_s4": "2026-10-10T17:32:52Z"
  },
  "frozen_commit": {
   "E47a": "db0ff62c6162c40b44e1a687b1b1ad9712e93d90",
   "E47c": "db0ff62c6162c40b44e1a687b1b1ad9712e93d90",
-  "hpc_E47t": "938d0098c766bd3082303b1d06d7278757a73703"
+  "hpc_E47t": "938d0098c766bd3082303b1d06d7278757a73703",
+  "hpc_E47b_s0": "c3c817bc7df3fb40c2c4ff807991504f3d7f6a02",
+  "hpc_E47b_s4": "c3c817bc7df3fb40c2c4ff807991504f3d7f6a02"
  },
  "frozen_run_commits": {
   "E47a": [
@@ -60,6 +68,12 @@
    "db0ff62"
   ],
   "hpc_E47t": [
+   "3fed270"
+  ],
+  "hpc_E47b_s0": [
+   "3fed270"
+  ],
+  "hpc_E47b_s4": [
    "3fed270"
   ]
  },
@@ -71,7 +85,14 @@
   "P8": "CONFIRMED. Headline kernels at N_g = 201: every arm's seed-mean pooled risk within 0.01% of N_g = 401 (worst seed 0.02%).",
   "P9": "CONFIRMED. At N_g = 101: C = 1 within 0.07% (M = 32 and 2048), C = 8 within 0.12% at M = 32 and 2.2% at M = 2048 (worst seed 7.6%). At N_g = 51 the C = 8 M = 2048 kernels move +70% (worst seed +188%); C = 1 moves 2.5-2.8%. At N_g = 151: every arm within 0.08% (worst seed 0.23%).",
   "P10": "FALSIFIED. Only 22% of the C = 8 kernels, pooled over M (7 of 32, the reader's basis), are flagged 'resolved' at N_g = 101 (44% at M = 32, 0% at M = 2048); at 151, 97% pooled (100% at M = 32, 94% at M = 2048); 100% at 201; 0% at 51. The learned mixtures at large M contain components narrower than a 101-point spacing (0.16): the coarse grid is safe for the smooth phi^4 chain at 101 and for the AR(1) headline kernels only from about 151.",
-  "unregistered": "Thread count. E24x (the comparator the hypothesis quoted, 0.03-0.04 ms for the transformer, the GRU and the U-Net) ran with 8 BLAS/torch threads on cnode07; part (c) ran with ONE thread, as designed. BP barely uses threads (0.107 vs 0.114 ms at N_g = 101; 0.667 vs 0.524 ms at 401: the matmul is a small share), the networks do: at one thread, per sequence, mlp 0.002, window 0.023, bigru 0.063, unet 0.152, transformer 0.208, tcn 0.216 ms. Per core, BP at N_g = 101 (0.107 ms) is faster than the transformer, the U-Net and the TCN and 1.7 times the bigru; at 151 (0.173 ms) it is within 15% of the U-Net. Not a prediction; the comparison is at matched threads (one) on one node, inference only, B = 512, L = 32."
+  "unregistered": "Thread count. E24x (the comparator the hypothesis quoted, 0.03-0.04 ms for the transformer, the GRU and the U-Net) ran with 8 BLAS/torch threads on cnode07; part (c) ran with ONE thread, as designed. BP barely uses threads (0.107 vs 0.114 ms at N_g = 101; 0.667 vs 0.524 ms at 401: the matmul is a small share), the networks do: at one thread, per sequence, mlp 0.002, window 0.023, bigru 0.063, unet 0.152, transformer 0.208, tcn 0.216 ms. Per core, BP at N_g = 101 (0.107 ms) is faster than the transformer, the U-Net and the TCN and 1.7 times the bigru; at 151 (0.173 ms) it is within 15% of the U-Net. Not a prediction; the comparison is at matched threads (one) on one node, inference only, B = 512, L = 32.",
+  "read_b": "2026-10-10, outputs/hpc_E47b_s{0,4}/kernels.csv (192 + 192 keys), tools/make_extension_numbers.py read_e47_learned as pinned (test-bundle hashes checked against E33's on every pair).",
+  "P1": "CONFIRMED. Base cell, M = 2048: seed-mean risk at N_g = 101 and 201 over E33's at 401 is 1.000 for both the site energy and the tilted spline.",
+  "P2": "CONFIRMED. Base cell, M = 2048, N_g = 51: 1.000 (site energy) and 1.006 (spline); band 3%.",
+  "P3": "CONFIRMED. Finest lattice (h = 0.25, L = 128), M = 2048: 1.000 and 1.000 at N_g = 101; 1.012 and 0.995 at 51 (band 10%).",
+  "P4": "CONFIRMED. M = 128, both cells, N_g = 101: 1.000, 1.000, 1.000, 1.001.",
+  "P5": "CONFIRMED. Median EM fit time of the site energy (base cell, M = 2048) relative to E33's at N_g = 401: 0.071 at N_g = 101 and 0.031 at 51 (thresholds 1/4 and 1/8). Shared nodes on both sides: indicative.",
+  "summary": "The coarse grid is safe for the phi^4 chain: the oracle is exact to 2e-11 at 101 points (a), the LEARNED site energy and spline lose nothing at 101 points and at most 1.2% at 51 (b), and one BP sweep is 6 times cheaper at 101 than at 401 on one thread (c). For the paper's Laplace-noise kernels the safe grid is about 151 points (d: P10 falsified at 101 for the large-M mixtures)."
  },
  "corrections_2026_10_09": [
   "outcome['P10']: '22% ... at N_g = 101 (44% at M = 32, 0% at M = 2048; 94% at 151, 100% at 201)' -> '22% ..., pooled over M (7 of 32, the reader's basis), ... at 151, 97% pooled (100% at M = 32, 94% at M = 2048); 100% at 201' (22% was pooled over M but 94% was M = 2048 alone; verdict unchanged; outputs/E47c/refinement.csv)"
