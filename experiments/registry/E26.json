@@ -5,9 +5,9 @@
  "design": "e05_generation's registered arms -- exact (true-kernel grid BP), em_bp (the mixture kernel fitted in E02a, validation-selected), lmmse (the covariance twin), isotropic -- plus the step study on nested Brownian paths at 100/200/400/800 steps, so resolution differences measure discretisation rather than Monte Carlo scatter. Metrics from markov_score.gen_metrics.compare, predeclared in docs/RESEARCH_PLAN.md (E5). The reference sample is drawn from the true law at t_min, never from clean p_0, which was the archival target error.",
  "predeclared_analysis": "Per-arm distance to the reference law, paired across arms by Brownian path; the step study's convergence in the number of integrator steps.",
  "seeds": {
-  "confirmatory": "0-3, as registered in E05.json"
+  "confirmatory": "0-15 (PROTOCOL.seeds), each crossed with the kernel's training size M in {128, 2048}: 32 (seed, M) rows per arm, as listed in outputs/hpc_E26/params_generate.json. E05 registered 4 seeds on 15 Sep and raised them to 16 in its amendment of 2026-09-16, so '0-3' was out of date."
  },
- "status": "FROZEN hpc_E26 2026-10-09T16:34:45Z; REGISTERED as E05 on 15 Sep (PRE-REGISTERED, smoke-tested, never run); SUBMITTED 25 Sep as E26 to answer Q8. Reads the fitted kernels from the E02a run of the 15 Sep deployment (ea0435a-20260915T104955Z), an absolute path because that output lives under a different deployment tag.; FROZEN 2026-10-09 (clean at 343ec92; it had been run and read but never frozen, found in the 9 Oct audit)",
+ "status": "FROZEN hpc_E26 2026-10-09T16:34:45Z; REGISTERED as E05 on 15 Sep (PRE-REGISTERED, smoke-tested, never run); SUBMITTED 25 Sep as E26 to answer Q8. Reads the fitted kernels from the E02a run of the 15 Sep deployment (ea0435a-20260915T104955Z), an absolute path because that output lives under a different deployment tag.; FROZEN 2026-10-09 (clean at 343ec92; it had been run and read but never frozen, found in the 9 Oct audit); READ 2026-10-09 into outcome_descriptive (no numeric prediction was registered, so no verdict); run 26 Sep as job 669377 on cnode06, 1 BLAS thread",
  "registered": "2026-09-25 (as E26; the config was registered 15 Sep as E05)",
  "script_sha256": "96d99ccc8f0652860d661644e8ee384347f9ff78a8d798638b68ab88597edfa8",
  "scope_note": "This answers the WEAK form of Q8 -- that BP can drive generation -- not the strong form Jerome actually proposed, which is one forward-backward sweep from a flat marginal with no reverse SDE and no score at all. The strong form is a separate sampler that does not exist yet and is the natural follow-up; recorded here so the distinction is not lost when the results land.",
@@ -27,5 +27,20 @@
   "hpc_E26": [
    "343ec92"
   ]
- }
+ },
+ "outcome_descriptive": {
+  "read": "2026-10-09, outputs/hpc_E26/generation.csv (128 rows: 4 arms x 16 seeds x M in {128, 2048}; 400-step reverse SDE; 2000 generated against 4000 reference sequences, the reference drawn from the true law at t_min and the same for both M at a given seed) and outputs/hpc_E26/steps.csv. Descriptive only: E26 registered no numeric prediction, so there is no verdict. Medians over the 32 (seed, M) rows unless stated.",
+  "excess_kurtosis": "Of the residuals a_{i+1} - rho a_i: reference 1.919 (median over the 16 seeds); exact 1.859; em_bp 1.787 (1.726 at M = 128, 1.787 at M = 2048); lmmse -0.0002; isotropic -0.001. The exact arm ranges from 1.66 to 2.23 over its 32 rows.",
+  "hist_kl_resid": "KL of the residual histogram: exact 7.5e-4; em_bp 1.9e-3 (3.5e-3 at M = 128, 1.4e-3 at M = 2048); lmmse 2.2e-2; isotropic 0.38. em_bp is above exact in 31 of the 32 (seed, M) pairs.",
+  "cov_fro": "Covariance error: lmmse 0.0709, exact 0.0713, em_bp 0.0813, isotropic 0.909. The covariance-matched Gaussian score gets the covariance as right as exact BP while its residuals have excess kurtosis about 0.",
+  "loglik_gap": "Gap of the mean log-likelihood under the true law to the reference sample: exact 0.056, em_bp 0.142 (0.31 at M = 128, 0.080 at M = 2048), lmmse 1.77, isotropic 46.3.",
+  "steps": "Step study (exact score, one Brownian path of 500 sequences, nested resolutions): strong RMSE against the 800-step path 0.019 at 100 steps, 0.0087 at 200, 0.0033 at 400.",
+  "not_run": "The network arms of E05's H5 were not run (net_ckpts null in params_generate.json), so H5's network clause is not tested here. E26 has no Monte Carlo floor arm; E27 adds one (mc_floor) on the same reference stream.",
+  "seed_0_tables": "The E26 table in docs/JEROME_CALL_2026-09-25.md (Q8) and reports/jerome-followup-2026-09-27.tex is the seed-0, M = 128 row, not a median (its exact entry 1.66-1.78 spans seed 0's two training sizes): em_bp 1.18 (1.63 at M = 2048), lmmse -0.01, isotropic -0.03, reference 1.866, residual KL 6.2e-4 / 2.6e-3 / 2.2e-2 / 3.8e-1 for exact / em_bp / lmmse / isotropic. E27's design and its P4 quote the same seed-0, M = 128 em_bp value (1.18); the 16-seed median is 1.79 (1.73 at M = 128)."
+ },
+ "corrections_2026_10_09": [
+  "seeds.confirmatory: '0-3, as registered in E05.json' -> '0-15 (PROTOCOL.seeds) x M in {128, 2048}' (the frozen run used seeds 0-15; E05's 2026-09-16 amendment raised its seeds to 16; source outputs/hpc_E26/params_generate.json, generation.csv)",
+  "outcome_descriptive: added (there was no outcome field) with the 16-seed x 2-size medians of excess kurtosis, residual KL, cov_fro and loglik_gap per arm, the step study, the untested network clause, and a note that the earlier ledger/report table is the seed-0, M = 128 row (source outputs/hpc_E26/generation.csv, steps.csv, params_generate.json)",
+  "status: appended the read date and run provenance (job 669377, cnode06, 1 thread) (source outputs/hpc_E26/params_generate.json)"
+ ]
 }

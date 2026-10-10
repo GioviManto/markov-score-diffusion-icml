@@ -49,7 +49,8 @@
 {\normalsize The derivation, the estimator, the measurements, and the confirmatory results}\\[0.35em]
 {\footnotesize Jérôme's email of 1 October 2026 (after Marc) \textperiodcentered\ this report 1 October 2026 \textperiodcentered\ branch
 \code{claude/phi4-field-2026-10-01} \textperiodcentered\ revised 1 October (reversibility, the
-physicist's parametrisation) and 3--5 October (every confirmatory result, E35, E33's amendment~3)}
+physicist's parametrisation) and 3--5 October (every confirmatory result, E35, E33's amendment~3);
+numbers rechecked against the frozen outputs 9 October}
 \end{center}
 
 \vspace{-0.4em}
@@ -87,8 +88,9 @@ predictions and been frozen (\S\ref{sec:conf}).
   computes on linear chains.
 \item \st{E32} (\S\ref{sec:e32}): at matched correlation $\lambda_1/\lambda_0=0.85$ the linear floor
   is $0.269$ at $\Th=0.3$ against $0.168$ for the Laplace laboratory, and falls to $0.041$ at
-  $\Th=2$; the operating grid's score agrees with a four times finer grid's to $10^{-12}$; Theorem~2's gap ratio rises monotonically
-  through $t_*$ to $0.73$--$0.94$ at $t=3$.
+  $\Th=2$; the operating grid's score agrees with a four times finer grid's to within $1.3\times10^{-12}$; Theorem~2's gap ratio rises
+  through $t_*$ to $0.73$--$0.94$ at $t=3$, though not monotonically on every cell (at $\Th=1$ it falls from $0.77$ to $0.73$
+  between $t=2.07$ and $3$).
 \item \st{E33 and E34} (\S\ref{sec:e33}): five kernel arms through grid BP, the window head and the
   transformer under both interfaces, the oracles; the physical statistics the consolidated note
   asks for; the clean-data interface. Eleven predictions were registered before any confirmatory
@@ -103,8 +105,9 @@ predictions and been frozen (\S\ref{sec:conf}).
   kinks. The window head and the transformer are $4$ to $27$ times the spline's risk on every cell and, at
   $\Th\ge0.5$, worse than the linear floor. The Legendre tilt is unreliable: it parks its invariant law
   outside the data, is sometimes reducible on the grid, and failed $39$ fits on the finest lattice. Under a
-  global sign latent (E35) the first-order kernel is worse than the linear floor and the same kernel on the
-  augmented state is $8.6$ and $17.9$ times better. Of E33's eight predictions, P1, P3, P4 and P6 are
+  global sign latent (E35x, sixteen seeds) the first-order kernel is worse than the linear floor in every seed, and at
+  $b=2$, $M=2048$ the same kernel on the augmented state is $13.1$ times better (mean of the per-seed ratios; median
+  $9.3$); E35's two-seed first look gave $8.6$ and $17.9$. Of E33's eight predictions, P1, P3, P4 and P6 are
   confirmed, P8 holds for the temperature and misses the barrier on one cell, and P2, P5 and P7 are falsified
   as written, P7 because the site energy did better than predicted.
 \end{enumerate}
@@ -385,8 +388,8 @@ for large $|a|$, with curvature $\sim12ca'^2_*$, so $K(\cdot\mid a)$ is a sharpe
 $\overleftarrow m(a)\approx\ell(a'_*(a))$; for the channel's $\ell(a')\propto\exp[-(x-e^{-t}a')^2/2\Delta_t]$ this is $\exp[-(x-e^{-t}a'_*)^2/2\Delta_t]$.
 \end{proof}
 So on a finite grid $\overleftarrow m$ is nearly constant, and the Gaussian with its moments is close to flat: the
-projection discards the backward information. Measured at $t=0.47$ on the $(401,8)$ grid, 28\,\% of
-a projected message's mass sits in the outer 5\,\% of the grid; over E32's cells and levels the
+projection discards the backward information. Measured at $t=0.47$ on the $(401,8)$ grid at the base cell,
+up to 30--31\,\% of a projected message's mass sits in the outer 5\,\% of the grid (the two replicates); over E32's cells and levels the
 maximum is 42\,\% at the base cell and 98--100\,\% at every other cell (Table~\ref{tab:ladder}). On
 grids wide enough for the Gaussian and Laplace chains' backward messages (half-width 32 at $t=1$)
 the projected recursion reproduces the LMMSE to $10^{-8}$ and $10^{-5}$, so this is a property of the
@@ -402,7 +405,7 @@ scope sentence on Proposition~1 and one sentence in the field section.
 \section{E32: the laboratory before any learning}\label{sec:e32}
 
 Deterministic, registered and predeclared, run on the laptop at commit \code{9b1c940}, frozen
-(\code{outputs/E32}, 9 files). Three predictions were registered first.
+(\code{outputs/E32}, 11 files, two of them from amendment~1, run the same afternoon at \code{0c30a7b}, \S\ref{sec:fixedh}). Three predictions were registered first.
 
 \begin{table}[h]\centering\footnotesize
 \begin{tabular}{@{}l r r r r r@{}}
@@ -442,7 +445,7 @@ four-point functions, at the four temperature cells; $t_*=\tfrac12\log\lambda_{\
 \end{figure}
 
 \st{P1, the grid: confirmed far inside its bound.} The $(401,8)$ reference score agrees with the
-$(1601,8)$ one to $10^{-12}$ relative or better on every cell and level, against a declared
+$(1601,8)$ one to within $1.3\times10^{-12}$ relative on every cell and level (the worst at $\Th=0.5$, $t=0.05$), against a declared
 tolerance of $10^{-3}$. The field kernel is smooth, so the trapezoid rule is spectrally accurate here,
 unlike the Laplace chain's kink. The same holds for the eigensolve: halving the fine spacing or
 widening the domain moves $\lambda_0$, $\rho_1$ and $s$ by less than $10^{-10}$.
@@ -450,9 +453,10 @@ widening the domain moves $\lambda_0$, $\rho_1$ and $s$ by less than $10^{-10}$.
 \st{P2, the projection: confirmed.} The edge mass exceeds 10\,\% at some level of every cell
 (Table~\ref{tab:ladder}); the closure arm is the covariance twin.
 
-\st{P3, Theorem~2: consistent, not reached within the schedule.} The ratio rises monotonically
-through $t_*$ and reads $0.85$, $0.87$, $0.73$, $0.94$ at $t=3$ on the four cells
-(Fig.~\ref{fig:theory}). The linear chains reached the constant at $t=4$ with 8192 chains (E18);
+\st{P3, Theorem~2: consistent, not reached within the schedule.} The ratio rises through $t_*$ on
+every cell and reads $0.85$, $0.86$, $0.73$, $0.94$ at $t=3$ on the four cells (Fig.~\ref{fig:theory}),
+but not monotonically everywhere: at $\Th=1$ it falls from $0.77$ at $t=2.07$ to $0.73$ at $t=3$, and at
+the base cell it dips from $0.0062$ to $0.0052$ over the three lowest levels before rising. The linear chains reached the constant at $t=4$ with 8192 chains (E18);
 this run stops at $t=3$ with 512, and the ratio at $t=2$ already moves by $0.1$ between the two
 replicates. The constants are large, $C_4=\tfrac16\|\kappa_4\|_F^2=3882$, $2350$, $1261$, $838$ at
 $\Th=0.3,0.5,1,2$ for $L=32$, which is why the gap is still $10^{-2}$--$10^{-1}$ of the score energy
@@ -568,7 +572,7 @@ the linear floor at every stride (ratio $1.007$ to $1.026$): on the field, the p
 closure even with clean data, because its drift is linear. And subsampling costs the gradient-class
 kernels a factor of $20$ to $30$ in risk but not their advantage: at stride 4 they are still at $15$ to $17\,\%$ of the floor.
 
-E36x repeats the clean part at sixteen seeds (jobs 684971 and 684972, frozen) with the neural kernel's ladder extended from $1200$ to $2000$ updates. P1 holds in all four clauses: at stride 1 the site energy ($0.0019$) and the spline ($0.0027$) are below $0.02$ in all sixteen seeds, and their stride-4 risk is $25$ and $14$ times their stride-1 risk. P3 holds: the mixture sits within $3\,\%$ of the floor at every stride ($1.026$, $1.008$, $1.008$). P2 is unresolved again, as registered, because the neural kernel still selected its last checkpoint in $15$ of the $16$ stride-4 fits and in none converged. The numbers lean one way and do so conservatively: at stride 4 the neural kernel's risk is $0.020$ against $0.040$ for the site energy and $0.036$ for the spline, below the site energy in all sixteen seeds; a fit still improving reports an upper bound, so more budget can only widen the margin (the extension from $1200$ to $2000$ updates alone cut it from $0.058$ to $0.020$). It is also the first place the exactly specified site energy is not the best gradient-class kernel: at stride 4 the spline is $10\,\%$ below it, because $K^s$ is no longer a tilted walk. At stride 1, where the clean problem is exactly specified, the neural kernel is five times worse than the site energy.
+E36x repeats the clean part at sixteen seeds (jobs 684971 and 684972, frozen) with the neural kernel's ladder extended from $400$ to $2000$ updates. P1 holds in all four clauses: at stride 1 the site energy ($0.0019$) and the spline ($0.0027$) are below $0.02$ in all sixteen seeds, and their stride-4 risk is $25$ and $14$ times their stride-1 risk. P3 holds: the mixture sits within $3\,\%$ of the floor at every stride ($1.026$, $1.008$, $1.008$). P2 is unresolved again, as registered, because the neural kernel still selected its last checkpoint in $15$ of the $16$ stride-4 fits and in none converged. The numbers lean one way and do so conservatively: at stride 4 the neural kernel's risk is $0.020$ against $0.040$ for the site energy and $0.036$ for the spline, below the site energy in all sixteen seeds; a fit still improving reports an upper bound, so more budget can only widen the margin (on E36's two seeds, extending the ladder from $400$ to $2000$ updates took the neural kernel's stride-4 risk from $0.023$ and $0.093$ to $0.021$ and $0.022$). It is also the first place the exactly specified site energy is not the best gradient-class kernel: at stride 4 the spline is $10\,\%$ below it, because $K^s$ is no longer a tilted walk. At stride 1, where the clean problem is exactly specified, the neural kernel is $5.6$ times worse than the site energy ($0.0103$ against $0.0019$, ratio of seed means).
 
 \section{E33 and E34: the design}\label{sec:e33}
 
@@ -791,7 +795,8 @@ in all $24$ fits, and the coarse kinks, bimodality and variance within $13.3\,\%
 
 The note asks for the domain-length \emph{distribution}, not only its mean (its section 24.5). E37 compares the
 whole distribution of coarse domain lengths on the same samples: for the spline and the site energy the two-sample
-Kolmogorov--Smirnov test never rejects (p-values $0.36$--$0.88$ on every cell) and their $10$, $50$ and $90\,\%$
+Kolmogorov--Smirnov p-values average $0.36$--$0.88$ over the four seeds on every cell, and $2$ of the $48$ individual tests
+fall below $5\,\%$ (two site-energy fits, at $\Th=1$ and $\Th=2$), about what chance gives; their $10$, $50$ and $90\,\%$
 quantiles sit within $10\,\%$ of the truth's, but for one $10\,\%$ quantile at $h=0.5$ ($1.104$, one lattice
 step); the mixture's domains are $14$--$18\,\%$ short at the median on the three $\Th=0.3$ cells, its KS distance
 four to five times that between two independent exact samples. Both E37 predictions fail as written for reasons of
@@ -816,7 +821,10 @@ Figure~\ref{fig:runtime} is the comparison the note's section 9.8 asks to be mea
 costs $0.5$, $1.0$ and $2.0$\,ms per sequence at $L=32$, $64$, $128$, linear in $L$, and the networks $4$ to $320\,\mu$s:
 a network is $6$ to $120$ times cheaper per posterior mean. In accuracy the order is reversed and the gap is larger:
 the site energy sits at $3$--$4\,\%$ of the floor on every lattice, the spline at $6$--$7\,\%$, while the best network
-is at $48\,\%$ and the window head climbs to the floor as $h$ falls, as the note expected for a fixed window. The
+is at $48\,\%$. The window head's risk falls along the refinement, but relative to the spline it grows from $9.2$ to $10.7$
+to $17.6$ times and relative to the linear floor from $0.55$ to $0.78$ to $1.20$ as $h$ falls (E33's P5). That is what the
+note expected for a fixed window, but this was not a fixed-window test: the window's radius was re-screened per cell,
+and the screen chose $2$, $4$ and $8$ sites, the same physical reach (radius times $h$ equal to $2$) on the three lattices. The
 runtime--accuracy frontier therefore has two ends and nothing between them: the networks own the cheap end, the
 structured kernels the accurate one, and the mixture sits on the floor at BP's cost. The note guessed that EM-BP
 might be cheaper to train though slower per sample; on training the guess does not hold here: at $M=2048$ a network
@@ -905,8 +913,8 @@ The note's section 9.7 asks for posterior sampling, and a missing site is a site
 
 \subsection{E41 and E42: closing two caveats}
 
-\emph{The neural kernel's budget (E41).} E33's neural kernel ended at its last checkpoint in $149$ of $192$ fits at $M=2048$, so its $2$--$6\times$ gap to the spline could have been a budget artefact. E41 refits it at four times the budget
-(up to $4800$ updates; four cells, $M=2048$, eight seeds). It was not: the risk fell on all four cells but by only $0.4$ to $4.5\,\%$ (from $0.066$ to $0.065$ on the base cell), the share of fits at the last checkpoint fell from $78$ to $16\,\%$,
+\emph{The neural kernel's budget (E41).} E33's neural kernel ended at its last checkpoint in $73$ of its $96$ risk-selected fits at $M=2048$ ($76\,\%$), so its $2$--$6\times$ gap to the spline could have been a budget artefact. E41 refits it at four times the budget
+(up to $4800$ updates; four cells, $M=2048$, eight seeds). It was not: the risk fell on all four cells but by only $0.4$ to $4.5\,\%$ (from $0.066$ to $0.065$ on the base cell), the share of fits at the last checkpoint fell from $78$ to $16\,\%$ on the same $32$ fits,
 and the ranking is unchanged: the neural kernel stays $1.9$ to $4.3$ times above the spline, $4.3$ to $9.2$ times above the site energy, and below the mixture. Prediction P1 (a drop of more than $10\,\%$ on three cells) fails; P2 to P5 hold.
 E33's neural-kernel numbers stand.
 
@@ -931,7 +939,7 @@ the tilted spline equals it to three digits at every time, so the predicted flip
 \subsection{E46: why the augmented kernel gains with no latent}
 
 E35x found the augmented kernel $18$ to $27\,\%$ below the first-order one at $b=0$, where there is no latent. The augmented model is a mixture of the kernel and its \emph{reflection} with shared parameters, so its E-step feeds the kernel every sequence and its mirror image, and the truth is reflection-symmetric.
-E46 fits the \emph{first-order} kernel on the sequences and their mirror images, on E35's own data, sixteen seeds. That fit is $32$ and $39\,\%$ below the plain first-order one at $M=512$ and $2048$ (below it in $16/16$ and $15/16$ seeds), and $16$ and $17\,\%$ below the augmented one:
+E46 fits the \emph{first-order} kernel on the sequences and their mirror images, on E35's own data, sixteen seeds. That fit is $32$ and $39\,\%$ below the plain first-order one at $M=512$ and $2048$ (below it in $16/16$ and $15/16$ seeds), and $17$ and $16\,\%$ below the augmented one:
 the whole gain is the symmetry, and a first-order fit on the data and their mirror images uses it better than the mixture does (P2 holds; P1, which predicted equality with the augmented arm, fails in this favourable direction). Its seed-mean risk equals that of a fit on twice as many \emph{independent} sequences ($0.0162$ against $0.0161$ at $M=512$, $0.0066$ against $0.0066$ at $2048$), although the registered interval criterion for that clause (P3) fails
 because the seed-to-seed variation is large (per-seed ratios $0.10$ to $2.25$).
 
@@ -939,12 +947,19 @@ because the seed-to-seed variation is large (per-seed ratios $0.10$ to $2.25$).
 
 Jérôme called the grid updates the bottleneck of the method. Every run so far uses $N_g=401$ points on $[-8,8]$, a choice checked only from above ($801$ and $1601$ change nothing). E47 checks it from below, in four parts registered before the learned and the timing parts ran.
 (a) The oracle: the true-kernel BP on the six $\phi^4$ cells against the $1601$-point reference. The error falls faster than any power of $N_g$: $0.5$--$0.7$ at $21$ points, $2\times10^{-5}$ to $7\times10^{-4}$ at $51$, below $2\times10^{-11}$ at $101$ on every cell, because the trapezoid rule on an analytic integrand converges super-exponentially (descriptive: this was scouted before registration).
-(d) The paper's headline kernels (the Laplace AR(1) laboratory, E02a's frozen fits, no refit), where the innovation is not smooth and the convergence is algebraic (E23). At $201$ points every arm is within $0.01\,\%$ of its $401$-point risk and at $151$ within $0.08\,\%$; at $101$ the single-Gaussian kernel is within $0.07\,\%$, but the eight-component mixture at $M=2048$ moves by $2.2\,\%$ ($7.6\,\%$ in the worst seed), and by $70\,\%$ at $51$ (P8, P9 hold). The prediction that most mixtures would be resolved at $101$ points fails (P10): at large $M$ they learn components narrower than the spacing, so none of the $M=2048$ mixtures is resolved at $101$, and $94\,\%$ are at $151$.
+(d) The paper's headline kernels (the linear chain with Laplace noise, E02a's frozen fits, no refit), where the density of the driving noise is not smooth and the convergence is algebraic (E23). At $201$ points every arm is within $0.01\,\%$ of its $401$-point risk and at $151$ within $0.08\,\%$; at $101$ the single-Gaussian kernel is within $0.07\,\%$, but the eight-component mixture at $M=2048$ moves by $2.2\,\%$ ($7.6\,\%$ in the worst seed), and by $70\,\%$ at $51$ (P8, P9 hold). The prediction that most mixtures would be resolved at $101$ points fails (P10): at large $M$ they learn components narrower than the spacing, so none of the $M=2048$ mixtures is resolved at $101$, and $94\,\%$ are at $151$.
 (c) Time, on an exclusive node with one thread ($B=512$, $L=32$): $0.053$\,ms per sequence at $N_g=51$, $0.107$ at $101$, $0.173$ at $151$, $0.249$ at $201$, $0.667$ at $401$. The cost grows like $N_g^{1.2}$ over this range, not $N_g^2$, because the elementwise work dominates; both timing predictions hold (P6, P7).
 (b) The learned estimator, refitted on the coarse grid on the base cell and the finest lattice, is queued on the cluster (P1--P5).
 So far the practical answer to the bottleneck is a coarser grid, not a new solver: $101$ points for the true $\phi^4$ kernel and about $151$ for the headline kernels, six and four times cheaper than $401$ on one thread; part (b) will say whether the learned $\phi^4$ kernels agree.
 
 The thread count matters for the comparison with the networks. E24x's figures, used in Figure~\ref{fig:runtime}, gave every method eight threads; grid BP uses almost none of them ($0.114$ against $0.107$\,ms at $101$ points, $0.52$ against $0.67$ at $401$), while the networks use them well. Measured in the same job with one thread, the networks cost $0.06$ (GRU), $0.15$ (U-Net) and $0.21$\,ms (transformer, TCN) per sequence, so per core grid BP at $401$ points is $3$ to $11$ times slower than these four, and at $101$ points it is faster than three of them (not a registered prediction). BP is independent across sequences, so a node could run it as parallel processes; that was not measured.
+
+\subsection{E50: speciation, and the kink energy of the lattice}
+
+Jérôme's email of 30 September suggested using the temperature sweep to watch ``speciation'': as the corruption is removed, the exact denoiser must at some point commit to the sign of each domain. For each site the exact posterior gives $p_i=P(a_i>0\mid x_t)$ (grid BP, \code{return\_sign\_prob}, tested against enumeration), and its commitment is $|2p_i-1|$; $t_c$ is the level where the site-averaged commitment falls through $\tfrac12$. The comparison is the Gaussian twin with the same covariance, whose commitment is $\tfrac2\pi\arcsin R_i$ in closed form ($R_i^2$ the share of site $i$'s variance the twin's posterior explains). Five predictions hold.
+The posterior is calibrated: the share of signs guessed right equals $(1+\text{commitment})/2$ to within $0.0025$ on average on every cell (P1). Along the fixed-spacing axis $t_c$ falls from $1.61$ at $\Theta=0.2$ to $0.46$ at $\Theta=2$ (P2). The exact posterior commits at higher noise than its twin on every cell, by $0.47$ in $t$ at $\Theta=0.2$ down to $0.07$ at $\Theta=2$ (P3): at $\Theta=0.2$, $L=32$ it is half-committed when the noise variance is $24$ times the signal's, the twin only at $8.9$ times, so the bimodality, not only the covariance, sets when the denoiser commits. At $\Theta=0.2$ ($\xi=19.5$ sites) the central sites' $t_c$ grows with the chain, $1.03$, $1.30$, $1.53$, $1.68$, $1.72$ at $L=4$ to $64$, and saturates ($1.750$ and $1.754$ at $128$ and $256$) (P4); below $\xi$ it moves one-for-one with $\tfrac12\ln(1+\Lambda_{\max})$, slope $0.98$ (P5), the finite-chain analogue of the speciation time $\tfrac12\ln\Lambda$ of Biroli, Bonnaire, de~Bortoli and Mézard.
+
+The second part checks the lattice against the continuum SPDE through its correlation length, on $\Theta\in[0.1,0.3]$ and $h$ down to $1/32$. The continuum limit is reached (at $\Theta=0.1$, $\xi_{\rm phys}$ moves by $0.03\,\%$ from $h=1/16$ to $1/32$; the operating lattice $h=1$ overestimates it by $4$--$9\,\%$). The two registered predictions on the dilute-kink law $\ln\xi_{\rm phys}=E_{\rm kink}/\Theta+\tfrac12\ln\Theta+\dots$ fail as written: a free fit with a linear correction gives $0.988$ for the barrier ($2\sqrt2/3=0.943$; band $2\,\%$) and $0.93$ for the prefactor exponent (P6, P7). Read without a verdict, the local slope $d\ln\xi_{\rm phys}/d(1/\Theta)$ rises from $0.64$ to $0.87$ as $\Theta$ falls from $0.29$ to $0.11$, and its gap to the instanton form $2\sqrt2/3-\Theta/2$ shrinks roughly like $\Theta^2$ ($-0.155$ to $-0.019$): consistent with the law plus large next-order corrections at these temperatures, which a four-parameter fit on this window cannot separate. Colder temperatures ($\xi_{\rm phys}>1000$) were not run.
 
 \clearpage
 \section{Alignment with the consolidated note}
@@ -964,6 +979,7 @@ clean-data learning (\S16.1) & E34 \code{clean} \\
 symmetric $W_\theta$, reversibility & by construction: every tilted walk is reversible (Proposition~\ref{prop:rev}); the symmetric site energy is learned directly by \code{em\_pair\_quartic} (\S\ref{sec:pair}) \\
 $\Th$ read from the data & Corollary~\ref{cor:read}: $\hat\Th=\hat\gamma s^2/h$ from any kernel of the class; P8 \\
 FFT transition (\S9.2, \S29 step 5) & E40: implemented (\code{bp\_fft}); second-order accurate ($6.7\times10^{-4}$ from dense BP at $N_g=401$) and $5.8\times$ slower on one core there; tuned, it breaks even near $N_g=3200$ \\
+speciation, kinks, crossover (\S18--20) & E50: commitment of the exact posterior across $\Theta$ and $L$ against its Gaussian twin (P1--P5 confirmed); the lattice reaches the continuum correlation length, the registered kink-energy fit fails on $\Theta\in[0.1,0.3]$ \\
 posterior sampling (\S9.7) & \code{markov\_score.ffbs}: forward filtering, backward sampling on the grid, tested against enumeration; E45 inpaints with E33's frozen kernels: the learned kernels equal the oracle, the Gaussian conditional is within $5\,\%$ \\
 ``minimal decisive experiment'' & E32 (floor across $\Th$, $h$) plus E33's window arm \\
 figures-first (\S28) & all seven and a summary figure: \code{reports/figures-first-2026-10-06.pdf} \\
@@ -984,14 +1000,14 @@ subsampling a fine lattice & E36 (\S\ref{sec:stride}): kernel $K^s$ exact; P1, P
   gradient SPDEs, and the quartic site energy is exactly specified for $\phi^4$ with five parameters;
   a general symmetric $W(a,a')$ would also cover non-gradient couplings at the price of a
   two-dimensional function to learn. Is that generality wanted for the paper, or is the site-energy
-  form the right level, with the tilt bases as the agnostic alternative? (E43 now measures the price: an unrestricted kernel is $2.8$ to $5.5$ times the site energy on $\phi^4$, and wins, by $1.5\times$ at $M=2048$, only on a chain outside the class.)
+  form the right level, with the tilt bases as the agnostic alternative? (E43 now measures the price: an unrestricted kernel is $2.5$ to $5.5$ times the site energy on $\phi^4$, and wins, by $1.5\times$ at $M=2048$, only on a chain outside the class.)
 \item Gaussian closure of the messages is not well-posed on the field (\S\ref{sec:closure}); the
   closure arm is the covariance twin. Does that match what Marc had in mind by ``Gaussian closure''
   for this benchmark, or did he mean the Kalman smoother of the linearised dynamics?
 \item The temperature sweep is at matched $\lambda_1/\lambda_0=0.85$ rather than at fixed $h$, so that
   the field is compared with the linear-chain laboratory at matched second-order structure. Agreed, or
   would a fixed-$h$ sweep be more natural for the physics reading?
-\item Theorem~2's ratio is still $0.75$--$0.95$ at $t=3$: the $\phi^4$ constants are large. Is it worth
+\item Theorem~2's ratio is still $0.73$--$0.94$ at $t=3$: the $\phi^4$ constants are large. Is it worth
   a sentence in the paper, or only the figure?
 \end{enumerate}
 

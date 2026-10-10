@@ -1,0 +1,24 @@
+experiment,prediction,clause,value,k,n,verdict,note
+E35x,P1,"b=0, M=512: mean log(aug/first), 95% CI",-0.2005,11.0000,16,FALSIFIED,"CI [-0.396, -0.050]"
+E35x,P1,"b=0, M=2048: mean log(aug/first), 95% CI",-0.3212,11.0000,16,FALSIFIED,"CI [-0.559, -0.083]"
+E35x,P2,b=2: first-order change 512->2048 (< 15%),0.0021,,16,CONFIRMED,
+E35x,P2,b=2: augmented change (< -30%) and falls in >= 14/16,-0.5171,16.0000,16,CONFIRMED,
+E35x,P3,"b=1, M=2048: first/aug > 2 in all seeds",7.6410,16.0000,16,CONFIRMED,augmented at cap in 5
+E35x,P3,"b=2, M=2048: first/aug > 2 in all seeds",13.0841,16.0000,16,CONFIRMED,augmented at cap in 5
+E35x,P3,"M=2048: seed-mean first/aug rising over b = 0, 1, 2",13.0841,,3,CONFIRMED,1.55 < 7.64 < 13.08
+E35x,P3,"b=2, M=2048: floor / augmented (seed means) >= 3",6.2933,,16,CONFIRMED,
+E35x,P4,"b=1, M=512: first-order / floor > 1 in all seeds",1.7070,16.0000,16,CONFIRMED,
+E35x,P4,"b=1, M=2048: first-order / floor > 1 in all seeds",1.6679,16.0000,16,CONFIRMED,
+E35x,P4,"b=2, M=512: first-order / floor > 1 in all seeds",1.5631,16.0000,16,CONFIRMED,
+E35x,P4,"b=2, M=2048: first-order / floor > 1 in all seeds",1.5664,16.0000,16,CONFIRMED,
+E36x,P1,stride 1: em_pair_quartic < 0.02 in all seeds,0.0019,16.0000,16,CONFIRMED,
+E36x,P1,em_pair_quartic: stride-4 / stride-1 >= 2 in all seeds,25.2392,16.0000,16,CONFIRMED,
+E36x,P1,stride 1: em_tilted_spline < 0.02 in all seeds,0.0027,16.0000,16,CONFIRMED,
+E36x,P1,em_tilted_spline: stride-4 / stride-1 >= 2 in all seeds,14.1628,16.0000,16,CONFIRMED,
+E36x,P2,stride 4: MDN < site energy in >= 12/16,0.4954,16.0000,16,UNRESOLVED,MDN at its last checkpoint in 15/16 (largest selected: 2000)
+E36x,P3,stride 1: mixture seed mean within 3% of the floor 0.0975,1.0258,,16,CONFIRMED,
+E36x,P3,stride 2: mixture seed mean within 3% of the floor 0.1578,1.0075,,16,CONFIRMED,
+E36x,P3,stride 4: mixture seed mean within 3% of the floor 0.2347,1.0080,,16,CONFIRMED,
+E38,P1,grid BP memory slope in the batch,1.0116,,3,CONFIRMED,"MB: 63.0, 256.9, 1041.8"
+E38,P1,grid BP memory slope in the length,0.9900,,3,CONFIRMED,"MB: 256.9, 512.1, 1013.6"
+E38,P2,"L=32, B=512: grid BP above every network",4.2192,6.0000,6,CONFIRMED,"bp 256.9 MB, largest network unet 60.9 MB; method statm-sampled"

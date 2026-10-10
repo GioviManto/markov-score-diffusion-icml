@@ -70,7 +70,10 @@
   "P7": "CONFIRMED. Log-log slope of time against N_g over 41-401 is 1.20 (over the top four grids 1.33): elementwise work dominates at these sizes, the N_g^2 law is not reached by 401.",
   "P8": "CONFIRMED. Headline kernels at N_g = 201: every arm's seed-mean pooled risk within 0.01% of N_g = 401 (worst seed 0.02%).",
   "P9": "CONFIRMED. At N_g = 101: C = 1 within 0.07% (M = 32 and 2048), C = 8 within 0.12% at M = 32 and 2.2% at M = 2048 (worst seed 7.6%). At N_g = 51 the C = 8 M = 2048 kernels move +70% (worst seed +188%); C = 1 moves 2.5-2.8%. At N_g = 151: every arm within 0.08% (worst seed 0.23%).",
-  "P10": "FALSIFIED. Only 22% of the C = 8 kernels are flagged 'resolved' at N_g = 101 (44% at M = 32, 0% at M = 2048; 94% at 151, 100% at 201); 0% at 51. The learned mixtures at large M contain components narrower than a 101-point spacing (0.16): the coarse grid is safe for the smooth phi^4 chain at 101 and for the AR(1) headline kernels only from about 151.",
+  "P10": "FALSIFIED. Only 22% of the C = 8 kernels, pooled over M (7 of 32, the reader's basis), are flagged 'resolved' at N_g = 101 (44% at M = 32, 0% at M = 2048); at 151, 97% pooled (100% at M = 32, 94% at M = 2048); 100% at 201; 0% at 51. The learned mixtures at large M contain components narrower than a 101-point spacing (0.16): the coarse grid is safe for the smooth phi^4 chain at 101 and for the AR(1) headline kernels only from about 151.",
   "unregistered": "Thread count. E24x (the comparator the hypothesis quoted, 0.03-0.04 ms for the transformer, the GRU and the U-Net) ran with 8 BLAS/torch threads on cnode07; part (c) ran with ONE thread, as designed. BP barely uses threads (0.107 vs 0.114 ms at N_g = 101; 0.667 vs 0.524 ms at 401: the matmul is a small share), the networks do: at one thread, per sequence, mlp 0.002, window 0.023, bigru 0.063, unet 0.152, transformer 0.208, tcn 0.216 ms. Per core, BP at N_g = 101 (0.107 ms) is faster than the transformer, the U-Net and the TCN and 1.7 times the bigru; at 151 (0.173 ms) it is within 15% of the U-Net. Not a prediction; the comparison is at matched threads (one) on one node, inference only, B = 512, L = 32."
- }
+ },
+ "corrections_2026_10_09": [
+  "outcome['P10']: '22% ... at N_g = 101 (44% at M = 32, 0% at M = 2048; 94% at 151, 100% at 201)' -> '22% ..., pooled over M (7 of 32, the reader's basis), ... at 151, 97% pooled (100% at M = 32, 94% at M = 2048); 100% at 201' (22% was pooled over M but 94% was M = 2048 alone; verdict unchanged; outputs/E47c/refinement.csv)"
+ ]
 }

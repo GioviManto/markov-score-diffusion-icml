@@ -19,6 +19,34 @@
  },
  "provenance_note": "Written on 9 Oct 2026 before any E50 cell ran. Seen beforehand: E32's frozen fixed_h.csv correlation lengths at h = 1 for Theta = 0.2-2 (19.47, 6.08, 3.66, 2.75, 1.98, 1.53, 1.21, 1.06 sites), and, computed as INPUTS for choosing the length series, the largest eigenvalue of the L x L covariance at Theta = 0.2, 0.3, 0.5, 1, 2 for L = 4-256 (e.g. Theta = 0.2: 3.66, 6.80, 11.98, 19.25, 27.06, 32.89, 35.84). No commitment, sign probability or MSE was computed on any cell, and no spectrum below Theta = 0.2 or at h < 1 on the kink ladder. The bounds of P3 and P5 were set from two pencil calculations, not from data: a +-1 variable is committed to more than a Gaussian one at equal signal-to-noise (scalar, unit signal-to-noise: E|2p-1| = E|tanh y| = 0.68 for a = +-1 against (2/pi) arcsin(1/sqrt 2) = 0.50 for a ~ N(0, 1), checked by Monte Carlo on 2e6 draws), and for a Lorentzian spectrum the twin's posterior variance halves at gamma S(0) = 3, i.e. t = (1/2) ln(1 + S(0)/3), whose slope against (1/2) ln(1 + S(0)) over S(0) = 4-12 is about 0.9-1.05. The new code (bp_grid return_sign_prob, markov_score/commitment.py) is tested in tests/test_commitment.py; the BP regression tests pass (97 passed, 25 skipped).",
  "resources": "laptop: part (a) about 1 h at 4 workers (19 cells x 2 reps x 48 levels, 2048 chains; the L = 256 cell dominates); part (b) about 15 min (54 eigensolves at 2401 points, 18 at 4801)",
- "status": "REGISTERED and PREDECLARED 2026-10-09, before any E50 cell ran",
- "registered": "2026-10-09"
+ "status": "REGISTERED and PREDECLARED 2026-10-09, before any E50 cell ran; RUN on the laptop (commit 454fcad, code path clean; restarted once with one worker after the three-worker run swapped, the two finished cells kept) and FROZEN 2026-10-10; READ: P1-P5 CONFIRMED, P6 and P7 FALSIFIED",
+ "registered": "2026-10-09",
+ "frozen_outputs": {
+  "outputs/E50/commitment.csv": "f5264cddc74f7ca842bc2faa60de908a657190ccd6ae7b7b0e0549db5f8e316d",
+  "outputs/E50/kink.csv": "2fb38cb0ae6ee3bad50904f2740ee222222e4f77078790fb9a8c47f636b47cc2",
+  "outputs/E50/params_commitment.json": "de23c0aa7b36701346e8df142f72973b0130385588547f6aa06b78336cdb7cfb",
+  "outputs/E50/params_kink_energy.json": "cd31e436b3da4c8f8b96ebe8bdedf819407f64b98e36c464f4fda3cb563bb8e0"
+ },
+ "frozen_at": {
+  "E50": "2026-10-10T17:24:37Z"
+ },
+ "frozen_commit": {
+  "E50": "454fcadeffbe82ce84e244bb36575541ef5c0d2b"
+ },
+ "frozen_run_commits": {
+  "E50": [
+   "454fcad"
+  ]
+ },
+ "outcome": {
+  "read": "2026-10-10, outputs/E50/commitment.csv (38 cell-reps x 48 levels = 1,824 rows) and outputs/E50/kink.csv (72 rows), tools/make_extension_numbers.py read_e50_commitment and read_e50_kink as pinned before the run.",
+  "P1": "CONFIRMED. The share of signs guessed right equals (1 + commitment)/2 to within 0.0025 on average over levels on every cell (worst T0.2_h1_L4) and within 0.016 at every level (threshold 0.05): the exact posterior is calibrated, an end-to-end check of the sign probabilities.",
+  "P2": "CONFIRMED. On the fixed-spacing axis the commitment time t_c (all sites) falls strictly with Theta: 1.611, 1.087, 0.847, 0.716, 0.595, 0.519, 0.475, 0.455 at Theta = 0.2, 0.3, 0.4, 0.5, 0.7, 1, 1.5, 2.",
+  "P3": "CONFIRMED. The exact posterior commits at higher noise than its Gaussian twin on every fixed-spacing cell, not only at Theta <= 0.5: t_c - t_c^twin = +0.466, +0.320, +0.227, +0.169, +0.118, +0.086, +0.072, +0.066 at Theta = 0.2 ... 2 (largest when coldest, as predicted).",
+  "P4": "CONFIRMED. Theta = 0.2, central sites: t_c = 1.025, 1.302, 1.526, 1.679, 1.724 at L = 4, 8, 16, 32, 64 (each step > 0.02), then 1.750 at 128 and 1.754 at 256 (+0.004 < 0.03): commitment time grows with the chain until the chain is several correlation lengths long, then saturates.",
+  "P5": "CONFIRMED. L = 4, 8, 16 (central sites): least-squares slope of t_c against (1/2) ln(1 + Lambda_max(L)) = 0.978 (band [0.8, 1.2]).",
+  "P6": "FALSIFIED. The four-parameter fit ln xi_phys = a/Theta + b ln Theta + c + d Theta over Theta = 0.1-0.3 gives a = 0.9876 (h = 1/16) and 0.9877 (h = 1/32), 4.8% above 2 sqrt(2)/3 = 0.9428 (band 2%).",
+  "P7": "FALSIFIED. The same fits give b = 0.929 and 0.930 (band [0.35, 0.65]).",
+  "unregistered": "Kink part. (i) The continuum limit is converged: xi_phys changes by 0.03% between h = 1/16 and 1/32 at Theta = 0.1 (1169.03 against 1168.69), and the 4801-point eigensolve agrees with the 2401-point one to 2e-12 in ln xi; the operating lattice h = 1 overestimates the continuum xi_phys by 4% (Theta = 0.1) to 9% (Theta = 0.3). (ii) Why the fit fails, as a reading and not a verdict: the local slope d ln xi_phys / d(1/Theta) between consecutive temperatures rises from 0.644 (Theta ~ 0.29) to 0.868 (Theta ~ 0.11); its deviation from the instanton form 2 sqrt(2)/3 - Theta/2 is -0.155 at Theta ~ 0.29 and -0.019 at 0.11, shrinking roughly like Theta^2 (deviation / Theta^2 between -1.5 and -2.2). That is consistent with the continuum dilute-kink law plus large next-order corrections at these temperatures, which a free four-parameter fit on Theta in [0.1, 0.3] trades off between a and b (collinear regressors). With b fixed at 1/2 and no correction term the fit gives a = 0.885. Settling the asymptotic constants needs Theta < 0.1 (xi_phys > 1000), not run. Commitment part. The exact t_c tracks (1/2) ln(1 + Lambda_max) within about 0.25 on every cell (descriptive); the twin commits later in the reverse process everywhere, so the bimodality, not only the covariance, sets when the denoiser commits: at Theta = 0.2, L = 32 the exact posterior is half-committed at t = 1.61 (noise variance 24 times the signal's), its Gaussian twin only at t = 1.15 (8.9 times)."
+ }
 }

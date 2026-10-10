@@ -68,11 +68,14 @@
  "outcome": {
   "read": "2026-10-09 ~18:00 CEST, all shards COMPLETE (exit 0), clean provenance, frozen; tools/make_extension_numbers.py as pinned before submission.",
   "P1": "CONFIRMED. Over M = 512, 2048, 8192, 32768 the log-log slope of the seed-mean |barrier - 1/4| is -0.45 at T = 1 and -0.54 at T = 2 (both in [-0.65, -0.35]). Mean error at T = 1: 0.0685, 0.0279, 0.0263, 0.0085; at T = 2: 0.1552, 0.0716, 0.0390, 0.0156. T = 2 follows the 1/sqrt(M) law (segment slopes -0.56, -0.44, -0.66): a sample-size limit, not a floor.",
-  "P2": "FALSIFIED as written. T = 1 is within 20% in 16/16 seeds at M = 32768 but 14/16 at M = 8192: seeds 1 and 4 miss by 0.0589 and 0.0505 against the 0.05 limit. The T = 1 error also stalls between 2048 and 8192 (0.0279 -> 0.0263, segment slope -0.04, signed bias +0.013 at 8192) before falling to 0.0085; not explained.",
+  "P2": "FALSIFIED as written. T = 1 is within 20% in 16/16 seeds at M = 32768 but 14/16 at M = 8192: seeds 1 and 4 have |barrier - 1/4| = 0.0589 and 0.0505 (barriers 0.191 and 0.300), missing the 0.05 limit by 0.009 and 0.0005. The T = 1 error also stalls between 2048 and 8192 (0.0279 -> 0.0263, segment slope -0.04, signed bias +0.013 at 8192) before falling to 0.0085; not explained.",
   "P3": "CONFIRMED. T = 2 is within 20% in 16/16 seeds at M = 32768 (E33: 6/16 at 2048; 13/16 at 8192).",
   "P4": "CONFIRMED. Seeds within 20% along M = 2048, 8192, 32768: T = 1: 14, 14, 16; T = 2: 6, 13, 16.",
   "P5": "CONFIRMED. T = 2 signed barrier error +0.027 (2048), +0.004 (8192), -0.005 (32768): below 0.01 in absolute value at 32768; the early error is bias and variance, the late error is variance.",
   "P6": "CONFIRMED. The temperature is read within 10% in 16/16 seeds at both sizes and both temperatures (largest deviation 1.9% at T = 1, M = 8192; 0.8% at T = 2, M = 32768).",
   "unregistered": "No failed fit. The barrier at T = 2 needs about M = 32768 for the 20% criterion in every seed, sixteen times E33's largest size; the temperature is read far earlier than the barrier."
- }
+ },
+ "corrections_2026_10_09": [
+  "outcome.P2: 'seeds 1 and 4 miss by 0.0589 and 0.0505 against the 0.05 limit.' -> 'seeds 1 and 4 have |barrier - 1/4| = 0.0589 and 0.0505 (barriers 0.191 and 0.300), missing the 0.05 limit by 0.009 and 0.0005.' (0.0589/0.0505 are absolute errors, not the misses against the limit; verdict unchanged; outputs/hpc_E42_s*/kernels.csv via tools/make_extension_numbers.load_e42_table)"
+ ]
 }

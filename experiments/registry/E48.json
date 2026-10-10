@@ -16,6 +16,7 @@
   "dev": "10000 (smoke only)"
  },
  "provenance_note": "Written after E36x was read (that is what motivated it) and before any E48 cell ran. P3 and P4 are judgements about what a flexible kernel does against the exactly specified one; a falsified P3 would be the more interesting outcome.",
+ "post_submission_note": "Added 2026-10-09, after submission and before any E48 cell ran; the predictions are unchanged. (i) P4 quotes 'E36x at 2000 updates: 5.4' for the stride-1 MDN / site-energy ratio. That figure is 0.0103 / 0.0019, a ratio of rounded seed means. In the frozen E36x clean.csv (outputs/hpc_E36x_s0 and s8, 16 seeds) the ratio of seed means, which is the statistic the reader computes for P4 (tools/make_extension_numbers.py, read_e48), is 5.59 (0.01034 / 0.00185); the mean of the per-seed ratios is 6.47 and their median 6.04. P4's threshold (below 5) stands as registered; the E36x value it is compared with is 5.59, not 5.4. (ii) P5 calls stride 2 'a tie, 0.0104 against 0.0108'. Those are seed means; in the frozen E36x data the MDN is already below the site energy in 14 of 16 seeds at stride 2 (the exceptions are seed 0, 0.0110 against 0.0108, and seed 4, 0.0353 against 0.0107). P5's threshold (at least 10 of 16) was therefore met by the 2000-update fits before E48 ran: P5 is a non-regression check on the longer ladder, not a test.",
  "resources": "cluster, defq, 4 x 8 cpus, 24G, 10 h; a clean MDN fit took 6-15 min at 2000 updates, so up to about 2 h at 16000",
  "status": "REGISTERED and PREDECLARED 2026-10-09, before any E48 cell ran; SUBMITTED 2026-10-09 (692000-692003), queued",
  "registered": "2026-10-09",
@@ -27,5 +28,8 @@
   "e48-s8": "692002, defq, 8 cpus, 24G, 10:00:00 -> outputs/hpc_E48_s8",
   "e48-s12": "692003, defq, 8 cpus, 24G, 10:00:00 -> outputs/hpc_E48_s12",
   "smoke": "the argument string run end to end at tiny settings (exit 0)"
- }
+ },
+ "corrections_2026_10_09": [
+  "post_submission_note: (absent) -> added: P4's quoted E36x baseline 5.4 is 0.0103/0.0019 from rounded means, the ratio of seed means is 5.59 (mean of per-seed ratios 6.47, median 6.04); P5's threshold (10/16) was already met in E36x (14/16 at stride 2), so P5 is a non-regression check, not a test (predictions unchanged; outputs/hpc_E36x_s0/clean.csv, outputs/hpc_E36x_s8/clean.csv)"
+ ]
 }

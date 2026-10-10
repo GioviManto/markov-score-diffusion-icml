@@ -27,7 +27,7 @@
  ],
  "outcome": {
   "read": "2026-10-03 10:40 BST, all 12 cells, per-seed paired ratios as predeclared (two seeds, no bootstrap); risks against the closed-form two-phase posterior mean.",
-  "P1": "FALSIFIED AS WRITTEN. At b = 0 the augmented/first-order risk ratio is 0.258 and 1.241 at M = 512 (seeds 0 / 1) and 1.087 and 0.617 at M = 2048: one of four within 10%. The ratios straddle 1 in both directions (seed means 0.96 at M = 512, 0.89 at M = 2048), so there is no systematic cost of augmentation, but at this risk level (0.003-0.034, against 0.66 for the isotropic map) either arm's risk moves by a factor of 3-4 between seeds and a 10% band was too tight to hold at two seeds. The one adverse cell is b = 0, seed 1, M = 512: 0.0342 against 0.0276.",
+  "P1": "FALSIFIED AS WRITTEN. At b = 0 the augmented/first-order risk ratio is 0.258 and 1.241 at M = 512 (seeds 0 / 1) and 1.087 and 0.617 at M = 2048: one of four within 10%. The ratios straddle 1 in both directions (ratio of the seed-mean risks 0.96 at M = 512 and 0.89 at M = 2048; mean of the per-seed ratios, the docs/METRICS.md convention, 0.749 and 0.852), so there is no systematic cost of augmentation, but at this risk level (0.003-0.034, against 0.66 for the isotropic map) either arm's risk moves by a factor of 3-4 between seeds and a 10% band was too tight to hold at two seeds. The one adverse cell is b = 0, seed 1, M = 512: 0.0342 against 0.0276.",
   "P2": "CONFIRMED. At b = 2 the first-order arm's risk changes by +6.2% / +3.4% from M = 512 to M = 2048 (predicted: less than 15%), while the augmented arm's falls by 57.5% / 72.9% (predicted: more than 30%).",
   "P3": "CONFIRMED. first-order/augmented at M = 2048 over b = 0, 1, 2: 0.92 -> 8.19 -> 8.64 (seed 0) and 1.62 -> 8.79 -> 17.92 (seed 1), monotone in both seeds and above 2 at b = 2 in both. At b = 2, M = 2048 the augmented arm is below the linear floor by 5.4x / 11.5x (risk 0.0114 / 0.0053 against 0.0617 / 0.0612; predicted: at least 3x). Seed 0 rises only from 8.19 to 8.64 between b = 1 and 2: monotone, not by much.",
   "at_cap_and_convergence": "The augmented arm selected its last checkpoint (400) in 3 of 12 cells (b = 1, M = 2048, both seeds; b = 2, M = 2048, seed 1): there it was still improving, so its risk is an upper bound and every confirmed clause would only strengthen. The first-order arm never reached the cap (selected checkpoints 20-60). Monotonicity violations below 2e-8 in every fit.",
@@ -52,5 +52,8 @@
   "E35": [
    "47aa56f"
   ]
- }
+ },
+ "corrections_2026_10_09": [
+  "outcome.P1: '(seed means 0.96 at M = 512, 0.89 at M = 2048)' -> '(ratio of the seed-mean risks 0.96 at M = 512 and 0.89 at M = 2048; mean of the per-seed ratios, the docs/METRICS.md convention, 0.749 and 0.852)' (0.96/0.89 are ratios of seed means, not means of per-seed ratios; both now stated; verdict unchanged; outputs/E35/augmented.csv, b = 0)"
+ ]
 }

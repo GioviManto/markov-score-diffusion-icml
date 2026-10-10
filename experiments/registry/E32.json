@@ -14,7 +14,7 @@
  "seeds": {
   "deterministic": "rng_for('e32-ladder' | 'e32-refine', T, h, L, rep), reps 0-1"
  },
- "status": "FROZEN E32 2026-10-01T09:05:45Z; REGISTERED 2026-10-01, PREDECLARED; the registered run is the laptop run started 1 Oct 09:50 local at commit 9b1c940 (outputs/E32, 4 workers), all four parts.; AMENDMENT 1 (1 Oct pm): part fixed_h registered and predeclared (P4, P5), to run on the laptop; fixed_h RUN and FROZEN 1 Oct pm (P4 confirmed; P5 half falsified as written, see outcome_fixed_h)",
+ "status": "FROZEN E32 2026-10-01T09:05:45Z; REGISTERED 2026-10-01, PREDECLARED; the registered run is the laptop run started 1 Oct 09:50 local at commit 9b1c940 (outputs/E32, 4 workers), all four parts.; AMENDMENT 1 (1 Oct pm): part fixed_h registered and predeclared (P4, P5), to run on the laptop; fixed_h RUN and FROZEN 1 Oct pm (P4 confirmed; P5 half falsified as written, see outcome_fixed_h); P1-P3 ADJUDICATED 2026-10-09 from the frozen files (see outcome): P1 and P2 CONFIRMED, P3 UNRESOLVED AS WRITTEN (the ratio does not reach 1 by t = 3, and on the T = 1 cell it falls over the last step)",
  "registered": "2026-10-01",
  "cells": [
   {
@@ -96,9 +96,21 @@
    "unchanged": "P1-P3 and their frozen outputs."
   }
  ],
+ "outcome": {
+  "read": "2026-10-09, after the fact, from the frozen outputs/E32 files: refinement.csv (P1); ladder.csv, arm 'projected', column edge_mass (P2; level -1 holds each replicate's maximum over levels); theory.csv (P3). The registry had recorded no verdict for P1-P3; the 1 Oct report (reports/field-laboratory-2026-10-01.tex, section E32) gives verdicts in prose run-in headings (P1 and P2 'confirmed', P3 'consistent, not reached within the schedule'), with the P1 grid errors and P2 edge masses in Table tab:ladder, and no reports/numbers CSV carries them.",
+  "P1": "CONFIRMED. Worst relative error of the (401, 8) exact score against (1601, 8), over levels and replicates: 1.27e-12 (T0.5_iso_L32, rep 0, t = 0.05); 9.6e-15 or less on the other five cells. Tolerance 1e-3, falsifier 1e-2. The (801, 8) grid is within 1.13e-15 on every cell.",
+  "P2": "CONFIRMED. The moment-projected recursion's edge mass (the share of a backward message's mass in the outer 5% of the operating grid) exceeds 10% at some level of every cell. Its maximum over levels is 0.37 and 0.42 (rep 0, rep 1) on the base cell T0.3_h1_L32 and 0.98-1.00 on the other five cells; it is above 10% in 15 to 24 of the 24 (level, rep) rows of each cell.",
+  "P3": "UNRESOLVED AS WRITTEN. The clause says the ratio measured/predicted 'approaches 1 above t_*' and fixes neither a threshold nor a level at which to read it. t_* = 1.15-1.16 on the four L = 32 cells, so three levels of the schedule lie above it (t = 1.43, 2.07, 3). The ratios there are 0.242, 0.628, 0.854 (T0.3_h1_L32); 0.253, 0.541, 0.865 (T0.5_iso_L32); 0.195, 0.772, 0.732 (T1_iso_L32); 0.169, 0.748, 0.938 (T2_iso_L32). The ratio rises toward 1 on three cells, but on the T = 1 cell it falls from 0.772 at t = 2.07 to 0.732 at t = 3, and no cell reaches 1 by t = 3, the last level of the registered schedule (2 replicates x 512 chains). The run neither confirms nor falsifies the clause: 1 is not reached by t = 3."
+ },
  "outcome_fixed_h": {
   "P4": "CONFIRMED: pooled linear floor [0.2959, 0.2689, 0.2412, 0.2247, 0.2046, 0.1942, 0.1861, 0.1844] along Theta = [0.2, 0.3, 0.4, 0.5, 0.7, 1.0, 1.5, 2.0] at h = 1 (monotone: True); 0.296 at Theta = 0.2 against 0.269 at the base cell. The fall is gentle (0.30 -> 0.18) compared with the iso line (0.27 -> 0.04): at fixed spacing a hot cell has xi ~ 1 site but a marginal with kurtosis -0.78, and the closure cannot denoise a non-Gaussian marginal even site by site.",
   "P5": "HALF FALSIFIED AS WRITTEN: the coarse kink density per unit length RISES with Theta, [0.0158, 0.066, 0.0986, 0.1185, 0.1384, 0.1506, 0.1605, 0.1655] (Arrhenius-like, more kinks at higher temperature, which is the physics; the prediction's sign was mis-stated when it was written, and a mis-stated prediction is a falsified one). The bimodality coefficient falls monotonically, [0.734, 0.606, 0.542, 0.511, 0.481, 0.465, 0.455, 0.45] (CONFIRMED), the coarse mean domain length in physical units falls, [8.97, 7.79, 7.04, 6.47, 5.95, 5.66, 5.4, 5.31], and xi in sites is [19.47, 6.08, 3.66, 2.75, 1.98, 1.53, 1.21, 1.06]: above 6.08 only below Theta = 0.3 (CONFIRMED).",
   "frozen": "outputs/E32/fixed_h.csv, laptop, commit 0c30a7b, 2 reps x 8 cells, 1 Oct 13:40 CEST"
- }
+ },
+ "corrections_2026_10_09": [
+  "outcome: (absent) -> added with verdicts for P1-P3: P1 CONFIRMED (worst 1.27e-12, T0.5_iso_L32), P2 CONFIRMED (edge mass maximum 0.37-0.42 on the base cell, 0.98-1.00 elsewhere), P3 UNRESOLVED AS WRITTEN (ratio 0.732-0.938 at t = 3; the T = 1 cell falls from 0.772 at t = 2.07 to 0.732 at t = 3) (the registry had no verdict for P1-P3; outputs/E32/refinement.csv, ladder.csv, theory.csv)",
+  "status: '... see outcome_fixed_h)' -> the same text plus '; P1-P3 ADJUDICATED 2026-10-09 ... P1 and P2 CONFIRMED, P3 UNRESOLVED AS WRITTEN ...' (record the verdicts where the status is read; same files)",
+  "outcome['P1']: '(801, 8) grid is within 1.1e-15' -> 'within 1.13e-15' (the largest (801, 8) error is 1.130e-15, base cell rep 0, t = 0.05; verdict unchanged; outputs/E32/refinement.csv)",
+  "outcome['read']: 'the 1 Oct report ... discussed them in prose only' -> 'gives verdicts in prose run-in headings (P1 and P2 confirmed, P3 consistent, not reached within the schedule), with the P1 grid errors and P2 edge masses in Table tab:ladder, and no reports/numbers CSV carries them' (the committed report states a verdict for each clause in its run-in headings; Table tab:ladder carries numbers only, with no verdicts and no P3 column; the P3 verdict recorded here agrees with it; reports/field-laboratory-2026-10-01.tex, E32 section; reports/numbers/*.csv)"
+ ]
 }

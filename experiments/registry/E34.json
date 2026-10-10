@@ -18,9 +18,9 @@
  "status": "FROZEN E34 2026-10-01T09:40:39Z; REGISTERED 2026-10-01, PREDECLARED, smoke-tested (--quick, all three parts); clean and physics_truth to be submitted/run; physics_learned waits for E33's kernels.csv.; COMPLETE 2026-10-05: P1b, P3, P4 confirmed; P2 falsified as written (clean beats noisy for spline and MDN, not for the mixture or the Legendre; the gap does not shrink)",
  "registered": "2026-10-01",
  "outcome_physics_truth_first_run": {
-  "P1 first half": "CONFIRMED: max |C_sample - C_spectral| over lags is 1.2-1.8 standard errors on all 12 (cell, rep) rows; sample kurtosis within 0.02 of the exact one.",
+  "P1 first half": "CONFIRMED: max |C_sample - C_spectral| over lags is 0.81-2.86 standard errors on the 12 (cell, rep) rows (lowest T = 1 rep 0, highest h = 0.5 rep 1; base cell 1.97 and 1.72), all below the 3.5 threshold; sample excess kurtosis within 0.021 of the exact one (largest gap T = 2 rep 1, -0.4814 against -0.4605). Values from the frozen outputs/E34/physics.csv; the first run's own file was not kept.",
   "P1 second half": "FALSIFIED: raw kink density per unit length 0.120, 0.175, 0.247 at h = 1, 0.5, 0.25 (ratio 1.41 per halving: 1/sqrt(h)). A sign change is not a kink: a rough field crosses the barrier inside a domain, and finer lattices resolve more crossings. N-31. The statistic is replaced by the coarse one (P1b); the raw one stays in the table.",
-  "numbers": "kinks per bond 0.120/0.088/0.062 (h = 1/0.5/0.25), mean domain in sites 5.09/7.51/10.88, i.e. 5.09/3.75/2.72 physical."
+  "numbers": "kinks per bond 0.120/0.088/0.062 (h = 1/0.5/0.25), mean domain in sites 5.09/7.51/10.88, i.e. 5.09/3.75/2.72 physical. These are two-rep means except at h = 0.5, where 7.51 and 3.75 (and the raw kink density 0.175 per unit length under 'P1 second half') are rep 0 alone; the two-rep means of the frozen physics.csv there are 7.46, 3.73 and 0.176."
  },
  "frozen_outputs": {
   "outputs/E34/physics.csv": "b0130a191fdcef7a1dd7a89f05004bab02142a98d7c4e380b867f746c4a3c92a",
@@ -59,9 +59,9 @@
   ]
  },
  "outcome_physics_truth": {
-  "P1 first half": "CONFIRMED on the rerun too: max |C_sample - C_spectral| over lags 1.2-1.8 standard errors on all 12 rows.",
-  "P1 second half": "FALSIFIED (N-31): raw kink density per unit length 0.120 / 0.175 / 0.247 at h = 1 / 0.5 / 0.25.",
-  "P1b": "CONFIRMED: coarse kink density per unit length 0.066 / 0.073 / 0.068 at h = 1 / 0.5 / 0.25 (within 11%), coarse mean domain length in physical units within 20% (see physics.csv).",
+  "P1 first half": "CONFIRMED on the rerun too: max |C_sample - C_spectral| over lags 0.81-2.86 standard errors on the 12 rows (lowest T = 1 rep 0, highest h = 0.5 rep 1; base cell 1.97 and 1.72), all below the 3.5 threshold.",
+  "P1 second half": "FALSIFIED (N-31): raw kink density per unit length 0.120 / 0.175 / 0.247 at h = 1 / 0.5 / 0.25 (two-rep means, except h = 0.5: rep 0 alone; its two-rep mean is 0.176).",
+  "P1b": "CONFIRMED: coarse kink density per unit length 0.065 / 0.073 / 0.068 at h = 1 / 0.5 / 0.25 (within 11%), coarse mean domain length in physical units within 20% (see physics.csv). The h = 0.5 values (the coarse kink density 0.073 and the coarse mean domain length) are rep 0 alone: in the frozen physics.csv the T0.3_h0.5_L64 rep 1 rows have NaN for every coarse statistic (coarse_min_len, coarse_kink_density, coarse_mean_domain and their physical versions); the other two cells are two-rep means.",
   "frozen": "outputs/E34/physics.csv, laptop, commit 811eb06"
  },
  "notes_clean_arm": "1 Oct pm, from the laptop preview (not confirmatory): em_tilted_poly fitted by clean MLE is ill-posed outside the data support (N-33): on seed 1 at the base cell, M = 2048, its risk was 1.79 (coefficients at the +-200 bound) while em_tilted_spline gave 0.007 and em_mixture 0.27. P2/P3 are read per arm with the at-bound flag (tools/make_field_potential_figs.py); the site-energy arm em_pair_quartic (E33 amendment 1) is immune by construction and is included in `clean` through cfg['arms'] when run with --set arms=(...). Preview of P4 on the pair arm at M = 512: kink density 0.123/0.130 vs truth 0.123/0.120 per bond, mean domain 5.1/4.9 vs 5.1/5.0 sites (outputs/E34_preview_laptop_learned).",
@@ -85,5 +85,13 @@
   "read": "2026-10-05 ~20:40 BST. physics_learned (registered part) on the laptop at 1755a29 (code path clean; reports/numbers modified, not code) on the 96 risk-selected E33 kernel fits it selects (M = 2048, seeds 0-3, six cells, four arms; outputs/E34_learned) plus the 24 site-energy fits sampled on 3 Oct (outputs/E34_learned_pair); amendment 3's failed fits enter as failed rows.",
   "P4": "CONFIRMED on all six cells. Spline samples: kink density / truth 1.001-1.011 (worst seed 0.974-1.045), mean domain / truth 0.982-1.008, all within 15%. Mixture samples overshoot the kink density on every cell and seed: 1.53 (base), 1.62 (h = 0.5), 1.70 (h = 0.25), 1.22 (T = 0.5), 1.12 (T = 1), 1.08 (T = 2), with domains 0.69-0.96 of the truth's.",
   "unregistered": "Site-energy samples within 5.3% of the kink density and 2.9% of the domain length (reading_learned_pair); MDN within 5% on cell means (worst seed 1.21 at h = 0.25); Legendre within 3.1% on cell means where it fitted (worst seed 0.77 at h = 0.5), its four h = 0.25 fits failed."
- }
+ },
+ "corrections_2026_10_09": [
+  "outcome_physics_truth_first_run['P1 first half']: '1.2-1.8 standard errors on all 12 (cell, rep) rows; sample kurtosis within 0.02' -> '0.81-2.86 standard errors ... all below the 3.5 threshold; ... within 0.021' (frozen corr_max_z spans 0.81 (T1 rep 0) to 2.86 (h = 0.5 rep 1); T2 rep 1 kurtosis differs from the exact one by 0.021; verdict unchanged; outputs/E34/physics.csv)",
+  "outcome_physics_truth_first_run['numbers']: h = 0.5 values stated without basis -> marked as rep 0 alone, with the two-rep means 7.46 / 3.73 / 0.176 (the other cells' numbers are two-rep means; outputs/E34/physics.csv)",
+  "outcome_physics_truth['P1 first half']: '1.2-1.8 standard errors on all 12 rows' -> '0.81-2.86 standard errors on the 12 rows ..., all below the 3.5 threshold' (frozen corr_max_z; verdict unchanged; outputs/E34/physics.csv)",
+  "outcome_physics_truth['P1 second half']: '0.120 / 0.175 / 0.247' -> same numbers plus the note that 0.175 is rep 0 alone (two-rep mean 0.176) (outputs/E34/physics.csv)",
+  "outcome_physics_truth['P1b']: basis of the h = 0.5 value not stated -> stated as rep 0 alone, because the T0.3_h0.5_L64 rep 1 rows carry NaN coarse statistics (verdict unchanged; outputs/E34/physics.csv)",
+  "outcome_physics_truth['P1b']: h = 1 coarse kink density '0.066' -> '0.065' (its two-rep mean is 0.065497: rep 0 0.0641, rep 1 0.0669; 0.066 was probably 0.0655 rounded a second time, though nothing on disk records how it was produced (E32's fixed_h sweep also gives 0.0660 at Theta = 0.3, h = 1); the generated reports/numbers/field_sweep.csv iso row gives 0.0655; the spread is still within 11% (0.0726 / 0.0655 = 1.108); verdict unchanged; outputs/E34/physics.csv; not flagged by the audit, found while checking it)"
+ ]
 }

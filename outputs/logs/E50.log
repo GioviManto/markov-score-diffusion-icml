@@ -1,0 +1,45 @@
+  commitment: 38 cells x 48 levels
+  [cells] 38 cells, 0 already on disk, 38 to run, workers=3
+  [E50] T0.2_h1_L128 rep=0: xi=19.47 Lambda=32.89 commit(t=0.5)=0.890
+  [E50] T0.2_h1_L128 rep=1: xi=19.47 Lambda=32.89 commit(t=0.5)=0.888
+/opt/homebrew/Cellar/python@3.14/3.14.4_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/resource_tracker.py:396: UserWarning: resource_tracker: There appear to be 6 leaked semaphore objects to clean up at shutdown: {'/mp-9n5ampvb', '/mp-z5ji7t46', '/mp-jh841tis', '/mp-41ebdow2', '/mp-tasctt0t', '/mp-n88awd62'}
+  warnings.warn(
+  commitment: 38 cells x 48 levels
+  [cells] 38 cells, 2 already on disk, 36 to run, workers=1
+  [E50] T0.2_h1_L256 rep=0: xi=19.47 Lambda=35.84 commit(t=0.5)=0.892
+  [E50] T0.2_h1_L256 rep=1: xi=19.47 Lambda=35.84 commit(t=0.5)=0.892
+  [E50] T0.3_h0.25_L128 rep=0: xi=22.48 Lambda=37.24 commit(t=0.5)=0.819
+  [E50] T0.3_h0.25_L128 rep=1: xi=22.48 Lambda=37.24 commit(t=0.5)=0.819
+  [E50] T0.2_h1_L64 rep=0: xi=19.47 Lambda=27.06 commit(t=0.5)=0.887
+  [E50] T0.2_h1_L64 rep=1: xi=19.47 Lambda=27.06 commit(t=0.5)=0.887
+  [E50] T0.3_h0.5_L64 rep=0: xi=11.47 Lambda=18.97 commit(t=0.5)=0.777
+  [E50] T0.3_h0.5_L64 rep=1: xi=11.47 Lambda=18.97 commit(t=0.5)=0.774
+  [E50] T0.2_h1_L32 rep=0: xi=19.47 Lambda=19.25 commit(t=0.5)=0.884
+  [E50] T0.2_h1_L32 rep=1: xi=19.47 Lambda=19.25 commit(t=0.5)=0.882
+  [E50] T0.3_h1_L32 rep=0: xi=6.08 Lambda=10.01 commit(t=0.5)=0.719
+  [E50] T0.3_h1_L32 rep=1: xi=6.08 Lambda=10.01 commit(t=0.5)=0.718
+  [E50] T0.4_h1_L32 rep=0: xi=3.66 Lambda=6.71 commit(t=0.5)=0.625
+  [E50] T0.4_h1_L32 rep=1: xi=3.66 Lambda=6.71 commit(t=0.5)=0.629
+  [E50] T0.5_h1_L32 rep=0: xi=2.75 Lambda=5.25 commit(t=0.5)=0.583
+  [E50] T0.5_h1_L32 rep=1: xi=2.75 Lambda=5.25 commit(t=0.5)=0.577
+  [E50] T0.7_h1_L32 rep=0: xi=1.98 Lambda=3.92 commit(t=0.5)=0.531
+  [E50] T0.7_h1_L32 rep=1: xi=1.98 Lambda=3.92 commit(t=0.5)=0.531
+  [E50] T1_h1_L32 rep=0: xi=1.53 Lambda=3.11 commit(t=0.5)=0.497
+  [E50] T1_h1_L32 rep=1: xi=1.53 Lambda=3.11 commit(t=0.5)=0.497
+  [E50] T1.5_h1_L32 rep=0: xi=1.21 Lambda=2.53 commit(t=0.5)=0.473
+  [E50] T1.5_h1_L32 rep=1: xi=1.21 Lambda=2.53 commit(t=0.5)=0.472
+  [E50] T2_h1_L32 rep=0: xi=1.06 Lambda=2.25 commit(t=0.5)=0.463
+  [E50] T2_h1_L32 rep=1: xi=1.06 Lambda=2.25 commit(t=0.5)=0.461
+  [E50] T0.5_iso_L32 rep=0: xi=6.15 Lambda=10.19 commit(t=0.5)=0.656
+  [E50] T0.5_iso_L32 rep=1: xi=6.15 Lambda=10.19 commit(t=0.5)=0.662
+  [E50] T1_iso_L32 rep=0: xi=6.15 Lambda=10.25 commit(t=0.5)=0.627
+  [E50] T1_iso_L32 rep=1: xi=6.15 Lambda=10.25 commit(t=0.5)=0.627
+  [E50] T2_iso_L32 rep=0: xi=6.15 Lambda=10.27 commit(t=0.5)=0.613
+  [E50] T2_iso_L32 rep=1: xi=6.15 Lambda=10.27 commit(t=0.5)=0.617
+  [E50] T0.2_h1_L16 rep=0: xi=19.47 Lambda=11.98 commit(t=0.5)=0.869
+  [E50] T0.2_h1_L16 rep=1: xi=19.47 Lambda=11.98 commit(t=0.5)=0.866
+  [E50] T0.2_h1_L8 rep=0: xi=19.47 Lambda=6.80 commit(t=0.5)=0.836
+  [E50] T0.2_h1_L8 rep=1: xi=19.47 Lambda=6.80 commit(t=0.5)=0.844
+  [E50] T0.2_h1_L4 rep=0: xi=19.47 Lambda=3.66 commit(t=0.5)=0.768
+  [E50] T0.2_h1_L4 rep=1: xi=19.47 Lambda=3.66 commit(t=0.5)=0.767
+  [cells] 72 cells, 0 already on disk, 72 to run, workers=1

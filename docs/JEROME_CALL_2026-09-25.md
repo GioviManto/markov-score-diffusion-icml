@@ -20,15 +20,15 @@ reason).
 | # | Question | Closed by | Status |
 |---|---|---|---|
 | Q1 | Is Gaussian-message BP provably the same as using the Gaussian (linear) score? Is the route through the Kalman filter? | Lemma + E23 | **IDENTIFICATION CONFIRMED** (6.7e-16 against our own RTS smoother); the *lemma text* drafted for it was **false as stated** — §2 Q1 |
-| Q2 | With a Laplace *ansatz* for the messages and a Laplace innovation, is BP exact? | E22, E22c | **ANSWERED — no.** Confirmed at scale: 432/432 cells |
+| Q2 | With a Laplace *ansatz* for the messages and a Laplace innovation, is BP exact? | E22, E22c | **ANSWERED — no.** Confirmed at scale: the interior failure in 432/432 cells, site 1 at the quadrature floor in 416/432 (corrected 9 Oct; it read 432/432 for both) |
 | Q3 | What do the messages $\mu_k$ actually look like? Is it Gaussian $\ast\ P_\varepsilon$? | E22, E22c | **ANSWERED — his conjecture is very nearly right** |
 | Q4 | Is closure possible only for the Gaussian, or for any finitely-parameterised family? | Lemma + E22 | **ANSWERED empirically** |
 | Q5 | Can BP be done in Fourier space — truncation on modes instead of a real-space grid? | E23 + `docs/FOURIER_ANALYSIS.md` | **ANSWERED analytically.** Closed form for the message, decay $\exp(-(\log b\omega)^2/\log\frac1\rho)$ at $R^2=0.99997$; the tilt is banded and hardest at LOW noise; cumulants provably divergent (Cramér fails). Solver still not worth building, now for a mechanism |
 | Q6 | Can $K$ be a neural network, fitted by EM through BP? Does it overfit? | E25, E25m | **ANSWERED — no, twice over.** A neural kernel loses to a mixture kernel AND to a comparable score net. The 1,516-parameter MDN kernel loses to the 25-parameter mixture kernel in **64/64 cells at matched budget**, median 2.04–2.57×, and E30 puts all arms on one estimand: em_bp $<$ best net $<$ mdn, §2 Q6 |
-| Q7 | Posterior mean for one noisy sequence: how long for a network, how long for BP? | E24, E24gpu2 | **ANSWERED on BOTH devices** — BP is ~15× *slower*; not a CPU artefact, §2 Q7 |
-| Q8 | Can we generate without a score — flat marginal, run BP once? | E26 (weak), **E27** (strong) | **ANSWERED, both forms — yes.** One BP sweep generates at the Monte Carlo floor and is 725× cheaper than the reverse SDE at equal error, §2 Q8 |
+| Q7 | Posterior mean for one noisy sequence: how long for a network, how long for BP? | E24 (`hpc_E24x`, `hpc_E24x_gpu`), E47 part (c) | **ANSWERED on BOTH devices** — BP is 12.5× *slower* than the transformer on CPU and 15.1× on the H200 at 8 threads (exclusive nodes); not a CPU artefact. With one thread on a 101-point grid it is faster than the transformer (corrected 9 Oct; it read ~15×, closed by E24 and the shared-node run E24gpu2), §2 Q7 |
+| Q8 | Can we generate without a score — flat marginal, run BP once? | E26 (weak), **E27** (strong) | **ANSWERED, both forms — yes.** One BP sweep generates at the Monte Carlo floor and is 731× cheaper than the reverse SDE at equal error (exclusive node, 8 threads, B = 2048; corrected 9 Oct, it read 725× from the shared-node run), §2 Q8 |
 | Q9 | Is the score compared at a fixed $t$ or averaged over $t$? | **E28** | **ANSWERED.** Pooled, and the pooled scalar *does* hide a crossover: em_bp first at the 8 (of 12) lowest levels at $M=128$ and the 10 lowest at $M=2048$, the LMMSE **oracle** above. The crossover **moves with data**, $t\approx0.94\to1.90$ for a 16× increase, §2 Q9 |
-| Q10 | Do the information curves quantify information about $\rho$ and $\beta$, or about $\kappa_2$ and $\kappa_4$? | `tools/cumulant_information.py` | **DONE — and a RECOMPUTE, not a relabel:** a relabel would have been wrong by 2.3–1518×, §2 Q10 |
+| Q10 | Do the information curves quantify information about $\rho$ and $\beta$, or about $\kappa_2$ and $\kappa_4$? | `tools/cumulant_information.py` | **DONE — and a RECOMPUTE, not a relabel:** a relabel would have been wrong by 1.6–1526× (corrected 9 Oct; it read 2.3–1518×, the $t = 3$ column alone, 2.36–1518), §2 Q10 |
 | Q11 | How does EM–BP scale in $M$ (sequences) and $L$ (sites)? | E24 | **ANSWERED** — the call's answer was wrong, and so was ours; §5.1 |
 
 ---
@@ -111,12 +111,18 @@ messages live in?* Evidence: `outputs/E22/` (four innovation families × twelve 
 64 chains, grid (801, 12), messages fitted by direct KL minimisation over each
 candidate's own parameters).
 
-**Confirmed at scale (E22c, job 669837, `outputs/hpc_E22c/`).** The laptop result was one
-configuration; E22c swept $\rho \in \{0.5, 0.7, 0.85, 0.95\}$, $L \in \{32, 128\}$,
-$N_g \in \{801, 1601\}$, four innovation families, twelve levels — **432 cells**, and both
-verdicts hold in **432/432**: the ansatz is at the measured quadrature floor at site 1, and
-strictly above it and growing with depth in the interior. Growth factor from site 1 to the
-deepest site spans 8.0e7 to 1.15e11 (median 1.4e10).
+**Confirmed at scale (E22c, job 669837, `outputs/hpc_E22c/`, frozen 9 Oct).** The laptop
+result was one configuration; E22c swept $\rho \in \{0.5, 0.85, 0.95\}$, $L \in \{32, 128\}$,
+$N_g \in \{801, 1601\}$, three non-Gaussian noise families (Laplace, Student-$t$, uniform;
+the Gaussian control is in `shapes_summary.csv` but not in the verdict table), twelve
+levels — **432 cells**. The interior verdict holds in **432/432**: the ansatz is strictly
+above the quadrature floor and growing with depth. The site-1 verdict holds in
+**416/432**: the 16 exceptions are uniform noise at $\rho = 0.5$, $t \le 0.153$, where the
+site-1 KL (2.4e-15 to 4.3e-15) is still machine precision in absolute terms but above that
+cell's measured floor (3.1e-17 to 3.6e-16). Growth factor from site 1 to the deepest site
+spans 6.7e7 to 3.3e11 (median 1.4e10). *(Corrected 9 Oct against the frozen
+`closure_verdict.csv`: this paragraph read $\rho \in \{0.5, 0.7, 0.85, 0.95\}$, four
+families, 432/432 for both verdicts, and a growth of 8.0e7 to 1.15e11.)*
 
 **The load-bearing control:** doubling the grid does not move the error.
 $\mathrm{KL}(N_g{=}1601)/\mathrm{KL}(N_g{=}801) = 1.000$ over 1512 cells. The failure is
@@ -149,6 +155,13 @@ His two-parameter family beats a plain Gaussian by **1 600×** (Laplace) and **1
 wrong four-parameter family by a factor of fifty.** Structure beats capacity — which is
 the paper's own thesis, showing up in a place we did not plant it.
 
+*(Corrected 9 Oct: the table and the factors above are the laptop run's, 64 chains,
+unfrozen. The frozen E22c at the same configuration — $\rho = 0.85$, $L = 32$,
+$N_g = 801$, site 31, 512 chains — gives 2 272× (Laplace) and 16 464× (Student-$t$) over
+the plain Gaussian, and 78× (Laplace) and 280× (Student-$t$) over the four-parameter
+mixture; the transition ansatz's KL for Laplace at $t = 0.05$ is 1.6e-5. Same direction,
+stronger.)*
+
 (On `uniform`, Gaussian+Laplace matches the plain Gaussian exactly: the optimiser drove
 the Laplace weight to zero. The family simply has nothing to offer a compact-support
 innovation.)
@@ -177,7 +190,9 @@ the Gaussian"*) is confirmed.
 Both halves, now with evidence. *Exact* closure: Gaussian-only, and site 1 versus site 31
 is the demonstration. *Projected* closure: available for any family, with a price that is
 now measured rather than asserted — 1e-5 to 1e-3 nats per message for the best
-two-parameter family. Whether that price is acceptable is a question about the downstream
+two-parameter family *(corrected 9 Oct: that range is the laptop's single configuration;
+across the 432 frozen E22c cells the transition ansatz's deepest-site KL runs from 4.3e-9
+to 2.0e-3, median 2.3e-4)*. Whether that price is acceptable is a question about the downstream
 score error, not about the messages, and it is what E23 will answer.
 
 #### P3 was falsified, and the reason is instructive
@@ -217,7 +232,11 @@ Three consequences, all of them design constraints rather than observations:
 1. **Odd cumulants are negligible** ($10^{-3}$–$10^{-2}$) — the innovations are symmetric
    and the messages inherit it. A truncation can carry even orders only, halving the
    budget.
-2. **Order 4 is not enough.** $|\kappa_6|$ is between 1 and 228, never small. A
+2. **Order 4 is not enough.** $|\kappa_6|$ is between 1 and 228, never small *(corrected
+   9 Oct: in the frozen E22c at site 31, $\rho = 0.85$, $L = 32$, $N_g = 801$ this holds for
+   Laplace (1.04–17.8) and Student-$t$ (12.7–228; 18.7–342 at $N_g = 1601$) noise; uniform
+   noise goes down to 0.24 on both grids, and
+   across all frozen cells and sites the minimum is 0.0064)*. A
    Gaussian-plus-$\kappa_4$ truncation — the natural first rung, and the one
    `e16_edgeworth_oracle` already builds — will miss a large term. E23 must go to order 6
    at least, and heavy-tailed families will want more.
@@ -275,7 +294,10 @@ $\int q^2/\phi < \infty$, and **it fails for every standardised BP message at ev
 level** (the integral grows by ×2.4e193 from half-width 8 to 20 at $t = 0.05$, and still by
 ×4.9e43 at $t = 3$). One basis has a convergence theorem this chain satisfies; the other has
 one it violates. That replaces the weaker argument we had been using ($|\kappa_6|$ runs
-1–228, a symptom rather than a cause).
+1–228, a symptom rather than a cause) *(corrected 9 Oct: 1–228 is the unfrozen laptop
+reading for Laplace and Student-$t$ at site 31; the frozen E22c at site 31, $\rho = 0.85$,
+$L = 32$, $N_g = 801$ gives Laplace 1.04–17.8, Student-$t$ 12.7–228 and uniform 0.24–3.8,
+see "What this hands E23", consequence 2, above)*.
 
 The two refuted explanations are kept in the note because they are why the third can be
 trusted: the "it's the metric and the positive cone" story died when the *unweighted* $L^2$
@@ -292,15 +314,23 @@ that BP is memory-bound, so there is nothing for a faster spectral step to buy.*
 
 E23 measured the premise before committing to a solver: *how many numbers does a BP
 message actually need, per representation?* On the Laplace chain, 144 cells per
-representation (4 $\rho$ × 12 noise levels × 3 sites), KL of the reconstructed message
-against the true one, degrees of freedom swept:
+representation (3 $\rho \in \{0.5, 0.85, 0.95\}$ × 12 noise levels × 4 sites
+$\{4, 8, 16, 31\}$), KL of the reconstructed message against the true one, degrees of
+freedom swept (median over the cells that reach each KL level):
 
 | representation | dof at KL $10^{-2}$ | dof at KL $10^{-4}$ | cells reaching $10^{-4}$ | non-monotone |
 |---|---|---|---|---|
 | grid (uniform trapezoid) | 45 | 151 | **144/144** | **0/144** |
 | Fourier, shared domain | 101 | 151 | 140/144 | 92/144 |
 | Fourier, domain adapted per message | **33** | **47** | 53/144 | 10/144 |
-| cumulant (Gram–Charlier) | 5 | — | 24/144 | **144/144** |
+| cumulant (Gram–Charlier) | 5 | 5 | 24/144 | **144/144** |
+
+*(Corrected 9 Oct against the frozen `outputs/hpc_E23/dstar.csv`: the description read
+"4 $\rho$ × 12 noise levels × 3 sites", and the cumulant row's dof at KL $10^{-4}$ read
+"—"; it is order 5 in every one of the 24 cells that reach $10^{-4}$. The cumulant
+reaches KL $10^{-2}$ in only 108/144 cells. All four noise families, 576 cells per
+representation: grid 45 / 151, shared Fourier 65 / 101, adapted Fourier 23 / 33,
+cumulant 5 / 5, non-monotone 0, 186, 188 and 358 of 576.)*
 
 Three findings, in order of how much they matter:
 
@@ -315,16 +345,27 @@ Three findings, in order of how much they matter:
 3. **The cumulant route is dead.** Gram–Charlier is non-monotone in **144/144 cells**:
    adding cumulants makes the reconstruction worse. This is not a bug, it is the known
    fact that Edgeworth/Gram–Charlier expansions are *asymptotic, not convergent*; E22's
-   $|\kappa_6| \in [1, 228]$ said the same thing from the other direction.
+   $|\kappa_6| \in [1, 228]$ said the same thing from the other direction *(corrected 9 Oct:
+   that range is the unfrozen laptop reading; frozen E22c at site 31, $\rho = 0.85$,
+   $L = 32$, $N_g = 801$ gives Laplace 1.04–17.8, Student-$t$ 12.7–228, uniform 0.24–3.8)*.
 
 And even the 4.28× would not have bought 4.28×: E24's `anatomy` part showed only 23.8% of
 a BP sweep at $N_g=401$ is the $N_g^2$ matmul (the rest is $O(BLN_g)$ elementwise work and
 traffic over 158 MB of message arrays), so making the matmul *free* caps the speed-up at
 $1/(1-0.238) = 1.3\times$. Two independent reasons, measured rather than argued.
+*(Corrected 9 Oct: 23.8% is the unfrozen laptop run, and so are the 23.8% in result 3
+above and the 55% at $N_g = 1601$ below. The frozen exclusive-node anatomy
+(`outputs/hpc_E24x/`, `outputs/hpc_E24x_gpu/`) puts the matmul at 12.1% (cnode07) and
+15.2% (gnode16's CPU) of a sweep at $N_g = 401$, and 29.4% / 23.9% at $N_g = 1601$, so a
+free matmul buys at most 1.14–1.18×. The conclusion is the same, more strongly.)*
 
 **A by-product worth recording:** uniform trapezoid quadrature is not merely adequate, it
-is the right choice. Gauss–Legendre and Clenshaw–Curtis are ~10× **worse** here, confirmed
-over 144 cells at scale. For a smooth decaying integrand the Euler–Maclaurin error terms
+is the right choice. Gauss–Legendre and Clenshaw–Curtis are 4–6× **worse** here (median
+relative score error at 51, 101 and 201 nodes over the 144 frozen quadrature cells, four
+noise families × 3 $\rho$ × 12 levels; over all ten node counts 2.3–20.4×: 2.4–2.5× at 31,
+4.5–6.7× at 51–601 except 151, where it is 2.3–2.4×, and 20× at 801)
+*(corrected 9 Oct against `outputs/hpc_E23/quadrature_summary.csv`: it read "~10× worse,
+confirmed over 144 cells at scale"; ~10× was the smoke run)*. For a smooth decaying integrand the Euler–Maclaurin error terms
 cancel and the trapezoid rule is spectrally accurate; the Laplace kink is not
 polynomial-like, which is exactly what the polynomial rules are built for.
 
@@ -640,6 +681,27 @@ posterior mean than the transformer, on the CPU *and* on the H200**: 0.3196 ms a
 in this project recorded that *"BP is slower at inference was a CPU artefact"*. **That was
 wrong.** What is a CPU artefact is the *absolute* BP number, not the ratio.
 
+*(Corrected 9 Oct. The numbers above and the batch table below are the shared-node runs
+E24c and E24gpu2, which are not citable for timing (N-29). The frozen exclusive-node reruns,
+8 threads, give 0.519 ms against 0.042 ms on CPU (**12.5×**, cnode07, `outputs/hpc_E24x/`)
+and 0.0405 ms against 0.0027 ms on the H200 (**15.1×**, `outputs/hpc_E24x_gpu/`); the batch
+table becomes 15.6× at batch 32, 15.0× at 512, 10.5× at 1024 and 6.2× at 2048, with BP flat
+at 0.0204–0.0219 s.)*
+
+*(Added 9 Oct, the one-thread caveat: E47 part (c), `outputs/hpc_E47t/`, exclusive node
+cnode01, ONE thread, B = 512, L = 32.)* BP takes 0.107 ms per sequence at $N_g = 101$ and
+0.667 ms at $N_g = 401$; the transformer takes 0.208 ms, the U-Net 0.152 ms and the
+bidirectional GRU 0.063 ms. The 12.5× above was measured with 8 threads, which the
+networks use and BP barely does: from one thread to eight, BP at $N_g = 401$ goes from
+0.667 to 0.524 ms and the transformer from 0.208 to 0.036 ms (`scaling.csv` at
+$t = 0.4665$, B = 512, in `outputs/hpc_E47t/` and `outputs/hpc_E24x/`; two different exclusive
+nodes). Per core, BP on the 101-point grid is about 1.9× *faster* than the transformer and
+1.7× slower than the GRU; on the 401-point grid it is 3.2× slower than the transformer.
+How coarse the grid may be is a property of the kernel: 101 points reproduce the true
+$\varphi^4$ kernel's BP to 2e-11 (E47 part (a)), while the linear chain's fitted
+8-component mixture kernels move by 2.2% at 101 points ($M = 2048$) and need 151 points to
+stay within 0.08% (E47 part (d)). Unregistered comparison, inference only.
+
 **What the GPU did change: the mechanism, and the large-batch behaviour.** On the H200,
 `bp_grid`'s wall clock is **flat at 0.0204–0.0215 s from batch 32 to batch 2048** — a 64×
 range for a 5.6% change. It is launch-latency-bound, and inherently so: the $L$-site
@@ -708,7 +770,8 @@ Three readings, in order of importance:
 
 **This changes E23.** See Q5.
 
-**What is still missing:** the GPU row (`hpc/icml_submit.sh e24-gpu`), and the same table
+**What is still missing:** the GPU row (`hpc/icml_submit.sh e24-gpu`) *(corrected 9 Oct:
+it exists, `outputs/hpc_E24x_gpu/`, above)*, and the same table
 at equal *error* rather than at equal configuration — a network that is faster and worse
 has not won anything. The error numbers exist in E03/E14; joining them is a write-up step,
 not a new run.
@@ -776,24 +839,35 @@ network vs huge network" claim stated as an experiment rather than as an intuiti
 > once."*
 
 **Status:** **WEAK FORM ANSWERED (E26, landed 26 Sep). STRONG FORM built, registered and
-predeclared as E27; not yet run.** The distinction was recorded in E26's registry entry
-before its results landed, so it did not get lost.
+predeclared as E27; not yet run.** *(Corrected 9 Oct: E27 ran on 27 Sep and was frozen
+on 28 Sep, with exclusive-node cost reruns frozen on 5 Oct; see the ledger row and the
+5 Oct log entry. Its P1–P5 were adjudicated on 9 Oct in the registry: P1, P3, P4, P5
+confirmed; P2 falsified as a tie: the one-sweep sampler's kurtosis is closer to the
+reference than the 400-step reverse SDE's in only 18 of 32 pairs, median error 0.071
+against 0.085, paired t = −1.2.)* The distinction was recorded in E26's registry
+entry before its results landed, so it did not get lost.
 
 **Weak form — does a BP score drive generation? Yes, and the contrast is sharp.**
 E26 drove the same reverse SDE (400 steps, identical Brownian path per arm, reference
 sample = the clean chain through the channel at $t_{\min}$) with four scores:
 
-| arm | excess kurtosis of the AR residual | reference | $\mathrm{KL}$ of the residual histogram |
+| arm | excess kurtosis of the residual $a_{i+1} - \rho a_i$ | reference | $\mathrm{KL}$ of the residual histogram |
 |---|---|---|---|
-| exact (true-kernel BP) | 1.66–1.78 | 1.87 | 6.2e-4 |
-| em_bp (fitted mixture) | 1.18 | 1.87 | 2.6e-3 |
-| lmmse (covariance twin) | **−0.01** | 1.87 | 2.2e-2 |
-| isotropic | −0.03 | 1.87 | 3.8e-1 |
+| exact (true-kernel BP) | 1.86 | 1.92 | 7.5e-4 |
+| em_bp (fitted mixture) | 1.79 (1.73 at $M = 128$, 1.79 at $M = 2048$) | 1.92 | 1.9e-3 (3.5e-3, 1.4e-3) |
+| lmmse (covariance twin) | **−0.0002** | 1.92 | 2.2e-2 |
+| isotropic | −0.001 | 1.92 | 3.8e-1 |
 
-The load-bearing row is **lmmse: excess kurtosis −0.01 where the truth is 1.87.** The
-covariance-matched Gaussian score generates a *Gaussian*. It gets the covariance right
-(cov_fro 0.069 against exact's 0.071) and destroys every higher-order structure in the
-law. This is the cleanest statement in the project of why the "learned scores are
+*(Corrected 9 Oct: medians over the frozen `outputs/hpc_E26/generation.csv`, 16 seeds ×
+$M \in \{128, 2048\}$, 32 rows per arm; the reference is the median over the 16 seeds. The
+table first printed here was seed 0 only: exact 1.66 ($M = 128$) and 1.78 ($M = 2048$),
+em_bp 1.18 ($M = 128$), lmmse −0.01, isotropic −0.03, reference 1.87, KL 6.2e-4 / 2.6e-3 /
+2.2e-2 / 3.8e-1. The exact arm ranges from 1.66 to 2.23 over its 32 rows.)*
+
+The load-bearing row is **lmmse: excess kurtosis −0.0002 where the reference is 1.92**
+(seed 0 read −0.01 against 1.87). The covariance-matched Gaussian score generates a
+*Gaussian*. It gets the covariance right (median cov_fro 0.071 against exact's 0.071;
+seed 0: 0.069 against 0.071) and destroys every higher-order structure in the law. This is the cleanest statement in the project of why the "learned scores are
 basically a low-pass filter of a Gaussian" framing is not the whole story — the part it
 throws away is exactly the part that makes the samples the right shape.
 
@@ -810,10 +884,12 @@ experiments are paired:
   forward filter conditioned on it, sample backward.
 - `ancestral_em` — the same pass with the fitted kernel. **This is the arm that matters:**
   it separates kernel error from integrator error, which nothing in this project has done.
-  E26's em_bp figure (1.18 against 1.87) confounds the two.
+  E26's em_bp figure (1.18 against 1.87) confounds the two. *(Corrected 9 Oct: 1.18 and
+  1.87 are seed 0, $M = 128$; the 16-seed median is 1.79 (1.73 at $M = 128$) against 1.92.)*
 - `mc_floor` — i.i.d. draws from the true law in continuous space, so every other arm's
   excess over it is the part that is not Monte Carlo. E26 had no such arm, which is why its
-  `exact` deficit (1.66 against 1.87) could not be read as bias.
+  `exact` deficit (1.66 against 1.87) could not be read as bias. *(Corrected 9 Oct: seed 0,
+  $M = 128$; the 16-seed median is 1.86 against 1.92.)*
 
 Correctness is pinned against the project's own exact solver, not against a second
 implementation of the same idea (`tests/test_ffbs_sampler.py`, 8 tests): the FFBS forward
@@ -968,8 +1044,11 @@ unchanged — $\rho$ and $\kappa_2 = q$, because their rows of $J$ are unit vect
 the internal check that $J$ is assembled right — and $\kappa_4$ does not, because $j_3$ mixes
 in the $q$ direction.
 
-**A relabel would have been wrong by a factor between 2.3 and 1518.** Across $\beta$ at a
-fixed noise level, medians over 8 replicates:
+**A relabel would have been wrong by a factor between 1.6 and 1526** (the `relabel_ratio`
+of `outputs/E01/cumulant_information.csv`, median over the 8 replicates of each $\beta$ and
+$t$, over every $\beta$ and every $t$ in the file; 2.2–1524 at the $t = 0.4665$ of the table
+below) *(corrected 9 Oct: it read "between 2.3 and 1518", which is the $t = 3$ column
+alone, 2.36–1518)*. Across $\beta$ at a fixed noise level, medians over 8 replicates:
 
 | $\beta$ | $\gamma_2$ | $\gamma_2'$ | $\mathrm{eff}(\beta)$ | $\mathrm{eff}(\kappa_4)$ | $\mathrm{eff}(\kappa_4)/\mathrm{eff}(\kappa_2)$ |
 |---|---|---|---|---|---|
@@ -1108,6 +1187,14 @@ $N_g^2$ matmul; the rest is $O(B L N_g)$ traffic, which dilutes the quadratic te
 operation count is quadratic; the *wall-clock* is not, until $N_g \gtrsim 1600$ where the
 matmul share passes 55 %.
 
+*(Corrected 9 Oct: the table and the shares above are the laptop's exploratory, unfrozen
+run. The frozen exclusive-node run, `outputs/hpc_E24x/slopes.csv` (cnode07, 8 threads),
+gives slopes (full / top half) of +1.03 / +1.00 in $B$, of +1.03 / +1.04 in $L$
+and of +1.16 / +1.22 in $N_g$; its anatomy puts the matmul at 12.1% of the sweep at
+$N_g = 401$ and 29.4% at 1601, so the 55% is not reached by 1601 on that node. Same
+verdicts: linear in $B$ and $L$, well below 2 in $N_g$. With one thread, E47 part (c)
+gives +1.20 over $N_g = 41$–401.)*
+
 The correction that survives: the bottleneck Jérôme identified by instinct is real, but it
 is the **representation size**, not specifically the matmul — which is why truncating the
 representation beats accelerating the matmul. See Q5.
@@ -1215,3 +1302,40 @@ one lookup away.
   `markov_score.ffbs`. **Information plots** relabelled by statistical order (F.3). **Figures first** (§28 and the
   call's summary figure): `reports/figures-first-2026-10-06.pdf`, all seven figures plus the summary, from frozen
   outputs.
+
+- **2026-10-09 (night)** — the ledger audited against the frozen data, and the coarse grid read.
+  **Three experiments found unfrozen, and frozen:** E22c, E23 and E26 had run on 26 Sep (clean at bd7ad42 and
+  343ec92) and been read, but never frozen; frozen 9 Oct (the small tables; `shapes.csv` and `representation.csv`
+  by hash only). **Corrections made in place, each marked "(corrected 9 Oct)":** Q2 (site 1 at the quadrature
+  floor in 416/432 cells, not 432/432; three $\rho$ and three non-Gaussian noise families, not four and four);
+  Q3 and Q4 (the factors were the laptop's single configuration; frozen E22c gives 2 272× and 16 464× over the
+  plain Gaussian and 78× and 280× over the four-parameter mixture); $|\kappa_6|$; Q5 (the table is
+  3 $\rho$ × 12 levels × 4 sites; the cumulant reaches KL $10^{-4}$ in 24/144 cells, at order 5; Gauss–Legendre
+  and Clenshaw–Curtis are 4–6× worse, not ~10×; the free-matmul cap is 1.14–1.18× on the exclusive nodes, not
+  1.3×); Q7 (the exclusive-node 12.5× and 15.1×, and the one-thread caveat below); Q8 (the E26 table was seed 0;
+  the 16-seed medians are exact 1.86, em_bp 1.79, reference 1.92; E27's P1–P5, never adjudicated, now are:
+  P2 falsified as a tie, the rest confirmed); Q10 (1.6–1526×, not 2.3–1518×); §5.1 (the
+  frozen slopes). No verdict in this ledger changed.
+  **E47 parts (a), (c) and (d) read** (P6–P9 confirmed, P10 falsified). (a) The coarse grid: BP with the true
+  $\varphi^4$ kernel is exact to 2e-11 at 101 points (worst 1.8e-11 over the six cells, against (1601, 8));
+  51 points give 1.7e-5 to 7.2e-4. (d) The linear chain's frozen headline kernels stay within 0.08% of their
+  401-point risk at 151 points; at 101 the 8-component mixtures move 2.2% ($M = 2048$), because their narrowest
+  components are finer than the 101-point spacing (P10). (c) One thread, exclusive node (`outputs/hpc_E47t/`):
+  BP 0.107 ms per sequence at $N_g = 101$ and 0.667 ms at 401, against the transformer's 0.208, the U-Net's 0.152
+  and the GRU's 0.063 ms. E24x's 12.5× was measured at 8 threads, which the networks use and BP barely does.
+  **Queued behind the cluster maintenance window** (no start before 10 Oct 12:00): E47 part (b), the learned
+  estimator refitted on the coarse grid (691998, 691999); E48, the MDN on clean strided data with its ladder
+  extended to 16 000 (692000–692003); E49, the MDN on the out-of-class Laplace-bond chain (692004, 692007).
+  **E50 registered and predeclared** (P1–P7) before any cell ran, now running on the laptop: speciation on the
+  $\varphi^4$ field, i.e. when the exact posterior commits to the sign of a site, $|2P(a_i > 0 \mid x_t) - 1|$
+  against $t$, against the Gaussian twin with the same covariance; and the kink energy of the lattice chain down
+  to $h = 1/32$ (continuum value $2\sqrt2/3$). Jérôme's email of 30 Sep, item 10.
+  **Two suggestions of the consolidated (SPDE) note DECLINED, with a measured reason.** Section 9.2's truncated
+  rank-$R$ representation (cost $O(LGR)$: the messages stay on the $G$-point grid, only the transition is
+  compressed) and section 23's interpolation-free $D\,G\,D$ Fourier update (multiply by $D$, convolve with the
+  Gaussian $G$ by FFT, multiply by $D$; no dilation, so no resampling) both accelerate only the transition
+  (matrix–vector) step. On the exclusive nodes that step is 12–15% of a BP sweep at $N_g = 401$
+  (`outputs/hpc_E24x/anatomy.csv` 12.1%, `outputs/hpc_E24x_gpu/anatomy.csv` CPU 15.2%), so even a free
+  transition caps either at 1.14–1.18×, about 1.15×; E40's FFT transition was 5.8× *slower* than dense BP at
+  $N_g = 401$ on one core. Coarsening the grid (E47) reduces every term instead: with one thread, BP is 6.2×
+  faster at $N_g = 101$ and 3.9× faster at 151 than at 401.
