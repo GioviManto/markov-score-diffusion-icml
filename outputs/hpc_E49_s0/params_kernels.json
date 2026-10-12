@@ -1,0 +1,120 @@
+{
+  "timestamp": "2026-10-10 21:23:36",
+  "git_commit": "3fed27000a7c2b06f5aeae3934f09bae5eee9c73",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "190aacc013c22ef327693fae9d01ba90eafd8389b1acd58cf4a6f81b353612ab",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode03",
+  "slurm_job_id": "692004",
+  "slurm_array_task_id": "",
+  "cpu_count": "24",
+  "blas_threads": "1",
+  "settings": {
+    "cells": [
+      "LAP_B_L32"
+    ],
+    "sizes": [
+      128,
+      512,
+      2048
+    ],
+    "net_sizes": [
+      2048,
+      128
+    ],
+    "n_chains": 2048,
+    "n_val": 1024,
+    "n_test": 2048,
+    "seeds": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "dev_seeds": [
+      10000,
+      10001
+    ],
+    "grid_size": 401,
+    "half_width": 8.0,
+    "arms": [
+      "em_mdn"
+    ],
+    "components": 8,
+    "poly_degree": 6,
+    "spline_basis": 24,
+    "mdn_components": 4,
+    "mdn_hidden": 32,
+    "em_checkpoints": [
+      10,
+      20,
+      40,
+      60,
+      80,
+      120,
+      160,
+      220,
+      300,
+      400,
+      600,
+      800,
+      1200
+    ],
+    "em_init_rho": 0.3,
+    "em_init_var": 0.8,
+    "archs": [
+      "window",
+      "transformer"
+    ],
+    "net_steps": 32000,
+    "net_checkpoints": [
+      500,
+      1000,
+      2000,
+      4000,
+      8000,
+      16000,
+      32000
+    ],
+    "screen_steps": 8000,
+    "mode": "eps",
+    "lrs_by_arch": {
+      "window": 0.001,
+      "transformer": 0.003
+    },
+    "trace_by_arch": {
+      "window": "coloured",
+      "transformer": "hutchinson"
+    },
+    "batch_size": 64,
+    "grad_clip": 1.0,
+    "winners": null,
+    "torch_threads": 1,
+    "device": "auto",
+    "loglinear_basis": 10
+  },
+  "cells": [
+    {
+      "cell": "LAP_B_L32",
+      "T": NaN,
+      "h": NaN,
+      "n_sites": 32,
+      "role": "lab_b",
+      "rho1": 0.8395732693644609,
+      "corr_length_sites": 12.153794799536918,
+      "scale": 0.8151241240753115,
+      "excess_kurtosis": -1.2943608978175098
+    }
+  ],
+  "quick": false,
+  "workers": 8,
+  "lab_b": {
+    "bond": 0.4,
+    "depth": 2.0
+  }
+}

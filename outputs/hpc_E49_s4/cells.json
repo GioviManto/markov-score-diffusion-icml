@@ -1,0 +1,13 @@
+[
+  {
+    "cell": "LAP_B_L32",
+    "T": NaN,
+    "h": NaN,
+    "n_sites": 32,
+    "role": "lab_b",
+    "rho1": 0.8395732693644609,
+    "corr_length_sites": 12.153794799536918,
+    "scale": 0.8151241240753115,
+    "excess_kurtosis": -1.2943608978175098
+  }
+]

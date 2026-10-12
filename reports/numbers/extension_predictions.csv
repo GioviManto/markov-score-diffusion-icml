@@ -38,6 +38,10 @@ E48,P2,stride 4: MDN below the site energy in >= 14/16 seeds,0.4046,16.0000,16.0
 E48,P3,stride 1: MDN above the site energy in 16/16 seeds,3.7069,16.0000,16.0000,CONFIRMED,
 E48,P4,stride 1: seed-mean ratio MDN / site energy < 5,2.9812,,16.0000,CONFIRMED,
 E48,P5,stride 2: MDN below the site energy in >= 10/16 seeds,0.9129,14.0000,16.0000,CONFIRMED,
+E49,P1,M = 2048: MDN below the site energy in >= 7/8 seeds,0.5461,7.0000,8.0000,CONFIRMED,
+E49,P2,M = 2048: MDN below the mixture in >= 7/8 seeds,0.2437,8.0000,8.0000,CONFIRMED,
+E49,P3,M = 2048: log-linear below the MDN in >= 6/8 seeds,1.3273,1.0000,8.0000,FALSIFIED,
+E49,P4,M = 2048: at most 30% of MDN fits at the last checkpoint,0.6250,5.0000,8.0000,FALSIFIED,
 E50,P1,"calibration: |share right - (1 + commitment) / 2| <= 0.01 on average over levels and <= 0.05 at every level, every cell",0.0025,19.0000,19.0000,CONFIRMED,worst mean 0.0025 (T0.2_h1_L4); worst level 0.0157 (T0.2_h1_L4)
 E50,P2,fixed spacing: t_c falls strictly as Theta rises (7/7 consecutive pairs),,7.0000,7.0000,CONFIRMED,"t_c: T0.2: 1.611, T0.3: 1.087, T0.4: 0.847, T0.5: 0.716, T0.7: 0.595, T1: 0.519, T1.5: 0.475, T2: 0.455"
 E50,P3,exact posterior commits earlier in the reverse process than its Gaussian twin (t_c > t_c^twin) at Theta <= 0.5 (4/4); excess at 0.2 > at 2,0.4655,4.0000,4.0000,CONFIRMED,"excess: T0.2: +0.466, T0.3: +0.320, T0.4: +0.227, T0.5: +0.169, T0.7: +0.118, T1: +0.086, T1.5: +0.072, T2: +0.066"

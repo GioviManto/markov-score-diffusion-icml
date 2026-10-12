@@ -182,7 +182,8 @@ turned out to be a coarser grid (Section~3.6). \src{E23, E24x, E40}
 
 \textbf{B. Can the kernel be a neural network?} (Q6). It can be fitted by EM, and it loses: the MDN is worse than the 25-number
 mixture kernel in 64 of 64 comparisons (median factor 2.0--2.5), and also worse than the best plain score network (which has
-19--25\% lower risk). \fals{We predicted it would sit between the networks and EM--BP.} With 61 times more parameters it does 2--2.5 times worse on test data, consistent with the overfitting Jérôme expected. \src{E25m, E30}
+19--25\% lower risk). \fals{We predicted it would sit between the networks and EM--BP.} With 61 times more parameters it does 2--2.5 times worse on test data, consistent with the overfitting Jérôme expected. This verdict is for the paper's chain, where a small kernel is
+correctly specified; where it is not, the network kernel does win (Section~3.4). \src{E25m, E30}
 
 \textbf{C. Cost} (Q7, Q11). BP is slower per sequence; by how much depends on threads and grid size. On the paper's 401-point grid
 with 8 threads BP takes 0.52\,ms per sequence against 0.042\,ms for the transformer ($12.5\times$); on an H200 GPU $15\times$ at
@@ -353,7 +354,12 @@ at $M=2048$ (8 of 8 seeds). On two true $\phi^4$ cells the unrestricted kernel c
 \fals{that price grows with data, the opposite of our prediction}. \fals{At $M=128$ we predicted the unrestricted kernel would be at least twice the site energy's risk in 14 of 16 seeds on both cells;
 on the hotter cell it was 12.} So keep the site energy for physics of this gradient type, and use the
 unrestricted kernel as a misspecification test: if it beats both the site energy and the spline at large $M$, the Gaussian-bond
-assumption is wrong. \src{E43}
+assumption is wrong. On the same chain the network kernel (the MDN, learned by EM through noise) does better still: at $M=2048$ its risk is
+0.056, against 0.068 for the unrestricted kernel and 0.103 for the site energy (7 of 8 seeds below it, ratio 0.55). \fals{We predicted
+the 100-number kernel would again beat the network; it does so in 1 of 8 seeds. We also predicted the network would settle within its
+budget; in 5 of 8 fits it was at its last checkpoint, so its risks are upper bounds.} Together with the stride-4 result, this answers
+Jérôme's question whether a neural kernel ever earns its parameters: yes, when the simple kernels' class is wrong (by a factor 1.8 to
+2.5 against the best of them), not when it is right. One constructed chain and eight seeds. \src{E43, E49}
 
 \textbf{Data out of equilibrium.} Snapshots taken while the field is still coarsening (domains growing) after a sudden cooling are not
 Gibbs. Off equilibrium there is no oracle, so the reference is the clean snapshot and the ratios are compressed (a perfect denoiser
@@ -419,13 +425,14 @@ shrinking roughly like $\Theta^2$, so the law looks right but these temperatures
 %=====================================================================================================
 \section{Where things stand}
 
-\textbf{Still queued.} The network kernel on the out-of-class chain (E49), behind the cluster's maintenance window. Finished on
-10 October: the learned kernels on a coarse grid (E47b) and the network kernel under strides (E48), both in Section~3.
+\textbf{Nothing is running.} The last three cluster experiments ran on 10 October, after the cluster's maintenance window, and are
+frozen and read: the learned kernels on a coarse grid (E47b), the network kernel under strides (E48) and the network kernel on the
+out-of-class chain (E49), all in Section~3. The laptop run E50 finished the same day.
 
 \textbf{Answered by frozen evidence.} Jérôme's eleven questions (Q5, Q8 and Q10 with the caveats above), and the note's programme:
 the four-arm comparison on the field, its physical checks (correlations, kinks, domain lengths, bimodality, generated samples),
 runtime and memory, the Gaussian/Kalman sanity check, the FFT transition, posterior sampling, clean-data learning, the hidden-variable
-repair, the subsampling protocol (completed by E48), the coarse grid (E47) and speciation (E50).
+repair, the subsampling protocol (completed by E48), the coarse grid (E47), the neural kernel's range of use (E48, E49) and speciation (E50).
 
 \begin{figure}[!htbp]\centering
 \includegraphics[width=\textwidth]{ff-summary.pdf}

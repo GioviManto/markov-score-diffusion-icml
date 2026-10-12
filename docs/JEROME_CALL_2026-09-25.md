@@ -506,6 +506,8 @@ same bundles, which was predeclared as P4 at 10% — so the two are interchangea
 and E29 ratio already reported stands. Budget-free at $M=32$ and $M=128$ (`at_cap` 0/16 and
 1/16 for em_bp, 0/16 and 2/16 for mdn).
 
+**Where the answer to Q6 stops holding (added 12 Oct).** The "no" is for the paper's chain and for the phi^4 field, where a parsimonious kernel is correctly specified. Where it is not, the neural kernel earns its parameters. On the phi^4 field observed every 4th site (the true kernel leaves the tilted-walk class; clean-data fits, E48, 16 seeds, ladder to 16,000 updates) the MDN is below the 5-parameter site energy in 16/16 seeds at 0.40 times its risk, while at stride 1 the site energy beats it by about 3 times. On a constructed chain outside the Gibbs class (a Laplace bond on a double well; noisy-data EM, E49, 8 seeds) the MDN is 0.55 times the site energy's risk at $M = 2048$ and 17% below even the 100-parameter unrestricted kernel (E43), after overtaking the Gaussian-bond families between $M = 128$ and 512; its fits were at the last checkpoint in 4 of 8 cases, so these are upper bounds. So the answer to "does the neural kernel ever pay?" is: yes, when the class of the simple kernels is wrong, by 1.8 to 2.5 times against the best Gaussian-bond kernel, and not otherwise (E48, E49).
+
 **Why this needed a new experiment rather than arithmetic** (recorded 28 September, closed by E30 the next day). E25's numbers could not be placed beside E29's, and the reason is stronger than the 27% disagreement between E25's fresh em_bp fit and E28's frozen E02a one: `exp_34` draws its data under the tags `exp34-train/val/test` and E03 under `exp31-train/val/test`. **Different tags are different random streams, so the two experiments are scored on different data**, and quoting 0.1445 beside 0.1080 would have been an arithmetic error rather than a rounding one. Resisting that was the point: the numbers are three decimal places apart and look like one table. E30 makes them one table properly, by refitting rather than by aligning.
 
 **The three attempts are kept in full below rather than summarised, because the first two failed for unrelated reasons and both failures were legible in the numbers before the cause was known.** This is Jérôme's headline suggestion and it is the one question
@@ -1339,3 +1341,17 @@ one lookup away.
   transition caps either at 1.14–1.18×, about 1.15×; E40's FFT transition was 5.8× *slower* than dense BP at
   $N_g = 401$ on one core. Coarsening the grid (E47) reduces every term instead: with one thread, BP is 6.2×
   faster at $N_g = 101$ and 3.9× faster at 151 than at 401.
+- **2026-10-12** — **The last three queued experiments read; every registered job is now frozen.** After the cluster's maintenance window
+  (jobs started 10 Oct; fetched through `lnode01`, which accepts the key while `lnode02` does not):
+  **E47 part (b)** (691998, 691999; P1–P5 confirmed): the learned site energy and spline at $N_g = 101$ and 201 have the same risk as at 401
+  to three digits on the base cell and the finest lattice, at $M = 128$ and $2048$; at 51 points at most 1.2% off; the site energy's EM fit takes
+  0.071 of its 401-point time at 101 points. With E47 (a), (c), (d) this closes Jérôme's grid question: 101 points for the phi^4 kernels,
+  about 151 for the linear chain's mixtures, 4–6 times cheaper, no Fourier solver.
+  **E48** (692000–692003; P2–P5 confirmed, P1 falsified): the MDN on clean strided data with its ladder extended to 16,000 updates is below the
+  site energy at stride 4 in 16/16 seeds (mean ratio 0.40), above it at stride 1 in 16/16 (about 3 times); it still improves in 11/16 fits, so its
+  risks are upper bounds. This resolves E36x's unresolved clause.
+  **E49** (692004, 692007; P1, P2 confirmed, P3, P4 falsified): on the Laplace-bond chain the MDN beats the site energy (7/8 seeds, ratio 0.55 at
+  $M = 2048$), the mixture (8/8) and, against the registered prediction, the 100-parameter log-linear kernel (7/8 seeds; the log-linear kernel
+  wins in 1 of 8). **E50** (frozen 10 Oct; P1–P5 confirmed, P6–P7 falsified): speciation and the kink energy, see the field report section 6.14.
+  See Q6 above for what E48 and E49 change in the answer to Q6.
+

@@ -16,7 +16,7 @@
  },
  "provenance_note": "Written after E43 and E41 were read and before any E49 cell ran. P3 is the one I am least sure of: the MDN has fifteen times the parameters but is a very different family.",
  "resources": "cluster, defq, 2 x 8 cpus, 24G, 12 h; an MDN fit took about 1 h at M = 2048 in E33 (shared nodes)",
- "status": "REGISTERED and PREDECLARED 2026-10-09, before any E49 cell ran; SUBMITTED 2026-10-09 (692004, 692007), queued",
+ "status": "REGISTERED and PREDECLARED 2026-10-09; RUN on the cluster (692004, 692007: 58 and 55 min on cnode03, clean 3fed270; started 10 Oct after the maintenance window); FROZEN 2026-10-12 (hpc_E49_s0, s4; 24 em_mdn keys plus 12 lmmse_true reference keys per shard); READ: P1, P2 CONFIRMED, P3, P4 FALSIFIED",
  "registered": "2026-10-09",
  "hpc_runs": {
   "deployment": "3fed270-20261009T160824Z (hpc/.deploy_3fed270.env)",
@@ -24,5 +24,36 @@
   "e49-s0": "692004, defq, 8 cpus, 24G, 12:00:00 -> outputs/hpc_E49_s0",
   "e49-s4": "692007, defq, 8 cpus, 24G, 12:00:00 -> outputs/hpc_E49_s4",
   "smoke": "the argument string run end to end at tiny settings (exit 0)"
+ },
+ "frozen_outputs": {
+  "outputs/hpc_E49_s0/kernels.csv": "c43e578cce2c557fae5ca426dff5c2e96c28eabe2bf4a81d7b642b3cb1510c2b",
+  "outputs/hpc_E49_s0/params_kernels.json": "12c5fba04f3516c2d6275e8c148bc89612f27522420ce9cf9ddddacfa92ce750",
+  "outputs/hpc_E49_s4/kernels.csv": "cb562c37a8c4d6cc6339264ae59f838d0ad730a4b00a9155ce94cd0af3b8d467",
+  "outputs/hpc_E49_s4/params_kernels.json": "b0a1087d7ab37625eeeb00303f26e4a52eaf1ed9ea46c6240ad9c34f144f5a5a"
+ },
+ "frozen_at": {
+  "hpc_E49_s0": "2026-10-12T07:26:51Z",
+  "hpc_E49_s4": "2026-10-12T07:26:51Z"
+ },
+ "frozen_commit": {
+  "hpc_E49_s0": "87f9d7c414d81059d38830d61b5ce83555885195",
+  "hpc_E49_s4": "87f9d7c414d81059d38830d61b5ce83555885195"
+ },
+ "frozen_run_commits": {
+  "hpc_E49_s0": [
+   "3fed270"
+  ],
+  "hpc_E49_s4": [
+   "3fed270"
+  ]
+ },
+ "outcome": {
+  "read": "2026-10-12, outputs/hpc_E49_s{0,4}/kernels.csv (risk-selected rows; 8 seeds x M in 128, 512, 2048), paired with E43's frozen lab-B fits on the same seeds (test-bundle hashes checked equal), tools/make_extension_numbers.py read_e49 as pinned.",
+  "P1": "CONFIRMED. M = 2048: the MDN is below the site energy in 7 of 8 seeds; mean of per-seed ratios MDN / site energy 0.546 (the exception, seed 4, stopped by convergence at checkpoint 85 with risk 0.121).",
+  "P2": "CONFIRMED. M = 2048: the MDN is below the mixture in 8 of 8 seeds (mean ratio 0.244).",
+  "P3": "FALSIFIED, in the direction that favours the neural kernel. M = 2048: the 100-parameter log-linear kernel is below the MDN in only 1 of 8 seeds; the MDN is below it in 7 of 8 (mean of per-seed ratios MDN / log-linear 0.83; the pinned reading reports the inverse ratio log-linear / MDN, 1.33 as a mean of per-seed ratios). Parsimony did not win again here: on this out-of-class chain the 1,516-parameter network kernel is the best arm.",
+  "P4": "FALSIFIED as registered (reading rule: at_cap == 1 in more than 30% of fits): 5 of 8 at M = 2048 (1 of 8 at M = 512, 0 of 8 at M = 128). One of the five is seed 4, which stopped by convergence at checkpoint 85 and is flagged only because it is the last saved one; four fits (seeds 0, 1, 5, 6) selected the last checkpoint, 1200, of E33's EM ladder. E49 used E33's ladder, not E41's extended one, so the MDN risks at M = 2048 are upper bounds and more budget can only widen its lead.",
+  "tables": "Seed-mean risk on LAP_B_L32 (linear floor 0.2434 at every M): M = 128 / 512 / 2048: MDN 0.1085 / 0.0664 / 0.0563; log-linear 0.1209 / 0.0796 / 0.0675; site energy 0.1090 / 0.1057 / 0.1029; tilted spline 0.1137 / 0.1079 / 0.1041; mixture 0.2377 / 0.2334 / 0.2305. MDN below the site energy in 5, 8, 7 of 8 seeds, below the log-linear in 6, 8, 7 of 8, below the spline in 5, 8, 7 of 8, below the mixture in 8, 8, 8 of 8, at M = 128, 512, 2048.",
+  "reading": "The crossover E43 reported for the unrestricted kernel on this chain (lab B) (it overtakes the Gaussian-bond families between M = 128 and 512) happens at the same place for the neural kernel, and the neural kernel then keeps its lead over the unrestricted one: at M = 2048 it has 1.8 times lower risk than the site energy (0.0563 against 0.1029) and 17% lower than the log-linear kernel. Together with E48 (stride 4, clean data) this answers Jerome's question 'does the neural kernel ever earn its parameters?': yes, where the physics is outside the Gibbs class it earns them, by a factor of 1.8 to 2.5 against the best Gaussian-bond kernel in both measured settings (E48, stride 4: the MDN's risk is 0.40 times the site energy's; E49, M = 2048: 0.55 times); where the class is correct (the phi^4 field itself) it does not (E33, E41). Caveats: one constructed chain (Laplace bond on a double well, calibrated to the base cell's correlation and kurtosis), eight seeds, and both the MDN (4 of 8 at its last checkpoint) and the log-linear kernel (23 of 24 lab-B fits at its iteration cap, E43) were budget-limited; the ranking MDN < log-linear could change with budget on either side."
  }
 }
