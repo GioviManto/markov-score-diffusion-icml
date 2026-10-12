@@ -1,0 +1,172 @@
+\section{A physical benchmark: the one-dimensional $\phi^4$ field}
+\label{sec:field}
+
+The linear chain tests the method on a model chosen for solvability. The $\phi^4$ field of
+\cref{sec:setup} tests it on a model chosen by physics: spatial snapshots of the stochastic
+Allen--Cahn equation, whose stationary law is a Gibbs measure with domains, kinks and a tunable
+correlation length. Because its lattice snapshots are exactly Markov (\cref{eq:tilted}) and its
+transfer operator can be diagonalised, the exact score, the exact samples and the exact physical
+statistics are all available, so every estimator can be compared with the truth and with a physical
+reading. The comparison follows the four arms of the proposal that motivated it: a learned pair
+energy, Gaussian closure, a window CNN, and the exact oracle.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig-field-chain.pdf}
+  \caption{\textbf{The field as a Markov chain.} (a)~Stationary density of the standardised field at the four temperatures of the
+  sweep of \cref{tab:fieldcells}: two humps when cold, a single hump when hot. (b)~The log of the tilt $g$ of
+  \cref{eq:tilted} against the log of the Gaussian tilt that would give the covariance twin; the field's
+  tilt is bimodal, which a linear-Gaussian kernel cannot express. (c)~An exact sample of $128$ sites at the base cell's
+  temperature and spacing; dotted lines mark the two wells.}
+  \label{fig:fieldchain}
+\end{figure*}
+
+\paragraph{Cells.}
+Two knobs set the chain, the temperature $\Temp$ and the lattice spacing $\latt$, and we run six cells
+(\cref{tab:fieldcells}). The base cell ($\Temp=0.3$, $\latt=1$, $\nsites=32$) is cold enough for domains.
+Three hotter cells hold the correlation length in sites fixed by solving for $\latt$ at each $\Temp$, so
+they compare the field with the linear-chain laboratory at matched second-order structure. Two refinements
+of the base cell hold the physical length fixed ($\latt=0.5$ with $64$ sites, $\latt=0.25$ with $128$), so the
+correlation length in sites grows like $1/\latt$ (from $\fldXiHone$ to $\fldXiHzeroptwofive$). The linear
+floor of every cell is the risk of the best linear (Gaussian) estimator (\cref{prop:lmmse}); it is large
+where the field is cold and nonlinear.
+
+\input{sections/tab-field-cells}
+
+\paragraph{Temperature and domains.}
+At fixed spacing the physics is monotone in the temperature (\cref{fig:fieldsweep}): lowering $\Temp$
+lengthens domains (the correlation length in sites grows from $\fldXiHot$ at $\Temp=2$ to $\fldXiCold$ at $\Temp=0.2$,
+exponentially in $1/\Temp$ with a slope that approaches the kink energy $E_{\mathrm{kink}}=2\sqrt2/3$ as
+the field cools; \cref{app:field}), sharpens the bimodality
+(coefficient from $\fldBimodHot$ to $\fldBimodCold$), and makes the linear floor higher
+($\fldFloorFixedHHot$ at $\Temp=2$ to $\fldFloorFixedHCold$ at $\Temp=0.2$). The raw count of sign changes
+per unit length is not a physical kink density (a rough field crosses zero inside a domain, and more finely on
+finer lattices), so we count kinks after merging runs shorter than one kink width, which is
+lattice-independent (\cref{app:field}). There is no transition: the crossover is smooth.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig-field-sweep.pdf}
+  \caption{\textbf{Temperature sweep of the field.} (a)~Correlation length in sites; (b)~mean domain length
+  (physical units); (c)~coarse kink density per unit length; (d)~pooled relative score error of the
+  linear (Gaussian) closure and of the isotropic score, for the fixed-spacing axis $\latt=1$ (blue) and
+  the iso-correlation axis (orange), where $\latt$ is solved so that the slowest correlation mode decays
+  at the same rate at every $\Temp$. The two axes share the base cell $\Temp=0.3$.}
+  \label{fig:fieldsweep}
+\end{figure*}
+
+\paragraph{Arms and protocol.}
+Every estimator learns from noised sequences only. EM--BP with five kernel families
+(\cref{sec:learning}): the paper's mixture ($25$ numbers), a spline tilt ($25$), a Legendre tilt ($7$),
+the quartic site energy ($5$), and an MDN ($1\,516$); a window CNN and a transformer, each trained under two
+recipes, implicit score matching on one noised view per sequence (ISM, EM--BP's own interface) and denoising
+score matching on clean targets with one fixed corruption (DSM, which gives the network strictly more); the
+linear floor; and the exact oracle. Sizes are $\nseq\in\{32,128,512,2048\}$ for the kernels and $\{128,2048\}$
+for the networks, sixteen seeds, the same twelve levels, and the held-out risk against the exact score selects
+EM's stopping point for every arm alike.
+
+\paragraph{The site energy wins on every cell; the paper's kernel does not leave the linear floor.}
+\Cref{tab:fieldscore} is the central result. At $\nseq=2048$ the five-parameter site energy reaches
+$\fldSiteFloorMin$--$\fldSiteFloorMax$ of the linear floor across the six cells, the best method on every
+cell at every size on average, and $\fldSiteOverSplineMin$--$\fldSiteOverSplineMax$ of the $25$-parameter spline's
+risk; the spline is next, and the networks, whichever recipe, are above the linear floor on every cell with
+$\Temp\ge0.5$ and at least $\fldNetOverSplineMin$ times the spline's risk on every cell at both network sizes. The paper's own mixture
+kernel is the instructive failure: it sits on the linear floor ($\fldMixFloorMin$--$\fldMixFloorMax$ times it
+at $\nseq=2048$) on every cell, because its expected next value is a \emph{linear} function of the current one,
+whereas the field's is not (\cref{app:field}); with more data its gap to the spline widens rather than closes (its risk is
+$\fldMixSplineBaseA$ times the spline's at $\nseq=512$ and $\fldMixSplineBaseB$ times at $2048$ on the
+base cell). A kernel whose family contains the
+physics pays nothing for it, a kernel whose family misses it never recovers; the choice of kernel family
+is the modelling decision, and for a gradient flow the right family has five numbers.
+
+\input{sections/tab-field-score}
+
+\paragraph{The fitted kernel reads as physics.}
+The site energy is the physicist's pair energy, so its parameters are physical. Fitted through noise to
+$\nseq=2048$ sequences, the temperature is recovered to within $10\%$ in $\fldThetaOkFits$ of $\fldThetaFits$ fits
+and the barrier height to within $20\%$ in $\fldBarrierOkFits$ of $\fldBarrierFits$ fits on the five cells where the
+registered reading asks for it (\cref{tab:fieldpair}); at $\Temp=2$, where the barrier is small against the thermal energy, its
+error falls like $\nseq^{-\fldBarrierSlope}$ and every one of sixteen seeds is within $20\%$ at
+$\nseq=\fldBarrierBigM$ (\cref{app:field}), so it is a sample-size limit and not a floor.
+
+\paragraph{Generated fields are physically right.}
+A score can be accurate and still generate wrong fields, so we sample from each fitted kernel by one forward
+sweep and compare physical statistics with exact draws (\cref{tab:fieldsamples}). Samples from the site energy
+and the spline reproduce the coarse kink density within $\fldKinkDevSite$ and $\fldKinkDevSpline$ of the
+truth on every cell, the mean domain length likewise, and the whole distribution of domain lengths to
+$\fldDomQuantDevSite$ and $\fldDomQuantDevSpline$ at every quantile, statistically indistinguishable from exact
+samples. The mixture's samples have $\fldMixKinkColdMin$--$\fldMixKinkColdMax$ times too many kinks on the cold
+cells and domains $\fldMixDomShortMin$--$\fldMixDomShortMax$ too short at the median: a linear drift cannot hold a
+domain, which is the smearing of the Gaussian closure seen in the samples.
+
+\input{sections/tab-field-samples}
+
+\paragraph{Refinement: what a fixed receptive field costs.}
+Because the correlation length in sites grows like $1/\latt$, a denoiser with a fixed window should lose
+ground as the lattice is refined and BP should not, which is the proposal's sharp prediction. The window CNN's
+radius is screened per cell ($2$, $4$ and $8$ sites at $\latt=1,\tfrac12,\tfrac14$, a constant physical
+reach, the last at the largest radius offered). Its absolute risk falls
+($\fldWindowRiskHone$, $\fldWindowRiskHzeroptwofive$ at $\latt=1$, $0.25$), but the structured kernel's falls
+faster: the window's risk relative to the spline grows from $\fldWindowSplineHone$ to $\fldWindowSplineHzeroptwofive$
+and relative to the linear floor from $\fldWindowFloorHone$ to $\fldWindowFloorHzeroptwofive$, so on the finest
+lattice the window is worse than the Gaussian closure. \Cref{fig:fieldruntime} puts this beside cost: the networks
+own the cheap end of the runtime--accuracy frontier ($\fldNetCostMin$--$\fldNetCostMax$\,ms per sequence against
+$\fldBpCostLone$--$\fldBpCostLthree$\,ms for grid BP, which is shared by every BP-based arm) and the structured kernels
+the accurate end, with nothing between them.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig-field-runtime.pdf}
+  \caption{\textbf{Accuracy against cost on the field.} Risk divided by the linear floor against (a)
+  inference time per sequence ($\nseq=2048$ training sequences; eight threads, $\latt$-matched cells,
+  $B=512$, the largest network variants, so the networks' times are upper bounds) and (b) training time per
+  fit (shared nodes, indicative). Circle, square and triangle: $\latt=1,0.5,0.25$ at $\Temp=0.3$ with $32$, $64$,
+  $128$ sites. The dashed line is the linear floor.}
+  \label{fig:fieldruntime}
+\end{figure*}
+
+\paragraph{Speciation: when does the denoiser commit to a domain?}
+The proposal that motivated this benchmark asks to watch the denoiser commit to whole domains as the noise is
+removed. For a noised sequence the exact posterior gives each site $p_i=P(a_i>0\mid\vx)$, and its commitment is
+$|2p_i-1|$, zero when the two wells are equally likely and one when the site has chosen. Averaged over sites, the
+commitment falls from one at $t=0$ to zero at high noise; we call $t_c$ the level where it crosses one half and
+compare it with the \emph{Gaussian twin}, whose commitment is available in closed form (\cref{app:field}). The
+posterior is calibrated, so the commitment is the probability of guessing the sign right (the two agree to
+$\fldSpecCalibDev$ on average over levels). \Cref{fig:speciation} gives the three readings. Colder fields commit
+earlier in the reverse process: $t_c$ falls from $\fldSpecTcCold$ at $\Temp=0.2$ to $\fldSpecTcHot$ at $\Temp=2$. The
+exact posterior commits at higher noise than its Gaussian twin at every temperature, by $\fldSpecExcessCold$ in $t$
+when the field is coldest and $\fldSpecExcessHot$ when it is hottest: at $\Temp=0.2$ the exact posterior is
+half-committed when the noise variance is $\fldSpecNoiseRatioExact$ times the signal's, its twin only at
+$\fldSpecNoiseRatioTwin$ times, so it is the two humps and not only the correlations that decide when the
+denoiser commits. At fixed $\Temp=0.2$ the commitment time of the central sites grows with the chain length
+($\fldSpecTcLfour$ at $\nsites=4$ to $\fldSpecTcLsixtyfour$ at $64$) and stops growing once the chain is several
+correlation lengths long ($\fldSpecTcLonetwentyeight$ and $\fldSpecTcLtwofiftysix$ at $128$ and $256$); below the
+correlation length it moves one-for-one with $\tfrac12\ln(1+\lambda_{\max})$, $\lambda_{\max}$ the largest eigenvalue of
+the covariance (slope $\fldSpecSlope$), the finite-chain analogue of the speciation time of
+\citet{biroli2024dynamical}. A second reading checks the lattice against the continuum: as $\latt\to0$ the physical
+correlation length converges (it changes by $\fldKinkConvergence$ from $\latt=1/16$ to $1/32$), and the dilute-kink law
+$\corrlen\propto\Temp^{1/2}e^{E_{\mathrm{kink}}/\Temp}$ is approached as $\Temp$ falls but not reached on $\Temp\in[0.1,0.3]$: a
+four-parameter fit returns a barrier of $\fldKinkFit$ against $2\sqrt2/3$ (a registered prediction, within $2\%$, failed),
+and we do not claim the asymptotic constant.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig_speciation.pdf}
+  \caption{\textbf{Commitment of the exact denoiser.} (a)~Site-averaged commitment $|2p-1|$ against the noise
+  level $t$ at three temperatures, for the exact posterior (solid) and the Gaussian twin (dashed). (b)~The level
+  $t_c$ where the commitment crosses one half against $\Temp$, exact (filled) and twin (open), at the fixed
+  spacing $\latt=1$, $\nsites=32$. (c)~At $\Temp=0.2$, $t_c$ of the central sites against the chain length
+  $\nsites$ (filled) and $\tfrac12\ln(1+\lambda_{\max})$ (open).}
+  \label{fig:speciation}
+\end{figure*}
+
+\paragraph{Beyond the score.}
+The same fitted kernels serve other tasks without refitting (\cref{app:field}). Hiding sites of a noised
+sequence and drawing posterior sequences by forward-filter backward-sample, the learned site energy and spline
+match the oracle within $\fldInpaintOracleDev$ in error and width and cover a nominal $90\%$ interval
+$\fldInpaintCovMin$--$\fldInpaintCovMax$ of the time, while on the base cell a Gaussian smoother with the true
+covariance is only $\fldInpaintLinErrMin$--$\fldInpaintLinErrMax$ worse in error, with
+$\fldInpaintLinWidthMin$--$\fldInpaintLinWidthMax$ wider intervals. On snapshots taken during coarsening after a quench, where the law is not Gibbs and the reference is
+therefore the clean snapshot (so a perfect denoiser does not reach zero and the ratios are compressed), the
+site energy still beats an empirical Gaussian smoother at every time (risk ratio $\fldQuenchEarly$ shortly after
+the quench, $\fldQuenchEq$ at equilibrium), and the flexible spline adds nothing.

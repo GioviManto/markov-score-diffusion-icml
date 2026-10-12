@@ -55,6 +55,17 @@ Spectral and moment methods for hidden Markov models \citep{hsu2012spectral} are
 high-noise competitor; the moment estimators of \cref{sec:learning} are their simplest form here,
 rate-correct and inefficient below the crossover.
 
+\paragraph{Physical Markov models and the field benchmark.}
+A nearest-neighbour energy on a line is the one-dimensional Gibbs measure of statistical mechanics, solved
+exactly by a transfer matrix \citep{ising1925beitrag}, which is also why it has no phase transition at any positive
+temperature; its Markov structure on a lattice is the Hammersley--Clifford picture of \citet{besag1974spatial}.
+Our $\phi^4$ benchmark is a one-dimensional instance, chosen so that the exact score, the exact samples and the
+exact physical statistics are available from one eigensolve and every estimator can be judged against them and
+against a physical reading (temperature, correlation length, kink density). The same section of the literature
+that studies when generative diffusion commits to a mode, speciation \citep{biroli2024dynamical,achilli2026speciation},
+is the vocabulary of \cref{sec:field}'s commitment measurement, which we make exact on a chain; and the cumulant
+attenuation of the forward process \citep{aarts2025cumulants} is the same law as \cref{thm:hermite}.
+
 \paragraph{Sequence denoisers and length.}
 The baselines of \cref{sec:experiments} are the standard sequence architectures
 \citep{bai2018tcn,vaswani2017attention,ronneberger2015unet}; that attention-based length

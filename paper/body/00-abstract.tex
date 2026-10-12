@@ -1,27 +1,22 @@
-Diffusion models are trained to approximate the score of a noised data distribution,
-a target that is unknown for almost every distribution of interest. We study a family
-in which it is known exactly and non-trivial: a first-order Markov chain with
-continuous, non-Gaussian transitions under coordinatewise Ornstein--Uhlenbeck noise,
-where conditioning leaves the posterior factor graph a tree and one forward--backward
-sweep of functional message passing returns the exact score. The laboratory separates
-what diffusion noise does to different orders of structure. The channel attenuates the
-Hermite moment of degree $m$ by $e^{-mt}$ exactly, so that, for a law with an
-exponential moment, the Fisher information one noised sequence carries about a
-feature first visible at degree $m$ decays as $e^{-2mt}$ with an explicit constant:
-correlation (degree two) as $e^{-4t}$, non-Gaussian shape (degree four) as
-$e^{-8t}$; and the gap between the true score and that of the covariance-matched
-Gaussian---which we show is exactly what Gaussian message closure computes---is
-$\tfrac16\lVert\kappa_4\rVert_F^2e^{-8t}$, with the crossover set by the covariance
-spectrum. Tree-exact inference verifies the rates and the constants, adding the
-fourth-order term back to the Gaussian score closes the gap wherever the expansion
-converges, and heavy-tailed driving noise reaches the same constant. We then learn the
-transition law from noised sequences alone by expectation--maximisation around the same
-recursion: the fitted shape sits at the information reference while the coordinate is
-identifiable and collapses to Gaussian driving noise where the reference says it must,
-and moment estimators show the predicted rates at a fraction of the efficiency.
-Against six sequence denoisers trained under one recipe the structured estimator is
-ahead at every sample size; at the estimator's own information interface---one noised
-view per sequence, no clean chain, no true score for model selection---the best network
-is a factor $\matchedRatioBestD$ behind. The advantage is earned by the non-Gaussian
-capacity of the driving-noise model, transfers to generation, extrapolates in length, and
-ends at a misspecification strength that a closed-form bias predicts.
+Diffusion models are trained to approximate the score of a noised data law, a target that is
+unknown for almost every distribution of interest. We study data for which it is known: a
+first-order Markov chain with an arbitrary continuous transition kernel under coordinatewise
+Ornstein--Uhlenbeck noise. Conditioning leaves the posterior factor graph a tree, so one
+forward--backward sweep of belief propagation (BP) returns the exact score, up to a stated
+quadrature, and the same sweep supplies the exact gradient that lets the kernel be learned from
+noised sequences alone by expectation--maximisation (EM): learn the local law, infer globally.
+The Gaussian kernel is a sanity check, because BP with Gaussian messages computes the linear
+score and the Kalman smoother. We test the approach on two chains whose scores are known:
+a linear chain with non-Gaussian noise, which separates what diffusion noise does to
+correlation from what it does to shape (the Fisher information about them decays as $e^{-4t}$
+and $e^{-8t}$), and the one-dimensional $\phi^4$ field, a physical model with domains and
+kinks whose lattice snapshots are exact Markov chains. On both, EM--BP with a kernel of a few parameters beats the neural denoisers it is compared with (six on the linear chain, two on
+the field) at every sample size; at the estimator's own information interface (one noised view per sequence, no clean chain, no true score
+for model selection) the best network is a factor $\matchedRatioBestD$ behind on the linear chain. The kernel family
+matters: the linear-drift mixture that suffices there only reaches the linear floor on the field,
+where the five-parameter quartic site energy reaches $\fldSiteFloorMin$--$\fldSiteFloorMax$ of it.
+A neural kernel earns its parameters only where the simple family is misspecified. We report
+what the structure costs (BP is slower per sequence than a network, and a coarser grid cuts its time
+by $\cmpCoarseSpeedupHundred\times$ without loss for the field kernels) and where it stops: a
+latent shared by the whole sequence leaves a bias that no sample size removes, and we repair it
+by augmenting the state.

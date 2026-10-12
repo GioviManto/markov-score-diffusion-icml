@@ -34,7 +34,7 @@ GENERATORS = [
     "make_tab_efficiency.py", "make_tab_structured.py", "make_tab_screening.py",
     "make_aggregation_structured.py", "make_aggregation_robustness.py",
     "make_convergence_numbers.py", "make_rate_analysis.py", "make_tab_hellinger.py",
-    "make_theory_numbers.py", "make_oracle_numbers.py",
+    "make_theory_numbers.py", "make_oracle_numbers.py", "make_paper_numbers.py",
 ]
 # generators that need registered outputs which may not exist yet; skipped if the source is absent
 OPTIONAL = {"make_capacity_numbers.py": "outputs/E02a/capacity.csv", "make_learning_numbers.py": "outputs/E06/levels.csv",

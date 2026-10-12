@@ -1,0 +1,96 @@
+\section{Where the structure stops}
+\label{sec:limits}
+
+The structured estimator assumes four things: that the data are Markov, that the kernel family is wide enough to
+contain the truth, that the grid resolves the kernel, and that the law is stationary. Each can fail, and each failure
+has a signature we can measure.
+
+\subsection{The kernel family: when does a flexible kernel pay?}
+\label{sec:kernelclass}
+
+The simple kernels are exactly specified on the two chains above, so the question is what happens when they are not.
+Two experiments take the truth out of the family, and one asks the neural kernel the same question.
+
+\paragraph{An unrestricted kernel on the field.}
+On the $\phi^4$ field the 100-parameter unrestricted kernel, which assumes no Gaussian bond, costs
+$\limUnrestrictedPriceMin$--$\limUnrestrictedPriceMax$ times the site energy's risk, and the price \emph{grows}
+with the data rather than shrinking ($\limUnrestrictedGrowthA$ at $\nseq=128$ to $\limUnrestrictedGrowthB$ at $2048$ on the
+base cell): the exactly specified model improves roughly like the sample size and the unrestricted one more slowly.
+Generality is paid for where it is not needed.
+
+\paragraph{A chain outside the family.}
+Replace the Gaussian bond by a sharp Laplace bond: the pair energy $|a'-a|$ in place of $(a'-a)^2$ on the same double well, with the bond
+scale and the well depth calibrated beforehand to the base cell's lag-one correlation and kurtosis (\cref{app:field}).
+This chain is outside the tilted-walk class, so the site energy and the spline
+are misspecified; its exact samples and oracle are available from the grid. The site energy and the spline
+stall at a risk of about $\limLapStall$ while the unrestricted kernel keeps improving, overtakes them between
+$\nseq=128$ and $512$, and ends $\limLapUnrestrictedGain\times$ below the site energy at $2048$ in every one of
+eight seeds. A neural kernel does better still: the MDN reaches $\limLapMdn$ at $\nseq=2048$ against
+$\limLapUnrestricted$ for the unrestricted kernel and $\limLapSite$ for the site energy, below the site energy
+in $\limLapMdnBelowSite$ of eight seeds and, against a registered prediction that parsimony would win, below
+the unrestricted kernel in $\limLapMdnBelowUnr$ (its fits were still improving at the last checkpoint in
+$\limLapMdnAtCap$ of eight, so its risk is an upper bound).
+
+\paragraph{Subsampling the field.}
+Observing a fine lattice only at every $s$-th site gives a chain that is still exactly Markov, with kernel $\kernel^s$,
+but no longer a tilted walk. The coarse-grained physics is unchanged across strides
+(kink density and domain length agree within $\limStrideAgree$), but the five- and twenty-five-parameter
+kernels are now misspecified: their risk at stride $4$ is $\limStrideGrowthSite$ and $\limStrideGrowthSpline$ times its
+stride-one value (kernels fitted on clean chains, sixteen seeds), though it stays far below the linear floor
+($\limStrideSiteRisk$ and $\limStrideSplineRisk$ against $\limStrideFloor$). Here the network kernel earns its parameters:
+with its ladder extended to $16\,000$ updates the MDN is below the site energy at stride $4$ in $\limStrideMdnBelow$ of sixteen seeds
+at $\limStrideMdnRatio$ times its risk, while at stride $1$, where the site energy is exactly specified, the site energy is
+$\limStrideOneRatio$ times better. The MDN was still improving at its last checkpoint in $\limStrideMdnAtCap$ of the
+sixteen fits, so its risks are upper bounds and the margin can only widen.
+
+The rule that emerges is simple. A kernel with a few parameters that contains the physics is better than a flexible one,
+the paper's own linear-drift mixture is correct for a linear chain and wrong for a double well, a network kernel loses to it
+on the linear chain by a factor $\limMdnLinearLo$--$\limMdnLinearHi$ and also to the best plain score network, and the flexible
+kernels (unrestricted, neural) are the right tools exactly when the simple family is wrong. The unrestricted kernel is therefore
+best used as a misspecification \emph{test}: if it beats the family it is compared with at large $\nseq$, the family's
+assumption is wrong.
+
+\subsection{The Markov assumption: a latent shared by the whole sequence}
+\label{sec:latent}
+
+The estimator is a model of $p(a_{i+1}\mid a_i)$ only. If a hidden variable is shared by a whole sequence, the observed chain is no longer
+Markov, a bias remains that more data cannot remove, and its size is computable. We start with a closed-form case on the linear chain:
+$X_i=Gb+U_i$ with $G=\pm1$ a fair sign per sequence and $U$ the Gaussian linear chain, whose exact score is a mixture of two Gaussian
+chains. The first-order kernel then stops improving: at $b=2$ four times more data change its risk by $\limLatentFlat$, and it ends
+$\limLatentWorseMin$--$\limLatentWorseMax$ times \emph{worse} than the linear floor in every one of sixteen seeds. The repair is the same mixture
+kernel on the augmented state $(X_i,G)$, the two phases tied by reflection, with the same number of parameters: BP runs on pairs, inferring each
+sequence's sign, and the risk keeps falling with the data ($\limLatentAugFall$ over the same factor of four), ending $\limLatentFloorRatio$ times below the
+linear floor and $\limLatentFirstOverAug$ times below the first-order kernel at $b=2$ (\cref{fig:repair}). A surprise is instructive: the repaired model
+also helps when there is no latent ($b=0$). We traced it to the reflection symmetry of the data: fitting the plain kernel on each sequence together with its
+sign-flipped copy is $\limSymGainMin$--$\limSymGainMax$ better than the plain fit, and in average risk it is worth as much as fitting on twice as many sequences.
+The same mechanism for general departures from Markov dependence is measured in \cref{fig:misspec}.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{ff-misspec-repair.pdf}
+  \caption{\textbf{A global latent and its repair.} Pooled relative score error against the latent strength $b$ for the
+  first-order kernel and for the same kernel on the augmented state $(X_i,G)$, against the linear floor (dashed), at
+  $\nseq=512$ (a) and $2048$ (b); sixteen seeds. The first-order kernel's error does not fall with the data and ends
+  above the linear floor; the augmented kernel's does, and ends far below it.}
+  \label{fig:repair}
+\end{figure*}
+
+\paragraph{Gaussian departures from the Markov structure.}
+\input{body/05c-misspec}
+
+\subsection{Resolution, discretisation and what we do not claim}
+\label{sec:notclaim}
+
+A flexible kernel can need a finer grid than the one the simple kernels use (\cref{sec:compute}), and the lattice itself is a modelling choice:
+the correlation length in sites grows like $1/\latt$, so a fixed-window network falls behind under refinement (\cref{sec:field}) and the
+advantage of structure grows. We also do not claim the following.
+\emph{Superiority over networks in general:} the comparison equalises the number of sequences under each method's standard recipe and,
+separately, matches the information interface with no oracle on either side; it does not rank learning algorithms, and the networks
+timed in \cref{sec:compute} are the largest variants.
+\emph{Exactness beyond quadrature:} grid BP is exact for the discretised model and accurate to the measured quadrature, and we
+say which where it matters.
+\emph{A Kalman filter:} the Gaussian pass is a smoother.
+\emph{A phase transition:} the field's low-temperature crossover is smooth in one dimension.
+\emph{A Laplace closure:} the transition-family message ansatz is not exact beyond the first site.
+\emph{A general SPDE transition:} a fixed driving-noise family such as the mixture kernel is a different object from the field's tilted walk, and
+it is misspecified there through its drift.

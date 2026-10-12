@@ -1,0 +1,82 @@
+\section{The $\phi^4$ field in detail}
+\label{app:field}
+
+\paragraph{The chain.}
+With the site terms split symmetrically, the lattice energy of \cref{sec:setup} defines the symmetric, positive,
+Hilbert--Schmidt transfer operator $\transfer(\phi,\phi')=e^{-\latt V(\phi)/2\Temp}e^{-(\phi'-\phi)^2/2\Temp\latt}e^{-\latt V(\phi')/2\Temp}$.
+Its largest eigenvalue $\lambda_0$ is simple with a positive eigenfunction $\psi_0$ (Perron--Frobenius), and the
+infinite-volume Gibbs measure is the stationary chain with marginal $\pi=\psi_0^2$ and kernel
+$\kernel(\phi'\mid\phi)=\transfer(\phi,\phi')\psi_0(\phi')/(\lambda_0\psi_0(\phi))$, reversible with respect to $\pi$. The lag-$k$
+covariance is $\sum_n(\lambda_n/\lambda_0)^k\langle\psi_0|\phi|\psi_n\rangle^2$, so $\lambda_1/\lambda_0$ plays for the field the role
+$\corr$ plays for the linear chain, and $\corrlen=1/\log(\lambda_0/\lambda_1)$. We diagonalise $\transfer$ densely on $2401$ points on
+$[-12,12]$; samples are exact in the continuum (a rejection sampler on the tilted walk) and on the lattice (an inverse-CDF sampler), and
+the two agree.
+
+\paragraph{The tilted-walk identity and reversibility.}
+Rearranging the eigen-equation, $\kernel(\phi'\mid\phi)=\normal{\phi';\phi}{\Temp\latt}g(\phi')/Z(\phi)$ with $g=\psi_0e^{-\latt V/2\Temp}$ and
+$Z(\phi)=\lambda_0\psi_0(\phi)e^{\latt V(\phi)/2\Temp}$: a Gaussian step tilted by a function of the arrival point, with the column normaliser the
+$h$-transform. Every tilted walk $\kernel_g(a'\mid a)=\normal{a';a}{\bondvar}g(a')/Z_g(a)$ is reversible with invariant density $\pi_g\propto gZ_g$, since
+$\pi_g(a)\kernel_g(a'\mid a)\propto g(a)g(a')\normal{a';a}{\bondvar}$ is symmetric. It is the Gibbs chain of the symmetric pair energy
+$W(a,a')=(a'-a)^2/2\bondvar+f(a)+f(a')$ with $f=-\tfrac12\log(g/Z_g)$, and conversely; so the directed kernel and the symmetric pair energy are one model
+class. For the field's own $(\bondvar,g)$, $f=(\latt/2\Temp)V(sa)$ up to a constant, $\hat\Temp=\hat\bondvar s^2/\latt$ reads the temperature, and
+$\hat V(\phi)=(2\hat\Temp/\latt)\hat f(\phi/s)+\mathrm{const}$ reads the potential, where $s^2=\operatorname{Var}_\pi\phi$.
+
+\paragraph{Where the linear chain and the field meet, and why the mixture kernel fails.}
+A Gaussian linear chain with $0<\corr<1$ is the member of the tilted family with $\log g$ quadratic (step variance $\ivar/\corr$, tilt variance $1+\corr$);
+no other linear chain is, and no other tilted walk has state-independent driving noise, so the two families intersect at the Gaussian chain only. The
+mixture kernel is misspecified on the field through its \emph{drift}: the conditional mean step of a tilted walk is exactly $\bondvar(\log Z)'(a)$, the
+gradient of the log-normaliser, which for the field is $\Temp\latt(\log\psi_0)'(\phi)+(\latt^2/2)V'(\phi)$, a nonlinear function with its zeros inside the wells,
+while the mixture's drift is linear. The misspecification is therefore through the drift, not through the shape of the driving noise, which is a different
+mechanism from every Gaussian departure of \cref{fig:misspec}.
+
+\input{sections/tab-field-pair}
+
+\paragraph{Physical statistics.}
+A \emph{kink} is a sign change that survives merging every run shorter than one kink width $\sqrt2/\latt$ sites; a \emph{domain} is the run between two kinks;
+the bimodality coefficient is $(\text{skew}^2+1)/(\text{excess kurtosis}+3)$. The raw sign-change density per unit length grows like $\latt^{-1/2}$ under
+refinement ($\fldRawKinkA$, $\fldRawKinkB$, $\fldRawKinkC$ at $\latt=1,\tfrac12,\tfrac14$) and is not a physical quantity; the coarse density is constant
+across the three refinements to within $\fldCoarseKinkSpread$ and the exact samples reproduce the spectral correlation function to within
+$\fldCorrZMax$ standard errors on every cell. \Cref{tab:fieldsamples} compares generated and exact samples.
+
+\paragraph{The chain outside the family.}
+The Laplace-bond chain of \cref{sec:kernelclass} has the symmetric pair energy $W(a,a')=-|a'-a|/\lambda-\eta\,[V(a)+V(a')]/2$ with $V(a)=(a^2-1)^2/4$, bond scale $\lambda=0.40$ and well depth $\eta=2.0$,
+chosen before any fit so that its lag-one correlation and kurtosis match the base cell's; it is a reversible grid chain built from this symmetric $W$ by the same Perron--Frobenius construction as the field's, so exact samples and an exact oracle are available from the grid.
+It lies outside the tilted-walk class: a Laplace bond is not a Gaussian step times a function of the arrival point.
+
+\paragraph{Missing data and uncertainty.}
+Hiding a random half or a gap of $8$ or $16$ of the $32$ sites of a noised sequence ($t=0.5$), and drawing $200$ posterior sequences by forward-filter
+backward-sample on the grid with the kernels of \cref{sec:field} \emph{without refitting}, the learned site energy and spline are indistinguishable from the
+oracle: error ratio $\fldInpaintOracleErrMin$--$\fldInpaintOracleErrMax$, interval-width ratio $\fldInpaintOracleWidthMin$--$\fldInpaintOracleWidthMax$,
+coverage $\fldInpaintCovMin$--$\fldInpaintCovMax$ of a nominal $90\%$ interval (the oracle's own is $\fldInpaintOracleCov$: the grid and the quantile estimate cost about $\fldInpaintGridCost$). The
+mixture kernel behaves like the Gaussian smoother. The Gaussian smoother with the true covariance is $\fldInpaintLinErrMin$--$\fldInpaintLinErrMax$ worse
+in error on the base cell, with $\fldInpaintLinWidthMin$--$\fldInpaintLinWidthMax$ wider intervals, and within $1\%$ in error at $\Temp=1$: at this noise level
+the exact posterior buys little over a Gaussian smoother.
+
+\paragraph{Clean data.}
+Fitting on the clean sequences instead of the noised ones helps the spline and the MDN by about a factor two but not the mixture, whose
+risk is $\fldCleanMixRatioMin$--$\fldCleanMixRatioMax$ of its noised risk: its gap is its wrong drift, not the noise. The one-view
+channel costs the spline a factor of about two to two and a half in risk at every $\nseq$.
+
+\paragraph{Commitment.}
+For a noised sequence the posterior mean of the commitment of site $i$ is $\E|2P(a_i>0\mid\vx)-1|$. For the Gaussian twin the posterior of $a_i$ is
+$\normal{\mu_i}{v_i}$ with $\mu_i\sim\normal{0}{\Sigma_{ii}-v_i}$ over the data, so with $R_i^2=1-v_i/\Sigma_{ii}$ the commitment is
+$\tfrac2\pi\arcsin R_i$ in closed form. The twin is half-committed exactly where its posterior variance has halved. The registered readings, their verdicts
+and the discussion of the fit of the dilute-kink law (the local slope of $\ln\corrlen_{\mathrm{phys}}$ against $1/\Temp$ rises from $\fldKinkSlopeHot$ to
+$\fldKinkSlopeCold$ as $\Temp$ falls from $\fldKinkTHigh$ to $\fldKinkTLow$, against the instanton value $2\sqrt2/3-\Temp/2$ with a gap shrinking roughly like $\Temp^2$) are in the
+experiment registry (\textsc{e50}).
+
+\section{Cost tables}
+\label{app:cost}
+
+\input{sections/tab-cost-time}
+
+\paragraph{Training.}
+EM's E-step is linear in the number of sequences and its M-step does not depend on it, so training time is dominated by the E-step beyond a few hundred sequences.
+In shared-node runs, a network fit took $\fldTrainNetMin$ to $\fldTrainNetMax$ minutes at $\nseq=2048$ and an EM fit $\fldTrainEmMin$ minutes to $\fldTrainEmMax$ hours (indicative:
+the runs shared nodes), so training is not where the structured estimator wins.
+
+\paragraph{Representation.}
+\Cref{tab:fourier} lists, for each way of compressing a BP message to $D$ numbers (the grid, a Fourier basis on the solver's fixed domain, a Fourier basis
+fitted to each message, and a cumulant expansion), the number needed to reach a given KL divergence from the true message, over the messages that exact BP produces on the linear chain with Laplace noise.
+
+\input{sections/tab-cost-fourier}

@@ -1,0 +1,80 @@
+\section{Exact inference: from the kernel to the score}
+\label{sec:inference}
+
+\begin{figure*}[t]
+  \centering
+  \input{figures/fig_method}
+  \caption{\textbf{Learn the local law, infer globally.} Top: EM on $\nseq$ noised sequences;
+  the E-step runs BP and sums its pair marginals into $\Xis$, the M-step updates the kernel, and
+  the two alternate. Bottom: the learned kernel inside BP at any level $t$ gives the posterior
+  mean, Tweedie's identity turns it into the score, and the reverse SDE uses the score to
+  denoise or generate. A direct score network learns the whole of the bottom row at once; here
+  only the kernel is learned.}
+  \label{fig:method}
+\end{figure*}
+
+\paragraph{The score is a posterior mean.}
+Tweedie's identity gives $\score(\vx,t)=-(\vx-e^{-t}\pmean{\va})/\Dt$, with
+$\pmean{\va}=\E[\va\mid\vx_t=\vx]$ \citep{robbins1956empirical,efron2011tweedie}. Estimating the
+score of a Markov chain under \cref{eq:channel} is therefore the same problem as computing
+a posterior mean, that is, as denoising.
+
+\begin{figure}[t]
+  \centering
+  \input{figures/fig_mechanism}
+  \caption{\textbf{Why the score is exact.} Latent sites (white) carry the chain prior
+  through its transition factors (filled squares). Coordinatewise noising attaches one
+  unary factor per site (open squares), joining $a_i$ to its own observation $x_i$
+  (shaded), and adds no edge among the latent variables. The posterior factor graph is
+  therefore the prior's chain, a tree, so the forward and backward sweeps
+  $\lmsg,\rmsg$ are exact; meeting at site $i$ they give $\pmeansite{i}$, and Tweedie's
+  identity returns $\score(\vx,t)=-(\vx-e^{-t}\pmean{\va})/\Dt$ exactly. The interior of
+  the chain is elided; $\nsites$ is its length.}
+  \label{fig:mechanism}
+\end{figure}
+
+\paragraph{The posterior is a tree.}
+Conditioning \cref{eq:prior} on $\vx$ multiplies the prior by one unary factor
+$\like(x_i\mid a_i)\propto\exp[-(x_i-e^{-t}a_i)^2/2\Dt]$ per site (\cref{fig:mechanism}): no
+edge is added among the latent variables, the posterior factor graph is the prior's chain, and
+sum-product on it is exact \citep{pearl1988probabilistic,kschischang2001factor}. Two sweeps of
+the functional messages
+\begin{equation}
+\begin{aligned}
+  \lmsg_i(a)&\propto\!\int\!\kernel(a\mid a')\,\like(x_{i-1}\mid a')\,\lmsg_{i-1}(a')\dd a',\\
+  \rmsg_i(a)&\propto\!\int\!\kernel(a''\mid a)\,\like(x_{i+1}\mid a'')\,\rmsg_{i+1}(a'')\dd a'',
+\end{aligned}
+\label{eq:bp}
+\end{equation}
+with $\lmsg_1\equiv\mu$ and $\rmsg_{\nsites}\equiv1$, return the site marginals
+$\propto\lmsg_i\like\rmsg_i$ and the pair marginals $\propto\lmsg_i\like\,\kernel\,\like\rmsg_{i+1}$
+of the whole sequence. Their means give the exact score of a correlated, possibly strongly
+non-Gaussian, $\nsites$-dimensional law, for \emph{any} kernel, even one whose score has no closed
+form. The pass is a smoother, not a filter: every site is conditioned on the whole sequence. It
+needs the kernel only through the integral operator in \cref{eq:bp}, which is why everything
+that follows treats $\kernel$ as the single object to be known, parameterised or learned.
+
+\paragraph{What ``exact'' means here.}
+Messages are functions on $\Reals$. We carry them on a grid of $\ngrid$ points on
+$[-\halfwidth,\halfwidth]$ with composite trapezoidal weights, so three statements are kept
+apart (\cref{app:numerics}): sum-product is exact on functional messages; forward--backward is exact
+for the discretised factor model, whose evidence is exact to floating point; and that model
+approximates the continuous chain through truncation (mass beyond $\pm\halfwidth$) and quadrature
+(second order in the spacing), both of which we measure rather than assume. At $\ngrid=401$ points
+on $[-8,8]$, the operating grid of every experiment below, the reference is accurate to
+$10^{-5}$ relative on ordinary draws for every driving-noise family of
+\cref{eq:linear}; on a Gaussian chain, where two independent exact answers exist, it is accurate to
+$\gsOpWorst$ (\cref{sec:sanity}); and on the $\phi^4$ field it agrees with a grid four times finer to
+$\fldOracleGridWorst$ on every cell (\cref{sec:field}). The domain, not the spacing, is what a
+heavy-tailed family tests, and at $\corr=0$ the Student-$t$ family needs a wider one
+(\cref{app:numerics}). Throughout, ``the exact score'' means this tree-exact inference, evaluated by
+validated quadrature, and ``the oracle'' is BP with the true kernel. The cost is $O(\nsites\ngrid^2)$
+per sequence and level, and one sweep also returns the pair marginals that EM needs
+(\cref{sec:learning}); \cref{sec:compute} measures it.
+
+\paragraph{Sampling.}
+The same recursion samples. Drawing $a_1\sim\mu$ and then each $a_i$ from $\kernel(\cdot\mid a_{i-1})$
+on the grid is exact ancestral sampling from the chain, and a forward-filter backward-sample pass
+draws whole sequences from the posterior given $\vx$, which gives uncertainty as well as a mean
+(\cref{app:field}, on the $\phi^4$ field). On a chain the reverse process is therefore needed to \emph{learn} the
+kernel from noised data, not to sample from it once it is known (\cref{sec:experiments}).

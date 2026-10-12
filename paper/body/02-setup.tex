@@ -1,84 +1,76 @@
-\section{Setup: an exactly solvable non-Gaussian laboratory}
+\section{Setting: a Markov chain with a general kernel}
 \label{sec:setup}
 
-\paragraph{Data and channel.}
-A clean sequence $\va\in\Reals^{\nsites}$ is a first-order Markov chain,
+\paragraph{Data.}
+A clean sequence $\va\in\Reals^{\nsites}$ is a first-order Markov chain with initial law $\mu$ and
+transition kernel $\kernel$,
 \begin{equation}
-  \Pz(\va)=\mu(a_1)\prod_{i=2}^{\nsites}\kernel(a_i\mid a_{i-1}),\;\;
-  \kernel(a'\mid a)=\innov(a'\!-\!\corr a),
+  \Pz(\va)=\mu(a_1)\prod_{i=2}^{\nsites}\kernel(a_i\mid a_{i-1}),
   \label{eq:prior}
 \end{equation}
-with $a_1\sim\normal{0}{1}$, $|\corr|<1$, and a driving-noise density $\innov$ of mean zero
-and variance $\ivar=1-\corr^2$. The variance choice makes $\Var(a_i)=1$ and
-$\Cov(a_i,a_j)=\corr^{|i-j|}$ exactly for \emph{every} driving-noise law, so the families we
-use---Gaussian, Laplace, Student-$t$, uniform, a symmetric two-component mixture, and the
-generalised Gaussian $\innov(\varepsilon)\propto\exp(-|\varepsilon/s_\beta|^\beta)$
-whose exponent $\beta$ moves the excess kurtosis from $+3$ (Laplace) through $0$
-(Gaussian) to $-1$ at $\beta=6$, at fixed variance---share one covariance $\Sig_0$ and,
-every driving-noise law being symmetric, differ only through cumulants of order four and
-higher.
+where $\kernel(\cdot\mid a)$ is a continuous density for every $a$. Nothing else is assumed in
+\cref{sec:inference,sec:sanity,sec:learning}; stationarity, symmetry and reversibility are
+properties of the examples below, not of the method. The kernel is the whole model: it is the
+one function from which the law of every site, every pair of sites and the whole sequence
+follows. We write $\Reals$ for the state space and $\nsites$ for the chain length; the
+ambient dimension is $\nsites$, and $\nseq$ denotes the number of observed sequences.
+
+\paragraph{The channel.}
 The forward process is the coordinatewise Ornstein--Uhlenbeck channel
 \begin{equation}
   \vx_t = e^{-t}\va + \sqrt{\Dt}\,\vz,\qquad \Dt=1-e^{-2t},\quad \vz\sim\normal{0}{\Id},
   \label{eq:channel}
 \end{equation}
-so $\Var(x_{t,i})=1$ at every $t$ and the noised law $\Pt$ tends to $\normal{0}{\Id}$.
+so that $\vx_t$ is a noised copy of the same sequence at level $t$. $\Pt$ is its law, and
+the score is $\score(\vx,t)=\nabla_{\vx}\log\Pt(\vx)$.
 
-\begin{figure}[t]
-  \centering
-  \input{figures/fig_mechanism}
-  \caption{\textbf{Why the score is exact.} Latent sites (white) carry the chain prior
-  through its transition factors (filled squares). Coordinatewise noising attaches one
-  unary factor per site (open squares), joining $a_i$ to its own observation $x_i$
-  (shaded), and adds no edge among the latent variables. The posterior factor graph is
-  therefore the prior's chain, a tree, so the forward and backward sweeps
-  $\lmsg,\rmsg$ are exact; meeting at site $i$ they give $\pmeansite{i}$, and Tweedie's
-  identity returns $\score(\vx,t)=-(\vx-e^{-t}\pmean{\va})/\Dt$ exactly. The interior of
-  the chain is elided; $\nsites$ is its length.}
-  \label{fig:mechanism}
-\end{figure}
+\paragraph{First instance: a linear chain with non-Gaussian noise.}
+The simplest kernel with a nontrivial score is a linear one with non-Gaussian driving noise,
+\begin{equation}
+  \kernel(a'\mid a)=\innov(a'-\corr a),\qquad a_1\sim\normal{0}{1},\quad |\corr|<1,
+  \label{eq:linear}
+\end{equation}
+with a driving-noise density $\innov$ of mean zero and variance $\ivar=1-\corr^2$. The
+variance choice makes $\Var(a_i)=1$ and $\Cov(a_i,a_j)=\corr^{|i-j|}$ exactly for \emph{every}
+noise law, so the families we use---Gaussian, Laplace, Student-$t$, uniform, a symmetric
+two-component mixture, and the generalised Gaussian
+$\innov(\varepsilon)\propto\exp(-|\varepsilon/s_\beta|^\beta)$ whose exponent $\beta$ moves the
+excess kurtosis from $+3$ (Laplace) through $0$ (Gaussian) to $-1$ at $\beta=6$, at fixed
+variance---share one covariance $\Sig_0$ and, every noise law being symmetric, differ only through
+cumulants of order four and higher. The laboratory therefore separates, by construction, what
+diffusion noise does to correlation from what it does to shape. Throughout \cref{sec:experiments}
+the frozen configuration is $\corr=0.85$, $\nsites=32$, Laplace noise.
 
-\paragraph{The score is a posterior mean, and the posterior is a tree.}
-Tweedie's identity gives $\score(\vx,t)=-(\vx-e^{-t}\pmean{\va})/\Dt$, with
-$\pmean{\va}=\E[\va\mid\vx_t=\vx]$ \citep{robbins1956empirical,efron2011tweedie}. Conditioning
-\cref{eq:prior} on $\vx$ multiplies the prior by one unary factor
-$\like(x_i\mid a_i)\propto\exp[-(x_i-e^{-t}a_i)^2/2\Dt]$ per site: no edge is added among
-the latent variables, the posterior factor graph is the prior's chain, and sum-product
-on it is exact \citep{pearl1988probabilistic,kschischang2001factor}. Two sweeps of the
-functional messages $\lmsg_i(a)\propto\int\kernel(a\mid a')\like(x_{i-1}\mid
-a')\lmsg_{i-1}(a')\dd a'$ and its mirror image $\rmsg_i$ (\cref{app:numerics},
-\cref{eq:bp}) return the site marginals $\propto\lmsg_i\like\rmsg_i$, and hence the exact
-score of a correlated, non-Gaussian, $\nsites$-dimensional law. Messages are functions on
-$\Reals$; we carry them on a grid of $\ngrid$ points on $[-\halfwidth,\halfwidth]$ with
-trapezoidal quadrature, exact for the discretised factor model and controlled for the
-continuous one (at $\ngrid=401$, $\halfwidth=8$ and the frozen correlation the reference is accurate
-to $10^{-5}$ relative on ordinary draws for every family used; the domain, not the spacing,
-is what a heavy-tailed family tests, and at $\corr=0$ the Student-$t$ family needs a wider
-one, \cref{app:numerics}). Throughout, ``the score'' means this
-tree-exact inference, evaluated by validated quadrature.
+\paragraph{Second instance: a physical field.}
+The one-dimensional $\phi^4$ field is the stochastic Allen--Cahn equation
+$\partial_\tau\phi=\partial_s^2\phi-V'(\phi)+\sqrt{2\Temp}\,\eta$ with the double well
+$V(\phi)=(\phi^2-1)^2/4$ at temperature $\Temp$; its stationary law is the Gibbs measure
+$\propto e^{-H[\phi]/\Temp}$ with $H[\phi]=\int[\tfrac12(\partial_s\phi)^2+V(\phi)]\,\mathrm{d}s$.
+On a lattice of spacing $\latt$ the energy couples only nearest neighbours,
+$H_{\latt}=\sum_i[(\phi_{i+1}-\phi_i)^2/2\latt+\latt V(\phi_i)]$, so a spatial snapshot is
+\emph{exactly} a first-order Markov chain in the site index, with a kernel of the form
+\emph{Gaussian step times a function of the arrival point},
+\begin{equation}
+  \begin{aligned}
+  \kernel(\phi'\mid\phi)&=\frac{\normal{\phi';\phi}{\Temp\latt}\,g(\phi')}{Z(\phi)},\\
+  Z(\phi)&=\int\normal{\phi';\phi}{\Temp\latt}\,g(\phi')\dd\phi',
+  \end{aligned}
+  \label{eq:tilted}
+\end{equation}
+with $g=\psi_0e^{-\latt V/2\Temp}$ built from the leading eigenfunction $\psi_0$ of the symmetric
+transfer operator $\transfer(\phi,\phi')=e^{-\latt V(\phi)/2\Temp}e^{-(\phi'-\phi)^2/2\Temp\latt}e^{-\latt V(\phi')/2\Temp}$
+(\cref{app:field}). Two knobs set the chain: the temperature $\Temp$ and the spacing $\latt$;
+the correlation length in sites is $\corrlen=1/\log(\lambda_0/\lambda_1)$. There is no phase
+transition in one dimension: $\corrlen$ is finite at every $\Temp>0$ and grows roughly like
+$e^{E_{\mathrm{kink}}/\Temp}$ as $\Temp$ falls, a sharp crossover. Unlike
+\cref{eq:linear}, the field's expected next value is a nonlinear function of the current one,
+and its driving noise is state-dependent; the two families meet only at the Gaussian chain
+(\cref{app:field}). Snapshots are standardised to unit variance, $a=\phi/\sqrt{\operatorname{Var}\phi}$.
 
-\paragraph{The covariance twin and the price of second-order closure.}
-The Gaussian chain with the same $\corr$ and $\ivar$ has the closed-form score
-$\Sgauss(\vx,t)=-\Sig_t^{-1}\vx$, $\Sig_t=e^{-2t}\Sig_0+\Dt\Id$, and posterior mean
-$e^{-t}\Sig_0\Sig_t^{-1}\vx$, the linear minimum-mean-square (LMMSE) estimator.
-\begin{proposition}[Gaussian closure computes the LMMSE of the covariance twin]
-\label{prop:lmmse}
-Let $\Pgauss$ project a density onto the Gaussian with its mean and variance, and let
-moment-projected sum-product apply $\Pgauss$ to each message after every transition
-integral in \cref{eq:bp}. For the chain \cref{eq:prior} with $\corr\neq0$ and any
-driving-noise law of mean zero and variance $\ivar$, it returns exactly the LMMSE estimator
-$e^{-t}\Sig_0\Sig_t^{-1}\vx$, the same for every such law.
-\end{proposition}
-The proof (\cref{app:proofs}) is an induction over the two sweeps: a convolution's first
-two moments depend on the driving noise only through its first two moments, so every
-projected message equals the Gaussian chain's message. Two consequences are used as
-checks below. Sum-product with \emph{any} Gaussian kernel is a linear map of $\vx$, and
-the LMMSE of the true covariance minimises the posterior-mean error over linear maps,
-so the LMMSE floor bounds every linear estimator; and the Gaussian quasi-likelihood of
-noised data depends on the data only through their sample covariance, whose expectation
-is $e^{-2t}\Sig_0+\Dt\Id$, so a linear-Gaussian kernel fitted by maximum likelihood is
-consistent for $(\corr,\ivar)$ and lands on that floor. \Cref{prop:lmmse} thus turns the
-gap between $\score$ and $\Sgauss$ into an interpretable object: it is precisely what
-any estimator that carries only second-order structure---a linear-Gaussian kernel, a
-linear denoiser, or the Kalman smoother (\cref{prop:kalman})---must leave on the table. \Cref{sec:theory}
-computes its size.
+\paragraph{What is scored.}
+For an estimator $\hat\score$ the \emph{risk} is the relative root-mean-square score error
+against the exact score, summed over test chains, sites and the schedule of noise levels
+(\cref{app:protocol}). Three reference points bracket every estimator: the isotropic score
+$-\vx$, which ignores the chain; the linear (LMMSE) score of the true covariance, which by
+\cref{prop:lmmse} is what any second-order estimator can reach; and the exact score, at zero
+(\cref{app:oracles}).

@@ -10,6 +10,7 @@
 \usepackage{array}
 \usepackage{multirow}
 \usepackage{capt-of}
+\usepackage{enumitem}
 \usepackage{xcolor}
 %% Figure palette, kept identical to the matplotlib house style in tools/figstyle.py so the
 %% TikZ schematic and the plotted figures cannot drift apart.
@@ -77,6 +78,8 @@
 \input{sections/rate-numbers}
 \input{sections/structured-aggregation-numbers}
 \input{sections/grid-convergence-numbers}
+\IfFileExists{sections/field-numbers.tex}{\input{sections/field-numbers}}{}
+\IfFileExists{sections/cumulant-numbers.tex}{\input{sections/cumulant-numbers}}{}
 \providecommand{\provenanceappendix}{\cref{app:protocol}}
 % Figures drawn for one column (tools/figstyle.COL_W = 3.25 in) keep that width in the one-column
 % appendix, where \columnwidth is the full text width and would double them.
@@ -84,14 +87,13 @@
 \providecommand{\headlinetable}{the archival comparison (\cref{app:additional})}
 \providecommand{\structuredtable}{the archival structured comparison (\cref{app:additional})}
 
-\icmltitlerunning{What Survives Diffusion Noise}
+\icmltitlerunning{Learn the Local Law, Infer Globally}
 
 \begin{document}
 
 \twocolumn[
-\icmltitle{What Survives Diffusion Noise?\\
-  Exact Scores, Order-by-Order Information Decay, and Transition Learning\\
-  in Non-Gaussian Markov Chains}
+\icmltitle{Learn the Local Law, Infer Globally:\\
+  Exact Diffusion Scores for Markov Data by Belief Propagation}
 
 \icmlsetsymbol{equal}{*}
 \begin{icmlauthorlist}
@@ -99,7 +101,7 @@
 \end{icmlauthorlist}
 \icmlaffiliation{anon}{Anonymous Institution}
 \icmlcorrespondingauthor{Anonymous}{anonymous@example.org}
-\icmlkeywords{diffusion models, score matching, belief propagation, Markov chains, Fisher information, Hermite polynomials}
+\icmlkeywords{diffusion models, score matching, belief propagation, Markov chains, expectation--maximisation, stochastic Allen--Cahn, Kalman smoother}
 \vskip 0.3in
 ]
 
@@ -111,9 +113,13 @@
 
 \input{body/01-introduction}
 \input{body/02-setup}
-\input{body/03-theory}
+\input{body/03-inference}
+\input{body/04-sanity}
 \input{body/04-learning}
 \input{body/05-experiments}
+\input{body/06-field}
+\input{body/07-compute}
+\input{body/08-limits}
 \input{body/06-related}
 \input{body/07-conclusion}
 
@@ -135,5 +141,6 @@ concern that requires discussion here.
 \input{body/A3-protocol}
 \input{body/A4-additional}
 \input{body/A5-audit}
+\input{body/A6-field}
 
 \end{document}

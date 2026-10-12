@@ -1,5 +1,8 @@
-\section{What survives diffusion noise: attenuation by statistical order}
+\subsection{What noise erases: attenuation by statistical order}
 \label{sec:theory}
+
+This subsection is the supporting theory: it says where non-Gaussian structure is lost, which is where the
+structured estimator can gain, and it does not enter the exactness of the method of \cref{sec:inference}.
 
 Write $\gref$ for the standard Gaussian on $\Reals^{\nsites}$, $\Hen{k}$ for the
 probabilists' Hermite polynomials and $H_\nu(\vx)=\prod_i\Hen{\nu_i}(x_i)$ for their
@@ -123,7 +126,7 @@ $\nseq\propto e^{8t}$; the ratio of the two informations is $\propto e^{-4t}$.
 This is H\'ajek--Le Cam for a regular parametric model at fixed $t$; it says nothing
 uniform in $t$ (the limits do not commute), nothing about absolute precision for a bounded
 coordinate once $1/\sqrt{\nseq I_t}$ exceeds its range, and nothing about an optimiser
-at a finite budget. All three caveats are visible in \cref{sec:learning}.
+at a finite budget. All three caveats are visible in \cref{sec:learning-results}.
 
 \paragraph{Where the asymptote begins.}
 For the Gaussian chain the expansion parameter is $e^{-2t}\lmax(\Sig_0)$, with
@@ -160,12 +163,14 @@ technical.
   (a)~Exact Fisher information of the Gaussian chain about $\corr$, scaled by its
   predicted asymptote $\tfrac12\Frob{\partial_\corr\Sig_0}^2e^{-4t}$, for five $\corr$;
   every curve reaches~1, and the tick on each marks $\tstar(\corr)$.
-  (b)~Efficient information per noised sequence about the second-order mode, the
-  correlation $\corr$, and the fourth-order mode, the shape $\beta$, of the generalised-Gaussian
-  chain, from tree-exact inference and Fisher's identity, $\shapeChains$ sequences
-  $\times\,\shapeReps$ replicates (bands: replicate range); guides $e^{-4t}$ and $e^{-8t}$.
-  Above $\tstar$ the fitted slopes are $\shapeSlopeRhoone$ ($\corr$) and
-  $\shapeSlopeBetathree$ ($\beta$, at $\beta=3$).
+  (b)~Efficient information per noised sequence about the second-order cumulant
+  $\kappa_2=\ivar$ and the fourth-order cumulant $\kappa_4=\gamma_2(\beta)\ivar^2$ of the driving noise of the
+  generalised-Gaussian chain ($\gamma_2$ its excess kurtosis), for the Laplace member ($\beta=1$, solid) and for
+  $\beta=3$ (dashed), from tree-exact inference, Fisher's identity and the change of coordinates from $(\corr,\beta)$ to
+  the cumulants (\cref{app:audit}); $\shapeChains$ sequences $\times\,\shapeReps$ replicates (bands: replicate range);
+  guides $e^{-4t}$ and $e^{-8t}$. Above $\tstar$ the fitted slopes at $\beta=3$ are $\cumSlopeKappatwoBetathree$
+  ($\kappa_2$) and $\cumSlopeKappafourBetathree$ ($\kappa_4$); the Laplace member's fourth-order curve reaches the
+  estimator's numerical floor from $t\approx3$ on. The coordinates are cumulants, not the shape parameter $\beta$.
   (c)~The price of second-order closure: $\E\lVert\score-\Sgauss\rVert^2$ measured by
   tree-exact BP, divided by the predicted $\tfrac16\Frob{\kfour}^2e^{-8t}$, for four
   driving-noise families on a domain wide enough for their samples (\cref{app:numerics}).
@@ -181,11 +186,13 @@ technical.
 \paragraph{Verification with the exact score.}
 \Cref{fig:theory} tests \cref{thm:decay} where nothing has to be approximated. For the
 Gaussian chain the closed form gives slope $\gaussSlopeRhoeightfive$ above $\tstar$ at
-$\corr=0.85$; for the non-Gaussian chain the shape information, estimated from
-per-sequence scores through the tree-exact recursion, falls with slope
-$\shapeSlopeBetatwo$ ($\beta=2$) and $\shapeSlopeBetathree$ ($\beta=3$) above $\tstar$
-against the predicted $-8$, and the correlation information with slope
-$\shapeSlopeRhotwo$ against $-4$. The constants are verified at two levels of precision:
+$\corr=0.85$; for the non-Gaussian chain the information about the fourth cumulant,
+estimated from per-sequence scores through the tree-exact recursion, falls with slope
+$\cumSlopeKappafourBetatwo$ ($\beta=2$) and $\cumSlopeKappafourBetathree$ ($\beta=3$) above $\tstar$
+against the predicted $-8$, and the information about the second cumulant with slope
+$\cumSlopeKappatwoBetathree$ against $-4$. These are the order-by-order coordinates of the theorem; the same data
+plotted against the shape parameter $\beta$ would misstate the fourth-order information by a factor between
+$\cumRelabelMin$ and $\cumRelabelMax$, because $\beta$ barely moves any cumulant near the Gaussian. The constants are verified at two levels of precision:
 in the scalar case an untruncated quadrature reproduces the shape constant of
 \cref{eq:info4} to within $\audScalarConstWorst\%$ and the covariance constant of
 \cref{eq:info2} to five digits (\cref{app:audit}), while on the chain the outer-product

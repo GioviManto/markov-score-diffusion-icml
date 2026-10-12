@@ -4,18 +4,26 @@
 (a) Exact Gaussian-chain information about rho, scaled by its predicted asymptote
     (1/2)||d_rho Sigma_0||_F^2 e^{-4t}, for five rho: the curves reach 1, and the
     crossover t_* = (1/2) log lambda_max(Sigma_0) (ticks) sets when.
-(b) Information about the correlation coordinate rho (degree 2) and the shape
-    coordinate beta (degree 4) of the generalised-Gaussian chain, efficient
-    information per noised sequence, mean over replicates with the replicate band;
-    guide lines e^{-4t} and e^{-8t}. Laplace (beta = 1) and the platykurtic member
-    (beta = 3).
+(b) Efficient information per noised sequence about the second cumulant kappa_2 (degree 2) and
+    the fourth cumulant kappa_4 (degree 4) of the generalised-Gaussian chain's driving noise
+    (kappa_2 = q, kappa_4 = gamma_2(beta) q^2), mean over replicates with the replicate band;
+    guide lines e^{-4t} and e^{-8t}. Laplace (beta = 1) and the platykurtic member (beta = 3).
+    Until 12 Oct 2026 this panel drew the information about rho and beta; Jerome Garnier-Brun's
+    objection (docs/JEROME_CALL_2026-09-25.md Q10) is that beta is not an order of anything: near
+    the Gaussian it barely moves any cumulant. The efficient information about (kappa_2, kappa_4)
+    is NOT a relabel of the old curves -- it is the delta-method change of coordinates of E01's
+    frozen shape_information.csv (tools/cumulant_information.py), recomputed here from that FROZEN
+    file and checked against its derived copy outputs/E01/cumulant_information.csv.
 (c) The price of second-order closure: E||S_t - S_t^G||^2 measured by tree-exact BP on a
     domain wide enough for the prior's samples (E18, grid (3201, 32)), divided by the predicted
     C_4 e^{-8t} with C_4 = ||kappa_4||_F^2 / 6. Four families reach 1, Student-t(5) included;
     the same Student-t chains on the operating (801, 8) domain show the truncation artefact.
 
 Every number drawn here comes from the CSVs; the fits quoted in the text come from
-tools/make_theory_numbers.py on the same files.
+tools/make_theory_numbers.py on the same files, except the cumulant-coordinate ones of panel (b),
+which this script writes to paper/sections/cumulant-numbers.tex (a generated fragment: the
+slopes of eff(kappa_2) and eff(kappa_4) above t_* + 1, their ratio and its decay). theory-numbers.tex,
+and every macro in it, is untouched.
 """
 
 from __future__ import annotations
@@ -34,6 +42,9 @@ import figstyle as fs  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "outputs" / "E01"  # panels (a), (b); panel (c) reads outputs/E18
+FRAGMENT = ROOT / "paper" / "sections" / "cumulant-numbers.tex"
+BETAS = (1.0, 1.25, 1.5, 2.0, 3.0)
+T_PLOT_MAX = 3.0   # beyond t = 3 the outer-product estimate of the shape coordinates is at its numerical floor
 # heights at which each rho curve in panel (a) carries its own label; staggered so that no
 # two labels can share a neighbourhood whatever the curves do between them
 LABEL_HEIGHTS = (None, 0.88, 0.64, 0.50, 0.13)
@@ -41,6 +52,97 @@ LABEL_HEIGHTS = (None, 0.88, 0.64, 0.50, 0.13)
 # run close together everywhere, so opposite offsets buy the clearance heights cannot
 LABEL_SIDES = (None, 4.2, 4.2, -4.6, -4.6)
 OUT = ROOT / "paper" / "figures"
+
+
+# --------------------------------------------------------------------------- cumulant coordinates
+def cumulant_frame(shape: pd.DataFrame) -> pd.DataFrame:
+    """E01's efficient information in (rho, kappa_2, kappa_4), from the frozen shape_information.csv.
+
+    The delta-method change of coordinates of tools/cumulant_information.py, applied here in memory to
+    the FROZEN file, so that nothing drawn or quoted depends on an unfrozen artefact. The derived copy
+    outputs/E01/cumulant_information.csv (committed, not itself in a registry's frozen_outputs) is
+    compared with the recomputation when present: any difference beyond rounding stops the script.
+    """
+    import contextlib
+    import io
+    import cumulant_information as ci
+    sys.path.insert(0, str(ROOT / "experiments"))
+    from frozen_config import FROZEN
+    with contextlib.redirect_stdout(io.StringIO()):
+        res = ci.convert(shape, float(FROZEN.innovation_variance))
+    cached = SRC / "cumulant_information.csv"
+    if cached.exists():
+        c = pd.read_csv(cached)
+        keys = ["beta", "rep", "t"]
+        if len(c) != len(res) or not np.allclose(c[keys].to_numpy(float), res[keys].to_numpy(float), rtol=0, atol=1e-12):
+            raise SystemExit("outputs/E01/cumulant_information.csv is not the transform of the frozen shape_information.csv (rows differ)")
+        for col in ("eff_rho", "eff_kappa2", "eff_kappa4", "relabel_ratio"):
+            if not np.allclose(c[col].to_numpy(float), res[col].to_numpy(float), rtol=1e-9, atol=0):
+                raise SystemExit(f"outputs/E01/cumulant_information.csv column {col} differs from the recomputation: "
+                                 "regenerate it with tools/cumulant_information.py or investigate")
+    return res
+
+
+_DIGITS = {"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine"}
+
+
+def _mac(name: str) -> str:
+    """LaTeX macro names cannot contain digits: spell them out (the convention of make_theory_numbers.py)."""
+    return "".join(_DIGITS.get(ch, ch) for ch in name).replace(".", "p")
+
+
+def _slope(t, y) -> float:
+    return float(np.polyfit(np.asarray(t, float), np.log(np.asarray(y, float)), 1)[0])
+
+
+def _sci(x: float) -> str:
+    m, e = f"{x:.1e}".split("e")
+    return f"{m}\\times10^{{{int(e)}}}"
+
+
+def cumulant_macros(c: pd.DataFrame, t_star: float, beta_ref: float = 1.0, t_low: float = 0.05, t_mid: float = 3.0,
+                    t_high: float = 4.0) -> dict[str, str]:
+    """The numbers quoted from panel (b), keyed by macro name (letters only: digits are spelled out by _mac).
+
+    Slopes: OLS of log(mean over replicates) on t over the levels t >= t_star + 1, as for the shape macros of
+    theory-numbers.tex. Ratios: eff(kappa_4) / eff(kappa_2) on the beta = 1 chain, MEDIAN over replicates at each
+    level (the convention of docs/JEROME_CALL_2026-09-25.md Q10); the decay ratio is the ratio at t_low over the
+    ratio at t_high. The relabel range is the median over replicates of eff(kappa_4) / eff(beta stored), over
+    every beta and level.
+    """
+    out: dict[str, str] = {}
+    for beta in sorted(c.beta.unique()):
+        m = c[c.beta == beta].groupby("t")[["eff_kappa2", "eff_kappa4"]].mean().reset_index()
+        fit = m[m.t >= t_star + 1.0]
+        tag = f"{beta:g}".replace(".", "p")
+        out[_mac(f"cumSlopeKappatwoBeta{tag}")] = f"{_slope(fit.t, fit.eff_kappa2):.2f}"
+        out[_mac(f"cumSlopeKappafourBeta{tag}")] = f"{_slope(fit.t, fit.eff_kappa4):.2f}"
+    med = c[c.beta == beta_ref].groupby("t")[["eff_kappa2", "eff_kappa4"]].median()
+    def at(t):
+        r = med.iloc[int(np.argmin(np.abs(med.index.to_numpy() - t)))]
+        return float(r.eff_kappa4 / r.eff_kappa2)
+    lo, mid, hi = at(t_low), at(t_mid), at(t_high)
+    out["cumRatioLow"] = f"{lo:.3f}"
+    out["cumRatioThree"] = _sci(mid)
+    out["cumRatioHigh"] = _sci(hi)
+    out["cumDecayRatio"] = f"{lo / hi:.1f}"
+    out["cumDecayRatioThree"] = f"{lo / mid:.0f}"
+    rr = c.groupby(["beta", "t"]).relabel_ratio.median()
+    out["cumRelabelMin"] = f"{rr.min():.1f}"
+    out["cumRelabelMax"] = f"{rr.max():.0f}"
+    return out
+
+
+def write_fragment(macros: dict[str, str], t_star: float, path: Path) -> None:
+    lines = ["%% generated by tools/make_fig_theory.py from outputs/E01/shape_information.csv (frozen) -- do not edit.",
+             "%% Efficient information about the driving noise's cumulants kappa_2 = q and kappa_4 = gamma_2(beta) q^2, the",
+             "%% delta-method change of coordinates of tools/cumulant_information.py (not a relabel of the rho, beta curves).",
+             f"%% Slopes: OLS of log(mean over replicates) on t over the levels with t >= t_* + 1 (t_* = {t_star:.2f} at rho = 0.85).",
+             "%% Ratios (beta = 1): eff(kappa_4)/eff(kappa_2), median over replicates; Low, Three, High at t = 0.05, 3, 4;",
+             "%% DecayRatio = Low/High (t = 4 is at the estimator's numerical floor), DecayRatioThree = Low/Three."]
+    lines += [f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in macros.items()]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n")
 
 
 def main():
@@ -84,46 +186,49 @@ def main():
             fs.halo(t)
     fs.panel_label(ax, "(a)")
 
-    # ---- (b) shape vs correlation information, generalised-Gaussian chain
+    # ---- (b) information about the second and fourth cumulants of the driving noise, generalised-Gaussian chain
     ax = axes[1]
-    picks = [(1.0, "-", "Laplace, β = 1"), (3.0, "--", "β = 3")]
-    for beta, ls, lab in picks:
-        d = s[s.beta == beta]
-        m = d.groupby("t").agg(rho_m=("eff_rho", "mean"), rho_lo=("eff_rho", "min"), rho_hi=("eff_rho", "max"),
-                               b_m=("eff_beta", "mean"), b_lo=("eff_beta", "min"), b_hi=("eff_beta", "max")).reset_index()
-        m = m[m.t <= 3.0]  # beyond t = 3 the outer-product estimate of the shape coordinate is at its numerical floor
-        ax.fill_between(m.t, m.rho_lo, m.rho_hi, color=fs.CAT[0], alpha=0.18, lw=0)
-        ax.fill_between(m.t, m.b_lo, m.b_hi, color=fs.CAT[1], alpha=0.18, lw=0)
-        ax.plot(m.t, m.rho_m, color=fs.CAT[0], ls=ls, lw=1.4)
-        ax.plot(m.t, m.b_m, color=fs.CAT[1], ls=ls, lw=1.4)
-        if beta == 1.0:
-            m_lab = {"rho": (m.t.to_numpy(), m.rho_m.to_numpy()),
-                     "beta": (m.t.to_numpy(), m.b_m.to_numpy())}
-    tt = np.array([1.2, 3.0])
-    ax.plot(tt, 3.0e1 * np.exp(-4 * (tt - 1.2)) * 1.1, color=fs.INK2, lw=0.8, ls=":")
-    ax.plot(tt, 2.0e-2 * np.exp(-8 * (tt - 1.2)) * 1.6, color=fs.INK2, lw=0.8, ls=":")
-    ax.text(2.15, 3.0e1 * np.exp(-4 * 0.95) * 2.6, "$e^{-4t}$", fontsize=7.5, color=fs.INK2, ha="left")
-    ax.text(2.15, 2.0e-2 * np.exp(-8 * 0.95) * 3.5, "$e^{-8t}$", fontsize=7.5, color=fs.INK2, ha="left")
+    cum = cumulant_frame(s)
+    picks = [(1.0, "-"), (3.0, "--")]
+    lab_curves = {}
+    for beta, ls in picks:
+        d = cum[cum.beta == beta]
+        m = d.groupby("t").agg(k2_m=("eff_kappa2", "mean"), k2_lo=("eff_kappa2", "min"), k2_hi=("eff_kappa2", "max"),
+                               k4_m=("eff_kappa4", "mean"), k4_lo=("eff_kappa4", "min"), k4_hi=("eff_kappa4", "max")).reset_index()
+        m = m[m.t <= T_PLOT_MAX]  # beyond t = 3 the outer-product estimate of the shape coordinates is at its numerical floor
+        ax.fill_between(m.t, m.k2_lo, m.k2_hi, color=fs.CAT[0], alpha=0.18, lw=0)
+        ax.fill_between(m.t, m.k4_lo, m.k4_hi, color=fs.CAT[1], alpha=0.18, lw=0)
+        ax.plot(m.t, m.k2_m, color=fs.CAT[0], ls=ls, lw=1.4)
+        ax.plot(m.t, m.k4_m, color=fs.CAT[1], ls=ls, lw=1.4)
+        lab_curves[beta] = (m.t.to_numpy(), m.k2_m.to_numpy(), m.k4_m.to_numpy())
+    # guides, parallel to the asymptotes and clear of the data: e^{-4t} above the kappa_2 curves; e^{-8t} BELOW the
+    # kappa_4 curves, because those fall more slowly than e^{-8t} over 2 <~ t <= 3 (their local slope is about -6
+    # where the estimator nears its floor) and would run into any guide drawn above them
+    g4 = (np.linspace(1.2, 3.0, 60), lambda t: 8.0 * np.exp(-4 * (t - 1.2)))
+    g8 = (np.linspace(1.0, 2.3, 60), lambda t: 5.0e-4 * np.exp(-8 * (t - 1.0)))
+    for gx_, gf_ in (g4, g8):
+        ax.plot(gx_, gf_(gx_), color=fs.INK2, lw=0.8, ls=":")
     ax.set_yscale("log"); ax.set_xscale("log")
     ax.set_xlim(0.045, 3.4)
     ax.set_ylim(1e-9, 2e3)
     ax.set_xticks([0.05, 0.1, 0.3, 1, 3]); ax.set_xticklabels(["0.05", "0.1", "0.3", "1", "3"])
     ax.set_xlabel("diffusion time  $t$")
     ax.set_ylabel("efficient information per sequence")
-    # These two labels used to be placed by hand above their curves and landed on them. Ride
-    # the curve instead, on the near-flat small-t section where the two series are three
-    # decades apart. Named by statistical order first (the note's appendix F item 3: label
-    # information by second- and fourth-order mode, not only by model parameter).
-    lab_rho = m_lab["rho"]; lab_beta = m_lab["beta"]
-    fs.label_on_curve(ax, lab_rho[0], lab_rho[1], r"second order, $\rho$", at_x=0.16,
-                      color=fs.CAT[0], fontsize=7.5, offset=5.0, zorder=6)
-    fs.label_on_curve(ax, lab_beta[0], lab_beta[1], r"fourth order, $\beta$", at_x=0.16,
-                      color=fs.CAT[1], fontsize=7.5, offset=5.0, zorder=6)
-    # the line-style key is a legend with real handles, not a sentence in the panel
+    # Named by statistical order first (the note's appendix F item 3), then by the cumulant it measures. The
+    # kappa_2 curves of the two chains lie within 25 % of each other, the kappa_4 curves 0.7 decades apart at
+    # t = 0.16 with beta = 3 above: the second-order name rides above the upper pair, the fourth-order name below
+    # the lower pair, so neither label meets a curve or a band.
+    t3, k2_3, _ = lab_curves[3.0]; t1, _, k4_1 = lab_curves[1.0]
+    fs.label_on_curve(ax, t3, k2_3, r"second order, $\kappa_2$", at_x=0.16, color=fs.CAT[0], fontsize=7.5, offset=6.5, zorder=6)
+    fs.label_on_curve(ax, t1, k4_1, r"fourth order, $\kappa_4$", at_x=0.16, color=fs.CAT[1], fontsize=7.5, offset=-8.0, zorder=6)
     from matplotlib.lines import Line2D
     ax.legend([Line2D([], [], color=fs.INK2, ls="-", lw=1.2), Line2D([], [], color=fs.INK2, ls="--", lw=1.2)],
               [r"Laplace, $\beta=1$", r"$\beta=3$"], loc="lower left", fontsize=7, frameon=False,
               handlelength=1.8, borderaxespad=0.3, labelspacing=0.25)
+    # horizontal guide names, level with their own guide and on the side away from the data: e^{-4t} to the right of
+    # the guide's upper end (above the kappa_2 curves), e^{-8t} to the left of its middle (below the kappa_4 curves)
+    ax.text(1.62, 6.0, "$e^{-4t}$", color=fs.INK2, fontsize=7.5, ha="left", va="center", zorder=6)
+    ax.text(1.30, 1.0e-5, "$e^{-8t}$", color=fs.INK2, fontsize=7.5, ha="right", va="center", zorder=6)
     fs.panel_label(ax, "(b)")
 
     # ---- (c) closure gap, measured / predicted. From E18 on the (3201, 32) grid: a domain wide
@@ -188,6 +293,12 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     fs.save(fig, OUT / "fig_theory.pdf")
     print("wrote", OUT / "fig_theory.pdf")
+    t_star = float(g[g.rho == 0.85].t_star.iloc[0])
+    macros = cumulant_macros(cum, t_star)
+    write_fragment(macros, t_star, FRAGMENT)
+    print(f"wrote {FRAGMENT.relative_to(ROOT)}: {len(macros)} macros")
+    for k in ("cumDecayRatio", "cumDecayRatioThree", "cumRatioLow", "cumRatioThree", "cumRatioHigh", "cumRelabelMin", "cumRelabelMax"):
+        print(f"  \\{k} = {macros[k]}")
 
 
 if __name__ == "__main__":

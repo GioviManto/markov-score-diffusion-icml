@@ -1,10 +1,11 @@
-\section{Learning the dynamics through noise}
+\section{Learning the local law through noise}
 \label{sec:learning}
 
 Now drop the assumption that $\kernel$ is known. We observe $\nseq$ noised sequences
 $\vx^{\mu}$, each at one level $t_\mu$, never the clean chain, and maximise the marginal
-log-likelihood $\Lik(\params)=\sum_\mu\log\Pt[t_\mu,\params](\vx^\mu)$ of a
-parameterised kernel $\kernelth$.
+log-likelihood $\Lik(\params)=\sum_\mu\log\Pt[t_\mu,\params](\vx^\mu)$ of a parameterised kernel
+$\kernelth$. Because \cref{sec:inference} computes this likelihood and its gradient exactly,
+learning the kernel and inferring the posterior are the same recursion.
 
 \paragraph{The exact gradient from one sweep.}
 Because only the transition factors depend on $\params$, Fisher's identity
@@ -16,42 +17,46 @@ Because only the transition factors depend on $\params$, Fisher's identity
 \end{aligned}
 \label{eq:fisher}
 \end{equation}
-where the expected transition mass $\Xis$ is read off the pairwise marginals that the
-same forward--backward pass returns. No differentiation through the recursion is needed,
-and the identity is verified against finite differences and against brute-force
-enumeration of the evidence on short chains (\codefile{tests/test\_em\_bp.py},
-\codefile{tests/test\_fisher\_bruteforce.py}). $\Xis$ is also all the M-step of EM needs: for a Gaussian kernel
-the maximiser is the belief-weighted Yule--Walker pair
-$\corr=S_{01}/S_{00}$, $\ivar=(S_{11}-\corr S_{01})/W$ with
+where the expected transition mass $\Xis$ is read off the pairwise marginals that the same
+forward--backward pass returns. No differentiation through the recursion is needed, and the identity
+is verified against finite differences and against brute-force enumeration of the evidence on short
+chains (\codefile{tests/test\_em\_bp.py}, \codefile{tests/test\_fisher\_bruteforce.py}). $\Xis$ is also all
+the M-step of EM needs, so EM alternates the two halves of \cref{fig:method}: run BP with the current
+kernel to get $\Xis$ (E-step), refit the kernel to $\Xis$ (M-step). The estimator sees one frozen
+noised view per sequence and never a clean trajectory; each reported fit selects its iteration
+count on a validation bundle disjoint from the test bundle, by the held-out risk against the exact score
+or, with no true score anywhere, by the held-out one-view log-evidence (\cref{app:protocol}).
+
+\paragraph{The kernel families.}
+The M-step depends on how the kernel is parameterised, and the choice is the main modelling decision.
+\begin{itemize}[leftmargin=1.2em,itemsep=0.1em,topsep=0.2em]
+\item \emph{Mixture kernel} (25 numbers). For the linear chain,
+$\kernelth(a'\mid a)=\sum_{c=1}^{\ncomp}\pi_c\,\normal{a'-\corr a-\nu_c}{s_c^2}$: a linear drift with
+driving noise an $\ncomp$-component Gaussian mixture. $\ncomp=1$ is the linear-Gaussian kernel and recovers
+the Gaussian score (\cref{prop:lmmse}); $\ncomp=8$ is the paper's estimator. For $\corr$ it is the
+belief-weighted Yule--Walker pair $\corr=S_{01}/S_{00}$, $\ivar=(S_{11}-\corr S_{01})/W$ with
 $S_{00}=\sum_{kl}\Xis_{kl}\gridpt{l}^2$, $S_{01}=\sum_{kl}\Xis_{kl}\gridpt{k}\gridpt{l}$,
-$S_{11}=\sum_{kl}\Xis_{kl}\gridpt{k}^2$ and $W=\sum_{kl}\Xis_{kl}$ ($k$ indexes the child
-site, $l$ the parent); for the mixture kernel
-$\kernelth(a'\mid a)=\sum_{c=1}^{\ncomp}\pi_c\,\normal{a'-\corr a-\nu_c}{s_c^2}$ used below,
-the complete-data problem carries a second latent label and we take conditional-maximisation
-sweeps, a generalised EM whose ascent is monotone \citep{dempster1977maximum,meng1993maximum}. The
-estimator sees one frozen noised view per sequence and never a clean trajectory; each
-reported fit selects its iteration count on a validation bundle disjoint from the test
-bundle.
+$S_{11}=\sum_{kl}\Xis_{kl}\gridpt{k}^2$ and $W=\sum_{kl}\Xis_{kl}$; the complete-data problem for the
+mixture carries a second latent label and we take conditional-maximisation sweeps, a generalised EM
+whose ascent is monotone \citep{dempster1977maximum,meng1993maximum}.
+\item \emph{Tilted-walk kernels} (7, 25 numbers). For a nonlinear drift,
+$\kernelth(a'\mid a)=\normal{a';a}{\bondvar}\,e^{B(a')\cdot\params}/Z_\params(a)$, a Gaussian step with a
+learned tilt of the arrival point, $B$ a Legendre or cubic-spline basis. It contains the field's kernel
+\cref{eq:tilted} exactly, and the M-step objective is concave in $\params$ at fixed $\bondvar$.
+\item \emph{The site energy} (5 numbers). Every tilted walk is reversible with the symmetric pair energy
+$W(a,a')=(a'-a)^2/2\bondvar+f(a)+f(a')$, so the directed kernel and the pair energy are one model class
+(\cref{app:field}). Parameterising $f$ as a quartic polynomial and $\bondvar$ gives five numbers,
+exactly specified for the $\phi^4$ field, and a fitted kernel reads as physics: the temperature
+$\hat\Temp=\hat\bondvar s^2/\latt$, the barrier height and the well position.
+\item \emph{Unrestricted and neural kernels} (100 and 1\,516 numbers). A log-linear kernel with a free
+two-dimensional spline for $\log\kernel$, which assumes no Gaussian bond, and a mixture density network
+(MDN) that maps $a$ to a Gaussian mixture for $a'$. Both are fitted by the same EM; they are the tools for
+asking whether a simple family is wide enough (\cref{sec:limits}).
+\end{itemize}
 
-\paragraph{The information curve predicts what is learned at each level.}
-\Cref{cor:samples} makes a prediction about learning that the exact score does not
-need: fitting from $\nseq$ sequences all observed at level $t$, the shape of the
-driving-noise law stops being identifiable at the level where its Cram\'er--Rao reference
-crosses the coordinate's range, while the correlation survives to the crossover.
-\IfFileExists{sections/learning-numbers.tex}{\input{body/04a-learning-results}}{\needsdata{E06 queued: the estimator against the information reference}}
-This is also the arithmetic behind the one-view protocol: of twelve levels spread over
-$t\in[0.05,3]$, only the lowest four carry appreciable information about shape.
-
-\begin{figure}[t]
-  \centering
-  \IfFileExists{figures/fig_learning.pdf}{\includegraphics[width=\columnwidth]{fig_learning.pdf}}{\needsdata{fig\_learning.pdf (E06)}}
-  \caption{\textbf{Learning through noise.} Recovery of the correlation coordinate and
-  of the driving-noise shape from $\nseq=512$ sequences observed at a single level $t$,
-  sixteen replicates (points: individual fits; line: RMSE), against the Cram\'er--Rao
-  reference (dashed), the clean-data floor (dotted) and, for the shape, the coordinate's
-  range. The fits are unimodal and at the reference at the lowest levels, split into a
-  shrunk cluster and Gaussian-collapsed fits from $t=\learnLevelTzeropseven$, and collapse
-  where the reference crosses the range. Hollow markers: the same fits with the \textsc{em}
-  ladder extended to $\learnBudgetLadderMax$ iterations (\textsc{e06c}).}
-  \label{fig:learning}
-\end{figure}
+\paragraph{Resolution and capacity.}
+A flexible kernel can learn narrow features, and the grid must resolve them: with large $\ncomp$ and many
+sequences the mixture's narrowest component can be finer than a coarse grid's spacing, which we measure
+through a ``resolved'' flag (\cref{sec:compute}). The structure is not free either: $\ncomp=1$ cannot see
+fourth-order structure and a large kernel overfits, which is why the tilted and site-energy families have
+few parameters.

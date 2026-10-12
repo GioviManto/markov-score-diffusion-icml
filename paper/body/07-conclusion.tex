@@ -1,24 +1,22 @@
-\section{Limitations and conclusion}
+\section{Conclusion}
 \label{sec:conclusion}
 
-The model is a chain in one dimension with a linear autoregressive form; the theorems
-hold for any law with an exponential moment at fixed length, and heavy-tailed laws sit
-outside them with a regime of their own; the exact verification and the learning
-results are for chains, at one driving-noise family in most experiments and with eight
-seeds in the regime sweeps. The estimator's advantage is the correctness of its
-factorisation: under a non-Markov truth it is misspecified in a way more data does not
-repair, and \cref{sec:experiments} computes where that begins. Inference costs
-$O(\nsites\ngrid^2)$ per sequence and level---of order ten times a network forward pass at
-$\ngrid=401$, with the mixture M-step a fixed cost per iteration that matches the E-step near
-$\nseq=2048$ and dominates below it---so the advantage
-is in data and understanding, not in wall-clock: a factor of eight in error at equal data
-is bought with a structural assumption and with compute a network does not pay. The comparison with denoisers equalises the number of clean sequences under each
-method's standard recipe and, separately, matches the information interface with no
-oracle on either side; it does not rank learning algorithms in general.
+For data that form a Markov chain, score estimation under diffusion noise reduces to posterior means, and a forward--backward sweep of
+belief propagation computes them exactly for any continuous kernel, up to a quadrature we measure. The kernel itself is learnable from noised
+sequences alone, by expectation--maximisation around the same sweep, so one can learn the local law and infer globally. The Gaussian kernel
+is a clean check, since BP with Gaussian messages is the linear score and the Kalman smoother. On two chains whose scores are known, a linear chain with
+non-Gaussian noise and the one-dimensional $\phi^4$ field, this estimator, with a kernel of a few parameters, beats the neural denoisers it is compared with
+at every sample size, including at its own information interface; the kernel family is the real modelling choice, the five-parameter site energy being right for a
+gradient flow and the paper's linear-drift mixture right for a linear chain and wrong for a double well; and a neural or unrestricted kernel earns its parameters only where
+the simple family is misspecified.
 
-What the laboratory teaches is general: diffusion noise erases statistical structure
-order by order, at rates fixed by Hermite degree, so a score learner that reaches only
-second order is bounded away from the truth by an $e^{-8t}$-scaled term whose content is
-the fourth-order moment, and a learner of shape pays $e^{4t}$ in samples per level.
-Explicit structure is the way to recover what the data still carry; the price of the
-wrong structure is a bias that no sample size removes, and that bias can be computed.
+The advantage is in data and understanding, not in wall-clock. Exact inference costs more per sequence than a network forward pass, by a factor that depends on the machine
+and the grid, a coarser grid and a smaller kernel recover a large part of it for the field kernels, and a Fourier representation of the messages is not worth building. The
+structure also has limits that can be computed: a latent shared by a whole sequence leaves a bias no sample size removes, which augmenting the state repairs; a kernel
+outside the family leaves a floor the unrestricted kernel is built to detect; a coarse grid fails for narrow kernels. The comparison equalises the number of sequences under each
+method's standard recipe and, separately, matches the information interface with no oracle on either side; it does not rank learning algorithms in general, and the networks
+we time are the largest variants.
+
+What the linear laboratory adds is a general fact about the channel: diffusion noise erases statistical structure order by order, at rates fixed by Hermite degree, so a score
+learner that reaches only second order is bounded away from the truth by an $e^{-8t}$-scaled term whose content is the fourth-order moment. This explains where the structured
+estimator gains and does not enter its exactness. Explicit structure recovers what the data still carry, and the price of the wrong structure is a bias that can be computed.

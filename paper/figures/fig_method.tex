@@ -1,0 +1,35 @@
+%% Figures-first figure 1 (the consolidated note, section 28): the method -- learn the local law, infer globally.
+%% Top row: EM on noisy sequences (E-step = BP pair marginals summed into Xi; M-step = the kernel's update; the loop).
+%% Bottom row: the learned kernel inside BP at any level t; Tweedie turns the posterior mean into the score, which the
+%% reverse SDE uses to denoise or generate. Symbols only and one-word stage labels (docs/FIGURE_TABLE_STANDARDS.md);
+%% notation docs/NOTATION.md; colours tools/figstyle.py. Needs paper/notation.tex and the fg* colours.
+\begin{tikzpicture}[
+  x=1cm, y=1cm, font=\footnotesize,
+  box/.style={draw=fgink, line width=0.45pt, rounded corners=1.5pt, inner sep=3pt, minimum height=6.2mm, minimum width=13mm},
+  dat/.style={box, fill=fgfill},
+  stp/.style={-{Latex[length=1.6mm, width=1.25mm]}, line width=0.6pt, draw=fgink},
+  emloop/.style={-{Latex[length=1.6mm, width=1.25mm]}, line width=0.7pt, draw=fgblue},
+  lab/.style={text=fgblue, inner sep=1.2pt, font=\scriptsize},
+  rowlab/.style={anchor=east, text=fgmuted, font=\scriptsize\itshape, inner sep=0pt},
+]
+  % learning row
+  \node[dat] (data) at (0, 0) {$\vx^{(1)},\dots,\vx^{(\nseq)}$};
+  \node[box] (xi)   at (3.6, 0) {$\Xis$};
+  \node[box] (K)    at (6.6, 0) {$\kernelth$};
+  \draw[stp] (data) -- node[above, lab] {E-step} node[below, lab] {BP} (xi);
+  \draw[stp] (xi) -- node[above, lab] {M-step} (K);
+  \draw[emloop] (K.north) to[out=140, in=40] node[above, lab] {EM} ($(data.north east)!0.5!(xi.north west)+(0,0.05)$);
+
+  % inference row
+  \node[dat] (x)  at (0, -1.55) {$\vx_t$};
+  \node[box] (pm) at (3.6, -1.55) {$\pmean{\va}$};
+  \node[box] (S)  at (6.6, -1.55) {$\score(\vx,t)$};
+  \node[box] (gen) at (10.3, -1.55) {$\hat\va,\ \va\sim\Pz$};
+  \draw[stp] (x) -- node[below, lab] {BP} (pm);
+  \draw[stp] (pm) -- node[above, lab] {Tweedie} (S);
+  \draw[stp] (S) -- node[above, lab] {reverse SDE} (gen);
+  \draw[stp, dashed] (K.south) .. controls +(0, -0.6) and +(0.2, 0.6) .. ($(x.east)!0.5!(pm.west)+(0, 0.06)$);
+
+  \node[rowlab] at (-1.15, 0) {learn};
+  \node[rowlab] at (-1.15, -1.55) {infer};
+\end{tikzpicture}

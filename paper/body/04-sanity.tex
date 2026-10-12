@@ -1,0 +1,73 @@
+\section{A sanity check: the Gaussian case}
+\label{sec:sanity}
+
+\paragraph{The covariance twin and the price of second-order closure.}
+The Gaussian chain with the same $\corr$ and $\ivar$ as \cref{eq:linear} has the closed-form score
+$\Sgauss(\vx,t)=-\Sig_t^{-1}\vx$, $\Sig_t=e^{-2t}\Sig_0+\Dt\Id$, and posterior mean
+$e^{-t}\Sig_0\Sig_t^{-1}\vx$, the linear minimum-mean-square (LMMSE) estimator. It is the natural
+approximation of a non-Gaussian chain by something solvable, and BP shows exactly what it computes.
+\begin{proposition}[Gaussian closure computes the LMMSE of the covariance twin]
+\label{prop:lmmse}
+Let $\Pgauss$ project a density onto the Gaussian with its mean and variance, and let
+moment-projected sum-product apply $\Pgauss$ to each message after every transition
+integral in \cref{eq:bp}. For the chain \cref{eq:linear} with $\corr\neq0$ and any
+driving-noise law of mean zero and variance $\ivar$, it returns exactly the LMMSE estimator
+$e^{-t}\Sig_0\Sig_t^{-1}\vx$, the same for every such law.
+\end{proposition}
+The proof (\cref{app:proofs}) is an induction over the two sweeps: a convolution's first two
+moments depend on the driving noise only through its first two moments, so every projected message
+equals the Gaussian chain's message. Two consequences are used as checks below. Sum-product with
+\emph{any} Gaussian kernel is a linear map of $\vx$, and the LMMSE of the true covariance minimises
+the posterior-mean error over linear maps, so the LMMSE floor bounds every linear estimator; and the
+Gaussian quasi-likelihood of noised data depends on the data only through their sample covariance,
+whose expectation is $e^{-2t}\Sig_0+\Dt\Id$, so a linear-Gaussian kernel fitted by maximum likelihood is
+consistent for $(\corr,\ivar)$ and lands on that floor. \Cref{prop:lmmse} thus turns the gap between
+$\score$ and $\Sgauss$ into an interpretable object: it is precisely what any estimator that carries only
+second-order structure---a linear-Gaussian kernel, a linear denoiser, or the Kalman smoother---must
+leave on the table.
+
+\paragraph{BP with Gaussian messages is the Kalman smoother.}
+On a Gaussian chain everything is available in closed form, which makes it the one place where grid
+BP can be checked against two independent exact computations.
+\begin{proposition}[The Gaussian chain: score, smoother and sum-product coincide]
+\label{prop:kalman}
+Let the driving noise of \cref{eq:linear} be Gaussian, so that $\va\sim\normal{0}{\Sig_0}$ with
+$(\Sig_0)_{ij}=\corr^{|i-j|}$, and let $\vx$ follow \cref{eq:channel}. Then
+(i) $\score(\vx,t)=-\Sig_t^{-1}\vx$ and $\pmean{\va}=e^{-t}\Sig_0\Sig_t^{-1}\vx$, with
+$\Sig_t=e^{-2t}\Sig_0+\Dt\Id$, and Tweedie's identity holds between them; (ii) every message of
+\cref{eq:bp} is Gaussian, $\lmsg_i$ is the Kalman filter's prediction density
+$p(a_i\mid x_{1:i-1})$ and $\lmsg_i\like$ its filtering density, and the site marginals
+$\propto\lmsg_i\like\rmsg_i$ are those of the Rauch--Tung--Striebel smoother, whose means are
+therefore $\pmean{\va}$ of (i).
+\end{proposition}
+The proof is in \cref{app:proofs}. The forward sweep is the Kalman filter and the full pass is its
+smoother, so a Gaussian BP is a linear map of the data and has little use beyond serving as a reference;
+this is what makes it a sanity check for any approximation of BP, grid BP included. \Cref{fig:gaussian}
+measures it. A Rauch--Tung--Striebel smoother written without the BP code agrees with the closed form to
+$\gsRtsWorst$, and grid BP at the operating grid agrees with both to $\gsOpWorst$ at every one of the
+$\gsLevels$ noise levels. Refining the grid converges faster than any power of the spacing, as the trapezoid
+rule does on Gaussian integrands, and reaches $10^{-10}$ by $\ngrid=\gsNeedTmin$ at the smallest level,
+where the likelihood is narrowest, and by $\ngrid=\gsNeedTmax$ at the largest; widening the domain at the
+operating spacing removes the truncation error, which is $\gsAthreeTmin$ at $\halfwidth=3$.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig_gaussian_sanity.pdf}
+  \caption{\textbf{The Gaussian sanity check.} Pooled relative score error of grid BP against the
+  closed-form score (lines) and against an independent Kalman--Rauch--Tung--Striebel smoother
+  (crosses) on the Gaussian chain, at the smallest, a middle and the largest noise level.
+  (a)~Refining the grid at $\halfwidth=8$; (b)~widening the domain at the operating spacing
+  $\gridh=0.04$. The dotted line is the smoother's own agreement with the closed form; the dashed
+  vertical lines mark the operating point $(\ngrid,\halfwidth)=(401,8)$.}
+  \label{fig:gaussian}
+\end{figure*}
+
+\paragraph{What does not carry over.}
+Moment-projected BP run \emph{on the grid} is off by up to $\gsProjWorst$ even on the Gaussian chain: its
+backward messages are Gaussians whose variance grows like $e^{2t}$, and the grid truncates them at
+$\pm\halfwidth$; the proposition concerns functional messages, and the LMMSE floors reported here are
+computed in closed form. On the $\phi^4$ field the projected recursion is not well posed at all, because
+the backward messages are nearly flat (a fraction $\fldProjEdgeBase$ of their mass lies in the outer
+$5\%$ of the grid on the base cell and $\fldProjEdgeOthersMin$ or more on the others), so the Gaussian
+arm of every field comparison is the covariance twin itself, computed in closed form
+(\cref{sec:field}). We also do not call the Gaussian pass a Kalman \emph{filter}: it smooths.

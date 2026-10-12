@@ -1,0 +1,81 @@
+\section{Computation: what exact inference costs and how to cut it}
+\label{sec:compute}
+
+The advantage of the structured estimator is in data and understanding, not in wall-clock, and the cost
+deserves its own measurement. Grid BP is the bottleneck of the method: each message update is a product of an
+$\ngrid\times\ngrid$ matrix with $\ngrid$-vectors, once per site and per level. We measure it on exclusive
+nodes (the whole node allocated), report the thread count with every number, and then ask whether the grid
+can be smaller or the messages represented differently.
+
+\paragraph{Cost and its scaling.}
+On the paper's $401$-point grid with eight threads, one posterior mean of a $32$-site sequence takes
+$\cmpBpMsEightThreads$\,ms against $\cmpTfMsEightThreads$\,ms for the largest transformer, a factor
+$\cmpRatioCpu$ on a CPU node and $\cmpRatioGpu$ on an H200 GPU (at batch $512$; the GPU time is flat in
+the batch because BP is bound by kernel launches, so the ratio falls to $\cmpRatioGpuLarge$ at batch $2048$).
+The cost is linear in the number of sequences and in the chain length (log-log slopes $\cmpSlopeBatch$ and
+$\cmpSlopeLength$) and grows like $\ngrid^{\cmpSlopeGrid}$ rather than $\ngrid^2$, because elementwise work and
+memory traffic dominate the matrix product at these sizes. Training is not cheaper than a network's: the
+E-step is linear in the number of sequences and the M-step does not depend on it, but total EM time is
+comparable with a network's, not orders of magnitude smaller (\cref{app:cost}). Memory is five message-sized
+arrays, $\cmpMemMb$\,MB for a $512\times32$ batch at $401$ points, linear in batch, length and grid, and
+$\cmpMemRatioMin$--$\cmpMemRatioMax$ times the largest network.
+
+\paragraph{The grid can be coarser.}
+The $401$-point grid was chosen for convergence safety and checked from above only (finer grids change nothing).
+\Cref{fig:coarsegrid} checks it from below. With the true $\phi^4$ kernel the score is exact to
+$\cmpCoarseOracleHundred$ at $101$ points on every cell, because the trapezoid rule on an analytic integrand
+converges faster than any power of the spacing; and the \emph{learned} $\phi^4$ kernels lose nothing: at $101$
+points the site energy's and the spline's risks equal their $401$-point values to three digits on two cells and
+at two sample sizes, and at $51$ points they move by at most $\cmpCoarseLearnedFifty$, while the EM fit is
+$\cmpCoarseFitSpeedup$ times faster. On one thread this makes BP $\cmpCoarseSpeedupHundred$ times faster at $101$
+points and $\cmpCoarseSpeedupOneFifty$ times at $151$ than at $401$. The linear chain's kernels are harder: with
+Laplace noise the transition is not smooth and, with many sequences, the eight-component mixture learns components
+narrower than a coarse spacing, so its risk is within $\cmpHeadlineAtOneFifty$ of the $401$-point value at $151$
+points but $\cmpHeadlineAtHundred$ off at $101$ and $\cmpHeadlineAtFifty$ off at $51$ ($\nseq=2048$), and only
+$\cmpResolvedHundred$ of its kernels are resolved at $101$ points (a registered prediction that at least $90\%$ would be
+resolved failed). The safe grid is therefore about $101$ points for the $\phi^4$ kernels and about $151$ for the
+mixtures, and the coarse grid cuts BP's cost by four to six times.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig_grid_coarse.pdf}
+  \caption{\textbf{A coarser grid.} (a)~BP time per sequence against the grid size $\ngrid$ (one thread, an
+  exclusive node, $B=512$, $\nsites=32$), with the times of three networks on the same node. (b)~Relative
+  change of the risk against its $401$-point value (the absolute value of the seed-mean ratio minus one) for the
+  $\phi^4$ site energy and spline (base cell, $\nseq=2048$; no fit at $151$ points) and for the linear chain's
+  mixture kernels with $\ncomp=1$ and $\ncomp=8$ (frozen kernels, $\nseq=2048$). Hollow markers: the coarse fit is
+  \emph{better} than the $401$-point fit; points within $10^{-4}$ of it are drawn at that floor (dotted); the four series are
+  offset horizontally so that coincident points can be told apart.}
+  \label{fig:coarsegrid}
+\end{figure*}
+
+\paragraph{With one thread the comparison changes.}
+The eight-thread ratio flatters the networks, which use threads, while BP barely does ($\cmpBpMsOneThread$\,ms on
+one thread against $\cmpBpMsEightThreads$ on eight at $401$ points). On one thread and the same node a network
+forward pass costs $\cmpWindowMsOne$\,ms (window), $\cmpGruMsOne$ (GRU), $\cmpUnetMsOne$ (U-Net), $\cmpTfMsOne$
+(transformer) and $\cmpTcnMsOne$ (TCN), so BP at $401$ points is $\cmpRatioOneTf$ times slower than the transformer and
+$\cmpRatioOneGru$ times slower than the GRU; at $151$ points ($\cmpBpMsOneFifty$\,ms) it is faster than the transformer and
+TCN, within $15\%$ of the U-Net and $\cmpRatioFiftyGru$ times slower than the GRU. The networks timed are the
+largest screened variants, several times the size of those scored. BP is also independent across sequences, so a
+node can run it as parallel processes; that was not measured. The honest summary is that exact inference costs more than a network
+forward pass by a factor that depends on the machine and the grid: $\cmpRatioCpu$ on a many-threaded CPU and
+$\cmpRatioGpu$ on a GPU at $401$ points, and on one core between the cost of the largest networks and
+$\cmpRatioFiftyGru$ times that of the fastest at $151$ points. What it buys with that is an error
+$\matchedRatioBestD$ times smaller than the best network's at matched information on the linear chain.
+
+\paragraph{Why not Fourier modes.}
+BP's messages could be carried in Fourier space, where the convolution of the kernel with the likelihood is a
+product, truncated to a few modes. We measured the premise. The message does not have a short exact description:
+the natural parametric ansatz, a Gaussian passed once through the kernel, is exact at the first site only
+and not a fixed point of the recursion, so its error grows into the chain by orders of magnitude (it fails to
+close in all $432$ configurations tested), while it is $\cmpAnsatzOverGauss$ times closer to the true message
+than a Gaussian at low noise. As a representation a Fourier basis fitted to each message needs
+$\cmpFourierAdaptedLo$ numbers for a KL divergence of $10^{-2}$ against $\cmpGridLo$ for the grid, and
+$\cmpFourierAdaptedHi$ for $10^{-4}$ against $\cmpGridHi$ (on the linear chain with Laplace noise), but it reaches
+$10^{-4}$ in only $\cmpFourierReach$ of the cases and adding modes can make it worse, so a solver cannot pick a truncation and
+know its error; the cumulant (Gram--Charlier) route is non-monotone in most cases. As a solver it would help
+little: the step Fourier speeds up, the transition matrix product, is only $\cmpMatmulShareLo$--$\cmpMatmulShareHi$ of a BP
+sweep at $401$ points, capping any speed-up at $\cmpFftCapLo$--$\cmpFftCapHi\times$, and the FFT transition we built is
+second-order accurate ($\cmpFftError$ from dense BP) but $\cmpFftSlower$ times \emph{slower} at $401$ points, and still
+$\cmpFftSlowerLarge$ times slower at the largest grid we timed ($3201$ points). Coarsening reduces every term of the sweep, which is why it is the better lever.
+\Cref{app:cost} gives the tables.

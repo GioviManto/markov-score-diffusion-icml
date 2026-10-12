@@ -293,10 +293,78 @@ def audit_sample_complexity():
     check(run, f"  {mode}-bootstrap 97.5%", float(v[np.searchsorted(cw, 0.975)]), "scSlopeCovHi")
 
 
+# ----------------------------------------------------------------------------- field / cost macros (sections/field-numbers.tex)
+def _cat(pattern: str) -> pd.DataFrame:
+    return pd.concat([pd.read_csv(f) for f in sorted(OUT.glob(pattern))], ignore_index=True)
+
+
+def audit_field():
+    """Re-derive a representative set of the field-numbers.tex macros with plain pandas (no import from make_paper_numbers.py)."""
+    # risk over the linear floor at M=2048, six cells (E33q site energy; E33o lmmse_true), seed means
+    k = _cat("hpc_E33q_s*/kernels.csv")
+    site = k[(k.selection == "risk") & (k.n_chains == 2048)].groupby("cell").risk.mean()
+    floor = pd.read_csv(OUT / "hpc_E33o" / "oracles.csv")
+    floor = floor[floor.arm == "lmmse_true"].groupby("cell").risk.mean()
+    r = (site / floor.reindex(site.index))
+    check("E33", "site energy risk / linear floor, min over cells", r.min(), "fldSiteFloorMin")
+    check("E33", "site energy risk / linear floor, max over cells", r.max(), "fldSiteFloorMax")
+    # best network over the site energy at M=2048
+    n = _cat("hpc_E33n_s*/nets.csv")
+    n = n[n.n_chains == 2048]
+    best = n.groupby(["cell", "arm", "arch"]).risk.mean().groupby("cell").min()
+    q = best / site.reindex(best.index)
+    check("E33", "best network / site energy, min over cells", q.min(), "fldNetRatioMin", fmt="{:.3f}")
+    check("E33", "best network / site energy, max over cells", q.max(), "fldNetRatioMax", fmt="{:.3f}")
+    # network fit wall (minutes), seed median
+    w = n.groupby(["cell", "arm", "arch"]).wall.median() / 60
+    check("E33", "network fit wall, min (minutes)", w.min(), "fldTrainNetMin", tol=0.5)
+    check("E33", "network fit wall, max (minutes)", w.max(), "fldTrainNetMax", tol=0.5)
+    # E28: first schedule level at which the Gaussian score beats EM-BP (pooled over nothing: per seed, then median)
+    d = pd.read_csv(OUT / "hpc_E28" / "per_level.csv")
+    for m, tag in ((128, "A"), (2048, "B")):
+        firsts = []
+        for _, g in d[d.n_chains == m].groupby("seed"):
+            p = g.pivot_table(index="t", columns="arm", values="risk_level").sort_index()
+            ok = p.index[(p.lmmse < p.em_bp).values]
+            firsts.append(float(ok[0]))
+        check("E28", f"first level where lmmse beats em_bp, M={m} (median over seeds)", np.median(firsts), f"lvlCross{tag}")
+        pool = d[d.n_chains == m].groupby(["arm", "t"])[["sq_err", "sq_ref"]].sum()
+        risk = np.sqrt(pool.sq_err / pool.sq_ref).unstack("arm")
+        check("E28", f"levels where EM-BP is the best arm, M={m}", int((risk.idxmin(axis=1) == "em_bp").sum()), f"lvlFirstLevels{tag}", fmt="{:d}")
+    # E30: MDN over EM-BP, pooled over seeds and levels
+    j = _cat("hpc_E30_s*/joint.csv").groupby(["arm", "n_chains"])[["sq_err", "sq_ref"]].sum()
+    rj = np.sqrt(j.sq_err / j.sq_ref).unstack("arm")
+    check("E30", "MDN / EM-BP pooled risk, min over M", (rj.mdn / rj.em_bp).min(), "limMdnLinearLo")
+    check("E30", "MDN / EM-BP pooled risk, max over M", (rj.mdn / rj.em_bp).max(), "limMdnLinearHi")
+    # E47t: one thread, grid BP ms per sequence and the coarse-grid speed-up
+    s = pd.read_csv(OUT / "hpc_E47t" / "scaling.csv")
+    g = s[(s.arm == "bp_grid") & (s.factor == "grid_size")].set_index("grid_size")
+    ms = g.wall_median / g.batch * 1e3
+    check("E47t", "BP ms per sequence at N_g=401 (one thread)", ms[401], "cmpBpMsOneThread")
+    check("E47t", "BP speed-up of N_g=101 over 401", ms[401] / ms[101], "cmpCoarseSpeedupHundred")
+    check("E47t", "BP speed-up of N_g=151 over 401", ms[401] / ms[151], "cmpCoarseSpeedupOneFifty")
+    # E27x: ancestral sampling against a 200-step reverse SDE
+    c = pd.read_csv(OUT / "hpc_E27x" / "cost.csv")
+    c = c[c.batch == 2048].set_index("arm").sec_per_seq
+    check("E27x", "200-step reverse SDE / ancestral, time per sequence", c["reverse_sde_200"] / c["ancestral_true"], "genAncestralCostRatio", tol=0.5)
+    # E40: FFT transition against dense BP, wall ratio at the smallest paper grid and the largest timed
+    f = pd.read_csv(OUT / "E40" / "fft.csv")
+    tm = f[f.part == "timing"].pivot_table(index="n_grid", columns="method", values="wall")
+    check("E40", "FFT / dense wall at N_g=401", tm.loc[401, "fft"] / tm.loc[401, "dense"], "cmpFftSlower", tol=0.06)
+    check("E40", "FFT / dense wall at N_g=3201", tm.loc[3201, "fft"] / tm.loc[3201, "dense"], "cmpFftSlowerLarge", tol=0.06)
+    # E35x: first-order kernel over the linear floor under a global latent
+    a = _cat("hpc_E35x_s*/augmented.csv")
+    a = a[a.b.isin([1.0, 2.0]) & a.n_chains.isin([512, 2048])]
+    mu = a.groupby(["b", "n_chains", "arm"]).risk.mean().unstack("arm")
+    ratio = mu.em_first_order / mu.lmmse_true
+    check("E35x", "first-order over linear floor, min over b in (1,2), M in (512,2048)", ratio.min(), "limLatentWorseMin", tol=0.06)
+    check("E35x", "first-order over linear floor, max over b in (1,2), M in (512,2048)", ratio.max(), "limLatentWorseMax", tol=0.06)
+
+
 def main() -> int:
     print(f"{'':3s}{'run':5s} {'quantity':58s} {'recomputed':>12s}   macro")
     for fn in (audit_capacity, audit_baselines, audit_generation, audit_misspec, audit_regimes,
-               audit_grid, audit_learning, audit_phase, audit_sample_complexity):
+               audit_grid, audit_learning, audit_phase, audit_sample_complexity, audit_field):
         print(f"--- {fn.__name__} ---")
         try:
             # a block may also refuse by returning non-zero; FINDINGS is the channel that fails

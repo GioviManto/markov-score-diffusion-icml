@@ -1,0 +1,171 @@
+macro,value,source
+cmpAnsatzOverGauss,"2{,}272","outputs/hpc_E22c/shapes_summary.csv; rho=0.85, L=32, grid 801, site 31, t=0.05, Laplace: KL(gaussian)/KL(gauss_through_transition), kl_median"
+cmpBpMsEightThreads,0.52,"outputs/hpc_E24x/cost.csv; median over the 12 levels of sec_per_seq (B=512, L=32, N_g=401, cnode07 exclusive), arms bp_grid / transformer"
+cmpBpMsOneFifty,0.173,"outputs/hpc_E47t/scaling.csv; bp_grid, factor grid_size: wall_median/batch (B=512, L=32, t=0.4665, exclusive cnode01)"
+cmpBpMsOneThread,0.667,"outputs/hpc_E47t/scaling.csv; bp_grid, factor grid_size: wall_median/batch (B=512, L=32, t=0.4665, exclusive cnode01)"
+cmpCoarseFitSpeedup,14,"outputs/hpc_E47b_s*/kernels.csv + E33q; 1/(median wall at 101 / median wall of E33's 401 fits); site energy, base cell, M=2048"
+cmpCoarseLearnedFifty,1.2\%,"outputs/hpc_E47b_s*/kernels.csv + outputs/hpc_E33[kq]_s*/kernels.csv; max over arms (site energy, spline) x cells (base, finest) at M=2048 of |seed-mean risk / E33's N_g=401 seed-mean risk - 1|"
+cmpCoarseOracleHundred,1.8\times10^{-11},"outputs/E47a/refinement.csv; max rel_error over six cells, levels and reps, grid_size 101, half_width 8 (reference N_g=1601)"
+cmpCoarseSpeedupHundred,6.2,outputs/hpc_E47t/scaling.csv; ms/seq at N_g=401 over N_g=101 / 151
+cmpCoarseSpeedupOneFifty,3.9,outputs/hpc_E47t/scaling.csv; ms/seq at N_g=401 over N_g=101 / 151
+cmpFftCapHi,1.18,outputs/hpc_E24x*/anatomy.csv; 1/(1-share) for the low / high matmul share
+cmpFftCapLo,1.14,outputs/hpc_E24x*/anatomy.csv; 1/(1-share) for the low / high matmul share
+cmpFftError,6.7\times10^{-4},"outputs/E40/fft.csv; max over levels of err_vs_dense, accuracy part, method fft"
+cmpFftSlower,5.8,outputs/E40/fft.csv; timing part: wall(fft)/wall(dense) at n_grid 401
+cmpFftSlowerLarge,2.2,"outputs/E40/fft.csv; timing part: wall(fft)/wall(dense) at n_grid 3201, the largest grid timed"
+cmpFourierAdaptedHi,47,"outputs/hpc_E23/dstar.csv; Laplace family, 144 cells per representation: median over the cells that reach dstar_0.01 / dstar_0.0001"
+cmpFourierAdaptedLo,33,"outputs/hpc_E23/dstar.csv; Laplace family, 144 cells per representation: median over the cells that reach dstar_0.01 / dstar_0.0001"
+cmpFourierReach,\text{53 of 144},"outputs/hpc_E23/dstar.csv; count of non-NaN dstar_0.0001, Laplace, repr fourier_adapted, out of 144"
+cmpGridHi,151,"outputs/hpc_E23/dstar.csv; Laplace family, 144 cells per representation: median over the cells that reach dstar_0.01 / dstar_0.0001"
+cmpGridLo,45,"outputs/hpc_E23/dstar.csv; Laplace family, 144 cells per representation: median over the cells that reach dstar_0.01 / dstar_0.0001"
+cmpGruMsOne,0.063,"outputs/hpc_E47t/scaling.csv; arms window / bigru / unet / transformer / tcn, factor batch: wall_median/batch"
+cmpHeadlineAtFifty,70\%,outputs/E47c/refinement.csv; |seed-mean ratio to N_g=401 - 1|
+cmpHeadlineAtHundred,2.2\%,outputs/E47c/refinement.csv; |seed-mean ratio to N_g=401 - 1|
+cmpHeadlineAtOneFifty,0.08\%,"outputs/E47c/refinement.csv; max over C in {1,8}, M in {32,2048} of |seed-mean risk / seed-mean risk at N_g=401 - 1|"
+cmpMatmulShareHi,15.2\%,"outputs/hpc_E24x_gpu/anatomy.csv; gemm_fraction, cpu rows, grid_size 401"
+cmpMatmulShareLo,12.1\%,"outputs/hpc_E24x/anatomy.csv; gemm_fraction, cpu, grid_size 401"
+cmpMemMb,266,"outputs/E38/memory.csv; increment_mb of bp_grid (kind infer, B=512, L=32, N_g=401)"
+cmpMemRatioMax,4.2,"outputs/E38/memory.csv ; outputs/hpc_E38/memory.csv; bp_grid increment over the largest network increment at that operating point: laptop (Min), Linux job (Max)"
+cmpMemRatioMin,1.8,"outputs/E38/memory.csv ; outputs/hpc_E38/memory.csv; bp_grid increment over the largest network increment at that operating point: laptop (Min), Linux job (Max)"
+cmpRatioCpu,12.5,outputs/hpc_E24x/cost.csv; ratio of the two medians above
+cmpRatioFiftyGru,2.8,outputs/hpc_E47t/scaling.csv; bp_grid grid_size 151 over bigru
+cmpRatioGpu,15.1,outputs/hpc_E24x_gpu/cost.csv; device gpu: median over levels of bp_grid / transformer sec_per_seq
+cmpRatioGpuLarge,6.2,"outputs/hpc_E24x_gpu/scaling.csv; device gpu, factor batch, batch 2048: (wall_median/2048) of bp_grid over transformer"
+cmpRatioOneGru,10.6,outputs/hpc_E47t/scaling.csv; bp_grid grid_size 401 over the network's batch row
+cmpRatioOneTf,3.2,outputs/hpc_E47t/scaling.csv; bp_grid grid_size 401 over the network's batch row
+cmpResolvedHundred,22\%,outputs/E47c/refinement.csv; mean of resolved_C8 over M and seeds at n_grid 101
+cmpSlopeBatch,1.03,"outputs/hpc_E24x/slopes.csv; bp_grid, device cpu, slope_full for factor batch / n_sites / grid_size"
+cmpSlopeGrid,1.16,"outputs/hpc_E24x/slopes.csv; bp_grid, device cpu, slope_full for factor batch / n_sites / grid_size"
+cmpSlopeLength,1.03,"outputs/hpc_E24x/slopes.csv; bp_grid, device cpu, slope_full for factor batch / n_sites / grid_size"
+cmpTcnMsOne,0.216,"outputs/hpc_E47t/scaling.csv; arms window / bigru / unet / transformer / tcn, factor batch: wall_median/batch"
+cmpTfMsEightThreads,0.042,"outputs/hpc_E24x/cost.csv; median over the 12 levels of sec_per_seq (B=512, L=32, N_g=401, cnode07 exclusive), arms bp_grid / transformer"
+cmpTfMsOne,0.208,"outputs/hpc_E47t/scaling.csv; arms window / bigru / unet / transformer / tcn, factor batch: wall_median/batch"
+cmpUnetMsOne,0.152,"outputs/hpc_E47t/scaling.csv; arms window / bigru / unet / transformer / tcn, factor batch: wall_median/batch"
+cmpWindowMsOne,0.023,"outputs/hpc_E47t/scaling.csv; arms window / bigru / unet / transformer / tcn, factor batch: wall_median/batch"
+fldBarrierBigM,"32\,768","outputs/hpc_E42_s*/kernels.csv + hpc_E33q; sizes 2048, 8192, 32768 (E33's and E42's site-energy fits): first with 16/16 fits |barrier-1/4| <= 0.05"
+fldBarrierFits,80,"outputs/hpc_E33q_s*/kernels.csv; E33 P8 barrier clause: em_pair_quartic, Theta <= 1, M=2048"
+fldBarrierOkFits,78,"outputs/hpc_E33q_s*/kernels.csv; E33 P8 barrier clause: em_pair_quartic, Theta <= 1, M=2048"
+fldBarrierSlope,0.54,"outputs/hpc_E42_s*/kernels.csv + hpc_E33q; M = 512, 2048, 8192, 32768; magnitude of the slope"
+fldBimodCold,0.73,"outputs/E32/fixed_h.csv; bimodality_coefficient, mean of 2 reps (physics rows)"
+fldBimodHot,0.45,"outputs/E32/fixed_h.csv; bimodality_coefficient, mean of 2 reps (physics rows)"
+fldBpCostLone,0.51,"outputs/hpc_E24x/scaling.csv; factor n_sites: median wall_median per (arm, L) over batch (as tools/make_field_runtime_fig.py), bp_grid"
+fldBpCostLthree,2.0,"outputs/hpc_E24x/scaling.csv; factor n_sites: median wall_median per (arm, L) over batch (as tools/make_field_runtime_fig.py), bp_grid"
+fldCleanMixRatioMax,0.99,"outputs/hpc_E34c/clean.csv + hpc_E33k; paired by (cell, seed, M): mean of per-seed ratios pooled over cells, min / max over M in 32, 128, 512, 2048"
+fldCleanMixRatioMin,0.90,"outputs/hpc_E34c/clean.csv + hpc_E33k; paired by (cell, seed, M): mean of per-seed ratios pooled over cells, min / max over M in 32, 128, 512, 2048"
+fldCoarseKinkSpread,11\%,"outputs/E34/physics.csv; (max-min)/min of coarse_kink_density_physical, exact_samples rows, cell means over reps (h=0.5 is rep 0 alone: rep 1 is NaN)"
+fldCorrZMax,2.86,"outputs/E34/physics.csv; max of corr_max_z over (cell, rep)"
+fldDomQuantDevSite,5.6\%,"outputs/E37/distribution.csv; max over cells and q10, q50, q90 of |mean over seeds of generated/true - 1|; site energy / tilted spline"
+fldDomQuantDevSpline,10.4\%,"outputs/E37/distribution.csv; max over cells and q10, q50, q90 of |mean over seeds of generated/true - 1|; site energy / tilted spline"
+fldFloorFixedHCold,0.296,"outputs/E32/fixed_h.csv; ladder rows, arm lmmse_true, level -1 (pooled), mean over reps"
+fldFloorFixedHHot,0.184,"outputs/E32/fixed_h.csv; ladder rows, arm lmmse_true, level -1 (pooled), mean over reps"
+fldInpaintCovMax,0.893,"outputs/E45/inpainting.csv; coverage90 mean over seeds per (cell, pattern, arm), min / max over cells, patterns and the two learned arms"
+fldInpaintCovMin,0.890,"outputs/E45/inpainting.csv; coverage90 mean over seeds per (cell, pattern, arm), min / max over cells, patterns and the two learned arms"
+fldInpaintGridCost,0.01,"outputs/E45/inpainting.csv; mean of coverage90 for arm oracle over cells, patterns, seeds; 0.90 minus it"
+fldInpaintLinErrMax,4.6\%,"outputs/E45/inpainting.csv; arm linear: ratio of seed means of rel_err to the oracle's - 1, base cell T0.3_h1_L32, min / max over the three patterns"
+fldInpaintLinErrMin,1.5\%,"outputs/E45/inpainting.csv; arm linear: ratio of seed means of rel_err to the oracle's - 1, base cell T0.3_h1_L32, min / max over the three patterns"
+fldInpaintLinWidthMax,9\%,"outputs/E45/inpainting.csv; arm linear: ratio of seed means of width90 to the oracle's - 1, base cell, min / max over the patterns"
+fldInpaintLinWidthMin,7\%,"outputs/E45/inpainting.csv; arm linear: ratio of seed means of width90 to the oracle's - 1, base cell, min / max over the patterns"
+fldInpaintOracleCov,0.89,"outputs/E45/inpainting.csv; mean of coverage90 for arm oracle over cells, patterns, seeds; 0.90 minus it"
+fldInpaintOracleDev,0.4\%,"outputs/E45/inpainting.csv; max over (cell, pattern, arm in site energy, spline) of |ratio of seed means (rel_err, width90) to the oracle's - 1|"
+fldInpaintOracleErrMax,1.0004,"outputs/E45/inpainting.csv; ratio of seed means (rel_err; width90), min / max over cells, patterns, the two learned arms"
+fldInpaintOracleErrMin,0.9999,"outputs/E45/inpainting.csv; ratio of seed means (rel_err; width90), min / max over cells, patterns, the two learned arms"
+fldInpaintOracleWidthMax,1.004,"outputs/E45/inpainting.csv; ratio of seed means (rel_err; width90), min / max over cells, patterns, the two learned arms"
+fldInpaintOracleWidthMin,0.998,"outputs/E45/inpainting.csv; ratio of seed means (rel_err; width90), min / max over cells, patterns, the two learned arms"
+fldKinkConvergence,0.04\%,"outputs/E50/kink.csv; max over T of |ln xi_phys(1/32) - ln xi_phys(1/16)| (n_fine 2401), percent"
+fldKinkDevSite,2.1\%,"outputs/E34_learned_pair/learned.csv ; outputs/E34_learned/learned.csv; max over six cells of |mean over 4 seeds of generated/true - 1|, coarse_kink_density (per site or per unit length: same ratio); site energy / tilted spline"
+fldKinkDevSpline,1.1\%,"outputs/E34_learned_pair/learned.csv ; outputs/E34_learned/learned.csv; max over six cells of |mean over 4 seeds of generated/true - 1|, coarse_kink_density (per site or per unit length: same ratio); site energy / tilted spline"
+fldKinkFit,0.988,"outputs/E50/kink.csv; coefficient a at h=1/32, n_fine 2401 (make_extension_numbers.e50_kink_fits)"
+fldKinkSlopeCold,0.87,outputs/E50/kink.csv; between T=0.3 and 0.275 (hot) / T=0.1 and 0.125 (cold)
+fldKinkSlopeHot,0.64,outputs/E50/kink.csv; between T=0.3 and 0.275 (hot) / T=0.1 and 0.125 (cold)
+fldKinkTHigh,0.29,"outputs/E50/kink.csv; mid-points of 0.3, 0.275 and of 0.1, 0.125"
+fldKinkTLow,0.11,"outputs/E50/kink.csv; mid-points of 0.3, 0.275 and of 0.1, 0.125"
+fldMixDomShortMax,18\%,"outputs/E37/distribution.csv; 1 - mean over seeds of the per-seed q50 ratio generated/true, min / max over the three cells"
+fldMixDomShortMin,14\%,"outputs/E37/distribution.csv; 1 - mean over seeds of the per-seed q50 ratio generated/true, min / max over the three cells"
+fldMixFloorMax,1.021,"outputs/hpc_E33[kq]_s*/kernels.csv, hpc_E33o/oracles.csv; seed-mean risk of the risk-selected fit over the seed-mean lmmse_true risk, min / max over cells (= the tab:fieldscore entries)"
+fldMixFloorMin,1.004,"outputs/hpc_E33[kq]_s*/kernels.csv, hpc_E33o/oracles.csv; seed-mean risk of the risk-selected fit over the seed-mean lmmse_true risk, min / max over cells (= the tab:fieldscore entries)"
+fldMixKinkColdMax,1.42,"outputs/E34_learned/learned.csv; mean over seeds of the per-seed ratio, min / max over T0.3_h1_L32, T0.3_h0.5_L64, T0.3_h0.25_L128"
+fldMixKinkColdMin,1.41,"outputs/E34_learned/learned.csv; mean over seeds of the per-seed ratio, min / max over T0.3_h1_L32, T0.3_h0.5_L64, T0.3_h0.25_L128"
+fldMixSplineBaseA,9.5,outputs/hpc_E33k_s*/kernels.csv; mean of per-seed ratios (paired by seed and test bundle)
+fldMixSplineBaseB,18.2,outputs/hpc_E33k_s*/kernels.csv; mean of per-seed ratios (paired by seed and test bundle)
+fldNetCostMax,0.32,"outputs/hpc_E24x/scaling.csv; factor n_sites, same derivation as the runtime figure (reports/numbers/field_runtime.csv)"
+fldNetCostMin,0.004,"outputs/hpc_E24x/scaling.csv; factor n_sites, same derivation as the runtime figure (reports/numbers/field_runtime.csv)"
+fldNetOverSplineMin,4.1,"outputs/hpc_E33n_s*/nets.csv + hpc_E33k; min over cells, M in (128, 2048), ISM/DSM, window/transformer of the mean of per-seed ratios"
+fldNetRatioMax,24,outputs/hpc_E33n_s*/nets.csv + hpc_E33q; per cell: smallest seed-mean risk among the four network arms over the site energy's seed-mean risk; min / max over the six cells
+fldNetRatioMin,14,outputs/hpc_E33n_s*/nets.csv + hpc_E33q; per cell: smallest seed-mean risk among the four network arms over the site energy's seed-mean risk; min / max over the six cells
+fldOracleGridWorst,1.3\times10^{-12},"outputs/E32/refinement.csv; max rel_error, grid_size 401, over cells, levels, reps"
+fldProjEdgeBase,0.42,"outputs/E32/ladder.csv; arm projected: largest edge_mass over levels, max over reps; base cell (Base) / the smallest over the other five cells (OthersMin)"
+fldProjEdgeOthersMin,0.98,"outputs/E32/ladder.csv; arm projected: largest edge_mass over levels, max over reps; base cell (Base) / the smallest over the other five cells (OthersMin)"
+fldQuenchEarly,0.986,"outputs/hpc_E44_s*/quench.csv; mean over seeds of the per-seed risk ratio, selection risk, tau = 1.5 / infinity"
+fldQuenchEq,0.950,"outputs/hpc_E44_s*/quench.csv; mean over seeds of the per-seed risk ratio, selection risk, tau = 1.5 / infinity"
+fldRawKinkA,0.120,"outputs/E34/physics.csv; kink_density_physical, exact_samples, mean over reps"
+fldRawKinkB,0.176,"outputs/E34/physics.csv; kink_density_physical, exact_samples, mean over reps"
+fldRawKinkC,0.247,"outputs/E34/physics.csv; kink_density_physical, exact_samples, mean over reps"
+fldSiteFloorMax,0.169,"outputs/hpc_E33[kq]_s*/kernels.csv, hpc_E33o/oracles.csv; seed-mean risk of the risk-selected fit over the seed-mean lmmse_true risk, min / max over cells (= the tab:fieldscore entries)"
+fldSiteFloorMin,0.032,"outputs/hpc_E33[kq]_s*/kernels.csv, hpc_E33o/oracles.csv; seed-mean risk of the risk-selected fit over the seed-mean lmmse_true risk, min / max over cells (= the tab:fieldscore entries)"
+fldSiteOverSplineMax,0.57,"outputs/hpc_E33[kq]_s*/kernels.csv; mean of per-seed ratios (paired), min / max over the six cells"
+fldSiteOverSplineMin,0.41,"outputs/hpc_E33[kq]_s*/kernels.csv; mean of per-seed ratios (paired), min / max over the six cells"
+fldSpecCalibDev,0.003,outputs/E50/commitment.csv; worst cell's mean over levels of |correct_all - (1+commit_all)/2|
+fldSpecExcessCold,0.47,outputs/E50/commitment.csv; commit_all against twin_commit_all
+fldSpecExcessHot,0.07,outputs/E50/commitment.csv; commit_all against twin_commit_all
+fldSpecNoiseRatioExact,24,outputs/E50/commitment.csv; e^{2t} - 1 at t = t_c exact / twin
+fldSpecNoiseRatioTwin,8.9,outputs/E50/commitment.csv; e^{2t} - 1 at t = t_c exact / twin
+fldSpecSlope,0.98,"outputs/E50/commitment.csv; OLS over L = 4, 8, 16 at Theta=0.2, commit_bulk"
+fldSpecTcCold,1.61,"outputs/E50/commitment.csv; crossing_time of the rep-pooled commit_all, cells T0.2_h1_L32 / T2_h1_L32"
+fldSpecTcHot,0.46,"outputs/E50/commitment.csv; crossing_time of the rep-pooled commit_all, cells T0.2_h1_L32 / T2_h1_L32"
+fldSpecTcLfour,1.03,outputs/E50/commitment.csv; crossing_time of commit_bulk
+fldSpecTcLonetwentyeight,1.750,outputs/E50/commitment.csv; crossing_time of commit_bulk
+fldSpecTcLsixtyfour,1.72,outputs/E50/commitment.csv; crossing_time of commit_bulk
+fldSpecTcLtwofiftysix,1.754,outputs/E50/commitment.csv; crossing_time of commit_bulk
+fldThetaFits,96,"outputs/hpc_E33q_s*/kernels.csv; make_field_potential_figs._readings on the risk-selected fits, as E33's P8 reads them"
+fldThetaOkFits,96,"outputs/hpc_E33q_s*/kernels.csv; make_field_potential_figs._readings on the risk-selected fits, as E33's P8 reads them"
+fldTrainEmMax,5,"outputs/hpc_E33[kq]_s*/kernels.csv; min (minutes) / max (hours) over (cell, arm in site energy, spline, mixture, MDN) of the seed-median wall, risk selection"
+fldTrainEmMin,8,"outputs/hpc_E33[kq]_s*/kernels.csv; min (minutes) / max (hours) over (cell, arm in site energy, spline, mixture, MDN) of the seed-median wall, risk selection"
+fldTrainNetMax,38,"outputs/hpc_E33n_s*/nets.csv; min / max over (cell, arm, architecture) of the seed-median wall"
+fldTrainNetMin,9,"outputs/hpc_E33n_s*/nets.csv; min / max over (cell, arm, architecture) of the seed-median wall"
+fldWindowFloorHone,0.55,"outputs/hpc_E33n_s*/nets.csv, hpc_E33o; the tab:fieldscore entries, ism:window"
+fldWindowFloorHzeroptwofive,1.20,"outputs/hpc_E33n_s*/nets.csv, hpc_E33o; the tab:fieldscore entries, ism:window"
+fldWindowRiskHone,0.149,"outputs/hpc_E33n_s*/nets.csv; arm ism_one_view, arch window"
+fldWindowRiskHzeroptwofive,0.118,"outputs/hpc_E33n_s*/nets.csv; arm ism_one_view, arch window"
+fldWindowSplineHone,9.2,"outputs/hpc_E33n_s*/nets.csv, hpc_E33k; ratio of seed means"
+fldWindowSplineHzeroptwofive,17.6,"outputs/hpc_E33n_s*/nets.csv, hpc_E33k; ratio of seed means"
+fldXiCold,19.5,outputs/E32/fixed_h.csv; corr_length_sites
+fldXiHone,6.1,outputs/E32/ladder.csv; corr_length_sites of T0.3_h1_L32 / T0.3_h0.25_L128
+fldXiHot,1.06,outputs/E32/fixed_h.csv; corr_length_sites
+fldXiHzeroptwofive,22.5,outputs/E32/ladder.csv; corr_length_sites of T0.3_h1_L32 / T0.3_h0.25_L128
+genAncestralCostRatio,731,"outputs/hpc_E27x/cost.csv; B=2048: sec_per_seq of reverse_sde_200 over ancestral_true (8 threads, exclusive)"
+limLapMdn,0.056,outputs/hpc_E49_s*/kernels.csv + hpc_E43b; seed-mean risk; fits at the last checkpoint; seeds (of 8) below the site energy; below the log-linear kernel
+limLapMdnAtCap,5,outputs/hpc_E49_s*/kernels.csv + hpc_E43b; seed-mean risk; fits at the last checkpoint; seeds (of 8) below the site energy; below the log-linear kernel
+limLapMdnBelowSite,7,outputs/hpc_E49_s*/kernels.csv + hpc_E43b; seed-mean risk; fits at the last checkpoint; seeds (of 8) below the site energy; below the log-linear kernel
+limLapMdnBelowUnr,7,outputs/hpc_E49_s*/kernels.csv + hpc_E43b; seed-mean risk; fits at the last checkpoint; seeds (of 8) below the site energy; below the log-linear kernel
+limLapSite,0.103,outputs/hpc_E43b_s*/kernels.csv; seed-mean risks; stall = mean of the site energy's and the spline's; gain = site / log-linear (ratio of seed means)
+limLapStall,0.10,outputs/hpc_E43b_s*/kernels.csv; seed-mean risks; stall = mean of the site energy's and the spline's; gain = site / log-linear (ratio of seed means)
+limLapUnrestricted,0.068,outputs/hpc_E43b_s*/kernels.csv; seed-mean risks; stall = mean of the site energy's and the spline's; gain = site / log-linear (ratio of seed means)
+limLapUnrestrictedGain,1.5,outputs/hpc_E43b_s*/kernels.csv; seed-mean risks; stall = mean of the site energy's and the spline's; gain = site / log-linear (ratio of seed means)
+limLatentAugFall,52\%,"outputs/hpc_E35x_s*/augmented.csv; fall of the augmented seed-mean risk and change of the first-order seed-mean risk from M=512 to 2048; first/augmented (mean of per-seed ratios); floor/augmented (seed means), M=2048"
+limLatentFirstOverAug,13.1,"outputs/hpc_E35x_s*/augmented.csv; fall of the augmented seed-mean risk and change of the first-order seed-mean risk from M=512 to 2048; first/augmented (mean of per-seed ratios); floor/augmented (seed means), M=2048"
+limLatentFlat,+0.2\%,"outputs/hpc_E35x_s*/augmented.csv; fall of the augmented seed-mean risk and change of the first-order seed-mean risk from M=512 to 2048; first/augmented (mean of per-seed ratios); floor/augmented (seed means), M=2048"
+limLatentFloorRatio,6.3,"outputs/hpc_E35x_s*/augmented.csv; fall of the augmented seed-mean risk and change of the first-order seed-mean risk from M=512 to 2048; first/augmented (mean of per-seed ratios); floor/augmented (seed means), M=2048"
+limLatentWorseMax,1.71,"outputs/hpc_E35x_s*/augmented.csv; ratio of seed means over b in (1,2) and M in (512, 2048); min / max"
+limLatentWorseMin,1.56,"outputs/hpc_E35x_s*/augmented.csv; ratio of seed means over b in (1,2) and M in (512, 2048); min / max"
+limMdnLinearHi,2.9,"outputs/hpc_E30_s*/joint.csv; pooled over the 16 seeds and levels, as E30's registered reading: sqrt(sum sq_err / sum sq_ref) of mdn over em_bp at each M; min / max over M"
+limMdnLinearLo,2.1,"outputs/hpc_E30_s*/joint.csv; pooled over the 16 seeds and levels, as E30's registered reading: sqrt(sum sq_err / sum sq_ref) of mdn over em_bp at each M; min / max over M"
+limStrideAgree,7.6\%,"outputs/E36/physics.csv; larger of (max-min)/min across strides of the coarse kink density and coarse mean domain, stride means"
+limStrideFloor,0.235,"outputs/E36/oracles.csv; lmmse_true, level -1, stride 4, mean over reps"
+limStrideGrowthSite,25,outputs/hpc_E36x_s*/clean.csv; mean of per-seed ratios; site energy / spline
+limStrideGrowthSpline,14,outputs/hpc_E36x_s*/clean.csv; mean of per-seed ratios; site energy / spline
+limStrideMdnAtCap,11,outputs/hpc_E48_s*/clean.csv + hpc_E36x; stride 4: fits at the last checkpoint; seeds (of 16) below the site energy; mean of per-seed ratios MDN/site. Stride 1: ratio of seed means
+limStrideMdnBelow,16,outputs/hpc_E48_s*/clean.csv + hpc_E36x; stride 4: fits at the last checkpoint; seeds (of 16) below the site energy; mean of per-seed ratios MDN/site. Stride 1: ratio of seed means
+limStrideMdnRatio,0.40,outputs/hpc_E48_s*/clean.csv + hpc_E36x; stride 4: fits at the last checkpoint; seeds (of 16) below the site energy; mean of per-seed ratios MDN/site. Stride 1: ratio of seed means
+limStrideOneRatio,3.0,outputs/hpc_E48_s*/clean.csv + hpc_E36x; stride 4: fits at the last checkpoint; seeds (of 16) below the site energy; mean of per-seed ratios MDN/site. Stride 1: ratio of seed means
+limStrideSiteRisk,0.040,outputs/hpc_E36x_s*/clean.csv; site energy / spline
+limStrideSplineRisk,0.036,outputs/hpc_E36x_s*/clean.csv; site energy / spline
+limSymGainMax,39\%,"outputs/hpc_E46_s*/symmetry.csv + hpc_E35x; 1 - geometric-mean ratio sym/first-order, min / max over M in (512, 2048)"
+limSymGainMin,32\%,"outputs/hpc_E46_s*/symmetry.csv + hpc_E35x; 1 - geometric-mean ratio sym/first-order, min / max over M in (512, 2048)"
+limUnrestrictedGrowthA,2.8,outputs/hpc_E43a_s*/kernels.csv + hpc_E33q; ratio of seed means
+limUnrestrictedGrowthB,5.5,outputs/hpc_E43a_s*/kernels.csv + hpc_E33q; ratio of seed means
+limUnrestrictedPriceMax,5.5,"outputs/hpc_E43a_s*/kernels.csv + hpc_E33q; ratio of seed means over the two cells and M in (128, 512, 2048); min / max"
+limUnrestrictedPriceMin,2.5,"outputs/hpc_E43a_s*/kernels.csv + hpc_E33q; ratio of seed means over the two cells and M in (128, 512, 2048); min / max"
+lvlCrossA,0.98,"outputs/hpc_E28/per_level.csv; per seed, the first of the twelve schedule levels at which risk_level(lmmse) < risk_level(em_bp), no interpolation (the registry reads 0.94 and 1.90 by an interpolation it does not specify); median over the 16 seeds"
+lvlCrossB,2.07,"outputs/hpc_E28/per_level.csv; per seed, the first of the twelve schedule levels at which risk_level(lmmse) < risk_level(em_bp), no interpolation (the registry reads 0.94 and 1.90 by an interpolation it does not specify); median over the 16 seeds"
+lvlFirstLevelsA,8,outputs/hpc_E28/per_level.csv; risk pooled over seeds (sqrt of summed sq_err over summed sq_ref)
+lvlFirstLevelsB,10,outputs/hpc_E28/per_level.csv; risk pooled over seeds (sqrt of summed sq_err over summed sq_ref)

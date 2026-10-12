@@ -11,67 +11,77 @@ from a hard target, and the solvable alternatives are Gaussian, whose scores are
 mixtures, whose nonlinearity lives in a discrete label rather than in any dependence between
 coordinates.
 
-\paragraph{A laboratory with an exact, non-trivial score.}
-We study a family that is neither. A first-order Markov chain with continuous, non-Gaussian
-transitions has a globally dependent, nonlinear score, yet under coordinatewise
-Ornstein--Uhlenbeck noise its posterior factor graph is a tree, so two sweeps of functional
-message passing return the score exactly (\cref{sec:setup}). The chain's covariance is fixed
-by two numbers and everything beyond it by the driving-noise law, so Gaussian, Laplace,
-Student-$t$, uniform and bimodal driving noise, and a one-parameter family interpolating
-between them, share one covariance exactly and differ only in higher-order structure. The
-laboratory therefore separates, by construction, what diffusion noise does to correlation
-from what it does to shape.
+\paragraph{The structural thesis: learn the local law, infer globally.}
+Data with a one-dimensional dependence structure sit between those cases. If the clean
+sequence is a first-order Markov chain with transition kernel $\kernel(a'\mid a)$, then under
+coordinatewise Gaussian noising the posterior factor graph is a tree, the score is a
+posterior mean (Tweedie's identity), and one forward--backward sweep of belief propagation (BP)
+returns it exactly for \emph{any} continuous kernel, including those whose score has no
+closed form (\cref{sec:inference}). A network that denoises such data must learn the
+composition of local transitions into a global posterior from examples. The structured
+estimator learns only the local law and delegates the composition to an exact algorithm. When the
+kernel is unknown it is learned from noised sequences alone by expectation--maximisation
+(EM) around the same sweep (\cref{sec:learning}); the result, EM--BP, is the paper's
+estimator (\cref{fig:summary}).
 
-\paragraph{Three questions.}
-What information about structured data survives diffusion noise? Can the dynamics that
-generate the data be learned from noised sequences alone, and how efficiently? And how much
-does knowing the structure reduce the data needed to recover the score, compared with a
-network that must discover it?
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{ff-summary.pdf}
+  \caption{\textbf{Summary.} Relative score error against the exact score, pooled over a
+  twelve-level noise schedule. (a)~Per-level error on the linear chain with Laplace noise
+  ($\nseq=2048$ training sequences): the learned kernel (blue) beats the best network (yellow)
+  at every level and the Gaussian score (dashed) except at the highest noise levels.
+  (b)~Pooled error against the number of training sequences on the same chain.
+  (c)~The $\phi^4$ field ($\nseq=2048$): risk divided by the linear (Gaussian) floor against
+  temperature $\Temp$; the five-parameter site energy (green) is far below it, the linear-drift
+  mixture kernel of (a, b) sits on it, and the window network rises above it when the field is hot.
+  (d)~The same ratio against inference time on three lattice spacings at $\Temp=0.3$ (eight
+  threads, the largest network variants).}
+  \label{fig:summary}
+\end{figure*}
 
-\paragraph{Three answers.}
-The first is a theorem (\cref{sec:theory}): \emph{diffusion noise is a low-pass filter on
-statistical order}. The channel attenuates the Hermite moment of degree $m$ exactly by
-$e^{-mt}$; for a law with an exponential moment, the Fisher information a noised sequence
-carries about a feature first visible at degree $m$ decays as $e^{-2mt}$, with a constant
-we give in general, and the number of sequences needed for a fixed local precision grows as
-$e^{2mt}$. Correlation lives at degree two and non-Gaussian shape at degree four, so the
-shape is lost twice as fast. The gap between the true score and that of the
-covariance-matched Gaussian, which we prove is exactly what single-Gaussian message closure
-computes (\cref{prop:lmmse}), is $\tfrac16\Frob{\kfour}^2e^{-8t}$ to leading order, with a
-crossover $\tstar=\tfrac12\log\lmax(\Sig_0)$ that is exact for the Gaussian chain. The exact
-score lets us verify the exponents and the constants, show that the missing fourth-order
-term is the whole of the gap above the crossover, and explain, rather than contradict,
-earlier measurements on this model that stopped before $\tstar$.
-
-The second is empirical (\cref{sec:learning}). We learn the transition law from noised
-sequences alone by expectation--maximisation around the same exact recursion, with Fisher's
-identity supplying the exact likelihood gradient from one forward--backward pass. The
-information curve of \cref{sec:theory} predicts the level at which the shape of the
-driving-noise law stops being identifiable from a given number of sequences, and the fits do
-what it says: they sit at the information reference below that level and collapse to
-Gaussian driving noise at it, while the correlation survives to the crossover.
-
-The third is a controlled comparison (\cref{sec:experiments}). Against six sequence
-denoisers trained under one recipe the structured estimator is ahead at every sample size;
-at the estimator's own information interface, one noised view per sequence with neither a
-clean chain nor the true score for model selection, the best network is a factor
-$\matchedRatioBestD$ behind, a larger gap than at the standard interface. The advantage is
-earned by the non-Gaussian capacity of the driving-noise model and not by the Markov
-factorisation alone, transfers to generation, extrapolates in sequence length, and ends at a
-misspecification strength that a closed-form bias predicts. Given enough clean data the
-networks do pass the second-order floor of \cref{prop:lmmse}, so the gap is a statement
-about information, not about a barrier they cannot cross.
+\paragraph{Two laboratories with exact scores.}
+The framework is stated for a general kernel (\cref{sec:setup}); we test it on two concrete
+cases chosen because their scores can be computed exactly and compared with everything else.
+The first is a linear chain with non-Gaussian driving noise, whose covariance is fixed by two
+numbers and whose shape by the noise law, so Gaussian, Laplace, Student-$t$, uniform and
+bimodal noise share one covariance exactly and differ only in higher-order structure; it
+separates, by construction, what diffusion noise does to correlation from what it does to
+shape (\cref{sec:experiments}). The second is the one-dimensional $\phi^4$ field, the
+stochastic Allen--Cahn model, whose lattice snapshots are exactly Markov, whose kernel is
+nonlinear (a double well with domains and kinks), and which has a physical vocabulary
+(temperature, correlation length, kink density) and exact transfer-matrix references
+(\cref{sec:field}).
 
 \paragraph{Contributions.}
-(i)~An exactly solvable non-Gaussian, correlated diffusion laboratory with a validated score
-reference, and the identification of Gaussian message closure with the LMMSE of the
-covariance twin (\cref{prop:lmmse}), used as an apparatus check at every regime.
-(ii)~\Cref{thm:hermite,thm:decay,thm:general}: exact Hermite attenuation and the
-order-by-order decay of score gaps and Fisher information, with constants, the general
-order, the exponential-moment hypothesis and what lies beyond it, verified with the exact
-score. (iii)~Transition learning from noised data by exact-inference EM, placed against the
-information curve level by level, with the collapse of the shape coordinate located and a
-moment estimator as the rate-correct, inefficient competitor. (iv)~A comparison against
-learned denoisers at three declared information interfaces, from capacity attribution to
-misspecification with its closed-form bias, showing what explicit structure buys and where
-it stops.
+\begin{enumerate}[label=(\roman*),leftmargin=1.6em,itemsep=0.1em,topsep=0.2em]
+\item \emph{Exact denoising for any Markov kernel.} Score estimation for Markov data reduces
+to posterior means, which BP computes exactly up to a quadrature we measure
+(\cref{sec:inference}); the Gaussian kernel is a clean sanity check, since BP with Gaussian
+messages is the linear score and the Kalman smoother (\cref{prop:lmmse,prop:kalman};
+\cref{sec:sanity}).
+\item \emph{The kernel is learnable from noise, and learning it works.} EM through the same
+sweep recovers the kernel from one noised view per sequence (\cref{sec:learning}). With a kernel of
+a few parameters it beats the neural denoisers it is compared with (six on the linear chain, two on the field) at every sample
+size, by a paired factor $\matchedRatioBestD$ at EM--BP's own information interface on the linear chain and by
+$\fldNetRatioMin$--$\fldNetRatioMax$ on the field (the best network over the site energy at $\nseq=2048$).
+\item \emph{The kernel family is the real modelling choice.} The linear-drift mixture is
+exactly right for the linear chain and sits on the linear floor on the field; the
+five-parameter site energy, the physicist's pair energy, is best on every field cell; an
+unrestricted or neural kernel earns its parameters only where the simple family is
+misspecified (\cref{sec:field,sec:limits}).
+\item \emph{Cost and limits, measured.} BP is slower per sequence than a network; a coarser grid
+recovers most of the gap for the field kernels, and a Fourier representation of the messages
+is not worth building (\cref{sec:compute}). A latent shared by a whole sequence leaves a bias
+that no sample size removes, which augmenting the state repairs (\cref{sec:limits}).
+\end{enumerate}
+
+\paragraph{Supporting theory: what noise erases.}
+Why structure matters most where the noise has not yet erased it is a general fact about the
+Ornstein--Uhlenbeck channel, and we prove it in the laboratory where it can be checked: the
+channel attenuates the Hermite moment of degree $m$ by $e^{-mt}$ exactly, so the Fisher
+information a noised sequence carries about a feature first visible at degree $m$ decays as
+$e^{-2mt}$ with an explicit constant (correlation as $e^{-4t}$, non-Gaussian shape as $e^{-8t}$),
+and the gap between the true score and that of the covariance-matched Gaussian is
+$\tfrac16\lVert\kappa_4\rVert_F^2e^{-8t}$ (\cref{sec:theory}). We treat this as supporting
+rather than central: it explains where the structured estimator gains, not why it is exact.

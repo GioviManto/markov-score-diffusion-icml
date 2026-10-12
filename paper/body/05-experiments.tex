@@ -1,49 +1,100 @@
-\section{What explicit structure buys, and where it stops}
+\section{A controlled laboratory: the linear chain with non-Gaussian noise}
 \label{sec:experiments}
 
-This section answers the third question in three steps: what explicit structure buys
-and why (capacity), whether the advantage is the structure or the data the estimator is
-given (three information interfaces, and a comparison at EM--BP's own), and where it stops
-(length, generation, misspecification). All comparisons use the frozen configuration of
-\cref{app:protocol}: Laplace chain, $\corr=0.85$, $\nsites=32$, twelve log-spaced
-levels on $[0.05,3]$, and the schedule-pooled relative score error against the tree-exact
-reference. Paired seeds are the inferential unit, sixteen at the frozen configuration and
-eight in the sweeps across regimes; every selection is made on development seeds or on a
-validation bundle that never enters a reported number. Three information interfaces are
-distinguished throughout: (A) the standard denoising recipe, clean sequences with a fresh
-corruption at every step; (B) clean sequences with one fixed corruption each; (C) one noised
-view per sequence and nothing else, which is what EM--BP sees. Three reference points
-bracket every estimator (\cref{app:oracles}): the isotropic score $-\vx$ at
-$\isoFloorLaplace$, the LMMSE oracle with the true covariance at $\lmmseFloorLaplace$,
-the floor of every second-order estimator by \cref{prop:lmmse}, and the exact score at
-zero.
+The linear chain of \cref{eq:linear} is the cleanest place to ask what structure is worth, because its
+covariance is fixed by two numbers and everything beyond it by the noise law, and because its exact score is
+available. We ask three things: what diffusion noise erases, and when (\cref{sec:theory}); whether the
+kernel can be learned through that noise (\cref{sec:learning-results}); and what explicit structure buys
+against networks (\cref{sec:buys}). Where it stops is \cref{sec:limits}. All comparisons use the frozen
+configuration of \cref{app:protocol}: Laplace noise, $\corr=0.85$, $\nsites=32$, twelve log-spaced levels on
+$[0.05,3]$, and the schedule-pooled relative score error against the tree-exact reference. Paired seeds are
+the inferential unit, sixteen at the frozen configuration and eight in the sweeps across regimes; every
+selection is made on development seeds or on a validation bundle that never enters a reported number.
+Three information interfaces are distinguished throughout: (A) the standard denoising recipe, clean sequences
+with a fresh corruption at every step; (B) clean sequences with one fixed corruption each; (C) one noised
+view per sequence and nothing else, which is what EM--BP sees. Three reference points bracket every estimator
+(\cref{app:oracles}): the isotropic score $-\vx$ at $\isoFloorLaplace$, the LMMSE oracle with the true
+covariance at $\lmmseFloorLaplace$, the floor of every second-order estimator by \cref{prop:lmmse}, and the
+exact score at zero.
+
+\input{body/03-theory}
+
+\subsection{Learning the shape and the correlation through noise}
+\label{sec:learning-results}
+
+\paragraph{The information curve predicts what is learned at each level.}
+\Cref{cor:samples} makes a prediction about learning that the exact score does not need: fitting from
+$\nseq$ sequences all observed at level $t$, the shape of the driving-noise law stops being identifiable at
+the level where its Cram\'er--Rao reference crosses the coordinate's range, while the correlation survives to
+the crossover. This is also the arithmetic behind the one-view protocol: of twelve levels spread over
+$t\in[0.05,3]$, only the lowest four carry appreciable information about shape.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig_learning.pdf}
+  \caption{\textbf{Learning through noise.} Recovery of the correlation coordinate and
+  of the driving-noise shape from $\nseq=512$ sequences observed at a single level $t$,
+  sixteen replicates (points: individual fits; line: RMSE), against the Cram\'er--Rao
+  reference (dashed), the clean-data floor (dotted) and, for the shape, the coordinate's
+  range. The fits are unimodal and at the reference at the lowest levels, split into a
+  shrunk cluster and Gaussian-collapsed fits from $t=\learnLevelTzeropseven$, and collapse
+  where the reference crosses the range. Hollow markers: the same fits with the \textsc{em}
+  ladder extended to $\learnBudgetLadderMax$ iterations (\textsc{e06c}).}
+  \label{fig:learning}
+\end{figure}
+\input{body/04a-learning-results}
+
+\subsection{What explicit structure buys}
+\label{sec:buys}
 
 \paragraph{Capacity: the margin is fourth-order.}
-\IfFileExists{sections/capacity-numbers.tex}{\input{body/05a-capacity}}{\needsdata{E02a running: capacity table and paired differences}}
-A linear-Gaussian kernel ($\ncomp=1$) lands on the LMMSE floor, as \cref{prop:lmmse}
-requires; the mixture kernel goes far below it. An earlier study of this model concluded
-the opposite from a sweep that, it turned out, had fitted every arm to a single training
-chain (\cref{app:capacity}); with independent chains and the checkpoint selected
-identically for every capacity the effect is unambiguous.
-\IfFileExists{sections/family-numbers.tex}{Capacity buys exactly what the closure discards: across the generalised-Gaussian family at fixed
+\input{body/05a-capacity}
+An earlier study of this model concluded the opposite from a sweep that, it turned out, had fitted
+every arm to a single training chain (\cref{app:capacity}); with independent chains and the checkpoint
+selected identically for every capacity the effect is unambiguous.
+Capacity buys exactly what the closure discards: across the generalised-Gaussian family at fixed
 covariance the paired gain of $\ncomp=8$ over $\ncomp=1$ is ordered by $\kfour$,
 $\famDiffBone$ at the Laplace member and a small loss, $\famDiffBtwo$, at the Gaussian
-member, where there is no fourth-order structure to buy (\cref{app:family},
-\cref{fig:family}).}{\needsdata{E02b queued: the generalised-Gaussian family against $\kfour$}}
-\IfFileExists{sections/regime-numbers.tex}{The contrast is not a property of the frozen point: in all $\regCells$ cells of a sweep over
+member, where there is no fourth-order structure to buy (\cref{app:family}, \cref{fig:family}).
+The contrast is not a property of the frozen point: in all $\regCells$ cells of a sweep over
 $\corr\in[\regRhoLo,\regRhoHi]$ and $\nsites\in[\regLenLo,\regLenHi]$ the mixture beats
 the Gaussian kernel with the paired interval excluding zero, the paired difference
 $\ncomp=8$ minus $\ncomp=1$ running from $\regGainStrongest$ at the most favourable corner
 to $\regGainWeakest$ at the least, and in every cell the $\ncomp=1$
 arm lands on the LMMSE floor to $\regIdentMax$, which checks the whole apparatus away from
-the frozen configuration (\cref{app:regimes}).}{\needsdata{E13 pending: the capacity contrast across correlations and chain lengths}}
+the frozen configuration (\cref{app:regimes}).
 
 \paragraph{Baselines under one recipe.}
-\IfFileExists{sections/baseline-numbers.tex}{\input{body/05d-baselines}}{\needsdata{E03 pending: screen and confirmatory table; information-matched arm; length extrapolation}}
+\input{body/05d-baselines}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{ff-nongaussian-gain.pdf}
+  \caption{\textbf{Where the gain is.} Per-level relative score error against the exact score on the
+  linear chain with Laplace noise, for $\nseq=128$ (a) and $\nseq=2048$ (b) training sequences: EM--BP
+  (blue), the best of the six networks (thick grey; the other five thin), the Gaussian
+  score (dashed) and the isotropic score (dotted). EM--BP is the best estimator at the lowest
+  $\lvlFirstLevelsA$ (a) and $\lvlFirstLevelsB$ (b) of twelve levels. The Gaussian score, which is given the true
+  covariance, overtakes it from $t=\lvlCrossA$ (a) and $t=\lvlCrossB$ (b) upward (the first level at which it is better,
+  median over seeds), because nothing non-Gaussian is left to recover; no network is first at any level.}
+  \label{fig:gain}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{ff-sample-efficiency.pdf}
+  \caption{\textbf{Sample efficiency.} Pooled relative score error against the number of training
+  sequences. (a)~The linear chain with Laplace noise: EM--BP ($\ncomp=8$), the six networks (best in dark
+  grey) and the LMMSE floor (dashed). (b)~The $\phi^4$ field at $\Temp=0.3$, $\latt=1$: the site energy, a
+  spline-tilted kernel, an MDN kernel, the paper's mixture kernel and two networks, against the field's
+  linear floor (dashed).}
+  \label{fig:efficiency}
+\end{figure*}
 
 \paragraph{Generation.}
-\IfFileExists{sections/generation-numbers.tex}{\input{body/05b-generation}}{\needsdata{E05 pending: reverse-SDE samples under the exact, EM--BP, LMMSE and network scores}}
+\input{body/05b-generation}
+Because the kernel is known after learning, generation does not need the reverse process at all: one
+forward sweep from the learned kernel draws a sequence, and with the true kernel it samples at the Monte
+Carlo floor of exact draws while costing $\genAncestralCostRatio\times$ less than a $200$-step reverse SDE
+(\cref{app:tables}). A Gaussian score generates Gaussian sequences, whatever its accuracy at second order.
 
-
-\paragraph{Misspecification.}
-\IfFileExists{sections/misspec-numbers.tex}{\input{body/05c-misspec}}{\needsdata{E08 pending: advantage against a misspecification parameter; break-even}}

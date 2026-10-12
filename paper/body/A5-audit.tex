@@ -115,3 +115,18 @@ $\tfrac1{24}(\partial_\beta\kfour)^2$ equal to $\audScalarConstbetatwoTtwo$ ($\b
 $\audScalarConstbetathreeTtwo$ ($\beta=3$) and $\audScalarConstbetaonepfiveTtwo$
 ($\beta=1.5$) at $t=2$, and the variance coordinate's $I_t e^{4t}$ equal to
 $\audScalarConstgaussianvarianceTtwo$ times one half.
+
+\paragraph{Information in cumulant coordinates.}
+The information curves of the generalised-Gaussian chain are measured in the coordinates $(\corr,\beta)$ in which the
+chain is parameterised. Fisher information transforms as a tensor, so the information about the driving noise's
+second and fourth cumulants, $\kappa_2=\ivar$ and $\kappa_4=\gamma_2(\beta)\ivar^2$, is obtained by the delta method from the
+efficient information about $(\corr,\beta)$ and the Jacobian of $(\corr,\beta)\mapsto(\kappa_2,\kappa_4)$; it is not a relabelling
+of the $\beta$ curve. Near the Gaussian the two differ by orders of magnitude: from $\beta=1$ to $\beta=3$ the information
+about $\beta$ falls by a factor of several hundred while the information about $\kappa_4$ rises, because $\beta$ barely moves any cumulant
+there, and a $\beta$ curve labelled as fourth-order information would be wrong by a factor between $\cumRelabelMin$ and
+$\cumRelabelMax$ over the schedule. In these coordinates the ratio of the fourth- to the second-order information at the Laplace member is
+$\cumRatioLow$ at $t=0.05$ and $\cumRatioThree$ at $t=3$, a decay of fourth-order relative to second-order information by a factor
+$\cumDecayRatioThree$ over that range (the ratio at $t=4$, $\cumRatioHigh$, is at the numerical floor of the shape estimator). The
+fitted slopes in \cref{fig:theory}b are for $t\ge\tstar+1$ on the mean over replicates; for the Laplace and $\beta=1.25$ members the
+fourth-order slope ($\cumSlopeKappafourBetaone$, $\cumSlopeKappafourBetaoneptwofive$) is a floor artefact, as the $\beta$ slope
+was (\cref{app:numerics}), and the rate is read on the smooth members ($\beta=2,3$).
