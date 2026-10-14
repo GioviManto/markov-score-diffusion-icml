@@ -19,7 +19,7 @@
 \usetikzlibrary{arrows.meta,positioning,calc}
 \usepackage[hyphens]{url}
 \usepackage[hidelinks]{hyperref}
-\graphicspath{{figures/}}
+\graphicspath{{figures/}{../paper/figures/}}
 \setlist{itemsep=0.12em,topsep=0.25em,leftmargin=1.2em}
 \definecolor{ink}{HTML}{1F2937}
 \definecolor{acc}{HTML}{2563EB}
@@ -28,6 +28,10 @@
 \newcommand{\src}[1]{{\footnotesize\color{gray}[#1]}}
 \newcommand{\fals}[1]{{\small\itshape #1}}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
+% one candidate figure: label and title, who asked, the file, what it shows, the suggestion
+\newcommand{\figchoice}[5]{\begin{samepage}\noindent\textbf{#1}\hfill{\small\color{gray}#2}\par\nopagebreak
+\includegraphics[width=\linewidth,height=5.1cm,keepaspectratio]{#3}\par\nopagebreak
+{\small #4 \textbf{#5}}\end{samepage}\par\medskip}
 \setlength{\parskip}{0.35em}
 \renewcommand{\topfraction}{0.9}\renewcommand{\bottomfraction}{0.8}\renewcommand{\textfraction}{0.07}
 \renewcommand{\floatpagefraction}{0.85}\setcounter{topnumber}{3}\setcounter{totalnumber}{4}
@@ -109,7 +113,7 @@ being read, which the registry says openly; an audit on 9 October re-derived the
 \end{itemize}
 
 \textbf{Waiting for you before you reply} (details in Section~4): the framing (a general Markov kernel, the linear chain first and the
-field second, the field in the body) and the figure choice are drafted, not decided; the Milan date; and Marc should be on the reply.
+field second, the field in the body) and the figure choice (the candidates are in Section~5) are drafted, not decided; the Milan date; and Marc should be on the reply.
 
 \bigskip
 \key{The paper's claim, in plain words. A diffusion model needs, at every noise level, the best guess of the clean data given the
@@ -530,10 +534,79 @@ addressed (hence E50). The corrections are applied, each logged in its registry 
 in the body rather than the appendix, which is what makes the paper long.
 \item The information panel (Q10) is re-plotted in cumulant coordinates ($\kappa_2$, $\kappa_4$); the alternative was to keep $\beta$
 and drop the label ``fourth order''.
-\item The figures: the summary figure plus the key ones named above; the rest are candidates for the appendix.
+\item The figures: the summary figure plus about six key ones; the candidates, with a suggestion for each, are in Section~5.
 \end{enumerate}
 
 \textbf{Yours to do.} The reply to Jérôme \emph{and Marc}, this week (12--16 October); tell Jérôme the Milan date once it is confirmed.
+
+
+%=====================================================================================================
+\section{The figures to choose from}
+
+Jérôme and Marc's note asks for five or six decisive figures and a summary figure \emph{before} the prose, and Jérôme asked for
+three specific plots: the information panel with the right labels (Q10), the speciation experiment, and the cost. The summary figure
+(Figure~3, Section~4) and the method figure (Figure~1) are already shown above. Below are the other candidates, each with the
+question it answers, what to look at, and my suggestion. Under the 8-page limit you can keep the summary plus about six; the rest go
+to the appendix. The suggestions are mine; the choice is yours.
+
+\figchoice{A. The Gaussian sanity check}{Jérôme's second contribution; Q1; E39}{fig_gaussian_sanity.pdf}
+{Grid BP against the closed-form score (lines) and an independent Kalman smoother (crosses) on a Gaussian chain, at three noise levels.
+Look for the error falling as the grid is refined (a) and the domain widened (b), and stopping at $10^{-13}$--$10^{-15}$, the
+precision floor of the computer. It shows the instrument is right before anything is learned.}
+{Suggest: body (one panel is enough).}
+
+\figchoice{B. Where the gain is, level by level}{Q9; E28}{ff-nongaussian-gain.pdf}
+{Error against the exact score at each noise level on the Laplace chain, with 128 (a) and 2048 (b) training sequences. The learned
+kernel (blue) is below every network at every level, and below the Gaussian score until the noise has erased the non-Gaussian
+structure (the crossing moves from $t\approx1$ to $t\approx2$ with more data).}
+{Suggest: body.}
+
+\figchoice{C. Sample efficiency}{the note's figure 4; E02a, E03, E33}{ff-sample-efficiency.pdf}
+{Error against the number of training sequences. (a) On the Laplace chain, EM--BP with 128 sequences (0.055) is already better than
+the best network with 2048 (0.060). (b) On the $\phi^4$ field the site energy improves steadily while the paper's mixture kernel sits
+on the dashed linear floor.}
+{Suggest: body.}
+
+\figchoice{D. The field and the temperature sweep}{the note's field programme; E32, E33}{fig-field-sweep.pdf}
+{How the $\phi^4$ field changes with temperature $\Theta$ for the fixed spacing $h=1$ (blue) and for spacings chosen to keep the
+correlation length fixed (orange): correlation length, domain length, kink density, and (d) how much there is to gain beyond a Gaussian
+model (the linear closure) and an independent-sites model. Cold fields are the nonlinear, domain-forming ones.}
+{Suggest: body (it introduces the second laboratory).}
+
+\figchoice{E. Accuracy against cost}{Jérôme's cost question (Q7); E24x, E33}{fig-field-runtime.pdf}
+{Error divided by the linear floor against inference time per sequence (a) and training time (b), on three lattice spacings. The
+networks own the cheap end and the structured kernels the accurate end; nothing lies between. This is the honest picture of what
+exactness costs.}
+{Suggest: body.}
+
+\figchoice{F. A hidden variable and its repair}{where the method stops; E35x}{ff-misspec-repair.pdf}
+{A hidden sign shared by the whole sequence makes the data non-Markov. The first-order kernel (orange) stops improving with data and
+ends above the linear floor (dashed); the same kernel on the augmented state (blue) keeps improving. Sixteen seeds.}
+{Suggest: body if there is room, otherwise appendix.}
+
+\figchoice{G. The information panel, in cumulant coordinates}{Jérôme's Q10 and action item 4; E01}{fig_theory.pdf}
+{The panel Jérôme asked to relabel is (b). It now shows the information the noisy data carry about the noise's second and fourth
+cumulants ($\kappa_2$, $\kappa_4$), not about $\rho$ and $\beta$: fourth-order information (lower curves) decays like $e^{-8t}$ against
+$e^{-4t}$ for second order; the rate is read on the smooth noise law ($\beta=3$, dashed) because the Laplace curve reaches the
+numerical floor. (a) is the Gaussian chain's information about $\rho$; (c) is the gap
+between the exact score and the Gaussian one.}
+{Suggest: appendix, unless you keep the information theory in the body.}
+
+\figchoice{H. Speciation: when the denoiser commits}{Jérôme's suggestion; E50}{fig_speciation.pdf}
+{(a) The commitment $|2p-1|$ of the exact posterior falls from one to zero as noise grows; the dashed twin has the same correlations
+but no humps. (b) The noise level $t_c$ at which it is half-committed falls from 1.61 to 0.46 as the field warms, always later than the
+twin's. (c) $t_c$ grows with the chain length and then saturates.}
+{Suggest: appendix, with one sentence in the body.}
+
+\figchoice{I. A coarser grid}{the grid as the bottleneck (Q7, Q11); E47}{fig_grid_coarse.pdf}
+{(a) BP time per sequence on one thread against the number of grid points, with three networks for scale. (b) How much the fitted
+kernels' error changes when the grid is coarsened: nothing visible down to 101 points for the field kernels; the linear chain's
+mixtures need about 151.}
+{Suggest: appendix, or fold (a) into figure E.}
+
+\medskip
+\textbf{My suggested six for the body, after the summary figure:} A, B, C, D, E and F, plus the small method schematic (Figure~1 of this document). G, H and I go to the appendix, with one sentence each in the text. \path{docs/PAPER_REWRITE_2026-10-12.md}
+has the cutting plan; the figures themselves are all already in the draft.
 
 \medskip
 {\footnotesize\color{gray}\raggedright Sources: \path{experiments/registry/E*.json} (hypotheses, predictions, outcomes, corrections)
