@@ -1,0 +1,303 @@
+%=====================================================================================================
+% Part III of the explainer: the mathematics and the technical details.
+% Sources checked while writing: paper/body/A1-proofs.tex (proofs), 03-theory.tex, 04-learning.tex, A2-numerics.tex, A3-protocol.tex,
+% A6-field.tex; reports/primer/p5-physics.tex, p6-synthesis.tex; src/markov_score/{bp_grid,em,pair_energy_kernel,augmented,grid_pair_chain}.py;
+% tools/cumulant_information.py.  "Proof" means the argument is complete here; "sketch" means the full proof is in paper/body/A1-proofs.tex.
+\clearpage
+\part*{Part III \quad The mathematics}
+\addcontentsline{toc}{part}{Part III}
+
+This part contains the mathematics behind everything above, in the order in which it is used: the channel and the score (\S6), exact
+inference on a chain (\S7), the Gaussian special case (\S8), learning by EM (\S9), the field (\S10), what noise erases (\S11), where the
+structure stops (\S12), speciation (\S13), cost and numerics (\S14), and the experimental protocol (\S15). Each result is stated, then
+proved or sketched. Notation: $\mathbb E$ is expectation, $\mathcal N(x;m,v)$ the Gaussian density in $x$ with mean $m$ and variance $v$,
+$\|\cdot\|_F$ the Frobenius norm, bold letters are vectors of length $L$.
+
+\section{The channel, the score and Tweedie's identity}
+
+\textbf{Setting.} A clean sequence $\mathbf a=(a_1,\dots,a_L)\in\mathbb R^L$ has density
+\begin{equation}\label{eq:prior}
+P_0(\mathbf a)=\mu(a_1)\prod_{i=2}^{L}K(a_i\mid a_{i-1}),
+\end{equation}
+with initial law $\mu$ and transition kernel $K$. The \emph{linear chain} is $K(a'\mid a)=p_\varepsilon(a'-\rho a)$ with a driving-noise density
+$p_\varepsilon$ of mean 0 and variance $q=1-\rho^2$, and $\mu=\mathcal N(0,1)$; then every $a_i$ has variance 1 and $\operatorname{Cov}(a_i,a_j)=\rho^{|i-j|}$,
+the matrix $\Sigma_0$. The Laplace chain takes $p_\varepsilon(e)=\tfrac1{2b}e^{-|e|/b}$ with $2b^2=q$. At noise level $t\ge0$ the data are observed through the
+coordinatewise Ornstein--Uhlenbeck channel
+\begin{equation}\label{eq:channel}
+\mathbf x=e^{-t}\mathbf a+\sqrt{\Delta_t}\,\mathbf z,\qquad \Delta_t=1-e^{-2t},\quad \mathbf z\sim\mathcal N(0,I_L).
+\end{equation}
+This is the solution at time $t$ of $\mathrm dx=-x\,\mathrm ds+\sqrt2\,\mathrm dW$ started at $a$: multiplying by $e^{s}$ gives $\mathrm d(e^{s}x)=\sqrt2e^{s}\mathrm dW$, so
+$x(t)=e^{-t}a+\sqrt2\int_0^te^{-(t-r)}\mathrm dW(r)$, Gaussian with variance $2\int_0^te^{-2(t-r)}\mathrm dr=\Delta_t$. Its stationary law is $\mathcal N(0,1)$, which is
+why pure noise is where the channel ends. Write $P_t$ for the law of $\mathbf x$ and $S(\mathbf x,t)=\nabla_{\mathbf x}\log P_t(\mathbf x)$ for its score.
+
+\textbf{Tweedie's identity (proof).} $P_t(\mathbf x)=\int P_0(\mathbf a)\,\mathcal N(\mathbf x;e^{-t}\mathbf a,\Delta_tI)\,\mathrm d\mathbf a$, and the Gaussian factor
+$\varphi=\mathcal N(\mathbf x;e^{-t}\mathbf a,\Delta_tI)$ has $\nabla_{\mathbf x}\varphi=-\frac{\mathbf x-e^{-t}\mathbf a}{\Delta_t}\,\varphi$. Dividing
+$\nabla P_t$ by $P_t$ turns the integral into a posterior expectation:
+\begin{equation}\label{eq:tweedie}
+S(\mathbf x,t)=-\frac{\mathbf x-e^{-t}\,\mathbb E[\mathbf a\mid\mathbf x]}{\Delta_t},\qquad\text{equivalently}\qquad \mathbb E[\mathbf a\mid\mathbf x]=e^{t}\big(\mathbf x+\Delta_tS(\mathbf x,t)\big).
+\end{equation}
+So the score is a rescaled \emph{posterior mean}, the best denoiser in mean square, and a score error is a denoising error multiplied by $e^{-t}/\Delta_t$: an
+estimate $\hat S$ corresponds to the denoiser $\hat{\mathbf m}=e^{t}(\mathbf x+\Delta_t\hat S)$ and $\|\hat S-S\|=\frac{e^{-t}}{\Delta_t}\|\hat{\mathbf m}-\mathbb E[\mathbf a\mid\mathbf x]\|$.
+Everything below is therefore about computing, or learning to compute, $\mathbb E[a_i\mid\mathbf x]$.
+
+\section{Exact inference on a chain: belief propagation}
+
+\textbf{The posterior is a chain.} By Bayes' rule and the independence of the noise across sites,
+\begin{equation}\label{eq:posterior}
+p(\mathbf a\mid\mathbf x)\ \propto\ \mu(a_1)\prod_{i=2}^{L}K(a_i\mid a_{i-1})\prod_{i=1}^{L}\ell_i(a_i),\qquad \ell_i(a)=\mathcal N(x_i;e^{-t}a,\Delta_t).
+\end{equation}
+Each factor involves one or two neighbouring sites, so the factor graph is a path: a tree. On a tree the sum-product algorithm is exact.
+
+\textbf{Messages.} With $\overrightarrow m_1=\mu$ and $\overleftarrow m_L\equiv1$,
+\begin{equation}\label{eq:bp}
+\overrightarrow m_{i+1}(a')=\int K(a'\mid a)\,\ell_i(a)\,\overrightarrow m_i(a)\,\mathrm da,\qquad
+\overleftarrow m_{i}(a)=\int K(a'\mid a)\,\ell_{i+1}(a')\,\overleftarrow m_{i+1}(a')\,\mathrm da'.
+\end{equation}
+
+\textbf{Proof of correctness.} By induction and the Markov property, $\overrightarrow m_i(a)\ell_i(a)\propto p(a_i{=}a,\,x_{1:i})$ and $\overleftarrow m_i(a)\propto p(x_{i+1:L}\mid a_i{=}a)$: the first
+claim is Bayes' rule plus the transition integral, the second uses that $x_{i+1:L}$ depends on $a_i$ only through $a_{i+1}$. Since $x_{1:i}$ and $x_{i+1:L}$ are conditionally independent given $a_i$,
+\begin{align}
+p(a_i\mid\mathbf x)&\ \propto\ \overrightarrow m_i(a_i)\,\ell_i(a_i)\,\overleftarrow m_i(a_i),\label{eq:site}\\
+p(a_{i-1},a_i\mid\mathbf x)&\ \propto\ \overrightarrow m_{i-1}(a_{i-1})\,\ell_{i-1}(a_{i-1})\,K(a_i\mid a_{i-1})\,\ell_i(a_i)\,\overleftarrow m_i(a_i),\label{eq:pair}
+\end{align}
+and the evidence is $P_t(\mathbf x)=\int\overrightarrow m_i\ell_i\overleftarrow m_i\,\mathrm da$ for any $i$. The posterior mean $\mathbb E[a_i\mid\mathbf x]=\int a\,p(a_i{=}a\mid\mathbf x)\mathrm da$ and
+Tweedie's identity \eqref{eq:tweedie} give the exact score of a correlated, possibly strongly non-Gaussian, $L$-dimensional law, for any kernel $K$, even when that score has no closed form.
+One forward and one backward sweep return all site marginals \eqref{eq:site}, all pair marginals \eqref{eq:pair} (which EM needs, \S9) and the evidence.
+
+\textbf{Grid implementation, cost and what ``exact'' means.} Messages are stored on a uniform grid $u_1,\dots,u_{N_g}$ on $[-A,A]$ (here $N_g=401$, $A=8$) with composite trapezoid weights $w_k$, so
+$\overrightarrow m_{i+1}(u_k)=\sum_lw_lK(u_k\mid u_l)\ell_i(u_l)\overrightarrow m_i(u_l)$: a matrix--vector product of cost $N_g^2$ per site. The cost per sequence and level is
+$O(LN_g^2)$, against $O(N_g^L)$ for brute-force summation. The recursion is run in the linear domain with the discarded scale factors accumulated, so the log-evidence is exact to floating point. Three levels of exactness are kept
+apart: (i) sum-product is exact on functions; (ii) forward--backward is exact for the \emph{discretised} factor model; (iii) the discretised model approximates the continuous chain with two errors, truncation (mass beyond
+$\pm A$) and quadrature (second order in the spacing for the trapezoid rule, but faster than any power of the spacing for smooth, rapidly decaying integrands, which is what is measured: errors of $10^{-12}$--$10^{-15}$ on the Gaussian chain).
+Both are measured, not assumed (\S14). ``The oracle'' is BP with the true kernel.
+
+\textbf{Sampling.} Because the kernel is explicit once learned, \emph{ancestral sampling} is exact: $a_1\sim\mu$, then $a_i\sim K(\cdot\mid a_{i-1})$ (on the grid, an inverse-CDF draw per step). \emph{Forward-filter backward-sample} draws
+from the posterior given $\mathbf x$: $a_L$ from the filtered marginal, then $a_i$ from $p(a_i\mid a_{i+1},x_{1:i})\propto K(a_{i+1}\mid a_i)\,\overrightarrow m_i(a_i)\ell_i(a_i)$, which needs only the forward messages.
+A hidden block of sites is handled by dropping the corresponding $\ell_i$ factors.
+
+\section{The Gaussian case: closure, LMMSE and the Kalman smoother}
+
+Let $\Sigma_0$ be the covariance of $\mathbf a$ and $\Sigma_t=e^{-2t}\Sigma_0+\Delta_tI$. The \emph{covariance twin} is the Gaussian $\mathcal N(0,\Sigma_0)$.
+\textbf{Gaussian facts (proof).} $(\mathbf a,\mathbf x)$ is jointly Gaussian with $\operatorname{Cov}(\mathbf x)=\Sigma_t$ and $\operatorname{Cov}(\mathbf a,\mathbf x)=e^{-t}\Sigma_0$, hence
+\begin{equation}\label{eq:gaussscore}
+\mathbb E_{\rm G}[\mathbf a\mid\mathbf x]=e^{-t}\Sigma_0\Sigma_t^{-1}\mathbf x,\qquad S^{\rm G}(\mathbf x,t)=-\Sigma_t^{-1}\mathbf x,
+\end{equation}
+and indeed $\mathbf x-e^{-t}\mathbb E_{\rm G}[\mathbf a\mid\mathbf x]=(\Sigma_t-e^{-2t}\Sigma_0)\Sigma_t^{-1}\mathbf x=\Delta_t\Sigma_t^{-1}\mathbf x$, which is \eqref{eq:tweedie}. For \emph{any} law with covariance $\Sigma_0$, the first expression is
+also the best \emph{linear} denoiser (LMMSE): the normal equations $\mathbb E[(\mathbf a-G\mathbf x)\mathbf x^{\top}]=0$ give $G=\operatorname{Cov}(\mathbf a,\mathbf x)\operatorname{Cov}(\mathbf x)^{-1}$, which depends on the law only through $\Sigma_0$.
+This is the \emph{linear floor} of the reports: the best any second-order estimator can do.
+
+\textbf{Proposition 1 (Gaussian closure computes the LMMSE).} Run the recursion \eqref{eq:bp} for the linear chain with $\rho\ne0$, but after every transition integral replace the message by the Gaussian with the same mean and variance. Then the posterior
+means equal $e^{-t}\Sigma_0\Sigma_t^{-1}\mathbf x$, whatever the driving-noise density, so the resulting score is $S^{\rm G}$.\\
+\emph{Sketch.} Induction on the sweep. If the incoming message is Gaussian with mean $m'$ and variance $v'$ (after multiplication by $\ell_i$, precision-weighted exactly as in the Gaussian chain), then the transition integral is the
+density of $\rho a+\varepsilon$ with $a$ Gaussian, whose mean and variance are $(\rho m',\rho^2v'+q)$ for every $\varepsilon$ of mean 0 and variance $q$; projection keeps exactly these two numbers. Backwards, the message is
+$h(\rho a)$ with $h$ the density of $a''-\varepsilon$ under the incoming Gaussian, of mean $m'$ and variance $v'+q$, and as a function of $a$ its normalised moments are $(m'/\rho,(v'+q)/\rho^2)$, which is where $\rho\ne0$ is used.
+So every projected belief is that of the covariance twin. (The hypothesis ``initial message Gaussian or projected'' cannot be dropped: a lemma stated without it was false, because the projection does not commute with the likelihood tilt.)
+
+\textbf{Proposition 2 (BP on the Gaussian chain is the Kalman smoother).} Let the driving noise be Gaussian. Then (i) the forward messages are the Kalman \emph{predictions} and $\overrightarrow m_i\ell_i$ the filtered densities, (ii) $\overleftarrow m_i$ is, up to scale, the likelihood of the future in information form,
+and (iii) $\overrightarrow m_i\ell_i\overleftarrow m_i$ is the Rauch--Tung--Striebel (RTS) smoothed marginal; its mean is \eqref{eq:gaussscore}.\\
+\emph{Proof of (i).} Suppose $\overrightarrow m_i=\mathcal N(m,P)$. Multiplying by $\ell_i$ and normalising is Bayes' rule with a scalar observation: the update
+$m^+=m+k(x_i-e^{-t}m)$, $P^+=(1-ke^{-t})P$ with gain $k=e^{-t}P/(e^{-2t}P+\Delta_t)$. The transition integral then gives the prediction $m'=\rho m^+$, $P'=\rho^2P^++q$ (Proposition 1's moment map, now exact).
+(ii) and (iii): $\overleftarrow m_i(a)\propto p(x_{i+1:L}\mid a_i{=}a)$ is the exponential of a quadratic in $a$ (zero precision at $i=L$), and the product with the filtered density is $p(a_i\mid\mathbf x)$ by the conditional independence above. The RTS smoother computes the same conditional
+law by a different factorisation (conditioning backwards on $a_{i+1}$); two exact computations of one Gaussian law agree. $\square$
+\textbf{Consequences.} BP is a \emph{smoother} (every site is conditioned on the whole sequence), not a filter. On the Gaussian chain everything is available in closed form, which is why it is the sanity check for any approximate BP: the closed form, an independent RTS smoother and grid BP
+agree to $1.9\times10^{-13}$ relative score error at every level ($10^{-15}$ for smoother against closed form). The three identifications (closure $=$ LMMSE, LMMSE $=$ Gaussian score, BP $=$ Kalman) are not new (they are in the thesis); what the paper adds is stating them as one proposition.
+\textbf{Where closure fails.} If the messages are forced to be Gaussian \emph{on the grid}, the backward messages (whose variance grows like $e^{2t}$) are truncated by the domain, and the error reaches 0.26; widening the domain to $A=64$ removes it up to $t=1.4$. On the $\phi^4$ field the backward messages are
+nearly flat, with a large share of their mass in the outer 5\% of the grid, so the Gaussian comparison there is the closed-form LMMSE itself.
+
+\section{Learning the kernel through noise: EM}
+
+\textbf{Objective.} We observe $M$ noised sequences $\mathbf x^\mu$, each at one level $t_\mu$, never the clean chain, and maximise the marginal log-likelihood
+$\mathcal L(\theta)=\sum_\mu\log P_{t_\mu,\theta}(\mathbf x^\mu)$ of a parametrised kernel $K_\theta$, where $P_{t,\theta}(\mathbf x)=\int P_\theta(\mathbf a)\prod_i\ell_i(a_i)\,\mathrm d\mathbf a$ is exactly the evidence that BP returns.
+
+\textbf{EM and its monotonicity (proof).} Let $Q(\theta\mid\theta')=\mathbb E_{\theta'}[\log P_\theta(\mathbf a)\mid\mathbf x]$ (summed over sequences). By Jensen's inequality,
+$\log P_{t,\theta}(\mathbf x)-\log P_{t,\theta'}(\mathbf x)=\log\mathbb E_{\theta'}\!\big[\tfrac{P_\theta(\mathbf a)}{P_{\theta'}(\mathbf a)}\,\big|\,\mathbf x\big]\ge Q(\theta\mid\theta')-Q(\theta'\mid\theta')$, so any $\theta$ that increases $Q$ increases $\mathcal L$. EM
+alternates the E-step (compute $Q(\cdot\mid\theta')$ by BP) and the M-step (increase it); increasing without maximising is \emph{generalised} EM and keeps the guarantee.
+
+\textbf{On a chain, $Q$ depends on the data only through pair marginals.} Since $\log P_\theta(\mathbf a)=\log\mu_\theta(a_1)+\sum_{i\ge2}\log K_\theta(a_i\mid a_{i-1})$, the expectation under the posterior uses only \eqref{eq:site} at site 1 and the pair marginals \eqref{eq:pair}:
+\begin{equation}\label{eq:Q}
+Q(\theta\mid\theta')=\sum_{k,l}\Xi_{kl}\log K_\theta(u_k\mid u_l)+(\text{first-site term}),\qquad
+\Xi_{kl}=\sum_\mu\sum_{i\ge2}P_{\theta'}(a_i{=}u_k,a_{i-1}{=}u_l\mid\mathbf x^\mu),
+\end{equation}
+the expected number of transitions from $u_l$ to $u_k$.
+
+\textbf{Fisher's identity (proof).} Write $P_{t,\theta}(\mathbf x)=\int f_\theta(\mathbf a)\mathrm d\mathbf a$ with $f_\theta=P_\theta(\mathbf a)\prod\ell_i$. Then $\nabla_\theta\log\int f_\theta=\int\nabla_\theta f_\theta/\int f_\theta=\mathbb E[\nabla_\theta\log f_\theta\mid\mathbf x]$, so
+\begin{equation}\label{eq:fisher}
+\nabla_\theta\mathcal L(\theta)=\sum_{k,l}\Xi_{kl}(\theta)\,\nabla_\theta\log K_\theta(u_k\mid u_l)\ \Big(+\text{first-site term}\Big),
+\end{equation}
+with $\Xi$ computed at the \emph{current} $\theta$. The exact gradient of the evidence therefore needs no differentiation through the recursion and no finite differences; it was verified against finite differences and brute-force enumeration on short chains.
+
+\textbf{The M-steps, family by family.}
+\begin{itemize}
+\item \emph{Mixture kernel} $K_\theta(a'\mid a)=\sum_{c=1}^C\pi_c\,\mathcal N(a'-\rho a-\nu_c;\,s_c^2)$: a linear drift $\rho a$ with Gaussian-mixture driving noise (25 numbers at $C=8$). Write $S_{00}=\sum_{kl}\Xi_{kl}u_l^2$, $S_{01}=\sum_{kl}\Xi_{kl}u_ku_l$, $S_{11}=\sum_{kl}\Xi_{kl}u_k^2$, $W=\sum_{kl}\Xi_{kl}$.
+For $C=1$ the M-step is a weighted least squares: minimising $\sum\Xi_{kl}(u_k-\rho u_l)^2$ gives $\hat\rho=S_{01}/S_{00}$ and then $\hat q=\sum\Xi(u_k-\hat\rho u_l)^2/W=(S_{11}-\hat\rho S_{01})/W$ (using $\hat\rho S_{00}=S_{01}$): the belief-weighted Yule--Walker estimator. For $C>1$ the residuals $u_k-\rho u_l$ carry a second latent label; we alternate conditional maximisation of $\rho$ and of
+the mixture parameters, a generalised EM.
+\item \emph{Tilted walks} $K_\theta(a'\mid a)=\mathcal N(a';a,\gamma)\,e^{\theta\cdot B(a')}/Z_\theta(a)$ with $B$ a Legendre (7 numbers) or spline (25) basis. For each source value $a$ this is an exponential family in $\theta$ with log-partition $\log Z_\theta(a)$, so
+$\nabla_\theta\log K_\theta(a'\mid a)=B(a')-\mathbb E_\theta[B(a')\mid a]$ and $\nabla_\theta Q=\sum_{kl}\Xi_{kl}\big(B(u_k)-\mathbb E_\theta[B\mid u_l]\big)$: the M-step matches the expected sufficient statistics under the posterior to those of the model (Boltzmann learning without a global partition function).
+The Hessian is $-\sum_{kl}\Xi_{kl}\operatorname{Cov}_\theta(B\mid u_l)\preceq0$, so $Q$ is concave in $\theta$ at fixed $\gamma$.
+\item \emph{Site energy} (5 numbers): the pair energy $W(a,a')=(a'-a)^2/2\gamma+f(a)+f(a')$ with $f$ a polynomial without constant term, of degree four, and $\log\gamma$ as the other parameter. The kernel is built from the symmetric operator $\mathsf T_f(a,a')=e^{-f(a)}\mathcal N(a';a,\gamma)e^{-f(a')}$ and its
+Perron eigenpair $(\lambda_0,\psi_0)$ by the ground-state transform of \S10, so each evaluation needs one eigensolve of an $N_g\times N_g$ matrix, and the gradient needs the derivative of the Perron vector: differentiating $\mathsf T\psi_0=\lambda_0\psi_0$ and projecting on $\psi_n$, $n\ge1$,
+gives $\mathrm d\psi_0=\sum_{n\ge1}\psi_n\langle\psi_n,\mathrm d\mathsf T\,\psi_0\rangle/(\lambda_0-\lambda_n)$ (the component along $\psi_0$ vanishes because $\psi_0$ stays normalised; the denominators are positive by Perron--Frobenius). The objective is not concave, so a step is kept only if $Q$ increases.
+\item \emph{Unrestricted} (100 numbers): $\log K$ a free two-dimensional spline of $(a,a')$, normalised per column, assuming no Gaussian bond. \emph{MDN} (1,516): a small network mapping $a$ to the weights, means and scales of a Gaussian mixture for $a'$, fitted by the same EM with gradient steps in the M-step.
+\end{itemize}
+Every kernel is initialised the same way, run on a ladder of checkpoints (10 to 1200 updates, longer for the network kernels), and the checkpoint is chosen on a validation bundle disjoint from the test bundle, either by the held-out risk against the exact score (needs the truth) or by the
+held-out one-view log-evidence $\sum_{\mathbf x}\log P_{t,\theta}(\mathbf x)$ (needs no truth; it picks the same checkpoint in 7 of 8 settings on the paper's chain).
+
+\textbf{The comparison networks.} \emph{Denoising score matching} (DSM) regresses $s_\theta(\mathbf x_t,t)$ onto $-(\mathbf x_t-e^{-t}\mathbf a)/\Delta_t$, the score of the \emph{conditional} law given the clean sequence, using the clean sequence $\mathbf a$; its minimiser is $S$ because $S=\mathbb E[-(\mathbf x-e^{-t}\mathbf a)/\Delta_t\mid\mathbf x]$ by \eqref{eq:tweedie}.
+\emph{Implicit score matching} (ISM, Hyv\"arinen 2005) minimises $\mathbb E[\tfrac12\|s_\theta\|^2+\nabla\!\cdot s_\theta]$ over noised samples only; by integration by parts it equals $\tfrac12\mathbb E\|s_\theta-S\|^2-\tfrac12\mathbb E\|S\|^2$, so it has the same minimiser without clean data, the same information EM--BP uses.
+
+\textbf{How a method is scored.} The \emph{risk} is the schedule-pooled relative score error
+\begin{equation}\label{eq:risk}
+R=\Big(\frac{\sum_t\sum_{j,i}\big(\hat S_t(\mathbf x_j)_i-S_t(\mathbf x_j)_i\big)^2}{\sum_t\sum_{j,i}S_t(\mathbf x_j)_i^2}\Big)^{1/2},
+\end{equation}
+over test sequences $j$, sites $i$ and the twelve levels, with $S$ the oracle score; $R=0$ is exact and the zero score has $R=1$. The two reference scores are the LMMSE floor $-\Sigma_t^{-1}\mathbf x$ \eqref{eq:gaussscore} and the \emph{isotropic} score $-\mathbf x$ (each site alone with its marginal $\mathcal N(0,1)$, for which $\Sigma_t=I$).
+Because the sums are pooled, the low-noise levels dominate.
+
+\section{The $\phi^4$ field as a Markov chain}
+
+\textbf{Gibbs law (derivation).} For $\mathrm dX=-M\nabla\mathcal H(X)\,\mathrm ds+\sqrt{2\Theta M}\,\mathrm dW$ with mobility $M>0$, the stationary law has zero probability current in every coordinate, which gives $p\propto e^{-\mathcal H/\Theta}$ (for one coordinate: $J=-V'p-\Theta p'=0\Rightarrow p\propto e^{-V/\Theta}$).
+On a lattice of spacing $h$ the stochastic Allen--Cahn field has energy and Gibbs law
+\begin{equation}\label{eq:lattice}
+\mathcal H_h(\phi)=\sum_i\Big[\frac{(\phi_{i+1}-\phi_i)^2}{2h}+h\,V(\phi_i)\Big],\quad V(\phi)=\tfrac14(\phi^2-1)^2,\qquad p(\phi)\propto e^{-\mathcal H_h(\phi)/\Theta}.
+\end{equation}
+The spring term is the lattice form of $\int\frac12(\partial_x\phi)^2$ and the well term of $\int V$; the gradient of $\mathcal H_h$ in one coordinate contains the second difference $(\phi_{i+1}-2\phi_i+\phi_{i-1})/h$, which becomes $\partial_x^2\phi$ as $h\to0$, giving
+$\partial_s\phi=\partial_x^2\phi-V'(\phi)+\sqrt{2\Theta}\eta$. Every factor in \eqref{eq:lattice} couples at most two neighbours, so a snapshot is exactly a Markov chain in the site index: in physical terms, a Gaussian random walk (each step of variance $\Theta h$) re-weighted at every site by $e^{-hV/\Theta}$.
+
+\textbf{Transfer operator and the kernel.} Split the site factors evenly between the two bonds that touch them: $p\propto\prod_i\mathsf T(\phi_i,\phi_{i+1})$ with $\mathsf T(\phi,\phi')=D(\phi)\,G(\phi'-\phi)\,D(\phi')$, $D=e^{-hV/2\Theta}$, $G(u)=e^{-u^2/2\Theta h}$. As an
+integral operator $\mathsf T$ is symmetric with positive kernel, so by Perron--Frobenius its largest eigenvalue $\lambda_0$ is simple, strictly above $\lambda_1\ge\lambda_2\ge\dots$, with an everywhere positive eigenfunction $\psi_0$. Inside a long chain each half contributes $\mathsf T^r\mathbf 1\propto\psi_0$, so the stationary marginal is
+$\pi=\psi_0^2$ ($\int\psi_0^2=1$), and normalising the continuation weight $\mathsf T(\phi,\phi')\psi_0(\phi')$ by the eigen-equation $\int\mathsf T(\phi,\phi')\psi_0(\phi')\mathrm d\phi'=\lambda_0\psi_0(\phi)$ gives the \emph{ground-state transform}
+\begin{equation}\label{eq:gst}
+K(\phi'\mid\phi)=\frac{\mathsf T(\phi,\phi')\,\psi_0(\phi')}{\lambda_0\,\psi_0(\phi)},\qquad\text{reversible:}\quad\pi(\phi)K(\phi'\mid\phi)=\frac{\psi_0(\phi)\mathsf T(\phi,\phi')\psi_0(\phi')}{\lambda_0}\ \text{is symmetric.}
+\end{equation}
+Inserting $\mathsf T^r=\sum_n\lambda_n^r\psi_n\psi_n^{\top}$ into the two-point function gives $\mathbb E[\phi_i\phi_{i+r}]=\sum_{n\ge1}(\lambda_n/\lambda_0)^rc_n^2$ with $c_n=\int\psi_0\,\phi\,\psi_n$: correlations decay geometrically, dominated by $\lambda_1/\lambda_0$, which plays for the field the role $\rho$ plays for the linear chain,
+and the correlation length is $\xi=1/\log(\lambda_0/\lambda_1)$ sites. Because $\lambda_0>\lambda_1$ strictly at every $\Theta>0$, $\xi$ is finite: \emph{there is no phase transition in one dimension}. Entropy is the reason: a kink costs $E_{\rm kink}$ but can sit anywhere, so a long stretch always contains some, at a density $\sim e^{-E_{\rm kink}/\Theta}$.
+
+\textbf{Kinks and the kink energy (derivation).} A static kink solves $\phi''=V'(\phi)$. Multiplying by $\phi'$ and integrating (both sides are derivatives, and both vanish far from the kink) gives $\tfrac12\phi'^2=V(\phi)$, so $\phi'=\sqrt{2V}=(1-\phi^2)/\sqrt2$, which integrates to
+$\phi_{\rm kink}(x)=\tanh(x/\sqrt2)$ and $E_{\rm kink}=\int[\tfrac12\phi'^2+V]\mathrm dx=\int_{-1}^{1}\sqrt{2V(\phi)}\,\mathrm d\phi=\frac1{\sqrt2}\int_{-1}^1(1-\phi^2)\mathrm d\phi=\frac{2\sqrt2}{3}\approx0.943$.
+The dilute-kink law $\xi\propto\Theta^{1/2}e^{E_{\rm kink}/\Theta}$ is the prediction that a fit on $\Theta\in[0.1,0.3]$ should return this energy; it returned 0.988 (registered prediction: within 2\%, falsified), so the law is approached as $\Theta$ falls but its constants are not pinned.
+
+\textbf{The tilted-walk identity (proof).} Put $g=\psi_0D$. Then $K(\phi'\mid\phi)=D(\phi)G(\phi'-\phi)g(\phi')/(\lambda_0\psi_0(\phi))$, and the eigen-equation reads $D(\phi)\int G(\phi'-\phi)g(\phi')\mathrm d\phi'=\lambda_0\psi_0(\phi)$, which is the normaliser. With $G=\sqrt{2\pi\Theta h}\,\mathcal N(\cdot;\phi,\Theta h)$,
+\begin{equation}\label{eq:tilted}
+K(\phi'\mid\phi)=\frac{\mathcal N(\phi';\phi,\Theta h)\,g(\phi')}{Z_g(\phi)},\qquad Z_g(\phi)=\int\mathcal N(\phi';\phi,\Theta h)g(\phi')\mathrm d\phi'.
+\end{equation}
+A \emph{tilted walk} is a Gaussian step re-weighted by a positive function of the arrival point; $Z_g$ is the column normaliser (the Doob $h$-transform). A model that parametrises $\log g$ and normalises each column numerically contains the truth \emph{without computing $\psi_0$ or $\lambda_0$}.
+
+\textbf{Reversibility and the pair energy (proof).} For any $\gamma>0$ and positive $g$, the tilted walk $K_g(a'\mid a)=\mathcal N(a';a,\gamma)g(a')/Z_g(a)$ is reversible with invariant density $\pi_g\propto gZ_g$, because
+$\pi_g(a)K_g(a'\mid a)\propto g(a)g(a')\mathcal N(a';a,\gamma)$ is symmetric (detailed balance). It is the Gibbs chain of the symmetric pair energy
+\begin{equation}\label{eq:pair-energy}
+W(a,a')=\frac{(a'-a)^2}{2\gamma}+f(a)+f(a'),\qquad f=-\tfrac12\log(g/Z_g):
+\end{equation}
+with $u=e^{-f}=\sqrt{g/Z_g}$ and $\mathsf T_g(a,a')=u(a)\mathcal N(a';a,\gamma)u(a')$, the function $\psi=\sqrt{gZ_g}$ satisfies $\mathsf T_g\psi=uZ_g=\psi$ (using $u\psi=g$), so it is the Perron eigenfunction with eigenvalue 1, and its ground-state transform $\mathsf T_g(a,a')\psi(a')/\psi(a)$ equals $K_g$; the converse is the tilted-walk identity with $D=e^{-f}$.
+For the field, $g/Z_g=\sqrt{2\pi\Theta h}\,D^2/\lambda_0$, so $f=-\log D+\text{const}=hV/2\Theta+\text{const}$. \emph{So the directed kernel and the symmetric pair energy are one model class; nothing irreversible can be learned by mistake, and a fitted kernel reads as physics.} In standardised units $a=\phi/s$, $s^2=\operatorname{Var}_\pi\phi$,
+the step variance is $\gamma=\Theta h/s^2$ and the read-out is $\hat\Theta=\hat\gamma s^2/h$, $\hat V(\phi)=(2\hat\Theta/h)\hat f(\phi/s)+\text{const}$: the temperature from the bond alone, the potential (barrier, wells) from the site energy.
+
+\textbf{Why the paper's mixture kernel fails on the field (proof).} For a tilted walk, differentiating $Z_g(a)=\int\mathcal N(a';a,\gamma)g(a')\mathrm da'$ under the integral gives
+$Z_g'(a)=\int\frac{a'-a}{\gamma}\,\mathcal N(a';a,\gamma)\,g(a')\,\mathrm da'=Z_g(a)\,\mathbb E[a'-a\mid a]/\gamma$, so
+\begin{equation}\label{eq:drift}
+\mathbb E[a'-a\mid a]=\gamma\,(\log Z_g)'(a).
+\end{equation}
+For the field, $\log Z_g=\log\psi_0+hV/2\Theta+\text{const}$, so in physical units the expected step is $\Theta h(\log\psi_0)'(\phi)+\tfrac{h^2}{2}V'(\phi)$: a nonlinear function with zeros inside the wells, pushing sites off the barrier towards the domain values.
+The mixture kernel has $\mathbb E[a'\mid a]=\rho a+\text{const}$, linear in $a$, whatever the shape of its driving noise. It is misspecified through its \emph{drift}, not through the shape of its noise, so as $M\to\infty$ EM converges to its KL-closest member, the linear-Gaussian projection, and the risk equals the linear floor (1.00--1.02 times it at $M=2048$): no amount of data repairs it.
+The two laboratories intersect only at the Gaussian chain: $\mathcal N(a';\rho a,q)$ is a tilted walk with $\gamma=q/\rho$ and $\log g(a')=-(1-\rho)a'^2/2q$ (complete the square), and for a chain $k(a'-\rho a)$ the mixed derivative $\partial_a\partial_{a'}\log K=-\rho(\log k)''$ is the constant $1/\gamma$ only if $\log k$ is quadratic.
+
+\section{What noise erases: Hermite attenuation and information decay}
+
+This section is the supporting theory of the paper (its Section 6.1). It says where structure beyond second order lives and why it fades first. Write $\mathrm{He}_n$ for the probabilists' Hermite polynomials and $\alpha=e^{-t}$.
+
+\textbf{Theorem 3 (Hermite attenuation; proof).} For $z\sim\mathcal N(0,1)$, $\mathbb E_z\mathrm{He}_n(\alpha a+\sqrt{1-\alpha^2}z)=\alpha^n\mathrm{He}_n(a)$. \emph{Proof.} Average the generating function $e^{sx-s^2/2}=\sum_n\mathrm{He}_n(x)s^n/n!$ at $x=\alpha a+\sqrt{1-\alpha^2}z$ over $z$: it gives $e^{s\alpha a-s^2\alpha^2/2}=\sum_n\mathrm{He}_n(a)(\alpha s)^n/n!$, and matching powers of $s$ proves the claim. For multi-indices
+$\nu$ the coordinates of $\mathbf z$ are independent, so the product form $\mathbb E[H_\nu(\mathbf x)\mid\mathbf a]=e^{-|\nu|t}H_\nu(\mathbf a)$ holds. $\square$ So the channel multiplies the Hermite moment of degree $m$ by $e^{-mt}$ exactly. For cumulants: noise only adds to the second cumulant, so the cumulant of order $m\ge3$ of $\mathbf x$ is $e^{-mt}$ times that of $\mathbf a$:
+the correlation structure (degree 2) fades as $e^{-2t}$ and the fourth cumulant $\kappa_4$ as $e^{-4t}$. Diffusion noise is a low-pass filter on statistical order.
+
+\textbf{Exact identity for the log-density.} With $s=\alpha\mathbf x/\Delta_t$ and $b=\alpha^2/\Delta_t$, Bayes' rule gives $P_t(\mathbf x)=g_{\Delta_t}(\mathbf x)\,\mathbb E_{P_0}\exp(s\cdot\mathbf a-\tfrac b2|\mathbf a|^2)$, with $g_\Delta$ the $\mathcal N(0,\Delta I)$ density. Hence $\log P_t(\mathbf x)=\log g_{\Delta_t}(\mathbf x)+\Lambda(s,b)$,
+$\Lambda(s,b)=\log\mathbb E_{P_0}\exp(s\cdot\mathbf a-\tfrac b2|\mathbf a|^2)$, $\mathbb E[\mathbf a\mid\mathbf x]=\nabla_s\Lambda$ and $S=-\mathbf x/\Delta_t+(\alpha/\Delta_t)\nabla_s\Lambda$ (this is Tweedie again). The Taylor coefficients of $\Lambda$ at the origin are joint cumulants of $s\cdot\mathbf a$ and $|\mathbf a|^2/2$; this needs an exponential moment
+($\mathbb E e^{\lambda|\mathbf a|}<\infty$, true for all the laws except Student-$t$).
+
+\textbf{Theorem 5 (order-by-order decay; sketch).} Grade a monomial $s^jb^k$ by $j+2k$, which is its order in $\alpha$ since $s=O(\alpha)$, $b=O(\alpha^2)$. By the symmetry $\mathbf a\mapsto-\mathbf a$ only even grades occur: $\Lambda=\Lambda_2+\Lambda_4+R_6$. The grade-two part depends on $\Sigma_0$ only; the grade-four part
+differs from that of the covariance twin by a term \emph{linear in the fourth-cumulant tensor $\kappa_4$}. Hence the leading term of the score gap is the gradient of the Wick (Hermite) product,
+\begin{equation}
+S-S^{\rm G}\approx\alpha^4\,\nabla_{\mathbf x}\Big[\tfrac1{24}\sum_{ijkl}\kappa_4[ijkl]\,{:}x_ix_jx_kx_l{:}\Big],\qquad\text{component }m:\ \alpha^4\,\tfrac16\sum_{jkl}\kappa_4[mjkl]\,{:}x_jx_kx_l{:}\,,
+\end{equation}
+and by Wick's theorem the second moment of ${:}x_jx_kx_l{:}$ against itself is the number of index-respecting perfect matchings, $3!$ times the symmetric contraction, so $\mathbb E\big[(\tfrac16\sum\kappa_4[mjkl]{:}x_jx_kx_l{:})^2\big]=\tfrac{3!}{36}\sum_{jkl}\kappa_4[mjkl]^2$; summing over $m$:
+\begin{equation}\label{eq:gap}
+\mathbb E_{P_t}\|S-S^{\rm G}\|^2=\tfrac16\|\kappa_4\|_F^2\,e^{-8t}\,\big(1+O(e^{-2t})\big).
+\end{equation}
+The error from replacing the reference law by $P_t$ is a relative $O(\alpha^2)$, the sixth-grade remainder is $O(\alpha^{10})$ in the cross term, and the tail outside the region where the expansion holds has probability $\exp(-c\,e^{2t})$, below every power of $\alpha$. Without the exponential-moment assumption (Student-$t$) the tail is polynomial and the rate is heavy-tailed; this is the regime
+of the measured $t_5$ chain, whose local slope on the last interval is $-5.28$ rather than $-8$. \textbf{Information.} Since $\partial_\theta\log P_t=\partial_\theta\Lambda$, the Fisher information about a parameter $\theta$ of the clean law carried by one noised sequence is
+\begin{equation}\label{eq:info}
+I_t(\theta)=\begin{cases}\tfrac12\|\partial_\theta\Sigma_0\|_F^2\,e^{-4t}\,(1+\epsilon_t)&\partial_\theta\Sigma_0\ne0\quad(\text{covariance coordinates}),\\[2pt]
+\tfrac1{24}\|\partial_\theta\kappa_4\|_F^2\,e^{-8t}\,(1+\epsilon_t)&\partial_\theta\Sigma_0=0\quad(\text{shape coordinates}),\end{cases}
+\end{equation}
+by Wick's theorem applied to the leading grade ($\tfrac{\alpha^4}{4}\cdot2\|\partial\Sigma_0\|^2$, respectively $\tfrac{4!}{24^2}\|\partial\kappa_4\|^2\alpha^8$). \textbf{General order} (Theorem 6): if the lowest non-vanishing Hermite moment of $\partial_\theta P_0$ has degree $m$,
+$I_t(\theta)=e^{-2mt}\sum_{|\nu|=m}(\partial_\theta\mathbb E[H_\nu(\mathbf a)])^2/\nu!\cdot(1+O(e^{-2t}))$ by orthogonality of the $H_\nu$ under the reference Gaussian. Degree-2 and degree-4 coordinates are orthogonal at leading order, so the efficient information about a shape coordinate after the correlation is estimated equals its raw information.
+
+\textbf{Corollary 7 (sample complexity by order).} At fixed $t$ the family is differentiable in quadratic mean with finite non-singular information, so the H\'ajek--Le Cam local asymptotic minimax bound holds and maximum likelihood attains it: any estimator from $M$ sequences at level $t$ has risk at least $1/(MI_t^{\rm eff})\asymp e^{2mt}/M$.
+A covariance coordinate therefore needs $M\propto e^{4t}$ sequences for a fixed precision and a shape coordinate $M\propto e^{8t}$: the ratio $e^{4t}$ is the extra cost of shape. This bound is for regular parametric families at fixed $t$ and says nothing about absolute precision beyond $1/\sqrt{MI_t}$ exceeding the coordinate's range.
+
+\textbf{The crossover $t_*$.} For the Gaussian chain, $P_t/g_{\Delta_t}$ is expanded in $\alpha^2\Sigma_0$, i.e.\ in $e^{-2t}\lambda_{\max}(\Sigma_0)$ in operator norm, so the expansion is valid for $t>t_*=\tfrac12\log\lambda_{\max}(\Sigma_0)$ ($t_*=1.17$ at $\rho=0.85$, where $\lambda_{\max}\le(1+\rho)/(1-\rho)$ by the Toeplitz bound).
+Equivalently $P_t/g_{\Delta_t}\in L^2(g_{\Delta_t})$ iff $2I-\Sigma_t\succ0$, i.e.\ $e^{2t}>\lambda_{\max}-1$. Below $t_*$ the long-wavelength covariance modes are still of order one and the measured rates are shallower (slopes $-3$ to $-6$ rather than $-4$ and $-8$ at $t\lesssim1.6$).
+
+\textbf{Information in cumulant coordinates (the Q10 recomputation).} The earlier curves were Fisher information about $\theta=(\rho,q,\beta)$ where $\beta$ is the shape parameter of a generalised-Gaussian noise law of fixed variance $q$. Jérôme's point: $\beta$ is not a moment; resolving it needs all cumulants. The honest coordinates are $\phi=(\rho,\kappa_2,\kappa_4)$ with
+$\kappa_2=q$ and $\kappa_4=\gamma_2(\beta)q^2$, $\gamma_2(\beta)=\Gamma(5/\beta)\Gamma(1/\beta)/\Gamma(3/\beta)^2-3$ the excess kurtosis. Information transforms as a tensor, not as a label: with the Jacobian $J=\partial\phi/\partial\theta$ (lower triangular, last row $(0,\,2\gamma_2q,\,\gamma_2'q^2)$),
+\begin{equation}
+I_\phi=J^{-\top}I_\theta J^{-1},\qquad I^{\rm eff}(\phi_k)=\frac1{(I_\phi^{-1})_{kk}}=\frac1{j_k^{\top}I_\theta^{-1}j_k},
+\end{equation}
+with $j_k$ the $k$th row of $J$. For $\rho$ and $\kappa_2$ the rows are unit vectors, so the effective information is unchanged; for $\kappa_4$ the row mixes in the $q$ direction ($2\gamma_2q\neq0$), so $I^{\rm eff}(\kappa_4)\ne I^{\rm eff}(\beta)$, by a factor between 1.6 and 1526 across the schedule: a relabel would have been wrong. In these coordinates the ratio of fourth- to second-order information at the Laplace member
+is 0.071 at $t=0.05$ and $9.9\times10^{-5}$ at $t=3$, a fall by a factor of about 700, and the fitted slopes on the smooth members are $-3.99$ ($\kappa_2$) and $-7.94$, $-8.01$ ($\kappa_4$, $\beta=2,3$), against the predicted $-4$ and $-8$.
+
+\section{Where the structure stops}
+
+\textbf{A hidden variable shared by the whole sequence.} Let $\mathbf X=Gb\mathbf 1+\mathbf U$, $G=\pm1$ a fair sign per sequence and $\mathbf U$ the Gaussian linear chain. Given $G$ the sequence is Markov; marginally it is not (the whole history informs $G$). Noised, $\mathbf x\mid G{=}g\sim\mathcal N(g\mathbf m,\Sigma_t)$ with $\mathbf m=e^{-t}b\mathbf 1$ and
+$\Sigma_t=e^{-2t}\Sigma_U+\Delta_tI$, so $P_t=\tfrac12\sum_g\mathcal N(g\mathbf m,\Sigma_t)$. \emph{Exact score (proof).} $\nabla\log P_t=\sum_gw_g\,(-\Sigma_t^{-1}(\mathbf x-g\mathbf m))$ with posterior weights $w_g\propto\exp(g\,\mathbf m^{\top}\Sigma_t^{-1}\mathbf x)$, so
+\begin{equation}
+S(\mathbf x,t)=-\Sigma_t^{-1}\big(\mathbf x-\mathbf m\tanh(\mathbf m^{\top}\Sigma_t^{-1}\mathbf x)\big),
+\end{equation}
+available without any grid: the reference. The linear floor uses the true covariance $\Sigma_U+b^2\mathbf 1\mathbf 1^{\top}$.
+\emph{The bias that data cannot remove.} A first-order kernel fitted by maximum likelihood converges, as $M\to\infty$, to the member of its family closest in KL to the noised law (the maximum-likelihood limit under a misspecified model). For the Gaussian version of the latent problem this is
+$\theta^*=\arg\min_{(\rho,q)}\sum_t\mathrm{KL}\big(\mathcal N(0,\tilde\Sigma_t)\,\|\,\mathcal N(0,\hat\Sigma_t(\rho,q))\big)$, and the resulting score $-\hat\Sigma_t^{-1}\mathbf x$ differs from the truth $-\tilde\Sigma_t^{-1}\mathbf x$ by a pooled relative error
+\begin{equation}
+b^2=\frac{\sum_t\operatorname{tr}\big[(\hat\Sigma_t^{-1}-\tilde\Sigma_t^{-1})\tilde\Sigma_t(\hat\Sigma_t^{-1}-\tilde\Sigma_t^{-1})\big]}{\sum_t\operatorname{tr}\tilde\Sigma_t^{-1}}
+\end{equation}
+(using $\mathbb E\|A\mathbf x\|^2=\operatorname{tr}(A\tilde\Sigma_tA^{\top})$ and $\mathbb E\|\tilde\Sigma_t^{-1}\mathbf x\|^2=\operatorname{tr}\tilde\Sigma_t^{-1}$). The finite-sample error is $\sqrt{b^2+v/M}$: a bias $b$ that no sample size removes plus a variance that falls like $1/M$; the measured values reproduce it to within 0.019 across mechanisms.
+\emph{The repair.} Enlarge the state to $(X_i,G)$: a hidden Markov model whose latent chain never changes, i.e.\ a mixture of two chains with weights inferred per sequence from the evidences. With the reflection symmetry of the truth, the minus chain is the reflection of the plus chain, $K_-(x'\mid x)=K_+(-x'\mid-x)$, $\mu_-(x)=\mu_+(-x)$, so the augmented model has the parameters of one kernel and none for $b$ (a drift constant already encodes the offset).
+BP runs on each component separately with its evidence $Z_g$; the responsibilities are $r_g\propto\pi_gZ_g$; the posterior mean is $\sum_gr_g\mathbb E[a_i\mid\mathbf x,g]$; and the E-step sums the components' pair statistics weighted by $r_g$ with the minus component reflected back onto the plus frame. Fisher's identity holds for the mixture evidence
+$Z=\tfrac12(Z_++Z_-)$, so EM is exact maximum likelihood for the augmented model. The reflection also explains the surprise at $b=0$: fitting the plain kernel on each sequence \emph{and its sign-flipped copy} uses the symmetry and equals, in average risk, fitting on twice as many sequences.
+
+\textbf{Subsampling.} Observing every $s$-th site of a Markov chain gives a Markov chain with kernel $K^s=K\circ\dots\circ K$ (Chapman--Kolmogorov). In the eigenbasis of the normalised transfer operator its eigenvalues are $(\lambda_n/\lambda_0)^s$, so the correlation length in the new index is $\xi/s$ and the coarse-grained physics is unchanged, but $K^s$ is no longer a Gaussian step times a function of the arrival point,
+which is why the 5- and 25-number kernels become misspecified (risk $\times25$ and $\times14$ from stride 1 to 4) while a network kernel can follow it.
+
+\textbf{A chain outside the family.} The Laplace-bond chain is built, like the field, from a symmetric pair weight, here $e^{W(a,a')}$ with $W(a,a')=-|a'-a|/\lambda-\eta[V(a)+V(a')]/2$, $V(a)=(a^2-1)^2/4$, $\lambda=0.40$, $\eta=2.0$ (chosen before any fit to match the base cell's lag-one correlation and kurtosis), by the same Perron--Frobenius construction on the grid. Its kernel is the ground-state transform of this weight and is not a Gaussian step
+times a function of the arrival point (a Laplace bond is not Gaussian), so the tilted-walk families are misspecified there; the oracle and exact samples come from the grid, with no discretisation gap between data and reference.
+
+\section{Speciation: the commitment of the denoiser}
+
+For a noised sequence the exact posterior gives $p_i=P(a_i>0\mid\mathbf x)$ (the sign of a site is the domain it belongs to), and the \emph{commitment} of site $i$ is $|2p_i-1|\in[0,1]$. Averaged over sites and data it falls from 1 at $t=0$ to 0 at high noise; $t_c$ is the level where it crosses $\tfrac12$.
+\textbf{Calibration.} If $p_i$ is the true posterior probability that the sign is $+$, then guessing the sign by the posterior's majority is right with probability $\mathbb E[\max(p_i,1-p_i)]=\tfrac12(1+\mathbb E|2p_i-1|)$: the commitment is the excess probability of guessing right, which E50 verifies to within 0.003 on average over levels.
+\textbf{The Gaussian twin in closed form (proof).} For the covariance twin the posterior of $a_i$ is $\mathcal N(\mu_i,v_i)$ with $v_i$ not depending on the data and $\mu_i$ a linear function of $\mathbf x$, with $\operatorname{Var}\mu_i=\Sigma_{ii}-v_i$ by the law of total variance. So $(a_i,\mu_i)$ is jointly Gaussian with correlation
+$R_i=\sqrt{1-v_i/\Sigma_{ii}}$, and the probability that the sign of $\mu_i$ agrees with the sign of $a_i$ is the orthant probability $\tfrac12+\tfrac1\pi\arcsin R_i$. By calibration the commitment is $2\cdot P(\text{right})-1$:
+\begin{equation}
+\text{commitment}_i=\tfrac2\pi\arcsin R_i.
+\end{equation}
+It equals $\tfrac12$ exactly when $R_i=\sin(\pi/4)$, i.e.\ $v_i=\Sigma_{ii}/2$: the twin is half-committed where its posterior variance has halved. For a single Gaussian mode of prior variance $\lambda$ seen through the channel, the posterior precision is $1/\lambda+e^{-2t}/\Delta_t$, so $v/\lambda=\big(1+\lambda e^{-2t}/\Delta_t\big)^{-1}=\tfrac12$ iff $\lambda e^{-2t}=\Delta_t=1-e^{-2t}$,
+i.e.\ $e^{2t}=1+\lambda$:
+\begin{equation}
+t_c=\tfrac12\ln(1+\lambda_{\max}),
+\end{equation}
+the commitment time of the leading covariance mode, which for chains shorter than the correlation length matches the measured $t_c$ one-for-one (slope 0.98): the finite-chain analogue of the speciation time $\tfrac12\ln\Lambda$ of Biroli, Bonnaire, de Bortoli and Mézard (2024) for the largest eigenvalue $\Lambda$ of the data covariance.
+The exact (non-Gaussian) posterior commits earlier than its twin, at every temperature, by 0.47 in $t$ when coldest and 0.07 when hottest: the two humps carry commitment information that the covariance alone does not.
+
+\section{Cost, numerics and the grid}
+
+\textbf{Operation counts.} Per sequence and level, grid BP costs $O(LN_g^2)$ (two sweeps plus the pair marginals). Measured log--log slopes on the 8-thread node: 1.03 in the batch, 1.03 in $L$, and $1.16$ in $N_g$ rather than 2, because at these sizes element-wise work and memory traffic, not the matrix product, dominate (the matrix product is only 12--15\% of a sweep at $N_g=401$).
+\textbf{Amdahl bound.} If a fraction $f$ of the time is a step that is made \emph{free}, the speed-up is at most $1/(1-f)$: with $f=0.12$--$0.15$ no faster solver for the transition step can exceed 1.14--1.18$\times$. An FFT transition computes the convolution in $O(N_g\log N_g)$ per vector instead of $N_g^2$; ours is second-order accurate ($6.7\times10^{-4}$ from dense BP) and
+5.8 times \emph{slower} at $N_g=401$, and still 2.2 times slower at $N_g=3201$, the largest grid timed: the asymptotic advantage is not reached at the sizes that matter here.
+\textbf{Fourier representations of messages.} A message is a function; one can store its first $D$ Fourier coefficients on a window instead of $N_g$ grid values. On the Laplace chain a Fourier basis adapted to each message needs 33 numbers for a KL divergence of $10^{-2}$ and 47 for $10^{-4}$ against 45 and 151 for the grid, but reaches $10^{-4}$ in only 53 of 144 cases and adding modes can make the error \emph{increase}, so a solver cannot choose a truncation and know its error. The Gram--Charlier (cumulant) expansion is non-monotone in most cases.
+\textbf{Closure families for messages.} A family is \emph{closed} if the recursion \eqref{eq:bp} maps it into itself. The Gaussian is (on a Gaussian chain, Proposition 2). The family ``a Gaussian passed once through the kernel'' (Jérôme's Laplace-type ansatz) is exact at site 1 only and not closed (432/432 configurations fail in the interior, KL about $1.6\times10^{-5}$ at site 31 at low noise); it is still $2{,}272$ times closer to the true message than a Gaussian.
+\textbf{Coarser grids.} With the true $\phi^4$ kernel the integrands are smooth and $N_g=101$ is exact to $2\times10^{-11}$; the learned $\phi^4$ kernels lose nothing at 101 points and at most 1.2\% at 51, and EM runs about 14 times faster. The linear chain's 8-component mixtures learn components narrower than a 101-point spacing, so they need about 151 points; a kernel component narrower than two grid cells is flagged ``unresolved''.
+\textbf{Memory.} One BP call on 512 sequences of 32 sites at 401 points holds five message-sized arrays, about 260\,MB, linear in batch, length and grid.
+
+\section{Experimental protocol and statistics}
+
+\textbf{Estimands and data.} Risks are \eqref{eq:risk}: on all sites (headline), on interior sites 5--28 (used for selection), and on the centre site (diagnostic). Twelve log-spaced levels $t\in[0.05,3]$. Per seed, a validation bundle (1024 sequences) and a test bundle (2048) are drawn from streams disjoint from every training stream, and their hashes are stored with every row so pairing across arms is checkable.
+\textbf{Seeds and statistics.} Sixteen confirmatory seeds for every comparison at the frozen configuration (eight for regime sweeps and some $\phi^4$ studies); a seed is an independent draw of data and initialisation. Ratios are formed \emph{within seed} (paired by test bundle) and averaged; intervals are percentile bootstraps over seeds; ``16 of 16 seeds'' counts seeds in which an arm is better. Development seeds, disjoint from the confirmatory ones, are used for every architecture and hyperparameter choice (three restarts per configuration).
+\textbf{Interfaces.} (A) networks trained by DSM on clean sequences with the level and corruption redrawn every step; (B) the same on one fixed corruption per clean sequence; (C) ISM on the same one-view noised bundle as EM--BP, the checkpoint selected on the held-out implicit objective, so the true score enters only in the final scoring. EM--BP is always at interface C.
+\textbf{Registry discipline.} For each experiment a registry file with the hypothesis, the design, the predictions and the analysis script is written \emph{before} the main run, with dated amendments; outputs are frozen by SHA-256 checksum (320 files at the last check, 0 problems); a prediction is read by its own rule as CONFIRMED, FALSIFIED, or UNRESOLVED when the rule cannot decide (for example a fit still improving when its budget ends); a failed fit counts as a failure and is never dropped.
+\textbf{From files to the manuscript.} Every number in the paper is a macro generated from the frozen files; a check regenerates the fragments in a scratch tree and diffs them, rejects any typed decimal, and builds the paper; an independent script recomputes headline numbers with plain pandas and compares.

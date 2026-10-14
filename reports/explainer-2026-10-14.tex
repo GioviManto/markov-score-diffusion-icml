@@ -36,6 +36,7 @@
 \renewcommand{\topfraction}{0.9}\renewcommand{\bottomfraction}{0.8}\renewcommand{\textfraction}{0.07}
 \renewcommand{\floatpagefraction}{0.85}\setcounter{topnumber}{3}\setcounter{totalnumber}{4}
 \setlength{\parindent}{0pt}
+\emergencystretch=4em\hbadness=3000
 
 \title{\textbf{What we did since the call of 25 September}\\[0.3em]\large What to know before writing to Jérôme, then an explanation from scratch}
 \author{Prepared for Giovanni Mantovani}
@@ -50,6 +51,7 @@ The first two pages are what you need before replying. The rest explains the wor
 \textbf{Part I} answers the eleven questions Jérôme asked on 25 September, \textbf{Part II} is the $\phi^4$ field he and Marc proposed
 afterwards. Every number comes from a run registered in advance with its output frozen by a checksum (the few exceptions are
 flagged); a prediction that turned out wrong is reported in \fals{italics}: a falsified prediction is a result, not a failure.
+\textbf{Part III} (Sections 6--15) is the mathematics and the technical details: derivations of everything used above, for reading with a pencil.
 \end{abstract}
 
 
@@ -607,6 +609,8 @@ mixtures need about 151.}
 \medskip
 \textbf{My suggested six for the body, after the summary figure:} A, B, C, D, E and F, plus the small method schematic (Figure~1 of this document). G, H and I go to the appendix, with one sentence each in the text. \path{docs/PAPER_REWRITE_2026-10-12.md}
 has the cutting plan; the figures themselves are all already in the draft.
+
+\input{explainer-part3}
 
 \medskip
 {\footnotesize\color{gray}\raggedright Sources: \path{experiments/registry/E*.json} (hypotheses, predictions, outcomes, corrections)
