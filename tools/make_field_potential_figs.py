@@ -41,7 +41,9 @@ from markov_score.field import potential  # noqa: E402
 from markov_score.pair_energy_kernel import potential_readings  # noqa: E402
 from frozen_config import FROZEN  # noqa: E402
 
-ARMS = {"em_pair_quartic": ("pair, 5", fs.CAT[0]), "em_tilted_poly": ("tilt, 7", fs.CAT[1]), "em_tilted_spline": ("tilt, 25", fs.CAT[2])}
+ARMS = {"em_pair_quartic": ("site energy, 5", fs.CAT[0]), "em_tilted_poly": ("Legendre, 7", fs.CAT[1]), "em_tilted_spline": ("spline, 25", fs.CAT[2])}
+# drawing order: the five-parameter site energy and the true potential on top of the flexible tilts
+ZORDER = {"em_pair_quartic": 4, "em_tilted_poly": 3, "em_tilted_spline": 2}
 DEFAULT_KERNELS = ["outputs/E33_preview_laptop/kernels.csv", "outputs/E33_preview_laptop_pair/kernels.csv",
                    "outputs/E33_preview_laptop_M2048/kernels.csv", "outputs/E33_preview_laptop_pair_M2048/kernels.csv"]
 DEFAULT_CLEAN = ["outputs/E34_preview_laptop/clean.csv", "outputs/E34_preview_laptop_pairclean/clean.csv"]
@@ -94,7 +96,7 @@ def figure(tab, curves, out):
     fig, axes = plt.subplots(1, 3, figsize=(fs.FULL_W, 2.15), gridspec_kw=dict(wspace=0.36))
     phi = np.linspace(-2.0, 2.0, 801)
     for ax, cell in zip(axes[:2], cells):
-        ax.plot(phi, potential(phi), color=fs.INK2, lw=1.4, ls="--", label=r"$V$")
+        ax.plot(phi, potential(phi), color=fs.INK, lw=1.3, ls="--", label=r"$V$", zorder=6)
         sub = tab[(tab.cell == cell) & (tab.source == "noisy")]
         if sub.empty:
             continue
@@ -104,7 +106,8 @@ def figure(tab, curves, out):
                 key = ("noisy", cell, arm, M, int(seed))
                 if key in curves:
                     p, v = curves[key]
-                    ax.plot(p, v, color=col, lw=0.9, alpha=0.85, label=lab if seed == sorted(sub.seed.unique())[0] else None)
+                    ax.plot(p, v, color=col, lw=0.9 if arm == "em_pair_quartic" else 0.7, alpha=0.9 if arm == "em_pair_quartic" else 0.55,
+                            zorder=ZORDER[arm], label=lab if seed == sorted(sub.seed.unique())[0] else None)
             for seed in sorted(tab[(tab.cell == cell) & (tab.source == "clean") & (tab.arm == arm) & (tab.n_chains == M)].seed.unique())[:1]:
                 key = ("clean", cell, arm, M, int(seed))
                 if key in curves:
@@ -114,7 +117,7 @@ def figure(tab, curves, out):
         fs.ygrid(ax); fs.panel_label(ax, "(a)" if ax is axes[0] else "(b)")
         ax.set_title(CELL_LABEL.get(cell, cell) + f", $M{{=}}{M}$", fontsize=6.6, pad=2.5)
     # the region above the barrier, between the wells, is the one every curve leaves empty
-    axes[0].legend(fontsize=6.0, loc="upper center", ncol=2, handlelength=1.5, columnspacing=0.8, labelspacing=0.2, borderpad=0.25)
+    axes[0].legend(fontsize=5.8, loc="upper center", ncol=1, handlelength=1.5, labelspacing=0.2, borderpad=0.25)
     cx = axes[2]
     for j, cell in enumerate(cells):
         for arm, (lab, col) in ARMS.items():
@@ -150,7 +153,11 @@ def main() -> int:
     ap.add_argument("--clean", nargs="*", default=DEFAULT_CLEAN)
     ap.add_argument("--fig", default="reports/figures/fig-field-potential.pdf")
     ap.add_argument("--table", default="reports/numbers/field_potential.csv")
+    ap.add_argument("--arms", nargs="*", default=list(ARMS),
+                    help="subset of the gradient-class arms to draw (the frozen Legendre shards contain failed fits)")
     args = ap.parse_args()
+    for arm in [a for a in ARMS if a not in args.arms]:
+        del ARMS[arm]
     fs.apply()
     grid, _ = make_grid(FROZEN.half_width, FROZEN.n_grid)
     noisy = _load(args.kernels, "noisy"); clean = _load(args.clean, "clean")

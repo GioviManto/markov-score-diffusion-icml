@@ -1,0 +1,467 @@
+\documentclass[11pt,a4paper]{article}
+% Briefing for the call with Jérôme on 19 October 2026: the phi^4 field laboratory and the answers to the
+% questions of the 25 September call. Every number is a macro generated from the frozen outputs
+% (../paper/sections/field-numbers.tex, written by tools/make_paper_numbers.py) or a generated table of the
+% paper (../paper/sections/tab-field-*.tex), except a few quoted from the question ledger
+% (docs/JEROME_CALL_2026-09-25.md) and from the registry outcomes; those are the audited (corrected 9 Oct) values.
+% Figure fig-field-potential-frozen.pdf: tools/make_field_potential_figs.py on the frozen shards
+% hpc_E33q_s* and hpc_E33k_s* (command in the caption's source comment below).
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{newtxtext,newtxmath}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hyphens]{url}
+\usepackage[hidelinks]{hyperref}
+\graphicspath{{figures/}{../paper/figures/}}
+\setlist{itemsep=0.15em,topsep=0.3em,leftmargin=1.3em}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4em}
+\renewcommand{\topfraction}{0.9}\renewcommand{\bottomfraction}{0.8}\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.85}
+\emergencystretch=3em
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\input{../paper/notation}
+\input{../paper/sections/field-numbers}
+\newcommand{\fals}[1]{\emph{#1}}
+
+\title{\textbf{The $\phi^4$ field, and the answers to 25 September}}
+\author{Giovanni Mantovani}
+\date{Call with Jérôme, 19 October 2026}
+
+\begin{document}
+\maketitle
+\vspace{-1.2em}
+
+\section*{In one page}
+
+\textbf{What we did.} We built the second laboratory of your email: exact snapshots of the one-dimensional $\phi^4$
+(stochastic Allen--Cahn) field, six settings across temperature and lattice spacing, and the four arms you proposed (EM with a
+learned pair energy, the Gaussian closure, a window CNN, the exact score), plus a transformer, a neural (MDN) kernel and the
+paper's own mixture kernel. EM--BP learns from noisy snapshots only; the networks are trained both on noisy snapshots and,
+with more information, on clean ones. Sixteen seeds; $\nseq=32$ to $2048$ sequences (networks at $128$ and $2048$). Each
+experiment was registered with its predictions before the main run, and its outputs are frozen by checksum. Predictions that
+failed are reported as such (\fals{in italics}).
+
+\textbf{What came out.}
+\begin{enumerate}[leftmargin=1.6em]
+\item \textbf{The five-parameter site energy wins everywhere.} Your pair energy, a Gaussian bond plus a quartic potential per site, learned by EM--BP
+through the noise, is the best arm on every cell at every $\nseq$ (on average over seeds). At $\nseq=2048$ its error is
+$\fldSiteFloorMin$--$\fldSiteFloorMax$ of the Gaussian closure's, and the best network is $\fldNetRatioMin$--$\fldNetRatioMax$
+times worse.
+\item \textbf{Its parameters are the physics.} The fitted temperature is within $10\%$ of the truth in $\fldThetaOkFits$ of
+$\fldThetaFits$ fits, the barrier height within $20\%$ in $\fldBarrierOkFits$ of $\fldBarrierFits$, and the learned potential
+is the double well (Figure~\ref{fig:potential}). Samples drawn from it have the right kinks and domain lengths.
+\item \textbf{The kernel family is the modelling choice.} The paper's mixture kernel, whose expected next value is linear in the
+current one, learns nothing beyond the Gaussian closure ($\fldMixFloorMin$--$\fldMixFloorMax$ times its error). A neural kernel
+earns its parameters only where the simple family is wrong (Section~\ref{sec:limits}).
+\item \textbf{Your refinement prediction holds.} As $\latt$ goes from $1$ to $\tfrac14$ at fixed physical length, the window CNN
+goes from $\fldWindowFloorHone$ to $\fldWindowFloorHzeroptwofive$ times the Gaussian closure's error (its radius re-chosen on
+each lattice), while the site energy stays at $3$--$4\%$ of it.
+\end{enumerate}
+
+\textbf{What is weaker than it sounds} (Section~\ref{sec:honest}). BP is slower per sequence than the networks; the stopping
+point of every arm, networks included, is chosen with the exact score on a validation set (a likelihood-based rule gives
+$4$--$23\%$ instead of $3$--$17\%$); with $\nseq=32$ on the two hottest cells the site energy is still above the Gaussian
+closure; several neural-kernel numbers are upper bounds.
+
+\clearpage
+\begin{table}[h]
+\centering\small
+\caption{Your email, point by point.}
+\label{tab:email}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}L@{}}
+\toprule
+Your point & What we did, and what came out \\
+\midrule
+Snapshots are exactly Markov; grid BP is an exact reference & Yes. The oracle on the 401-point grid agrees with a four
+times finer grid to $\fldOracleGridWorst$ on every cell. \\
+The mixture-of-noise family is misspecified; a learned kernel is needed & Confirmed: the mixture sits on the Gaussian closure,
+$\fldMixFloorMin$--$\fldMixFloorMax$ times it. \\
+Parametrise a pair energy $W_\params$; Boltzmann learning; the E-step is the Fisher identity & Done, with five parameters
+(Section~\ref{sec:estimator}); best arm everywhere. One addition: the directed kernel and the symmetric pair energy are the
+same model class (every such kernel is reversible). \\
+Gaussian closure should fail badly & It fails, and more than expected: moment-projected BP is not even well-posed here
+(Section~\ref{sec:closure}). The Gaussian answer is the linear floor: $0.27$ on the base cell against $0.03$ for the site energy. \\
+Choose $\latt$ near the correlation length, or treat $\latt$ as a parameter & Two axes: a temperature sweep at fixed
+correlation length ($\corrlen\approx6$ sites), and a refinement $\latt=1,\tfrac12,\tfrac14$ at fixed physical length; plus a
+fixed-$\latt$ sweep for the physics. \\
+Fixed-window networks lose under refinement; BP does not care & Confirmed (item 4 above, Figure~\ref{fig:runtime}). \\
+Domain length grows like $e^{\Delta E/\Temp}$; no transition in 1D & Smooth crossover, $\corrlen$ from $\fldXiHot$ to $\fldXiCold$
+sites as $\Temp$ goes from $2$ to $0.2$. \fals{The fitted kink energy is $\fldKinkFit$, not $2\sqrt2/3\approx0.943$}: these
+temperatures are not cold enough. \\
+Use the temperature sweep to study speciation & Done (Figure~\ref{fig:speciation}): colder fields commit earlier, and earlier
+than their Gaussian twin. \\
+Exact sampling, no equilibration issues & Data are exact steps of the true kernel (rejection from the tilted walk), the first
+site after a burn-in that forgets the start to $10^{-12}$; an inverse-CDF sampler on the transfer matrix agrees. \\
+Optimise grid BP; Fourier not so promising & Agreed. The cheap lever is a coarser grid: on $101$ points the $\phi^4$ kernels lose
+nothing and BP is $\cmpCoarseSpeedupHundred$ times faster than on $401$. \\
+Frame the theory neutrally, with the linear chain as a first example & Drafted this way (general Markov kernel; linear chain first, field
+second); to be cut down. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%=====================================================================================================
+\section{The field as a Markov chain}
+\label{sec:model}
+
+The SPDE and its stationary law (we write $\Temp$ for the temperature, because $T$ is the transfer operator):
+\[
+\partial_\tau\phi=\partial_x^2\phi-V'(\phi)+\sqrt{2\Temp}\,\eta,\qquad V(\phi)=\tfrac14(\phi^2-1)^2,\qquad
+p[\phi]\propto\exp\Big(-\tfrac1\Temp\textstyle\int\big[\tfrac12(\partial_x\phi)^2+V(\phi)\big]\dd x\Big).
+\]
+On a lattice of spacing $\latt$ the energy couples only neighbours,
+\[
+p(\phi_1,\dots,\phi_\nsites)\;\propto\;\prod_i\exp\Big(-\frac{(\phi_{i+1}-\phi_i)^2}{2\Temp\latt}-\frac{\latt\,V(\phi_i)}{\Temp}\Big),
+\]
+so a snapshot is exactly a Markov chain in the site index. With the symmetric transfer operator
+$\transfer(\phi,\phi')=e^{-\latt V(\phi)/2\Temp}\,e^{-(\phi'-\phi)^2/2\Temp\latt}\,e^{-\latt V(\phi')/2\Temp}$, its Perron
+pair $\transfer\psi_0=\lambda_0\psi_0$, the stationary chain has
+\[
+\kernel(\phi'\mid\phi)=\frac{\transfer(\phi,\phi')\,\psi_0(\phi')}{\lambda_0\,\psi_0(\phi)}
+=\frac{\normal{\phi';\phi}{\Temp\latt}\,g(\phi')}{Z(\phi)},\qquad g=\psi_0\,e^{-\latt V/2\Temp},\qquad \pi=\psi_0^2 .
+\]
+The second form is your ground-state transform written as a \emph{tilted walk}: a Gaussian step re-weighted by a function of the
+arrival point, with $Z$ its normaliser. Two facts follow and matter below:
+\begin{itemize}
+\item \textbf{The drift is non-linear.} In standardised units $a=\phi/s$ the step variance is $\bondvar=\Temp\latt/s^2$, and
+differentiating $Z$ gives $\E[a'-a\mid a]=\bondvar\,(\log Z)'(a)$. The paper's
+mixture kernel $a'=\corr a+\varepsilon$, $\varepsilon\sim\sum_c w_c\normal{\mu_c}{\sigma_c^2}$, has $\E[a'\mid a]=\corr a+$const,
+so it cannot hold a site inside a domain. The two families meet only at the Gaussian linear chain.
+\item \textbf{Correlation length} $\corrlen=1/\log(\lambda_0/\lambda_1)$ in sites; it grows like $1/\latt$ under refinement and
+roughly like $e^{E_{\mathrm{kink}}/\Temp}$ as the field cools. There is no transition at any $\Temp>0$.
+\end{itemize}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{fig-field-chain.pdf}
+\caption{(a) Stationary density of the standardised field $a=\phi/s$ at the four temperatures of the sweep: two humps when cold.
+(b) The log-tilt $\log g$ against the Gaussian tilt of the covariance twin: bimodal, which no linear-Gaussian kernel can
+express. (c) An exact snapshot of 128 sites at $\Temp=0.3$, $\latt=1$; dotted lines mark the wells.}
+\label{fig:chain}
+\end{figure}
+
+\textbf{Cells.} The base cell ($\Temp=0.3$, $\latt=1$, $\nsites=32$) is cold enough for domains. Three hotter cells keep the
+correlation length at about six sites by solving for $\latt$, so they match the linear-chain laboratory at second order. Two
+refinements of the base cell keep the physical length fixed. The ``floor'' column is the error of the best linear estimator,
+i.e.\ how much there is to gain beyond a Gaussian model.
+
+\input{../paper/sections/tab-field-cells}
+
+%=====================================================================================================
+\section{The estimator: your pair energy, learned through the noise}
+\label{sec:estimator}
+
+\textbf{Score from BP.} Data are corrupted as $\vx=e^{-t}\va+\sqrt{\Dt}\,\vz$, $\Dt=1-e^{-2t}$. By Tweedie,
+$\nabla_\vx\log\Pt(\vx)=-(\vx-e^{-t}\E[\va\mid\vx])/\Dt$, and on a chain the posterior mean is exact by one forward and one
+backward BP sweep through $\kernel$, with messages on a 401-point grid on $[-8,8]$.
+
+\textbf{The model.} On the standardised field the pair energy is a Gaussian bond plus a site energy,
+\[
+W_\params(a,a')=\frac{(a'-a)^2}{2\bondvar}+f_\params(a)+f_\params(a'),\qquad f_\params(a)=\sum_{m=1}^{4}c_m\Big(\frac a2\Big)^m,
+\qquad \params=(\log\bondvar,c_1,\dots,c_4),
+\]
+five parameters. We call this arm the \emph{site energy}, after its free function $f_\params$; it is the pair energy of your
+email. The kernel is the ground-state transform of
+$\transfer_\params(a,a')=e^{-f_\params(a)}\,\normal{a';a}{\bondvar}\,e^{-f_\params(a')}$ (one eigensolve per evaluation). The truth
+is in the family: $\bondvar=\Temp\latt/s^2$ and $f=(\latt/2\Temp)\,V(sa)+$const.
+
+\textbf{Learning = Boltzmann learning with a posterior.} For one noisy sequence, Fisher's identity gives
+\[
+\nabla_\params\log p_\params(\vx)=\E_{p_\params(\va\mid\vx)}\Big[\nabla_\params\log p_\params(\va)\Big]
+=-\,\E_{\text{posterior}}\Big[\textstyle\sum_i\nabla_\params W_\params(a_i,a_{i+1})\Big]
++\E_{\text{model}}\Big[\textstyle\sum_i\nabla_\params W_\params(a_i,a_{i+1})\Big],
+\]
+for the Gibbs form $p_\params(\va)\propto\exp(-\sum_iW_\params(a_i,a_{i+1}))$: your $\E_{\rm data}[\nabla W]-\E_{\rm model}[\nabla W]$
+with the data term replaced by a posterior expectation. EM does this
+in two steps: the E-step runs BP on each noisy sequence and accumulates the expected pair counts $\Xis(a,a')$; the M-step
+increases $\Qfun(\params)=\langle\Xis,\log\kernelth\rangle$ (L-BFGS, gradient through the perturbation theory of the Perron
+vector; not concave, so this is generalised EM). EM's stopping point is chosen on a validation set (Section~\ref{sec:honest}).
+
+\textbf{Directed or symmetric? The same class.} Any tilted walk
+$\kernel_g(a'\mid a)=\normal{a';a}{\bondvar}\,g(a')/Z_g(a)$ is reversible, with invariant law $\pi_g\propto g\,Z_g$, because
+$\pi_g(a)\kernel_g(a'\mid a)\propto g(a)\,g(a')\,\normal{a';a}{\bondvar}$ is symmetric. It is the Gibbs chain of the pair energy
+above with $f=-\tfrac12\log(g/Z_g)$. So the choice is only about parametrisation: a flexible tilt $\log g$ (we run a spline,
+$25$ numbers, and a Legendre polynomial, $7$) or the site energy itself ($5$, a quartic for the field). A fitted kernel then
+reads as physics: $\hat\Temp=\hat\bondvar s^2/\latt$ and $\hat V(\phi)=(2\hat\Temp/\latt)\hat f(\phi/s)+$const.
+
+\textbf{What the Gaussian closure is here.}
+\label{sec:closure}
+Forcing the messages to be Gaussian (moment projection, which on a linear chain is exactly the Kalman smoother) is not a usable
+estimator on the field: far from the bulk the kernel jumps back towards it almost regardless of where it starts, so the
+backward messages are nearly flat across the grid and their projection discards them ($\fldProjEdgeBase$ of a projected
+message's mass in the outer $5\%$ of the grid on the base cell, $\fldProjEdgeOthersMin$ or more on the others). The Gaussian arm
+is therefore the covariance twin's exact answer, the best linear estimator, computed in closed form: the ``linear floor''.
+
+\textbf{Arms.} EM--BP with five kernels (site energy 5, Legendre tilt 7, spline tilt 25, paper's mixture 25, MDN 1{,}516);
+window CNN and transformer, each trained two ways, on one noisy copy per sequence (ISM, EM--BP's own information) and on clean
+targets with one fixed corruption (DSM, strictly more information); the linear floor; the exact oracle. The error is
+$R=\big(\sum\|\hat\score-\score\|^2/\sum\|\score\|^2\big)^{1/2}$, pooled over test chains, sites and twelve levels
+$t\in[0.05,3]$; tables report $R$ divided by the linear floor, so $1$ is the Gaussian closure.
+
+%=====================================================================================================
+\section{Results}
+\label{sec:results}
+
+\input{../paper/sections/tab-field-score}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{ff-sample-efficiency.pdf}
+\caption{Pooled error against the number of training sequences. (a) The paper's linear chain with Laplace driving noise: EM--BP
+with the 25-number mixture kernel against the best network (trained on clean sequences; the other architectures in grey), the
+LMMSE floor and the isotropic score.
+(b) The $\phi^4$ base cell ($\Temp=0.3$, $\latt=1$): the site energy improves steadily, the paper's mixture
+stays on the dashed linear floor, the networks (DSM) start above it.}
+\label{fig:efficiency}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+% tools/make_field_potential_figs.py --arms em_pair_quartic em_tilted_spline
+%   --kernels outputs/hpc_E33q_s{0,4,8,12}/kernels.csv outputs/hpc_E33k_s{0,4,8,12}/kernels.csv --clean
+%   --fig reports/figures/fig-field-potential-frozen.pdf --table reports/numbers/field_potential_frozen.csv
+\includegraphics[width=\textwidth]{fig-field-potential-frozen.pdf}
+\caption{The potential read off the kernels learned through noise, $\hat V(\phi)=(2\hat\Temp/\latt)\hat f(\phi/s)$, one curve
+per seed (sixteen), against the true double well (dashed), at $\nseq=2048$. (a) Base cell: both kernels recover the well.
+(b) $\Temp=2$, where the barrier is small against the thermal energy: the site energy keeps the right shape with a spread
+barrier; the 25-number spline tilt does not pin the potential down. (c) Fitted temperature over true against $\nseq$, every seed as a point, on
+the two cells.}
+\label{fig:potential}
+\end{figure}
+
+\textbf{Reading Table~\ref{tab:fieldscore}.}
+\begin{itemize}
+\item \textbf{The site energy is best on every cell.} At $\nseq=2048$: $\fldSiteFloorMin$--$\fldSiteFloorMax$ of the linear
+floor, and $\fldSiteOverSplineMin$--$\fldSiteOverSplineMax$ of the 25-number spline's error. \fals{We had predicted it would be
+within $10\%$ of the spline; it is about twice as good.} The right five parameters beat a flexible 25.
+\item \textbf{The paper's mixture learns nothing beyond the floor}, at every $\nseq$ (Figure~\ref{fig:efficiency}b): a linear
+drift cannot hold a domain. Its samples show it, $\fldMixKinkColdMin$--$\fldMixKinkColdMax$ times too many kinks on the cold
+cells and domains $\fldMixDomShortMin$--$\fldMixDomShortMax$ too short at the median, while the site energy's samples are within
+$\fldKinkDevSite$ in kink density and $\fldDomQuantDevSite$ at every domain-length quantile, indistinguishable from exact samples.
+\item \textbf{The networks lose to the structured kernels everywhere}: at least $\fldNetOverSplineMin$ times the spline's error,
+and above the linear floor on every cell with $\Temp\ge0.5$, whichever training recipe. They do beat the mixture on the cold
+cells. The MDN kernel is below the floor at $\nseq=2048$ on every cell, but well above the tilts.
+\item \textbf{Physics} (Figure~\ref{fig:potential}): on the base cell $\hat\Temp/\Temp=1.000\pm0.023$ and barrier
+$0.247\pm0.011$ against $0.25$ (mean $\pm$ s.d.\ over sixteen seeds, $\nseq=2048$). At $\Temp=2$ the barrier is small against the thermal energy and is learned slowly: its error falls like
+$\nseq^{-\fldBarrierSlope}$ and all sixteen seeds are within $20\%$ at $\nseq=\fldBarrierBigM$, so it is a sample-size limit,
+not a floor.
+\end{itemize}
+
+%=====================================================================================================
+\section{Your predictions: refinement, cost, speciation}
+\label{sec:predictions}
+
+\textbf{Refinement.} The correlation length in sites grows like $1/\latt$ ($\fldXiHone$ to $\fldXiHzeroptwofive$ from $\latt=1$ to
+$\tfrac14$). The window CNN's radius was screened on each lattice and the screen picked $2$, $4$, $8$ sites, a constant
+physical reach ($8$ was the largest offered). Trained on noisy copies (ISM) with $\nseq=2048$, its absolute error falls ($\fldWindowRiskHone\to\fldWindowRiskHzeroptwofive$), but
+relative to the spline it grows from $\fldWindowSplineHone$ to $\fldWindowSplineHzeroptwofive$, and relative to the floor from
+$\fldWindowFloorHone$ to $\fldWindowFloorHzeroptwofive$: on the finest lattice the window is worse than the Gaussian closure.
+Per step the field becomes nearly Gaussian as $\latt\to0$ (your $O(\latt)$ caveat), the floor falls ($0.269\to0.098$), and the
+site energy still stays at $3$--$4\%$ of it: the structure builds up over many sites, and BP collects it. Whether a wider
+window closes the gap was not tested.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{fig-field-runtime.pdf}
+\caption{Error over the linear floor against (a) inference time per sequence and (b) training time per fit, at $\Temp=0.3$ on
+$\latt=1,\tfrac12,\tfrac14$ (circle, square, triangle; $32$, $64$, $128$ sites), $\nseq=2048$. Inference: eight threads, batch
+512, the largest network variants. Training: shared nodes, indicative only. BP's time is the same for every kernel.}
+\label{fig:runtime}
+\end{figure}
+
+\textbf{Cost.} Figure~\ref{fig:runtime}: the networks own the cheap end ($\fldNetCostMin$--$\fldNetCostMax$\,ms per sequence) and
+the structured kernels the accurate end ($\fldBpCostLone$--$\fldBpCostLthree$\,ms for BP), with nothing in between. The grid is
+the lever. With the true $\phi^4$ kernel, BP on $101$ points is exact to $\cmpCoarseOracleHundred$; the learned site energy and
+spline refitted on $101$ points have the same error as on $401$ to three digits (at most $\cmpCoarseLearnedFifty$ off at $51$),
+the EM fit is about $\cmpCoarseFitSpeedup$ times faster, and on one thread BP takes $0.107$\,ms per sequence at $101$ points
+against $\cmpBpMsOneThread$\,ms at $401$. The paper's mixtures need about $151$ points, because with much data they learn
+components narrower than a $101$-point spacing.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_speciation.pdf}
+\caption{Commitment of the exact denoiser. (a) Site-averaged $|2p-1|$, with $p=P(a_i>0\mid\vx)$, against $t$: exact posterior
+(solid) and its Gaussian twin with the same covariance (dashed). (b) The level $t_c$ where it crosses $\tfrac12$, against $\Temp$
+($\latt=1$, $\nsites=32$). (c) At $\Temp=0.2$, $t_c$ of the central sites against $\nsites$, beside $\tfrac12\ln(1+\lambda_{\max})$.}
+\label{fig:speciation}
+\end{figure}
+
+\textbf{Speciation.} For a noisy snapshot the exact posterior gives each site $p_i=P(a_i>0\mid\vx)$; the commitment
+$|2p_i-1|$ goes from $0$ (both wells equally likely) to $1$ (the site has chosen), and $t_c$ is the level where its site
+average crosses $\tfrac12$. All five registered predictions on commitment held (Figure~\ref{fig:speciation}):
+\begin{itemize}
+\item the posterior is calibrated: the share of signs guessed right equals $(1+\text{commitment})/2$ to $\fldSpecCalibDev$;
+\item colder fields commit earlier in the reverse process: $t_c$ falls from $\fldSpecTcCold$ at $\Temp=0.2$ to $\fldSpecTcHot$ at
+$\Temp=2$;
+\item the exact posterior commits before its Gaussian twin at every temperature, by $\fldSpecExcessCold$ in $t$ when coldest
+and $\fldSpecExcessHot$ when hottest. At $\Temp=0.2$ it is half-committed when the noise variance is $\fldSpecNoiseRatioExact$ times
+the signal's, the twin only at $\fldSpecNoiseRatioTwin$: the two humps, not just the correlations, decide when it commits;
+\item $t_c$ grows with the chain length ($\fldSpecTcLfour$ at $\nsites=4$, $\fldSpecTcLsixtyfour$ at $64$) and stops once the
+chain is several domains long ($\fldSpecTcLonetwentyeight$, $\fldSpecTcLtwofiftysix$ at $128$, $256$);
+\item below the correlation length, $t_c$ moves one-for-one with $\tfrac12\ln(1+\lambda_{\max})$ (slope $\fldSpecSlope$),
+$\lambda_{\max}$ the largest covariance eigenvalue: the finite-chain analogue of the speciation time $\tfrac12\ln\lambda_{\max}$ of
+Biroli, Bonnaire, de~Bortoli and Mézard.
+\end{itemize}
+\fals{The dilute-kink law $\corrlen\propto\Temp^{1/2}e^{E_{\mathrm{kink}}/\Temp}$, fitted on $\Temp\in[0.1,0.3]$, returns a barrier
+of $\fldKinkFit$ against $2\sqrt2/3$ (predicted within $2\%$).} The local slope approaches the theory as $\Temp$ falls, so the
+law looks right but these temperatures do not pin its constant; the lattice itself is converged ($\corrlen$ moves by
+$\fldKinkConvergence$ from $\latt=1/16$ to $1/32$).
+
+%=====================================================================================================
+\section{Where it stops working, and where a neural kernel pays}
+\label{sec:limits}
+
+\begin{table}[h]
+\centering\small
+\caption{Stress tests. ``Floor'' is the best linear estimator. Sixteen seeds unless stated.}
+\label{tab:limits}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.27\textwidth}L@{}}
+\toprule
+Test & Outcome \\
+\midrule
+Observe every 4th site (clean fits; the kernel is $\kernel^4$, no longer a tilted walk) & Pair energy and spline worsen
+$\limStrideGrowthSite\times$ and $\limStrideGrowthSpline\times$ but stay far below the floor ($\limStrideSiteRisk$, $\limStrideSplineRisk$
+against $\limStrideFloor$). The MDN is below the site energy in $\limStrideMdnBelow$ of 16 seeds, at $\limStrideMdnRatio$ times its
+error; at stride 1 the site energy is $\limStrideOneRatio$ times better than the MDN. \\
+A chain outside the class: a Laplace bond $|a'-a|$ on a double well (noisy fits, 8 seeds) & At $\nseq=2048$ the site energy
+stalls at $\limLapSite$; a 100-number unrestricted kernel reaches $\limLapUnrestricted$, the MDN $\limLapMdn$ (below the site energy in
+$\limLapMdnBelowSite$ of 8 seeds). \\
+The 100-number unrestricted kernel on the true field & Costs $\limUnrestrictedPriceMin$--$\limUnrestrictedPriceMax$ times the pair
+energy. \fals{The price grows with $\nseq$; we predicted it would shrink.} Useful as a misspecification test, not as the
+estimator. \\
+A hidden sign shared by the whole sequence (Gaussian test chain; the data are not Markov) & A first-order kernel stalls
+($\limLatentFlat$ from 4 times more data) at $\limLatentWorseMin$--$\limLatentWorseMax$ times the floor. BP on the augmented state
+(value, sign) repairs it: $\limLatentFloorRatio$ times below the floor. \\
+Snapshots after a quench (not Gibbs; reference is the clean snapshot) & The site energy beats an empirical Gaussian smoother at
+every time (ratio $\fldQuenchEarly$ early, $\fldQuenchEq$ at equilibrium); the spline adds nothing. \\
+Missing data: hide sites, sample posteriors by FFBS & The learned site energy matches the oracle within $\fldInpaintOracleDev$ in
+error and interval width, coverage $\fldInpaintCovMin$--$\fldInpaintCovMax$ for a nominal $0.90$. On the cold cell a Gaussian
+smoother is only $\fldInpaintLinErrMin$--$\fldInpaintLinErrMax$ worse, with $\fldInpaintLinWidthMin$--$\fldInpaintLinWidthMax$ wider intervals. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+So a neural kernel earns its parameters when the simple family is wrong (stride 4; the Laplace bond), by $1.8$--$2.5$ times
+against the best Gaussian-bond kernel, and not when it is right. On the paper's chain it loses to the 25-number mixture in
+64 of 64 comparisons. In both winning cases the MDN was still improving when its budget ended (11 of 16 and 5 of 8 fits), so its
+numbers there are upper bounds.
+
+%=====================================================================================================
+\section{What we do not claim}
+\label{sec:honest}
+
+\begin{itemize}
+\item \textbf{Speed.} BP is slower per sequence than a network. On the 401-point grid with eight threads it is
+$\cmpRatioCpu\times$ the transformer on CPU and $\cmpRatioGpu\times$ on an H200. On one thread the gap narrows ($3.2\times$ at
+$401$ points) and at $101$ points BP is faster than the transformer, but still slower than the GRU. The networks timed are the
+largest screened variants.
+\item \textbf{Stopping rule.} Every arm's stopping point or checkpoint, networks included, is picked with the exact score on a
+validation set. With an oracle-free rule for EM (held-out likelihood) the site energy is at $4$--$23\%$ of the floor instead of
+$3$--$17\%$.
+\item \textbf{Small data.} With $\nseq=32$ on the two hottest cells the site energy is above the floor ($1.37$, $1.43$); it wins on
+average from $\nseq=128$, and in 16 of 16 seeds from $\nseq=512$.
+\item \textbf{Failed predictions,} beyond those above: \fals{at $\nseq=128$, $\Temp=2$ the mixture beats the spline in 12 of 16 seeds;
+the 7-number Legendre tilt crashes on the finest lattice (39 failed fits); the barrier at $\Temp=1$ is within $20\%$ in 14 of 16
+seeds, not 16; the information-decay theorem's $e^{-8t}$ regime is not reached by $t=3$ (ratio $0.73$--$0.94$, unresolved);
+the raw count of sign changes is not a lattice-independent kink density (we count kinks after merging short runs).}
+\item \textbf{Unexplained:} why the unrestricted kernel's price over the site energy grows with data.
+\end{itemize}
+
+%=====================================================================================================
+\section{The 25 September questions}
+\label{sec:questions}
+
+Answered in the order of the call. The linear chain is $a_{i+1}=\corr a_i+\varepsilon_i$, $\corr=0.85$, Laplace driving noise,
+$\nsites=32$, unless stated.
+
+\textbf{Q1. Gaussian messages = Gaussian score = Kalman?} Yes. On a linear chain, BP whose messages are projected onto Gaussians
+returns exactly the best linear estimator of the covariance-matched Gaussian chain,
+$\lmmse(\vx)=e^{-t}\Sig(e^{-2t}\Sig+\Dt\Id)^{-1}\vx$, which is the Rauch--Tung--Striebel smoother. The hypothesis that matters is
+that the first message is Gaussian (or projected) too; without it the claim is false, by $4\times10^{-2}$ at the first site in a
+computed counterexample. Check: grid
+BP, the closed form and an independent RTS smoother agree to $1.9\times10^{-13}$. \fals{Projected BP run on the same 401-point
+grid is off by up to $0.26$: its backward messages widen past the grid's edge.} Not new: the thesis had it; the paper now
+says ``Kalman''.
+
+\textbf{Q2--Q4. Do messages stay in a finite family?} Your family, a Gaussian pushed once through the chain,
+$\normal{m}{v}$ dilated by $\corr$ and convolved with $\innov$, is exact at the first site and very close afterwards:
+$\cmpAnsatzOverGauss\times$ smaller KL than a plain Gaussian and $78\times$ smaller than a 4-parameter Gaussian+Laplace at low
+noise. But it is not closed, $(G*\innov)\cdot\mathcal N\neq G'*\innov$: the interior error is above the quadrature floor in 432 of
+432 configurations, and does not move when the grid is doubled. The Gaussian closes; we have no proof about other families. \fals{We predicted the family would do
+best at high noise; it does worst there,} because with a flat likelihood the recursion drives messages to the stationary law, an
+infinite convolution.
+
+\textbf{Q5. Fourier BP?} Two of the three operations are free in Fourier space, which gives the message in closed form,
+$\varphi_{k+1}(\omega)=\varphi_\mu(\corr^k\omega)\prod_{j<k}\varphi_\varepsilon(\corr^j\omega)$ (checked against grid BP to
+$2\times10^{-8}$). The likelihood is the hard step, a convolution in $\omega$ of width $e^{-t}/\sqrt{\Dt}$, widest at low noise.
+As a representation, Fourier modes on a window adapted to each message need $\cmpFourierAdaptedLo$ numbers (KL $10^{-2}$) or
+$\cmpFourierAdaptedHi$ ($10^{-4}$) against the grid's $\cmpGridLo$ and $\cmpGridHi$, close to your ``20 modes''; but they reach
+$10^{-4}$ in only \cmpFourierReach{} cases and adding modes can make it worse, so a solver cannot choose a truncation. Cumulant
+(Gram--Charlier) truncation does not converge: Cramér's condition fails for every message, and adding cumulants makes the
+reconstruction worse in 144 of 144 cases. And the transition step is only
+$\cmpMatmulShareLo$--$\cmpMatmulShareHi$ of a sweep, so making it free buys at most $\cmpFftCapLo$--$\cmpFftCapHi\times$; our FFT
+version is $\cmpFftSlower\times$ slower at $401$ points. The coarse grid is the better trick (Section~\ref{sec:predictions}).
+
+\textbf{Q6. A neural network for the kernel?} It trains through BP and loses where a small kernel is right: on the linear chain
+the 1{,}516-parameter MDN is worse than the 25-number mixture in 64 of 64 comparisons ($2.1$--$2.9\times$) and worse than the best
+plain score network. \fals{We predicted it would sit between the two.} It wins where the simple family is wrong
+(Section~\ref{sec:limits}). This is the overfitting you predicted in the call.
+
+\textbf{Q7. Time per posterior mean?} See Section~\ref{sec:honest}: BP is slower ($\cmpBpMsEightThreads$ against
+$\cmpTfMsEightThreads$\,ms, eight threads; on the H200 $15\times$ at batch 512, $6\times$ at 2048, because BP is latency-bound).
+What scales well is training: the EM M-step costs the same whatever $\nseq$ (the E-step is linear in $\nseq$), because the kernel
+is evaluated on the grid only.
+
+\textbf{Q8. Generation without a score?} Yes. On a chain, sampling site by site from the kernel is exact, and it is
+$\genAncestralCostRatio\times$ cheaper than a 200-step reverse SDE at equal error (eight threads, 2{,}048 sequences). A Gaussian score generates Gaussian samples
+(excess kurtosis of $a_{i+1}-0.85a_i$ about $0$ against $1.92$).
+
+\textbf{Q9. Fixed $t$ or pooled?} Per level: EM--BP beats every network at all twelve levels, and beats the Gaussian oracle at
+the $\lvlFirstLevelsA$ ($\nseq=128$) or $\lvlFirstLevelsB$ ($\nseq=2048$) lowest. Above that the non-Gaussian structure left is
+smaller than the kernel's estimation error; the crossover moves from $t\approx1$ to $t\approx2$ with 16 times more data.
+\fals{We predicted first place at every level.}
+
+\textbf{Q10. Information about $\corr,\beta$ or about $\kappa_2,\kappa_4$?} Recomputed, not relabelled. With $\kappa_2=q$,
+$\kappa_4=\gamma_2(\beta)q^2$ and $J=\partial(\corr,\kappa_2,\kappa_4)/\partial(\corr,q,\beta)$, the efficiency of coordinate $k$ is
+$1/(j_k^\top I_\params^{-1}j_k)$; a relabel would be wrong by $1.6$--$1526\times$. The message survives: fourth-order information
+falls about $700\times$ more than second order from $t=0.05$ to $t=3$. Following your advice it is a supporting result, not
+the headline.
+
+\textbf{Q11. Scaling in $\nseq$ and $\nsites$?} The call's answer was wrong. A sweep is $O(\nsites\,\ngrid^2 B)$ operations for $B$
+sequences: measured slopes $\cmpSlopeBatch$ in $B$, $\cmpSlopeLength$ in $\nsites$, and $\cmpSlopeGrid$ (not $2$) in $\ngrid$,
+because element-wise work and memory traffic dominate the matrix product. Memory: about $\cmpMemMb$\,MB for 512 sequences of 32
+sites, $\cmpMemRatioMin$--$\cmpMemRatioMax$ times the largest network.
+
+\textbf{Your other requests.} Figures first, with a summary figure: done (the draft opens with one). Labels of the information
+plot: re-plotted in cumulant coordinates. Notation: one table; ``driving noise'' instead of ``innovation'', ``linear chain''
+instead of AR(1). Clean-input network arm: dropped.
+
+%=====================================================================================================
+\section*{To discuss}
+\begin{enumerate}[leftmargin=1.6em]
+\item \textbf{Is this enough for a paper,} as you suggested: the general Markov kernel, the linear chain as the first example
+and the $\phi^4$ field as the second? Venue and timeline.
+\item \textbf{What to cut.} The draft is far over an 8-page body. Which five or six figures carry it?
+\item \textbf{The headline.} ``Learn the local law, infer globally; the kernel family is the modelling choice'', with the
+neural kernel as the test of when flexibility pays?
+\item \textbf{Marc.} How to involve him from here.
+\item \textbf{The defence.} Can I show the field results as further work on Friday?
+\end{enumerate}
+
+\vfill
+{\footnotesize\raggedright Sources: registry files \path{experiments/registry/E*.json} and the frozen outputs they list (field: E32--E34,
+E36--E37, E41--E50; questions: E22--E31, E39--E40, E47); full detail in \path{reports/field-laboratory-2026-10-01.pdf} and
+\path{docs/JEROME_CALL_2026-09-25.md}.\par}
+
+\end{document}
