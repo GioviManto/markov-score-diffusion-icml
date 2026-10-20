@@ -9,9 +9,18 @@
     "P3": "The sites next to a kink commit last: the median over domains of (median core tau - median edge tau) is positive, and the difference is positive in at least 75% of domains, at both cells."
   },
   "predeclared_analysis": "tools/core/read_e53.py on outputs/E53/sites.csv (one row per chain and site: a_i, tau_i, domain id, domain length, role core/edge/other) with the definitions above; pooled over the 32 chains per cell. A cell with fewer than 20 qualifying domains reports 'unresolved' for every prediction.",
-  "seeds": {"confirmatory": "rng_for('e53-chains', cell) and rng_for('e53-path', cell); deterministic given them"},
+  "seeds": {
+    "confirmatory": "rng_for('e53-chains', cell) and rng_for('e53-path', cell); deterministic given them"
+  },
   "provenance_note": "Written 20 Oct 2026 before the run. Seen beforehand: E50's site-averaged commitment curves (t_c from 1.61 at Theta = 0.2 to 0.46 at Theta = 2; t_c saturates with L). No per-site time had ever been computed.",
   "resources": "laptop, a few minutes",
-  "status": "REGISTERED and PREDECLARED 2026-10-20, before the run",
-  "registered": "2026-10-20"
+  "status": "REGISTERED and PREDECLARED 2026-10-20; RUN 2026-10-20 (laptop, commit 983b760+E53 registration c.f. git log); READ: P3 CONFIRMED; P1 FALSIFIED; P2 FALSIFIED (confirmed at Theta = 0.2 only)",
+  "registered": "2026-10-20",
+  "outcome": {
+    "read": "2026-10-20, tools/core/read_e53.py on outputs/E53/sites.csv as registered (148 domains at Theta = 0.2, 355 at Theta = 0.3).",
+    "P1": "FALSIFIED at both cells: the median within-domain sd of core-site tau is 0.58 (Theta = 0.2) and 0.64 (Theta = 0.3) of the across-domain sd, not below 0.25. Sites inside a domain do not all commit at the same level.",
+    "P2": "FALSIFIED as written: Spearman(domain tau, length) = 0.47 at Theta = 0.2 (> 0.4) but 0.25 at Theta = 0.3.",
+    "P3": "CONFIRMED at both cells: core minus edge median tau +0.63 and +0.48 in t, positive in 87% and 84% of domains.",
+    "unregistered_reading": "Descriptive, read after the verdicts: within a domain tau is spatially smooth (median lag-1 autocorrelation 0.80 at Theta = 0.2, 0.62 at Theta = 0.3; the same sites shuffled: -0.04, -0.12) and rises with the distance to the nearest kink (Spearman 0.50, 0.42). The polarisation map of a chain (reports/core figure) shows the mechanism: the bulk of each long domain commits as a block (a plateau of tau across tens of sites), then the posterior locates each kink late, with a front that moves from the bulk to the wall over a few sites; short domains commit last, and a minority domain can be painted with its neighbour's sign at intermediate t and flipped later. No propagation across kinks. Answer to Jerome: neither pure scenario; all at once per domain bulk, sequential only at the walls."
+  }
 }
