@@ -1,18 +1,43 @@
 {
-  "id": "E52",
-  "script": "experiments/e52_log_partition.py",
-  "hypothesis": "Jerome (call of 19 Oct 2026, 00:07-00:12): 'the log Z, can we compute it exactly or not?' For the chain, log Z_L = L log lambda_0 + O(1), lambda_0 the largest eigenvalue of the transfer operator, and the correlation length is 1 / log(lambda_0 / lambda_1). For a quadratic potential both are in closed form (a Gaussian integral operator); for the quartic double well no closed form is known (in the continuum limit the eigenproblem is the Schroedinger equation of the quartic double well), so the numbers must be computed. The run shows that the numerical answer is exact to quadrature precision, and puts the field between its two limits.",
-  "design": "Deterministic, laptop, eigensolves only (no data). A plain dense solver written in the driver: the trapezoid-discretised transfer operator T(phi, phi') = exp(-(h/2Theta)[V(phi)+V(phi')] - (phi'-phi)^2/(2Theta h)) on [-12, 12], symmetrised by the square roots of the weights, `numpy.linalg.eigh`. (a) Gaussian check: V = k phi^2 / 2 with k in {1, 2} on the fixed-spacing axis h = 1, Theta in {0.2, 0.3, 0.5, 0.7, 1, 1.5, 2}, against the closed form lambda_0 = sqrt(2 pi / (a + c)), lambda_1 / lambda_0 = b / (a + c), a = h k / (2 Theta) + 1 / (Theta h), b = 1 / (Theta h), c = sqrt(a^2 - b^2). (b) The quartic V = (phi^2 - 1)^2 / 4 on the same axis and on E33's six cells, at n = 601, 1201, 2401, 4801 points: log lambda_0 and xi = 1 / log(lambda_0 / lambda_1) in sites. (c) The low-temperature reference: the harmonic well V ~ (phi - 1)^2 (k = 2), Delta = log lambda_0(quartic) - log lambda_0(harmonic, k = 2).",
-  "predeclared_predictions": {
-    "P1": "Gaussian check: at n = 2401, log lambda_0 and lambda_1 / lambda_0 match the closed form to 1e-10 (absolute) for both k and all seven temperatures.",
-    "P2": "Quartic convergence: at every (Theta, h) of part (b), |log lambda_0(2401) - log lambda_0(4801)| < 1e-10 and |xi(2401) / xi(4801) - 1| < 1e-8.",
-    "P3": "Reproduction: at h = 1 the correlation lengths equal E32's frozen fixed-h values (19.47, 6.08, 3.66, 2.75, 1.98, 1.53, 1.21, 1.06 sites at Theta = 0.2 ... 2, two decimals as printed) after rounding.",
-    "P4": "Low temperature: |Delta| falls monotonically as Theta falls along h = 1 (6 of 6 steps from Theta = 2 to 0.2), and |Delta(0.2)| < |Delta(2)| / 5."
-  },
-  "predeclared_analysis": "Printed by the driver itself (outputs/E52/spectrum.csv; one row per potential, Theta, h, n) and checked by tools/core/read_e52.py.",
-  "seeds": {"confirmatory": "none (deterministic)"},
-  "provenance_note": "Written 20 Oct 2026 before the run. Seen beforehand: E32's frozen fixed-h correlation lengths (P3 is a reproduction check of them) and E50's kink-energy ladder (xi ~ exp(E_kink / Theta)). No log lambda_0 value had been looked at.",
-  "resources": "laptop, about a minute",
-  "status": "REGISTERED and PREDECLARED 2026-10-20, before the run",
-  "registered": "2026-10-20"
+ "id": "E52",
+ "script": "experiments/e52_log_partition.py",
+ "hypothesis": "Jerome (call of 19 Oct 2026, 00:07-00:12): 'the log Z, can we compute it exactly or not?' For the chain, log Z_L = L log lambda_0 + O(1), lambda_0 the largest eigenvalue of the transfer operator, and the correlation length is 1 / log(lambda_0 / lambda_1). For a quadratic potential both are in closed form (a Gaussian integral operator); for the quartic double well no closed form is known (in the continuum limit the eigenproblem is the Schroedinger equation of the quartic double well), so the numbers must be computed. The run shows that the numerical answer is exact to quadrature precision, and puts the field between its two limits.",
+ "design": "Deterministic, laptop, eigensolves only (no data). A plain dense solver written in the driver: the trapezoid-discretised transfer operator T(phi, phi') = exp(-(h/2Theta)[V(phi)+V(phi')] - (phi'-phi)^2/(2Theta h)) on [-12, 12], symmetrised by the square roots of the weights, `numpy.linalg.eigh`. (a) Gaussian check: V = k phi^2 / 2 with k in {1, 2} on the fixed-spacing axis h = 1, Theta in {0.2, 0.3, 0.5, 0.7, 1, 1.5, 2}, against the closed form lambda_0 = sqrt(2 pi / (a + c)), lambda_1 / lambda_0 = b / (a + c), a = h k / (2 Theta) + 1 / (Theta h), b = 1 / (Theta h), c = sqrt(a^2 - b^2). (b) The quartic V = (phi^2 - 1)^2 / 4 on the same axis and on E33's six cells, at n = 601, 1201, 2401, 4801 points: log lambda_0 and xi = 1 / log(lambda_0 / lambda_1) in sites. (c) The low-temperature reference: the harmonic well V ~ (phi - 1)^2 (k = 2), Delta = log lambda_0(quartic) - log lambda_0(harmonic, k = 2).",
+ "predeclared_predictions": {
+  "P1": "Gaussian check: at n = 2401, log lambda_0 and lambda_1 / lambda_0 match the closed form to 1e-10 (absolute) for both k and all seven temperatures.",
+  "P2": "Quartic convergence: at every (Theta, h) of part (b), |log lambda_0(2401) - log lambda_0(4801)| < 1e-10 and |xi(2401) / xi(4801) - 1| < 1e-8.",
+  "P3": "Reproduction: at h = 1 the correlation lengths equal E32's frozen fixed-h values (19.47, 6.08, 3.66, 2.75, 1.98, 1.53, 1.21, 1.06 sites at Theta = 0.2 ... 2, two decimals as printed) after rounding.",
+  "P4": "Low temperature: |Delta| falls monotonically as Theta falls along h = 1 (6 of 6 steps from Theta = 2 to 0.2), and |Delta(0.2)| < |Delta(2)| / 5."
+ },
+ "predeclared_analysis": "Printed by the driver itself (outputs/E52/spectrum.csv; one row per potential, Theta, h, n) and checked by tools/core/read_e52.py.",
+ "seeds": {
+  "confirmatory": "none (deterministic)"
+ },
+ "provenance_note": "Written 20 Oct 2026 before the run. Seen beforehand: E32's frozen fixed-h correlation lengths (P3 is a reproduction check of them) and E50's kink-energy ladder (xi ~ exp(E_kink / Theta)). No log lambda_0 value had been looked at.",
+ "resources": "laptop, about a minute",
+ "status": "FROZEN E52 2026-10-20T14:46:50Z; REGISTERED and PREDECLARED 2026-10-20; RUN 2026-10-20 (laptop, commit da585b3, 28 min under load); READ: P1, P2, P3 CONFIRMED (P3 after a reader correction, see outcome); P4 FALSIFIED",
+ "registered": "2026-10-20",
+ "outcome": {
+  "read": "2026-10-20, tools/core/read_e52.py on outputs/E52/spectrum.csv.",
+  "P1": "CONFIRMED. Gaussian check, 14 cases: max |log lambda_0 - closed form| 2.2e-14, max |lambda_1/lambda_0 - closed form| 2.8e-16.",
+  "P2": "CONFIRMED. Quartic, 13 (Theta, h) points: max |log lambda_0(2401) - log lambda_0(4801)| 1.8e-13, max relative change of xi 9.7e-15.",
+  "P3": "CONFIRMED after a reader correction. The first reading said 2/7: the reader compared against a TYPED list of E32's values that had eight entries (E32's axis includes Theta = 0.4) mapped onto E52's seven temperatures, shifted by one from Theta = 0.5. The prediction names E32's frozen values; read from outputs/E32/fixed_h.csv (h = 1) all 7 agree to 6.7e-15 (relative). The data were not changed; only the comparison was fixed. Recorded here because the first verdict was printed.",
+  "P4": "FALSIFIED. Delta = log lambda_0(quartic) - log lambda_0(harmonic well) = +0.077, +0.155, +0.247, +0.280, +0.289, +0.274, +0.250 at Theta = 0.2, 0.3, 0.5, 0.7, 1, 1.5, 2: it goes to zero as Theta falls (the low-temperature limit is the harmonic well, as expected) but is not monotone above Theta = 1, where the harmonic-well reference has no meaning, and |Delta(0.2)| is not below |Delta(2)|/5.",
+  "values": "log lambda_0 per site at h = 1: -0.467, -0.186, 0.161, 0.362, 0.550, 0.737, 0.857 at Theta = 0.2 ... 2; xi = 19.47, 6.08, 2.75, 1.98, 1.53, 1.21, 1.06 sites. E33's cells: log lambda_0 = -0.186 (base), -0.291 (h = 1/2), -0.508 (h = 1/4), -0.043, 0.086, 0.249 (Theta = 0.5, 1, 2 iso)."
+ },
+ "frozen_outputs": {
+  "outputs/E52/spectrum.csv": "3cc0b2fd7c8ba017c3c5fe050539645c77da04fdc1b6e1e7614c36330ef4a5c9",
+  "outputs/E52/params_spectrum.json": "02a2c75922e0f119732310bd7d50c3f8f8796bc1a71987d0729fc9ec49302fbe"
+ },
+ "frozen_at": {
+  "E52": "2026-10-20T14:46:50Z"
+ },
+ "frozen_commit": {
+  "E52": "da585b388cd7278ff0518f849f8e7bb541b24d58"
+ },
+ "frozen_run_commits": {
+  "E52": [
+   "da585b3"
+  ]
+ }
 }

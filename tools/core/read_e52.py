@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
-E32_XI = {0.2: 19.47, 0.3: 6.08, 0.5: 3.66, 0.7: 2.75, 1.0: 1.98, 1.5: 1.53, 2.0: 1.21}
 
 
 def main() -> int:
@@ -21,11 +20,13 @@ def main() -> int:
     d_l = (q[("log_lambda0", 2401)] - q[("log_lambda0", 4801)]).abs()
     d_x = (q[("xi_sites", 2401)] / q[("xi_sites", 4801)] - 1).abs()
     v["P2"] = (bool((d_l < 1e-10).all() and (d_x < 1e-8).all()), f"max dlog lambda0 {d_l.max():.1e}, max rel dxi {d_x.max():.1e}")
-    axis = q.reset_index()
-    axis = axis[axis.label.str.endswith("_h1") & axis.label.str.startswith("T")]
-    match = [round(float(r[("xi_sites", 2401)]), 2) == E32_XI[round(float(r["T"].iloc[0] if hasattr(r["T"], "iloc") else r["T"]), 2)]
-             for _, r in axis.iterrows()]
-    v["P3"] = (all(match), f"{sum(match)}/{len(match)} correlation lengths equal E32's to two decimals")
+    # P3 against E32's FROZEN fixed-h correlation lengths (read from the CSV; the first reading used a typed list
+    # that was shifted by one temperature, see E52.json outcome)
+    e32 = pd.read_csv(ROOT / "outputs/E32/fixed_h.csv").query("h == 1.0").groupby("T").corr_length_sites.first()
+    ours = df[(df.part == "quartic") & (df.n == 2401) & df.label.str.endswith("_h1") & df.label.str.startswith("T")].set_index("T").xi_sites
+    both = pd.concat([e32.rename("e32"), ours.rename("e52")], axis=1).dropna()
+    dev = (both.e52 / both.e32 - 1).abs()
+    v["P3"] = (len(both) == 7 and bool((dev < 1e-6).all()), f"{int((dev < 1e-6).sum())}/{len(both)} equal E32's frozen values; max rel dev {dev.max():.1e}")
     hw = df[df.part == "harmonic_well"].set_index("T").log_lambda0
     qa = df[(df.part == "quartic") & (df.n == 2401) & df.label.str.endswith("_h1") & df.label.str.startswith("T")].set_index("T").log_lambda0
     delta = (qa - hw).sort_index()
