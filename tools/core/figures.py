@@ -91,11 +91,12 @@ def panel_precision(fig, spec, rho=0.85, L=24):
     S0 = rho ** np.abs(idx[:, None] - idx[None, :])
     Q = lambda t: np.linalg.inv(np.exp(-2 * t) * S0 + (1 - np.exp(-2 * t)) * np.eye(L))  # noqa: E731
     dist = np.abs(idx[:, None] - idx[None, :])
-    ts = np.geomspace(1e-3, 3, 400)
-    ref = np.abs(Q(0.0))[dist == 1].sum()
-    far = np.array([np.abs(Q(t))[dist >= 2].sum() / ref for t in ts])
+    ts = np.geomspace(1e-3, 3, 4000)
+    frob = lambda M, sel: float(np.sqrt(np.sum(M[sel] ** 2)))  # noqa: E731  (the thesis's dist_mass, fig_ch05.py)
+    ref = frob(Q(0.0), dist == 1)
+    far = np.array([frob(Q(t), dist >= 2) / ref for t in ts])
     t_star = float(ts[np.argmax(far)])
-    print(f"  precision: t* = {t_star:.3f} (largest mass beyond the first off-diagonal, {far.max():.3f} of Q_0's neighbour coupling)")
+    print(f"  precision: t* = {t_star:.3f} (largest Frobenius mass beyond the first off-diagonal, {far.max():.3f} of Q_0's neighbour coupling)")
     sub = spec.subgridspec(1, 3, wspace=0.08)
     axes = []
     for j, (t, title) in enumerate([(0.0, r"$t=0$"), (t_star, r"$t=t^\star$"), (1.5, r"$t=1.5$")]):
