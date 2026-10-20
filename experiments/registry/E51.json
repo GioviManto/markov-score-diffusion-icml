@@ -1,0 +1,21 @@
+{
+  "id": "E51",
+  "script": "experiments/e51_kernel_readings.py",
+  "hypothesis": "Jerome (call of 19 Oct 2026, 00:23-00:28, 01:38): understand exactly how the temperature and the potential are read off the spline, and find out what can be exported to the MDN kernel ('is there an effective temperature we could extract?'). Two identities hold for every kernel of the gradient class W = (a'-a)^2/2gamma + f(a) + f(a'): the mixed second derivative of log K is 1/gamma, and -1/2 log K(a|a) is f up to a constant (src/markov_score/kernel_readings.py; tests/test_kernel_readings.py). They need no parameter of the kernel, so they apply to the MDN. On a kernel outside the class the curvature is not constant; its spread under the stationary pair law measures the distance from the class.",
+  "design": "Deterministic, laptop, no fitting: every risk-selected E33 fit of em_pair_quartic (hpc_E33q_s*), em_tilted_spline and em_mdn (hpc_E33k_s*), six cells x M in (32, 128, 512, 2048) x seeds 0-15, rebuilt from its `theta` column (e34_field_physics.kernel_from_row) on the registered grid (401 points on [-8, 8]). Per fit: kernel_readings.readings (Theta_hat / Theta, barrier, well, potential RMS, curvature_cv) and, for the two class arms, the readings from the fit's own parameters (gamma, site_energy) as an identity check. The fit's E33 risk is copied beside it.",
+  "predeclared_predictions": {
+    "P1": "Identity check: for every site-energy and spline fit, the curvature reading of Theta equals the reading from the fit's own gamma to a relative 1e-6, and the barrier from the diagonal equals the barrier from the fit's own site energy to 1e-6 (absolute).",
+    "P2": "MDN temperature at the base cell (T0.3_h1_L32), M = 2048: the median over seeds of Theta_hat / Theta lies in [0.9, 1.1].",
+    "P3": "MDN temperature at M = 2048 on all six cells: the seed median of Theta_hat / Theta lies in [0.8, 1.2] on at least 5 of 6 cells.",
+    "P4": "MDN barrier at the base cell, M = 2048: the seed median lies in [0.175, 0.325] (true 0.25, within 30%).",
+    "P5": "At every cell and M (24 pairs), the interquartile range over seeds of Theta_hat / Theta is wider for the MDN than for the site energy.",
+    "P6": "The MDN's distance from the gradient class falls with data at the base cell: the seed median of curvature_cv at M = 2048 is below that at M = 32.",
+    "P7": "The distance from the class tracks the error: over all MDN fits (6 cells x 4 M x 16 seeds), the Spearman correlation between curvature_cv and the fit's risk divided by its cell's linear floor is above 0.3."
+  },
+  "predeclared_analysis": "tools/core/read_e51.py on outputs/E51/readings.csv: medians and IQRs over seeds per (arm, cell, M); a fit whose kernel cannot be rebuilt or whose reading is not finite counts against every prediction it touches. The linear floor per cell is E33's lmmse_true risk (hpc_E33o oracles.csv).",
+  "seeds": {"confirmatory": "E33's 0-15 (frozen fits; nothing is refitted)"},
+  "provenance_note": "Written 20 Oct 2026 before any MDN fit was read through these identities. Seen beforehand: E33's frozen risks of every arm, the site-energy and spline potential/temperature readings from their own parameters (fig-field-potential-frozen, E33 P8), and the identity tests on synthetic kernels and the TRUE field kernel (Theta_hat = Theta to 1e-6). No MDN reading had been computed.",
+  "resources": "laptop, minutes",
+  "status": "REGISTERED and PREDECLARED 2026-10-20, before the run",
+  "registered": "2026-10-20"
+}
