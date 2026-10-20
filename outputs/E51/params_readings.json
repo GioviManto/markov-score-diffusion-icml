@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-10-20 16:07:21",
+  "git_commit": "983b760e99f16e4a217d1801371540dd5d38971e",
+  "git_branch": "claude/paper-core-2026-10-20",
+  "git_dirty": "?? outputs/E51/\n?? outputs/E54/",
+  "source_archive_sha256": "",
+  "source_is_clean": false,
+  "revision_source": "git",
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "platform": "macOS-14.1.1-arm64-arm-64bit-Mach-O",
+  "hostname": "MacBook-Air-160.local",
+  "slurm_job_id": "",
+  "slurm_array_task_id": "",
+  "cpu_count": "8",
+  "blas_threads": "2",
+  "settings": {
+    "sources": {
+      "em_pair_quartic": "outputs/hpc_E33q_s*/kernels.csv",
+      "em_tilted_spline": "outputs/hpc_E33k_s*/kernels.csv",
+      "em_mdn": "outputs/hpc_E33k_s*/kernels.csv"
+    },
+    "grid_size": 401,
+    "half_width": 8.0
+  },
+  "quick": false,
+  "n_fits": 1152
+}
