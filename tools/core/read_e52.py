@@ -9,7 +9,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def main() -> int:
+def main(argv=()) -> int:
     df = pd.read_csv(ROOT / "outputs/E52/spectrum.csv")
     pd.set_option("display.width", 200)
     g = df[df.part == "gaussian"]
@@ -35,6 +35,18 @@ def main() -> int:
                "Delta by Theta: " + ", ".join(f"{t:g}: {x:+.4f}" for t, x in delta.items()))
     print("quartic, n = 2401 (log lambda0 per site, xi in sites):")
     print(df[(df.part == "quartic") & (df.n == 2401)][["label", "T", "h", "log_lambda0", "xi_sites"]].to_string(index=False))
+    if "--tex" in argv:
+        ax = df[(df.part == "quartic") & (df.n == 2401) & df.label.str.endswith("_h1") & df.label.str.startswith("T")].sort_values("T")
+        fmt = lambda x: f"${x:.3f}$" if x < 0 else f"{x:.3f}"  # noqa: E731
+        tex = "\n".join([r"\begin{table}[h]", r"\centering\small",
+                          r"\caption{Free energy per site and correlation length of the lattice field, $h=1$.}", r"\label{tab:logz}",
+                          r"\begin{tabular}{l" + "c" * len(ax) + "}", r"\toprule",
+                          r"$\Theta$ & " + " & ".join(f"{t:g}" for t in ax["T"]) + r" \\", r"\midrule",
+                          r"$\log\lambda_0$ & " + " & ".join(fmt(x) for x in ax.log_lambda0) + r" \\",
+                          r"$\xi$ (sites) & " + " & ".join(f"{x:.2f}" for x in ax.xi_sites) + r" \\",
+                          r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
+        (ROOT / "reports/core/tab-logz.tex").write_text(tex)
+        print("wrote reports/core/tab-logz.tex")
     print()
     for k, (ok, msg) in v.items():
         print(f"{k}: {'CONFIRMED' if ok else 'FALSIFIED'}  {msg}")
@@ -42,4 +54,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import sys
+    raise SystemExit(main(sys.argv[1:]))

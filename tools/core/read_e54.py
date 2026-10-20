@@ -84,13 +84,13 @@ def main(argv) -> int:
             rows.append(LABEL[c] + " & " + " & ".join(cells) + r" \\")
         tex = "\n".join([
             r"\begin{table}[h]", r"\centering\small",
-            r"\caption{Score error divided by the best linear estimator's on the six field cells (mean of 8 seeds). "
-            r"Site energy: 5 parameters; neural kernel: MDN inside BP, 1{,}516; CNN: standard denoising score matching, "
-            r"5--20k parameters.}", r"\label{tab:field}",
+            r"\caption{Score error divided by the linear floor on the six field cells, mean of the 8 seeds shared by all "
+            r"three estimators. Site: the five-parameter site-energy kernel; neural: the neural kernel inside BP; CNN: "
+            r"the network trained by denoising score matching.}", r"\label{tab:field}",
             r"\begin{tabular}{lcccccc}", r"\toprule",
             r" & \multicolumn{3}{c}{$M=32$} & \multicolumn{3}{c}{$M=2048$} \\",
             r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}",
-            r"cell & site energy & neural kernel & CNN & site energy & neural kernel & CNN \\", r"\midrule",
+            r"cell & site & neural & CNN & site & neural & CNN \\", r"\midrule",
             *rows, r"\bottomrule", r"\end{tabular}", r"\end{table}", ""])
         (ROOT / "reports/core/tab-field.tex").write_text(tex)
         print("wrote reports/core/tab-field.tex")

@@ -101,8 +101,7 @@ def panel_precision(fig, spec, rho=0.85, L=24):
     axes = []
     for j, (t, title) in enumerate([(0.0, r"$t=0$"), (t_star, r"$t=t^\star$"), (1.5, r"$t=1.5$")]):
         ax = fig.add_subplot(sub[0, j])
-        q = np.abs(Q(t))
-        ax.imshow(q / q.max(), cmap="Greys", norm=LogNorm(1e-3, 1), interpolation="nearest")
+        ax.imshow(np.abs(Q(t)), cmap="Greys", norm=LogNorm(1e-3, 5.0), interpolation="nearest")   # one scale for all three
         ax.set_xticks([]); ax.set_yticks([])
         for s in ax.spines.values():
             s.set_visible(True); s.set_linewidth(0.4); s.set_color(fs.INK2)
@@ -138,8 +137,8 @@ def panel_efficiency(ax, rows, arms, title=None):
 def summary():
     lap, lap_floor, _ = laplace_rows()
     fld, fld_floor = field_rows()
-    fig = plt.figure(figsize=(fs.FULL_W, 2.05))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.35, 1, 1], wspace=0.42)
+    fig = plt.figure(figsize=(fs.FULL_W, 2.45))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.6, 1, 1], wspace=0.42, bottom=0.33, top=0.9)
     pa = panel_precision(fig, gs[0, 0])
     fs.panel_label(pa[0], "(a)", x=-0.25, y=1.12)
     print(f"  (b) Laplace chain, floor {lap_floor:.4f}")
@@ -157,7 +156,7 @@ def summary():
         for hh, ll in zip(*a.get_legend_handles_labels()):
             if ll not in lab:
                 h.append(hh); lab.append(ll)
-    fig.legend(h, lab, loc="lower center", ncol=5, bbox_to_anchor=(0.58, -0.13), handlelength=1.8, columnspacing=1.2)
+    fig.legend(h, lab, loc="lower center", ncol=5, bbox_to_anchor=(0.6, 0.0), handlelength=1.8, columnspacing=1.2)
     fs.save(fig, OUT / "fig1-summary.pdf")
 
 

@@ -56,7 +56,7 @@ the best linear estimator, −Σ_t⁻¹x. This is the "linear floor" every numbe
 | M | 32 | 128 | 512 | 2048 |
 |---|---|---|---|---|
 | EM–BP, mixture kernel (25 par.) | 0.59 | 0.33 | 0.22 | 0.14 |
-| neural kernel in BP (MDN, 1,516 par.) | 1.26 | 0.85 | 0.53 | 0.40 |
+| neural kernel in BP (MDN, 1,516 par.) | 1.26 | 0.85 | 0.53 | 0.39 |
 | CNN, standard DSM (5,505 par.) | 1.11 | 0.85 | 0.72 | 0.71 |
 | best of six networks (reference only) | 1.11 | 0.72 | 0.47 | 0.36 |
 
@@ -75,7 +75,7 @@ CNN: **E54, pending**. At M = 32 the site energy is 0.24–0.28 on the cold cell
 
 **B7. The fitted kernel reads as physics, also when it is a neural network (E51).** For any kernel of the gradient
 class, the mixed second derivative of log K is 1/γ (→ temperature) and −½ log K(a|a) is the site energy (→ potential).
-Site energy: Θ̂/Θ = 1.000 at M = 2048 (base cell), barrier 0.248 (true 0.25). Neural kernel: Θ̂/Θ within 9% on all six
+Site energy: Θ̂/Θ = 1.000 at M = 2048 (base cell), barrier 0.248 (true 0.25). Neural kernel: Θ̂/Θ within 10% on all six
 cells at M = 2048 (0.91–1.00); its potential is right only where 2Θ/h is small (base cell barrier 0.20; off by 1.5–3.4×
 on fine or hot lattices, where V = (2Θ/h) f amplifies the kernel's error). (Figure 4.)
 
@@ -136,7 +136,7 @@ alone; the site energy is f = −½ log(g/Z) = −½ log K(a|a) + const, and V̂
 of the gradient class, not parameters of the spline (E51 P1: they agree with the spline's own parameters to 1e-14).
 
 **Q6. What can be exported to the MDN (an effective temperature)?** [00:23:37, 00:27:33] The temperature, yes: the
-average mixed curvature of log K gives Θ̂ within 9% on all six cells (E51). The potential, only where the site energy
+average mixed curvature of log K gives Θ̂ within 10% on all six cells (E51). The potential, only where the site energy
 is a large part of the kernel (small 2Θ/h). The spread of the curvature measures how far the MDN is from the gradient
 class (cv ≈ 0.4–1.0); it does not predict the MDN's error well (Spearman 0.24).
 
