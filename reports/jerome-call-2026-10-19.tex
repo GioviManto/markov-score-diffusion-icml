@@ -128,8 +128,9 @@ $\fldWindowFloorHzeroptwofive$ times the floor (radius re-chosen per lattice); t
 \item \textbf{Speciation} (Figure~\ref{fig:speciation}): colder fields commit earlier ($t_c$ from $\fldSpecTcCold$ at $\Temp=0.2$
 to $\fldSpecTcHot$ at $\Temp=2$), and earlier than their Gaussian twin (by $\fldSpecExcessCold$ to $\fldSpecExcessHot$ in $t$).
 \item \textbf{Caveats} (backup, B7). BP is slower per sequence than a network ($\cmpRatioCpu\times$ the transformer,
-eight threads, 401 points; 101 points lose nothing here and are $\cmpCoarseSpeedupHundred\times$ faster). Stopping uses the exact
-score for every arm (a likelihood rule gives $4$--$23\%$). A neural kernel wins only off-class (backup, B6).
+eight threads, 401 points; 101 points lose nothing here and make BP $\cmpCoarseSpeedupHundred\times$ faster than on 401). EM and
+the DSM networks stop on the exact score of a validation set (a likelihood rule for EM gives $4$--$23\%$); the ISM networks do not.
+A neural kernel wins only off-class (backup, B6).
 \end{enumerate}
 
 {\small The separate backup has your email point by point, the derivations, the full table, cost and refinement, the

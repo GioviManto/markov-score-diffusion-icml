@@ -207,9 +207,11 @@ numbers there are upper bounds.
 $\cmpRatioCpu\times$ the transformer on CPU and $\cmpRatioGpu\times$ on an H200. On one thread the gap narrows ($3.2\times$ at
 $401$ points) and at $101$ points BP is faster than the transformer, but still slower than the GRU. The networks timed are the
 largest screened variants.
-\item \textbf{Stopping rule.} Every arm's stopping point or checkpoint, networks included, is picked with the exact score on a
-validation set. With an oracle-free rule for EM (held-out likelihood) the site energy is at $4$--$23\%$ of the floor instead of
-$3$--$17\%$.
+\item \textbf{Stopping rule.} EM--BP's stopping point and the DSM networks' checkpoints are picked with the exact score on a
+validation set. The ISM networks pick their checkpoint on the held-out ISM objective, with no exact score, although their
+architecture screen (for example the window radius) used the exact score on development seeds. (The caption of Table~\ref{tab:fieldscore}, generated
+for the paper, says ``each network's checkpoint'': that holds for DSM only.) With an oracle-free rule for EM (held-out likelihood)
+the site energy is at $4$--$23\%$ of the floor instead of $3$--$17\%$.
 \item \textbf{Small data.} With $\nseq=32$ on the two hottest cells the site energy is above the floor ($1.37$, $1.43$); it wins on
 average from $\nseq=128$, and in 16 of 16 seeds from $\nseq=512$.
 \item \textbf{Failed predictions,} beyond those above: \fals{at $\nseq=128$, $\Temp=2$ the mixture beats the spline in 12 of 16 seeds;
