@@ -37,7 +37,7 @@ the stochastic Allen--Cahn field.
 $\log K$ is $1/\gamma$ and $-\tfrac12\log K(a\mid a)$ is the site energy. Applied to the MDN, the temperature comes back
 within $9\%$ on all six cells; the potential only on the base cell.
 \item \textbf{$\log Z$} (Q1) has no closed form for the quartic chain; it is computed from the top eigenvalue of the transfer
-operator, and the solver reproduces the Gaussian closed form. %E52
+operator to $10^{-13}$, and the same solver reproduces the Gaussian closed form to $2\cdot10^{-14}$.
 \item \textbf{Speciation per site} (Q8): neither an avalanche nor all at once. The bulk of a domain commits as a block; the
 kinks are located last, by a short front moving from the bulk to the wall.
 \end{enumerate}
@@ -106,7 +106,30 @@ from the mixed derivative of $\log K$, every seed a point, medians joined.}
 %=====================================================================================================
 \section{Is \texorpdfstring{$\log Z$}{log Z} known? (Q1)}
 
-%E52-TEXT
+For a chain of $L$ sites, $\log Z_L=L\log\lambda_0+O(1)$ and $\xi=1/\log(\lambda_0/\lambda_1)$, where $\lambda_0>\lambda_1$ are
+the top eigenvalues of the transfer operator
+$T(\phi,\phi')=\exp\!\big(-\tfrac{h}{2\Theta}[V(\phi)+V(\phi')]-\tfrac{(\phi'-\phi)^2}{2\Theta h}\big)$.
+For a quadratic $V$ the operator is Gaussian and $\lambda_0$ is in closed form. For the quartic double well no closed form is
+known: in the continuum limit the eigenproblem is the Schr\"odinger equation of the quartic double well (the transfer-integral
+method of Scalapino, Sears and Ferrell, 1972; Krumhansl and Schrieffer, 1975; Khare, Habib and Saxena, 1997, note that the
+$\phi^4$ case has no exact solution). So the field is an interacting model whose answer is not known in advance.
+
+Numerically it is easy. A dense eigensolve of the trapezoid-discretised operator reproduces the Gaussian closed form to
+$2\cdot10^{-14}$, and the quartic $\log\lambda_0$ changes by $2\cdot10^{-13}$ from $2401$ to $4801$ points (E52):
+
+\begin{center}\small
+\begin{tabular}{lccccccc}
+\toprule
+$\Theta$ ($h=1$) & 0.2 & 0.3 & 0.5 & 0.7 & 1 & 1.5 & 2 \\
+\midrule
+$\log\lambda_0$ per site & $-0.467$ & $-0.186$ & $0.161$ & $0.362$ & $0.550$ & $0.737$ & $0.857$ \\
+$\xi$ (sites) & 19.47 & 6.08 & 2.75 & 1.98 & 1.53 & 1.21 & 1.06 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+As $\Theta$ falls, $\log\lambda_0$ approaches its value for a single harmonic well (the gap is $0.08$ at $\Theta=0.2$), and $\xi$
+grows like $e^{E_{\rm kink}/\Theta}$ (a dilute gas of kinks; E50 fits the exponent $0.99$ against $2\sqrt2/3=0.94$).
 
 %=====================================================================================================
 \section{Speciation per site (Q8)}

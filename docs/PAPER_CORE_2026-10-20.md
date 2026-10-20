@@ -83,7 +83,7 @@ on fine or hot lattices, where V = (2Θ/h) f amplifies the kernel's error). (Fig
 
 | id | result | source |
 |---|---|---|
-| A1 | log Z is not in closed form for the quartic chain; computed to 1e-10 from the transfer operator; Gaussian closed form reproduced | E52 (pending), E32 |
+| A1 | log Z is not in closed form for the quartic chain; log λ₀ per site converged to 2e-13 (2401 vs 4801 points); the same solver reproduces the Gaussian closed form to 2e-14; low-Θ limit = one harmonic well (gap 0.08 at Θ = 0.2) | E52, E32 |
 | A2 | Correlation length grows like e^{E_kink/Θ} (kink gas), fitted slope 0.988 vs 2√2/3 = 0.943 | E50 kink part |
 | A3 | Speciation: site-averaged commitment, t_c 1.61 → 0.46 from Θ = 0.2 to 2; exact commits earlier than its Gaussian twin | E50 |
 | A4 | Per-site polarisation: domain bulks commit as blocks, kinks are located last by a short front; no avalanche across kinks | E53 |
@@ -116,7 +116,7 @@ on fine or hot lattices, where V = (2Θ/h) f amplifies the kernel's error). (Fig
 **Q1. Is log Z known exactly?** [00:07:16–00:12:40] log Z_L = L log λ₀ + O(1), λ₀ the top eigenvalue of the transfer
 operator. For a quadratic potential λ₀ is in closed form; for the quartic double well it is not (in the continuum
 limit the eigenproblem is the Schrödinger equation of the quartic double well, which has no closed-form spectrum).
-We compute it to about 1e-10 and check the solver against the Gaussian closed form (E52). So the model is not a
+We compute it to 2e-13 and the same solver reproduces the Gaussian closed form to 2e-14 (E52; log λ₀ = −0.186 per site on the base cell). Literature: Scalapino–Sears–Ferrell 1972, Krumhansl–Schrieffer 1975; Khare–Habib–Saxena 1997 state the φ⁴ transfer-integral equation has no exact solution. So the model is not a
 trivial toy, as Jérôme expected. Context: ξ ∝ e^{E_kink/Θ} at low temperature (E50).
 
 **Q2. Why 5 parameters, why stop at fourth order?** [00:15:32–00:16:35] The lattice energy is a quadratic bond plus a
