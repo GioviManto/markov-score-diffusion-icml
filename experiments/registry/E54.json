@@ -1,0 +1,20 @@
+{
+  "id": "E54",
+  "script": "experiments/e54_field_dsm.py",
+  "hypothesis": "Jerome (call of 19 Oct 2026, 01:16-01:20) asked for the networks to be trained the standard way (denoising score matching, 'standard DDPM is fine') and for one comparison at a time: an estimator that knows the structure against a CNN that does not. E33 trained its networks on ONE fixed noisy copy per sequence and only at M = 128 and 2048. With the standard recipe (fresh level and fresh noise for every clean sequence at every step) the CNN gets more information than EM-BP, so it is the network-favourable baseline. The paper's three-way comparison on the field (site energy, MDN kernel inside BP, CNN) rests on it.",
+  "design": "E33's six cells x M in (32, 128, 512, 2048) x seeds 0-7. One arm: the window CNN with E33's per-cell winning hyper-parameters (outputs/hpc_E33n_s0/winners.json; radius 2/4/8 at h = 1/0.5/0.25, width 64), trained by `nn_torch.train(loss='dsm')` on the E33 training chains (rng_for('e33-train', seed, cell, M)), eps parameterisation, a fresh level from the twelve-level schedule and fresh noise per sequence per step, batch 64, Adam 1e-3, gradient clip 1, 64k steps, checkpoints 500-64000 (doubled from E33's 32k because the dev fit below ended at the 32k cap). Checkpoint chosen on the validation bundle's BP risk (the rule of the kernel arms' `risk` rows). Scored on E33's test bundle: `e33._common` builds the bundles from the same generator keys, so `test_bundle` hashes equal E33's and every comparison is paired by seed.",
+  "predeclared_predictions": {
+    "P1": "The standard DSM CNN beats E33's one-corruption DSM CNN (same architecture and hyper-parameters) at M = 128 and M = 2048 on every cell (12 cell-M pairs), in at least 7 of 8 seeds each.",
+    "P2": "The site energy (E33 em_pair_quartic, risk-selected) beats the standard DSM CNN at every cell and every M (24 pairs), in at least 7 of 8 seeds each.",
+    "P3": "Data efficiency: the site energy's seed-mean risk at M = 32 is below the standard CNN's seed-mean risk at M = 2048 on at least 4 of the 6 cells.",
+    "P4": "The MDN kernel inside BP (E33 em_mdn, risk-selected) has a lower seed-mean risk than the standard CNN at M = 2048 on at least 5 of 6 cells.",
+    "P5": "At M = 32 the standard CNN has a lower seed-mean risk than the MDN kernel on at least 3 of 6 cells.",
+    "P6": "The standard CNN's seed-mean risk falls strictly with M (32 < 128 < 512 < 2048) on every cell."
+  },
+  "predeclared_analysis": "tools/core/read_e54.py: per (cell, M) the seed means of risk for dsm_standard (this run), dsm_one_corruption/window (E33 hpc_E33n_s*), em_pair_quartic (hpc_E33q_s*) and em_mdn (hpc_E33k_s*), risk-selected rows only, seeds 0-7, paired by (cell, seed, M) after asserting equal test_bundle hashes; win counts per pair; the at_cap share per (cell, M) printed beside every verdict (an at-cap CNN is an upper bound). A failed or missing fit counts against every prediction it touches.",
+  "seeds": {"confirmatory": "0-7 (E33's protocol has 0-15; eight are enough for paired claims at the margins seen in E33 and halve the laptop time)", "dev": "10000 only (timing, see provenance_note), never read as a result"},
+  "provenance_note": "Written 20 Oct 2026 before any confirmatory E54 fit ran. Seen beforehand: (i) E33's frozen numbers for every other arm (tables in the field report); (ii) two DEV fits at 32k steps used to time the run: base cell T0.3_h1_L32, M = 128, seed 10000: risk 0.1161, selected checkpoint 32000 (at the cap), 83 s; T0.3_h0.25_L128, M = 128, seed 10000: risk 0.0937, checkpoint 8000, 235 s. The step budget was doubled to 64k because of (ii). E03's frozen Laplace-chain numbers (standard DSM nets vs one-corruption nets) informed P1.",
+  "resources": "laptop, 4 workers, one torch thread each, about 4-5 h",
+  "status": "REGISTERED and PREDECLARED 2026-10-20, before any confirmatory fit",
+  "registered": "2026-10-20"
+}
