@@ -13,9 +13,22 @@
     "P7": "The distance from the class tracks the error: over all MDN fits (6 cells x 4 M x 16 seeds), the Spearman correlation between curvature_cv and the fit's risk divided by its cell's linear floor is above 0.3."
   },
   "predeclared_analysis": "tools/core/read_e51.py on outputs/E51/readings.csv: medians and IQRs over seeds per (arm, cell, M); a fit whose kernel cannot be rebuilt or whose reading is not finite counts against every prediction it touches. The linear floor per cell is E33's lmmse_true risk (hpc_E33o oracles.csv).",
-  "seeds": {"confirmatory": "E33's 0-15 (frozen fits; nothing is refitted)"},
+  "seeds": {
+    "confirmatory": "E33's 0-15 (frozen fits; nothing is refitted)"
+  },
   "provenance_note": "Written 20 Oct 2026 before any MDN fit was read through these identities. Seen beforehand: E33's frozen risks of every arm, the site-energy and spline potential/temperature readings from their own parameters (fig-field-potential-frozen, E33 P8), and the identity tests on synthetic kernels and the TRUE field kernel (Theta_hat = Theta to 1e-6). No MDN reading had been computed.",
   "resources": "laptop, minutes",
-  "status": "REGISTERED and PREDECLARED 2026-10-20, before the run",
-  "registered": "2026-10-20"
+  "status": "REGISTERED and PREDECLARED 2026-10-20; RUN 2026-10-20 (laptop, commit 983b760, 1152 fits, 0 failed); READ: P1, P2, P3, P4, P6 CONFIRMED; P5, P7 FALSIFIED",
+  "registered": "2026-10-20",
+  "outcome": {
+    "read": "2026-10-20, tools/core/read_e51.py on outputs/E51/readings.csv as registered.",
+    "P1": "CONFIRMED. Curvature vs own gamma: max relative deviation 4.4e-15; diagonal vs own site energy: barrier max deviation 5.1e-14 (all 768 class fits).",
+    "P2": "CONFIRMED (near the edge). Base cell, M = 2048: MDN median Theta_hat/Theta = 0.907.",
+    "P3": "CONFIRMED. 6/6 cells in [0.8, 1.2] at M = 2048: 0.968, 0.997, 0.907, 0.992, 0.980, 0.974 (h0.25, h0.5, base, T0.5, T1, T2).",
+    "P4": "CONFIRMED. Base-cell MDN median barrier 0.197 (true 0.25).",
+    "P5": "FALSIFIED narrowly: the MDN's IQR of Theta_hat/Theta is wider than the site energy's in 23 of 24 (cell, M) pairs, not 24.",
+    "P6": "CONFIRMED weakly: base-cell median curvature_cv 1.29 at M = 32, 1.03 at M = 2048 (the MDN stays far from the class pointwise).",
+    "P7": "FALSIFIED: Spearman(curvature_cv, risk/floor) = 0.237 over 384 MDN fits (registered > 0.3).",
+    "unregistered_reading": "The MDN's potential is right only where the site energy is a large part of the kernel. The reading V = (2 Theta/h) f amplifies the kernel's error by 2 Theta/h: MDN potential RMS at M = 2048 is 0.044, 0.062, 0.068, 0.111, 0.178, 0.441 at 2 Theta/h = 0.6, 1.2, 2.39, 2.4, 8.85, 26.7, and the barrier 0.20, 0.30, 0.26, 0.54, 0.38, 0.85 (true 0.25). The temperature, an average of the curvature over the data, is robust everywhere (within 9%) although the curvature itself varies by about 40-100% (cv) across the data: the MDN is not in the gradient class pointwise but its average bond is right."
+  }
 }
