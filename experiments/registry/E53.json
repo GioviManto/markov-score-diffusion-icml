@@ -14,7 +14,7 @@
   },
   "provenance_note": "Written 20 Oct 2026 before the run. Seen beforehand: E50's site-averaged commitment curves (t_c from 1.61 at Theta = 0.2 to 0.46 at Theta = 2; t_c saturates with L). No per-site time had ever been computed.",
   "resources": "laptop, a few minutes",
-  "status": "REGISTERED and PREDECLARED 2026-10-20; RUN 2026-10-20 (laptop, commit 983b760+E53 registration c.f. git log); READ: P3 CONFIRMED; P1 FALSIFIED; P2 FALSIFIED (confirmed at Theta = 0.2 only)",
+  "status": "REGISTERED and PREDECLARED 2026-10-20; RUN 2026-10-20 (laptop, commit 7a93ad2); READ: P3 CONFIRMED; P1 FALSIFIED; P2 FALSIFIED (confirmed at Theta = 0.2 only)",
   "registered": "2026-10-20",
   "outcome": {
     "read": "2026-10-20, tools/core/read_e53.py on outputs/E53/sites.csv as registered (148 domains at Theta = 0.2, 355 at Theta = 0.3).",
