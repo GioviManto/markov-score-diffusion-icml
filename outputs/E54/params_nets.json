@@ -1,0 +1,66 @@
+{
+  "timestamp": "2026-10-21 14:12:56",
+  "git_commit": "e50697d12447399774e474733abef98f49a8d195",
+  "git_branch": "claude/paper-core-2026-10-20",
+  "git_dirty": "?? outputs/E54/\n?? reports/core/tab-field.tex",
+  "source_archive_sha256": "",
+  "source_is_clean": false,
+  "revision_source": "git",
+  "python": "3.14.4",
+  "numpy": "2.5.3",
+  "platform": "macOS-14.1.1-arm64-arm-64bit-Mach-O",
+  "hostname": "MacBook-Air-160.local",
+  "slurm_job_id": "",
+  "slurm_array_task_id": "",
+  "cpu_count": "8",
+  "blas_threads": "1",
+  "settings": {
+    "cells": [
+      "T0.3_h1_L32",
+      "T0.5_iso_L32",
+      "T1_iso_L32",
+      "T2_iso_L32",
+      "T0.3_h0.5_L64",
+      "T0.3_h0.25_L128"
+    ],
+    "sizes": [
+      32,
+      128,
+      512,
+      2048
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "n_val": 1024,
+    "n_test": 2048,
+    "grid_size": 401,
+    "half_width": 8.0,
+    "arch": "window",
+    "lr": 0.001,
+    "steps": 64000,
+    "checkpoints": [
+      500,
+      1000,
+      2000,
+      4000,
+      8000,
+      16000,
+      32000,
+      64000
+    ],
+    "batch_size": 64,
+    "grad_clip": 1.0,
+    "mode": "eps",
+    "torch_threads": 1
+  },
+  "quick": false,
+  "workers": 4
+}
