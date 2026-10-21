@@ -34,9 +34,16 @@ def load():
     cols = ["cell", "arm", "n_chains", "seed", "risk", "test_bundle", "at_cap"]
     df = pd.concat([cnn[cols], k[cols], n[cols]], ignore_index=True)
     df = df[df.seed.isin(SEEDS)]
-    # pairing: every arm of a (cell, seed, M) must be scored on the same test bundle
-    hashes = df.groupby(["cell", "seed", "n_chains"]).test_bundle.nunique()
-    assert (hashes == 1).all(), f"unpaired bundles: {hashes[hashes > 1]}"
+    # Pairing. Within each platform every arm of a (cell, seed) is scored on one test bundle (the bundle does not
+    # depend on M). Across platforms (E33 on the cluster, E54 on the laptop) the hashes differ in the last bits of
+    # eigensolve-derived floats, so the gate is that the SAME draws give the same deterministic risks:
+    # tools/core/check_e54_pairing.py (reports/core/e54_pairing.csv, every deviation below 1e-12).
+    df["platform"] = np.where(df.arm == "cnn", "laptop", "cluster")
+    hashes = df.groupby(["platform", "cell", "seed"]).test_bundle.nunique()
+    assert (hashes == 1).all(), f"more than one bundle per (platform, cell, seed): {hashes[hashes > 1]}"
+    pair = pd.read_csv(ROOT / "reports/core/e54_pairing.csv")
+    assert len(pair) == len(CELLS) * len(SEEDS), "pairing check incomplete"
+    assert float(pair[["lmmse_rel_dev", "iso_rel_dev"]].max().max()) < 1e-12, "laptop and cluster test sets differ"
     floor = pd.read_csv(ROOT / "outputs/hpc_E33o/oracles.csv").query("arm == 'lmmse_true'").groupby("cell").risk.mean()
     df["ratio"] = df.risk / df.cell.map(floor)
     return df
