@@ -25,7 +25,7 @@ def _csvs(pattern):
     return pd.concat([pd.read_csv(p) for p in sorted(glob.glob(str(ROOT / pattern)))], ignore_index=True)
 
 
-def load():
+def load(all_seeds=False):
     cnn = pd.read_csv(ROOT / "outputs/E54/nets.csv").assign(arm="cnn")
     k = pd.concat([_csvs("outputs/hpc_E33k_s*/kernels.csv"), _csvs("outputs/hpc_E33q_s*/kernels.csv")], ignore_index=True)
     k = k[(k.selection == "risk") & k.arm.isin(["em_pair_quartic", "em_mdn"])]
@@ -33,7 +33,8 @@ def load():
     n = n[(n.arm == "dsm_one_corruption") & (n.arch == "window")].assign(arm="cnn_one_copy")
     cols = ["cell", "arm", "n_chains", "seed", "risk", "test_bundle", "at_cap"]
     df = pd.concat([cnn[cols], k[cols], n[cols]], ignore_index=True)
-    df = df[df.seed.isin(SEEDS)]
+    if not all_seeds:
+        df = df[df.seed.isin(SEEDS)]
     # Pairing. Within each platform every arm of a (cell, seed) is scored on one test bundle (the bundle does not
     # depend on M). Across platforms (E33 on the cluster, E54 on the laptop) the hashes differ in the last bits of
     # eigensolve-derived floats, so the gate is that the SAME draws give the same deterministic risks:
@@ -85,14 +86,16 @@ def main(argv) -> int:
     for k_, (ok, msg) in v.items():
         print(f"{k_}: {'CONFIRMED' if ok else 'FALSIFIED'}  {msg}")
     if "--tex" in argv:
+        # the table reports every seed each estimator has: 16 for the kernels (E33), 8 for the CNN (E54)
+        mean = load(all_seeds=True).groupby(["arm", "cell", "n_chains"]).ratio.mean()
         rows = []
         for c in CELLS:
             cells = [f"{mean[(a, c, m)]:.2f}" for m in (32, 2048) for a in ("em_pair_quartic", "em_mdn", "cnn")]
             rows.append(LABEL[c] + " & " + " & ".join(cells) + r" \\")
         tex = "\n".join([
             r"\begin{table}[h]", r"\centering\small",
-            r"\caption{Score error divided by the linear floor on the six field cells, mean of the 8 seeds shared by all "
-            r"three estimators. Site: the five-parameter site-energy kernel; neural: the neural kernel inside BP; CNN: "
+            r"\caption{Score error divided by the linear floor on the six field cells; mean over 16 seeds for the kernels "
+            r"and 8 for the network. Site: the five-parameter site-energy kernel; neural: the neural kernel inside BP; CNN: "
             r"the network trained by denoising score matching.}", r"\label{tab:field}",
             r"\begin{tabular}{lcccccc}", r"\toprule",
             r" & \multicolumn{3}{c}{$M=32$} & \multicolumn{3}{c}{$M=2048$} \\",

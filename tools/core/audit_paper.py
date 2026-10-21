@@ -78,8 +78,7 @@ def field():
     check("mixture at the floor", f"{mix.min():.2f}" == "1.00" and f"{mix.max():.2f}" == "1.02", f"{mix.min():.3f}-{mix.max():.3f}",
           printed="($1.00$ to $1.02$)")
     cold = rk.loc[("em_pair_quartic", 32)][["T0.3_h1_L32", "T0.3_h0.5_L64", "T0.3_h0.25_L128"]]
-    check("site energy at M=32 on Theta=0.3", (pct(cold.min()), pct(cold.max())) == (24, 28), f"{cold.min():.3f}-{cold.max():.3f}",
-          printed="$24$ to $28\\%$")
+    check("site energy at M=32 on Theta=0.3 (table only)", (pct(cold.min()), pct(cold.max())) == (24, 28), f"{cold.min():.3f}-{cold.max():.3f}")
     hot32 = rk.loc[("em_pair_quartic", 32)][["T1_iso_L32", "T2_iso_L32"]]
     hot128 = rk.loc[("em_pair_quartic", 128)][["T1_iso_L32", "T2_iso_L32"]]
     check("hot cells need M=128", bool((hot32 > 1).all() and (hot128 < 1).all()), f"M=32 {hot32.round(2).tolist()}, M=128 {hot128.round(2).tolist()}")
@@ -146,8 +145,43 @@ def speciation():
     check("commitment ten sites in", f"{med[10]:.2f}" == "1.46", f"{med[10]:.3f}", printed="is $1.46$ ten sites inside")
 
 
+def network_on_field():
+    floor = pd.read_csv(ROOT / "outputs/hpc_E33o/oracles.csv").query("arm == 'lmmse_true'").groupby("cell").risk.mean()
+    cnn = pd.read_csv(ROOT / "outputs/E54/nets.csv")
+    cnn["r"] = cnn.risk / cnn.cell.map(floor)
+    c = cnn.groupby(["n_chains", "cell"]).r.mean()
+    k = csvs("outputs/hpc_E33[kq]_s*/kernels.csv")
+    k = k[k.selection == "risk"]
+    k["r"] = k.risk / k.cell.map(floor)
+    km = k.groupby(["arm", "n_chains", "cell"]).r.mean()
+    c2048 = c.loc[2048]
+    check("CNN 39-244% at 2048", (pct(c2048.min()), pct(c2048.max())) == (39, 244), f"{c2048.min():.3f}-{c2048.max():.3f}",
+          printed="$39$ to $244\\%$")
+    se32 = km.loc[("em_pair_quartic", 32)]
+    check("site at 32 beats CNN at 2048, all six", bool((se32 < c2048).all()), f"{(se32 < c2048).sum()}/6", printed="on all six cells")
+    paired = cnn[cnn.seed < 8].merge(k[(k.arm == "em_pair_quartic") & (k.seed < 8)][["cell", "seed", "n_chains", "risk"]],
+                                     on=["cell", "seed", "n_chains"], suffixes=("_cnn", "_se"))
+    check("site beats CNN in every cell, M and seed", bool((paired.risk_se < paired.risk_cnn).all()) and len(paired) == 192,
+          f"{int((paired.risk_se < paired.risk_cnn).sum())}/{len(paired)}", printed="every cell and every seed")
+    md = km.loc["em_mdn"]
+    check("neural beats CNN at 2048 on every cell", bool((md.loc[2048] < c2048).all()), f"{(md.loc[2048] < c2048).sum()}/6")
+    half = int((md.loc[32] < c.loc[32]).sum())
+    check("neural beats CNN at 32 on half", half == 3, f"{half}/6", printed="only on half of them")
+    hot = c.unstack("cell")[["T1_iso_L32", "T2_iso_L32"]]
+    check("CNN above floor on hottest at every M", bool((hot > 1).all().all()), f"min {hot.min().min():.2f}",
+          printed="the network stays above it at every $M$")
+
+    def v(s_, step):
+        return float(dict(x.split(":") for x in s_.split(";"))[str(step)])
+    cnn["gain"] = cnn.val_curve.apply(lambda s_: 1 - v(s_, 64000) / v(s_, 32000))
+    g = cnn[cnn.n_chains >= 512].groupby("n_chains").gain.median()
+    check("doubling steps: 5-7%", (pct(g.min()), pct(g.max())) == (5, 7), f"{g.round(3).to_dict()}", printed="by only $5$ to $7\\%$")
+    npar = sorted(cnn.n_params.unique())
+    check("CNN parameters", (npar[0], npar[-1]) == (5249, 19201), f"{npar}", printed="5{,}249 to\n19{,}201 parameters")
+
+
 def main() -> int:
-    for part in (laplace, field, grid_and_spectrum, speciation):
+    for part in (laplace, field, network_on_field, grid_and_spectrum, speciation):
         print(f"--- {part.__name__}")
         part()
     print(f"\n{len(FAIL)} failure(s)" + (": " + ", ".join(FAIL) if FAIL else ""))

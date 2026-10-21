@@ -69,8 +69,10 @@ best linear estimator is better than both (the score is almost linear there and 
 dominates). (Figure 3b.) Not to be hidden: it is the honest shape of the result.
 
 **B6. φ⁴ field, six cells (E33, E54).** At M = 2048 the 5-parameter site energy is 0.03–0.17 of the linear floor on
-every cell; the neural kernel 0.23–0.84; the paper's mixture kernel ≈ 1.0 (a linear drift cannot hold a domain); the
-CNN: **E54, pending**. At M = 32 the site energy is 0.24–0.28 on the cold cells and above the floor on the two hottest
+every cell; the neural kernel 0.23–0.84; the CNN (standard DSM, E54, 8 seeds) 0.39–2.44, above the floor on the two hottest
+cells at every M; the paper's mixture kernel ≈ 1.0 (a linear drift cannot hold a domain). **With 32 sequences the site energy beats
+the CNN with 2048 on all six cells**, and beats it in every (cell, M, seed). The CNN's numbers are upper bounds (last checkpoint
+in most fits at M ≥ 512), but 32k → 64k steps gained only 5–7% on validation. At M = 32 the site energy is 0.24–0.28 on the cold cells and above the floor on the two hottest
 (1.37, 1.43). Selection caveat: with the oracle-free likelihood rule the site energy is 0.04–0.23 (not 0.03–0.17).
 
 **B7. The fitted kernel reads as physics, also when it is a neural network (E51).** For any kernel of the gradient
@@ -88,7 +90,7 @@ on fine or hot lattices, where V = (2Θ/h) f amplifies the kernel's error). (Fig
 | A3 | Speciation: site-averaged commitment, t_c 1.61 → 0.46 from Θ = 0.2 to 2; exact commits earlier than its Gaussian twin | E50 |
 | A4 | Per-site polarisation: domain bulks commit as blocks, kinks are located last by a short front; no avalanche across kinks | E53 |
 | A5 | Spline (25 par.) vs site energy (5 par.): same class, more variance, messy when hot ("the awkward baby") | E33, fig-field-potential-frozen |
-| A6 | Full field table: every cell × M × arm, with at-cap shares | E33, E54 |
+| A6 | Full field table: every cell × M × arm, with at-cap shares (the body table has site, neural, CNN at M = 32, 2048) | E33, E54 |
 | A7 | Neural kernel earns its parameters only off-class: on a Laplace-bond chain the MDN beats the site energy (0.056 vs 0.103); MDN numbers not budget-limited (4× budget moves them 0.4–4.5%) | E49, E41 |
 | A8 | Oracle-free stopping (held-out likelihood) costs little | E20, E33 evidence rows |
 | A9 | Robustness of B4 across ρ ∈ {0.5, 0.85, 0.95}, L ∈ {32, 128} (EM–BP wins 16/16 seeds everywhere) | E14, E13x |
@@ -123,7 +125,7 @@ trivial toy, as Jérôme expected. Context: ξ ∝ e^{E_kink/Θ} at low temperat
 quartic site potential, so a degree-4 polynomial site energy plus one bond variance contains the truth exactly.
 
 **Q3. Does the neural kernel beat a full network?** [00:17:39] On the field, yes at large M: 0.23–0.84 of the floor
-against the CNN's (E54, pending; the one-copy CNN of E33 is 0.48–3.3). On the Laplace chain only from M = 512; at
+against the CNN's 0.39–2.44 (E54, standard DSM; the one-copy CNN of E33 was 0.48–3.3). On the Laplace chain only from M = 512; at
 M = 32 the CNN is better (1.11 vs 1.26). The parsimonious kernel beats both everywhere.
 
 **Q4. The CNN's window.** [00:18:17–00:20:28] Radius 2, 4, 8 sites at h = 1, ½, ¼ (the same physical reach, 2),
@@ -190,8 +192,8 @@ standard deviation); 101 points give the same risk (E47b).
 
 ## 8. Open, and what is not claimed
 
-- E54 (CNN on the field, standard DSM): running, 8 seeds, 64k steps; the first fits end at the step cap, so the CNN's
-  numbers are upper bounds.
+- E54 (CNN on the field, standard DSM): done and frozen, P1–P5 confirmed, P6 falsified (finest lattice flat from M = 512).
+  Laptop and cluster test sets are the same draws (48 pairs, 2.4e-15) although their hashes differ (BLAS bits).
 - Stopping uses the exact score on validation for EM–BP and the DSM networks; the likelihood rule changes the site
   energy from 3–17% to 4–23% of the floor.
 - BP at 401 points is slower per sequence than a network; at 101 points it is as fast as the transformer on one thread.

@@ -62,10 +62,16 @@ and the CNN.}
 
 On the Laplace chain EM--BP with $32$ sequences is more accurate than the CNN with $2{,}048$, and EM--BP with $128$ sequences
 (risk $0.055$) is more accurate than the best of six network architectures with $2{,}048$ ($0.060$). The networks see the
-clean sequences and fresh noise at every step; EM--BP sees one noisy copy of each sequence. On the field the site energy is
-$3$--$17\%$ of the linear error at $M=2048$ on all six cells (Table~\ref{tab:field}).
+clean sequences and fresh noise at every step; EM--BP sees one noisy copy of each sequence.
 
-%E54-TABLE
+On the field (Table~\ref{tab:field}; new run E54, the same CNN trained the standard way) the result is the same. The site energy
+with $32$ sequences beats the CNN with $2048$ on all six cells, and at equal $M$ it beats it in every cell and every seed. At
+$M=2048$ the site energy is at $3$--$17\%$ of the linear error, the neural kernel at $23$--$84\%$, the CNN at $39$--$244\%$: on
+the two hottest cells, which are close to Gaussian, the CNN stays above the linear floor at every $M$. The neural kernel beats the
+CNN at $M=2048$ everywhere, at $M=32$ on half the cells. The CNN often ends at its last checkpoint for $M\ge512$, so its numbers
+are upper bounds, but doubling its training from 32{,}000 to 64{,}000 steps lowered its validation error by only $5$--$7\%$.
+
+\input{tab-field}
 
 %=====================================================================================================
 \section{Reading the physics off a kernel (Q5, Q6, Q7)}
