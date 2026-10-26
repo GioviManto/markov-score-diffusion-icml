@@ -243,6 +243,15 @@ cmd_for() {
     e49-s0)      echo "e43_free_kernel.py --only kernels --set 'cells=(\"LAP_B_L32\",)' --set 'arms=(\"em_mdn\",)' --set 'seeds=(0, 1, 2, 3)' --output-dir {OUT}/E49_s0";;
     e49-s4)      echo "e43_free_kernel.py --only kernels --set 'cells=(\"LAP_B_L32\",)' --set 'arms=(\"em_mdn\",)' --set 'seeds=(4, 5, 6, 7)' --output-dir {OUT}/E49_s4";;
     e34-physics) echo "e34_field_physics.py --only physics_truth --output-dir {OUT}/E34p";;
+    # E55 (26 Oct 2026): GPU parts with MSD_HPC_GRES=gpu:1 MSD_HPC_VENV=venv-cuda MSD_JOB_ENV="export BP_DEVICE=gpu";
+    # one shard per cell (e55-<part>-<cell id>), each its own output directory (N-27: no shared merged CSV).
+    e55-timing)  echo "e55_unet_energy.py --only timing --output-dir {OUT}/E55_timing";;
+    e55-oracles) echo "e55_unet_energy.py --only oracles --output-dir {OUT}/E55_oracles";;
+    e55-winners) echo "e55_unet_energy.py --only winners --set screen_glob=\"'{OUT}/E55_screen_*/screening.csv'\" --output-dir {OUT}/E55_winners";;
+    e55-screen-*|e55-nets-*|e55-energy-*|e55-pair-*)
+      local rest=${1#e55-}; local part=${rest%%-*}; local cell=${rest#*-}; local extra=""
+      [[ $part != screen ]] && extra="--set winners=\"'{OUT}/E55_winners/winners.json'\""
+      echo "e55_unet_energy.py --only $part --set \"cells=('$cell',)\" $extra --output-dir {OUT}/E55_${part}_$cell";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }

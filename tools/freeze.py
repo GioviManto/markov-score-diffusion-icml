@@ -51,6 +51,8 @@ EXTRA_OWNERS = {"hpc_E33o": "E33", "hpc_E33n": "E33", "E34_learned": "E34", "E34
                 "hpc_E41_s0": "E41", "hpc_E41_s2": "E41", "hpc_E41_s4": "E41", "hpc_E41_s6": "E41", "hpc_E42_s0": "E42", "hpc_E42_s4": "E42", "hpc_E42_s8": "E42", "hpc_E42_s12": "E42", "hpc_E46_s0": "E46", "hpc_E46_s8": "E46", "hpc_E44_s0": "E44", "hpc_E44_s4": "E44",
                 "hpc_E47b_s0": "E47", "hpc_E47b_s4": "E47", "E47a": "E47", "E47c": "E47", "hpc_E47t": "E47", "hpc_E48_s0": "E48", "hpc_E48_s4": "E48", "hpc_E48_s8": "E48", "hpc_E48_s12": "E48", "hpc_E49_s0": "E49", "hpc_E49_s4": "E49",
                 "hpc_E43a_s0": "E43", "hpc_E43a_s4": "E43", "hpc_E43a_s8": "E43", "hpc_E43a_s12": "E43", "hpc_E43b_s0": "E43", "hpc_E43b_s4": "E43"}
+from registry import _E55_DIRS  # noqa: E402
+EXTRA_OWNERS.update({d: "E55" for d in _E55_DIRS})   # E55's part/shard directories
 
 
 def _registry_file(out_id: str) -> Path:
