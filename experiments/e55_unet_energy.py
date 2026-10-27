@@ -89,7 +89,7 @@ SETTINGS = dict(
                 em_energy=[dict(hidden=h) for h in (16, 32, 64)]),
     winners=None,
     steps=2**18, net_checkpoints=tuple(2**k for k in range(10, 19)), batch_size=128, warmup=1000,
-    ema_decay=0.999, grad_clip=1.0, torch_threads=2, device="auto", eval_chunk=512,
+    ema_decay=0.999, grad_clip=1.0, torch_threads=2, device="auto", eval_chunk=512, compile=False, compile_mode="reduce-overhead",
     timing_steps=2000, timing_em_iters=5,
     timing_probes=None,          # None = the registered probe list in part_timing; e55-timing8 passes its own
     screen_arms=("unet", "window", "em_energy"), screen_glob=None,   # winners: None = this directory's screening.csv
@@ -187,9 +187,12 @@ def _fit_net(cfg, arm, conf, cell_id, seed, n, dev, steps=None, checkpoints=None
     ck = tuple(checkpoints or cfg["net_checkpoints"])
     dcfg = ud.DSMConfig(steps=int(steps or cfg["steps"]), batch_size=cfg["batch_size"], lr=float(conf["lr"]),
                         warmup=cfg["warmup"], grad_clip=cfg["grad_clip"], ema_decay=cfg["ema_decay"], checkpoints=ck,
-                        seed=int(rng_for("e55-train", arm, cell_id, seed, n).integers(0, 2**31 - 1)), device=dev)
+                        seed=int(rng_for("e55-train", arm, cell_id, seed, n).integers(0, 2**31 - 1)), device=dev,
+                        compile=bool(conf.get("compile", cfg["compile"])),
+                        compile_mode=str(conf.get("compile_mode", cfg["compile_mode"])))
     t0 = time.time()
-    saved = ud.train_dsm(model, A, T_SCHEDULE, dcfg)
+    clock = {}
+    saved = ud.train_dsm(model, A, T_SCHEDULE, dcfg, clock=clock)
     t_train = time.time() - t0
     best, best_v, curve = None, np.inf, {}
     for step in sorted(saved):
@@ -200,9 +203,10 @@ def _fit_net(cfg, arm, conf, cell_id, seed, n, dev, steps=None, checkpoints=None
             best, best_v = step, v
     model.load_state_dict(saved[best])
     risk = e14._pooled(lambda X, t: ud.posterior_mean(model, X, t, cfg["eval_chunk"]), test)
-    return {**base, "arm": arm, "hp": json.dumps(hp), "lr": float(conf["lr"]), "steps": dcfg.steps,
+    return {**base, "arm": arm, "hp": json.dumps(hp), "lr": float(conf["lr"]), "steps": dcfg.steps, "compiled": int(dcfg.compile),
             "checkpoint": best, "at_cap": int(best == max(saved)), "val_selected": best_v, "risk": risk,
             "n_params": ud.n_params(model), "train_seconds": t_train, "wall": time.time() - t0, "device": str(dev),
+            "ckpt_seconds": ";".join(f"{k}:{v:.2f}" for k, v in sorted(clock.items())),
             "val_curve": ";".join(f"{k}:{v:.6f}" for k, v in sorted(curve.items()))}
 
 
@@ -434,8 +438,9 @@ def _timing_cell(args):
                      total_seconds=time.time() - t0, device=str(get_xp().__name__), risk=dev_max, draws_equal=int(same))]
     if what in ("unet", "window"):
         k = cfg["timing_steps"]
-        row = _fit_net(cfg, what, conf, cell_id, seed, n, dev, steps=k, checkpoints=(k,))
-        per = row["train_seconds"] / k
+        row = _fit_net(cfg, what, conf, cell_id, seed, n, dev, steps=k, checkpoints=(k // 2, k))
+        c = dict(kv.split(":") for kv in row["ckpt_seconds"].split(";"))
+        per = (float(c[str(k)]) - float(c[str(k // 2)])) / (k - k // 2)     # steady state: compilation excluded
     else:
         k = cfg["timing_em_iters"]
         rows = _fit_kernel_cell(cfg, what, conf, cell_id, seed, n, dev, ladder=(k,))

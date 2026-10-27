@@ -174,15 +174,19 @@ class DSMConfig:
     checkpoints: tuple = DOUBLING_CHECKPOINTS
     seed: int = 0
     device: str = "cpu"
+    compile: bool = False          # torch.compile the training forward/backward (CUDA only; the same model and loss)
+    compile_mode: str = "reduce-overhead"   # CUDA graphs: the step is replayed, not relaunched kernel by kernel
 
 
-def train_dsm(model: nn.Module, A: np.ndarray, t_levels, cfg: DSMConfig) -> dict:
+def train_dsm(model: nn.Module, A: np.ndarray, t_levels, cfg: DSMConfig, clock: dict | None = None) -> dict:
     """Standard DSM on the clean sequences A (n, L). Returns {step: EMA state dict on the CPU} at cfg.checkpoints.
 
     Every step draws a batch of clean sequences (with replacement), a level from `t_levels` and fresh noise for each,
     on the device, from one generator seeded by cfg.seed. On the CPU two runs with the same seed are identical; on a
-    GPU the convolutions are not bitwise deterministic.
+    GPU the convolutions are not bitwise deterministic. `clock`, if given, receives {step: seconds since the start} at
+    every checkpoint (the steady-state step time is a difference of two of them, free of compilation time).
     """
+    import time
     dev = torch.device(cfg.device)
     torch.manual_seed(cfg.seed)
     gen = torch.Generator(device=dev)
@@ -198,14 +202,19 @@ def train_dsm(model: nn.Module, A: np.ndarray, t_levels, cfg: DSMConfig) -> dict
     # step instead of hundreds (a small U-Net on an H200 is launch-bound: 18-37 ms/step measured, job 720363)
     opt = torch.optim.Adam(params, lr=cfg.lr, fused=dev.type == "cuda")
     ckpts = set(int(c) for c in cfg.checkpoints)
+    # Compilation fuses the U-Net's ~1000 small kernels per step (eager mode is launch-bound on an H200: 16-37 ms/step,
+    # timing jobs 720363/723188); the compiled module shares its parameters with `model`, so the optimiser, the EMA and
+    # every saved state are untouched. Off on the CPU.
+    fwd = torch.compile(model, mode=cfg.compile_mode) if (cfg.compile and dev.type == "cuda") else model
     saved = {}
+    t0 = time.time()
     for step in range(1, cfg.steps + 1):
         idx = torch.randint(0, data.shape[0], (cfg.batch_size,), generator=gen, device=dev)
         a = data[idx]
         t = levels[torch.randint(0, len(levels), (cfg.batch_size,), generator=gen, device=dev)]
         eps = torch.randn(a.shape, generator=gen, device=dev)
         x = torch.exp(-t)[:, None] * a + torch.sqrt(1.0 - torch.exp(-2.0 * t))[:, None] * eps
-        loss = ((model(x, t) - eps) ** 2).mean()
+        loss = ((fwd(x, t) - eps) ** 2).mean()
         for g in opt.param_groups:
             g["lr"] = cfg.lr * min(1.0, step / max(cfg.warmup, 1))
         opt.zero_grad(set_to_none=True)
@@ -220,6 +229,8 @@ def train_dsm(model: nn.Module, A: np.ndarray, t_levels, cfg: DSMConfig) -> dict
                 be.copy_(b)
         if step in ckpts:
             saved[step] = {k: v.detach().cpu().clone() for k, v in ema.state_dict().items()}
+            if clock is not None:
+                clock[step] = time.time() - t0
     return saved
 
 
