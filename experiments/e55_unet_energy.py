@@ -88,8 +88,10 @@ SETTINGS = dict(
                 window=[dict(lr=lr) for lr in (2e-4, 1e-3)],
                 em_energy=[dict(hidden=h) for h in (16, 32, 64)]),
     winners=None,
-    steps=2**18, net_checkpoints=tuple(2**k for k in range(10, 19)), batch_size=128, warmup=1000,
-    ema_decay=0.999, grad_clip=1.0, torch_threads=2, device="auto", eval_chunk=512, compile=False, compile_mode="reduce-overhead",
+    # half-octave ladder 256 ... 262144 (21 checkpoints; amendment 2026-10-27: the doubling ladder from 1024 could miss an
+    # early optimum, which only a network pays for)
+    steps=2**18, net_checkpoints=tuple(sorted({int(round(2 ** (k / 2))) for k in range(16, 37)})), batch_size=128, warmup=1000,
+    ema_decay=0.999, grad_clip=1.0, torch_threads=2, device="auto", eval_chunk=512, compile=True, compile_mode="reduce-overhead",
     timing_steps=2000, timing_em_iters=5,
     timing_probes=None,          # None = the registered probe list in part_timing; e55-timing8 passes its own
     screen_arms=("unet", "window", "em_energy"), screen_glob=None,   # winners: None = this directory's screening.csv

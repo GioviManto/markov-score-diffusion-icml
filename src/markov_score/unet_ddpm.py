@@ -205,7 +205,12 @@ def train_dsm(model: nn.Module, A: np.ndarray, t_levels, cfg: DSMConfig, clock: 
     # Compilation fuses the U-Net's ~1000 small kernels per step (eager mode is launch-bound on an H200: 16-37 ms/step,
     # timing jobs 720363/723188); the compiled module shares its parameters with `model`, so the optimiser, the EMA and
     # every saved state are untouched. Off on the CPU.
-    fwd = torch.compile(model, mode=cfg.compile_mode) if (cfg.compile and dev.type == "cuda") else model
+    compiled = bool(cfg.compile and dev.type == "cuda")
+    if compiled:
+        # a worker trains many models in a row: without a reset each new model is one more recompilation (dynamo falls back
+        # to eager, silently, past its cache limit of 8) and the CUDA-graph pools of finished fits stay allocated
+        torch._dynamo.reset()
+    fwd = torch.compile(model, mode=cfg.compile_mode) if compiled else model
     saved = {}
     t0 = time.time()
     for step in range(1, cfg.steps + 1):
@@ -231,6 +236,9 @@ def train_dsm(model: nn.Module, A: np.ndarray, t_levels, cfg: DSMConfig, clock: 
             saved[step] = {k: v.detach().cpu().clone() for k, v in ema.state_dict().items()}
             if clock is not None:
                 clock[step] = time.time() - t0
+    if compiled:
+        del fwd
+        torch._dynamo.reset()
     return saved
 
 
