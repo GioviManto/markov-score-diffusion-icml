@@ -193,7 +193,10 @@ def train_dsm(model: nn.Module, A: np.ndarray, t_levels, cfg: DSMConfig) -> dict
         p.requires_grad_(False)
     data = torch.as_tensor(np.asarray(A), dtype=torch.float32, device=dev)
     levels = torch.as_tensor(tuple(t_levels), dtype=torch.float32, device=dev)
-    opt = torch.optim.Adam(model.parameters(), lr=cfg.lr)
+    params, ema_params = list(model.parameters()), list(ema.parameters())
+    # fused Adam and one multi-tensor EMA update: the same arithmetic as the per-tensor loops, a few GPU launches per
+    # step instead of hundreds (a small U-Net on an H200 is launch-bound: 18-37 ms/step measured, job 720363)
+    opt = torch.optim.Adam(params, lr=cfg.lr, fused=dev.type == "cuda")
     ckpts = set(int(c) for c in cfg.checkpoints)
     saved = {}
     for step in range(1, cfg.steps + 1):
@@ -212,8 +215,7 @@ def train_dsm(model: nn.Module, A: np.ndarray, t_levels, cfg: DSMConfig) -> dict
         opt.step()
         decay = min(cfg.ema_decay, (1.0 + step) / (10.0 + step))
         with torch.no_grad():
-            for pe, p in zip(ema.parameters(), model.parameters()):
-                pe.lerp_(p, 1.0 - decay)
+            torch._foreach_lerp_(ema_params, params, 1.0 - decay)
             for be, b in zip(ema.buffers(), model.buffers()):
                 be.copy_(b)
         if step in ckpts:

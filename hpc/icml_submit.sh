@@ -246,6 +246,7 @@ cmd_for() {
     # E55 (26 Oct 2026): GPU parts with MSD_HPC_GRES=gpu:1 MSD_HPC_VENV=venv-cuda MSD_JOB_ENV="export BP_DEVICE=gpu";
     # one shard per cell (e55-<part>-<cell id>), each its own output directory (N-27: no shared merged CSV).
     e55-timing)  echo "e55_unet_energy.py --only timing --output-dir {OUT}/E55_timing";;
+    e55-timing8) echo "e55_unet_energy.py --only timing --set \"timing_probes=[('unet', {'base': 64, 'lr': 0.0002, 'rep': 0}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 1}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 2}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 3}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 4}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 5}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 6}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 7}, 'T0.3_h1_L32', 2048)]\" --output-dir {OUT}/E55_timing8";;
     e55-oracles) echo "e55_unet_energy.py --only oracles --output-dir {OUT}/E55_oracles";;
     e55-winners) echo "e55_unet_energy.py --only winners --set screen_glob=\"'{OUT}/E55_screen_*/screening.csv'\" --output-dir {OUT}/E55_winners";;
     e55-screen-*|e55-nets-*|e55-energy-*|e55-pair-*)
