@@ -96,3 +96,13 @@ def test_the_largest_fits_have_about_a_million_transitions():
     for c, sizes in e55.SIZES.items():
         L = e55.find_cell(c)["L"]
         assert max(sizes) * (L - 1) <= 1.1e6
+
+
+def test_the_window_sizes_are_e33s_frozen_winners():
+    import json
+    f = Path(__file__).resolve().parents[1] / "outputs" / "hpc_E33n_s0" / "winners.json"
+    if not f.exists():
+        pytest.skip("frozen E33 outputs not present (cluster deployment)")
+    frozen = {k.split("|")[0]: v["hp"] for k, v in json.loads(f.read_text()).items() if k.endswith("|window")}
+    assert frozen == e55.E33_WINDOW_HP
+    assert e55._window_hp("T0.3_h1_L512") == e55.E33_WINDOW_HP["T0.3_h1_L32"]

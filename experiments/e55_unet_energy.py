@@ -68,7 +68,11 @@ CELLS = E33_CELLS + tuple(c["id"] for c in NEW_CELLS)
 SIZES = {**{c: (32, 128, 512, 2048, 8192) for c in E33_CELLS}, "T0.3_h1_L32": (32, 128, 512, 2048, 8192, 32768),
          "T0.3_h1_L128": (32, 128, 512, 2048, 8192), "T0.3_h1_L512": (32, 128, 512, 2048)}
 E33_SIZES = (32, 128, 512, 2048)          # where E33 has frozen site-energy fits
-E33_WINDOW = ROOT / "outputs" / "hpc_E33n_s0" / "winners.json"
+# E33's per-cell window radius and width (outputs/hpc_E33n_s0/winners.json, frozen). Copied here because outputs/ is not
+# deployed to the cluster (timing job 720363 failed on the file); tests/test_e55_driver.py holds the copy equal to the file.
+E33_WINDOW_HP = {"T0.3_h1_L32": dict(radius=2, width=64), "T0.3_h0.5_L64": dict(radius=4, width=64),
+                 "T0.3_h0.25_L128": dict(radius=8, width=64), "T0.5_iso_L32": dict(radius=4, width=128),
+                 "T1_iso_L32": dict(radius=4, width=64), "T2_iso_L32": dict(radius=4, width=64)}
 WINDOW_CELL = {"T0.3_h1_L128": "T0.3_h1_L32", "T0.3_h1_L512": "T0.3_h1_L32"}   # same field, same window
 EM_LADDER = (10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200, 1600, 2400)
 
@@ -93,7 +97,7 @@ QUICK = dict(cells=("T0.3_h1_L32",), sizes={"T0.3_h1_L32": (32,)}, seeds=(10_001
              screen=dict(unet=[dict(base=8, lr=1e-3)], window=[dict(lr=1e-3)], em_energy=[dict(hidden=8)]),
              steps=64, net_checkpoints=(32, 64), batch_size=16, warmup=8, timing_steps=20, timing_em_iters=2,
              timing_probes=[("unet", dict(base=8, lr=1e-3), "T0.3_h1_L32", 32), ("em_energy", dict(hidden=8), "T0.3_h1_L32", 32),
-                            ("em_pair_quartic", {}, "T0.3_h1_L32", 32), ("parity", {}, "T0.3_h1_L32", 32)])
+                            ("em_pair_quartic", {}, "T0.3_h1_L32", 32), ("parity", dict(n_val=24, n_test=24), "T0.3_h1_L32", 32)])
 
 
 # ------------------------------------------------------------------ cells and bundles
@@ -160,7 +164,7 @@ def _setup(cfg):
 
 
 def _window_hp(cell_id):
-    return json.loads(E33_WINDOW.read_text())[f"{WINDOW_CELL.get(cell_id, cell_id)}|window"]["hp"]
+    return dict(E33_WINDOW_HP[WINDOW_CELL.get(cell_id, cell_id)])
 
 
 def _fit_net(cfg, arm, conf, cell_id, seed, n, dev, steps=None, checkpoints=None):
@@ -418,8 +422,9 @@ def _timing_cell(args):
     t0 = time.time()
     if what == "parity":
         # the reference means of one test bundle built on the CPU and on the BP device, on THIS hardware
-        cpu = common(cfg, cell_id, seed, n, np)[9]
-        devb = common(cfg, cell_id, seed, n, get_xp())[9]
+        pcfg = {**cfg, **conf}                       # a smaller bundle: the CPU build of a full L = 512 one takes ~30 min
+        cpu = common(pcfg, cell_id, seed, n, np)[9]
+        devb = common(pcfg, cell_id, seed, n, get_xp())[9]
         dev_max = max(float(np.max(np.abs(cpu[t][1] - devb[t][1]))) for t in cpu)
         same = all(np.array_equal(cpu[t][0], devb[t][0]) for t in cpu)
         print(f"  [E55 parity] {cell_id}: max |m_dev - m_cpu| = {dev_max:.2e}, draws equal: {same}", flush=True)
@@ -444,7 +449,7 @@ def part_timing(cfg, out, workers):
     probes = cfg.get("timing_probes") or [("unet", dict(base=128, lr=2e-4), c, 2048) for c in ("T0.3_h1_L32", "T0.3_h1_L512")] + \
         [("unet", dict(base=32, lr=2e-4), "T0.3_h1_L32", 2048), ("window", dict(lr=2e-4), "T0.3_h1_L512", 2048)] + \
         [("em_energy", dict(hidden=64), "T0.3_h1_L32", 32768), ("em_energy", dict(hidden=64), "T0.3_h1_L512", 2048),
-         ("em_pair_quartic", {}, "T0.3_h1_L512", 2048), ("parity", {}, "T0.3_h1_L512", 32)]
+         ("em_pair_quartic", {}, "T0.3_h1_L512", 2048), ("parity", dict(n_val=24, n_test=240), "T0.3_h1_L512", 32)]
     cells = [(cfg, *p) for p in probes]
     write_csv(out / "timing.csv", run_cells(cells, _timing_cell, workers, out, "timing.csv",
                                             key=lambda c: f"{c[1]}_{c[3]}_M{c[4]}_" + "_".join(f"{k}{v}" for k, v in sorted(c[2].items()))))
