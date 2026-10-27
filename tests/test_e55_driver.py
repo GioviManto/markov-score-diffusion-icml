@@ -106,3 +106,14 @@ def test_the_window_sizes_are_e33s_frozen_winners():
     frozen = {k.split("|")[0]: v["hp"] for k, v in json.loads(f.read_text()).items() if k.endswith("|window")}
     assert frozen == e55.E33_WINDOW_HP
     assert e55._window_hp("T0.3_h1_L512") == e55.E33_WINDOW_HP["T0.3_h1_L32"]
+
+
+def test_every_set_key_in_the_e55_job_commands_is_a_known_setting():
+    """apply_overrides refuses an unknown key (job 723189 died on 'timing_probes' in its first second)."""
+    import re
+    sub = (Path(__file__).resolve().parents[1] / "hpc" / "icml_submit.sh").read_text()
+    start = sub.index("# E55 (26 Oct 2026)"); block = sub[start:sub.index("*) echo \"unknown experiment", start)]
+    lines = block.split("\n")
+    keys = {k for l in lines for k in re.findall(r'--set \\?"?([A-Za-z_]+)=', l)}
+    assert {"cells", "winners", "screen_glob", "timing_probes"} <= keys
+    assert keys <= set(e55.SETTINGS), keys - set(e55.SETTINGS)

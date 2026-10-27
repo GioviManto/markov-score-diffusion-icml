@@ -249,10 +249,11 @@ cmd_for() {
     e55-timing8) echo "e55_unet_energy.py --only timing --set \"timing_probes=[('unet', {'base': 64, 'lr': 0.0002, 'rep': 0}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 1}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 2}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 3}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 4}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 5}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 6}, 'T0.3_h1_L32', 2048), ('unet', {'base': 64, 'lr': 0.0002, 'rep': 7}, 'T0.3_h1_L32', 2048)]\" --output-dir {OUT}/E55_timing8";;
     e55-oracles) echo "e55_unet_energy.py --only oracles --output-dir {OUT}/E55_oracles";;
     e55-winners) echo "e55_unet_energy.py --only winners --set screen_glob=\"'{OUT}/E55_screen_*/screening.csv'\" --output-dir {OUT}/E55_winners";;
-    e55-screen-*|e55-nets-*|e55-energy-*|e55-pair-*)
-      local rest=${1#e55-}; local part=${rest%%-*}; local cell=${rest#*-}; local extra=""
+    e55-screen-*|e55-nets-*|e55-energy-*|e55-pair-*|e55-kern-*)
+      local rest=${1#e55-}; local part=${rest%%-*}; local cell=${rest#*-}; local extra="" only=$part
       [[ $part != screen ]] && extra="--set winners=\"'{OUT}/E55_winners/winners.json'\""
-      echo "e55_unet_energy.py --only $part --set \"cells=('$cell',)\" $extra --output-dir {OUT}/E55_${part}_$cell";;
+      [[ $part == kern ]] && only="energy,pair"     # one job per cell for both kernel parts (QoS: 30 submitted jobs)
+      echo "e55_unet_energy.py --only $only --set \"cells=('$cell',)\" $extra --output-dir {OUT}/E55_${part}_$cell";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }

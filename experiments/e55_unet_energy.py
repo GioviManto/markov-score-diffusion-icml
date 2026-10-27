@@ -91,6 +91,8 @@ SETTINGS = dict(
     steps=2**18, net_checkpoints=tuple(2**k for k in range(10, 19)), batch_size=128, warmup=1000,
     ema_decay=0.999, grad_clip=1.0, torch_threads=2, device="auto", eval_chunk=512,
     timing_steps=2000, timing_em_iters=5,
+    timing_probes=None,          # None = the registered probe list in part_timing; e55-timing8 passes its own
+    screen_arms=("unet", "window", "em_energy"), screen_glob=None,   # winners: None = this directory's screening.csv
 )
 QUICK = dict(cells=("T0.3_h1_L32",), sizes={"T0.3_h1_L32": (32,)}, seeds=(10_001,), screen_sizes=(32,),
              n_val=32, n_test=32, grid_size=101, em_checkpoints=(2, 4), energy_checkpoints=(2, 4),
@@ -324,7 +326,7 @@ def _screen_cell(args):
 
 
 def part_screen(cfg, out, workers):
-    arms = [a for a in cfg.get("screen_arms", ("unet", "window", "em_energy"))]
+    arms = list(cfg["screen_arms"])
     cells = [(cfg, a, conf, c, n) for c in _shard_cells(cfg) for a in arms for conf in cfg["screen"][a]
              for n in cfg["screen_sizes"]]
     write_csv(out / "screening.csv", run_cells(cells, _screen_cell, workers, out, "screening.csv",

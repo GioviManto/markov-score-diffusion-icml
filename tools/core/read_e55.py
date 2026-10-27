@@ -34,17 +34,17 @@ COLS = ["arm", "cell", "n_chains", "seed", "risk", "at_cap"]
 # ------------------------------------------------------------------ loading and gates
 
 
-def _csvs(pattern):
-    paths = sorted(glob.glob(str(ROOT / pattern)))
+def _csvs(*patterns):
+    paths = sorted(p for pattern in patterns for p in glob.glob(str(ROOT / pattern)))
     if not paths:
-        raise SystemExit(f"no files match {pattern}")
+        raise SystemExit(f"no files match {patterns}")
     return pd.concat([pd.read_csv(p) for p in paths], ignore_index=True)
 
 
 def load():
     nets = _csvs("outputs/hpc_E55_nets_*/nets.csv")
-    energy = _csvs("outputs/hpc_E55_energy_*/kernels.csv")
-    pair = _csvs("outputs/hpc_E55_pair_*/pair.csv")
+    energy = _csvs("outputs/hpc_E55_kern_*/kernels.csv", "outputs/hpc_E55_energy_*/kernels.csv")
+    pair = _csvs("outputs/hpc_E55_kern_*/pair.csv", "outputs/hpc_E55_pair_*/pair.csv")
     orc = _csvs("outputs/hpc_E55_oracles/oracles.csv")
     # gate 1: every E55 part saw the same draws for a (cell, seed) -- CPU-built oracles and GPU-built fits alike
     parts = pd.concat([d[["cell", "seed", "test_draws"]] for d in (nets, energy, pair, orc)], ignore_index=True)
