@@ -37,7 +37,7 @@ _E55_DIRS = {"hpc_E55_oracles": "oracles.csv", "hpc_E55_timing": "timing.csv", "
              **{f"hpc_E55_nets_{c}": "nets.csv" for c in _E55_CELLS},
              **{f"hpc_E55_energy_{c}": "kernels.csv" for c in _E55_CELLS},
              **{f"hpc_E55_pair_{c}": "pair.csv" for c in _E55_CELLS},
-             **{f"hpc_E55_kern_{c}": "kernels.csv" for c in _E55_CELLS}, "hpc_E55_timing8": "timing.csv"}
+             **{f"hpc_E55_kern_{c}": "kernels.csv" for c in _E55_CELLS}, "hpc_E55_timing8": "timing.csv", "hpc_E55_cost": "cost.csv"}
 OUTPUT_DIRS["E55"] = "hpc_E55_oracles"
 MAIN_CSV.update(_E55_DIRS)
 SCRIPTS.update({d: "e55_unet_energy.py" for d in _E55_DIRS})

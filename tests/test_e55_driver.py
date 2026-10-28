@@ -125,3 +125,25 @@ def test_every_worker_compiles_into_its_own_cache():
     assert str(os.getpid()) in root.name
     assert os.environ["TORCHINDUCTOR_CACHE_DIR"].startswith(str(root))
     assert os.environ["TRITON_CACHE_DIR"].startswith(str(root))
+
+
+def test_pooled_levels_is_e14_pooled_plus_the_per_level_errors():
+    cfg = _cfg()
+    *_, sigma0, A, Av, val, test, base = e55.common(cfg, "T1_iso_L32", 1, 16, np)
+    from markov_score import theory
+    f = lambda X, t: theory.lmmse_posterior_mean(X, sigma0, t)  # noqa: E731
+    pooled, per = e55.pooled_levels(f, test)
+    assert pooled == e14._pooled(f, test)                       # identical, not merely close
+    assert set(per) == set(e33.T_SCHEDULE) and all(0 < v < 1 for v in per.values())
+    assert min(per.values()) <= pooled <= max(per.values())
+
+
+def test_the_dsm_validation_loss_ranks_the_exact_denoiser_first():
+    cfg = _cfg()
+    *_, sigma0, A, Av, val, test, base = e55.common(cfg, "T2_iso_L32", 0, 16, np)
+    from markov_score import theory
+    dset = e55.dsm_validation_set(Av, "T2_iso_L32", 0)
+    good = e55.dsm_loss(lambda X, t: theory.lmmse_posterior_mean(X, sigma0, t), dset)
+    bad = e55.dsm_loss(lambda X, t: X / np.exp(-t), dset)       # predicts no noise at all
+    assert good < bad and abs(bad - 1.0) < 0.1                    # eps_hat = 0 costs E eps^2 = 1
+    assert e55.dsm_validation_set(Av, "T2_iso_L32", 0)[3][2].tobytes() == dset[3][2].tobytes()   # fixed draws

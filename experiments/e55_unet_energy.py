@@ -94,12 +94,15 @@ SETTINGS = dict(
     ema_decay=0.999, grad_clip=1.0, torch_threads=2, device="auto", eval_chunk=512, compile=True, compile_mode="reduce-overhead",
     timing_steps=2000, timing_em_iters=5,
     timing_probes=None,          # None = the registered probe list in part_timing; e55-timing8 passes its own
+    cost_lengths=(32, 64, 128, 512), cost_unet_bases=(32, 64, 128), cost_batches_gpu=(1, 64, 1024), cost_batches_cpu=(1, 64),
+    cost_reps=7, cost_gpu=True,
     screen_arms=("unet", "window", "em_energy"), screen_glob=None,   # winners: None = this directory's screening.csv
 )
 QUICK = dict(cells=("T0.3_h1_L32",), sizes={"T0.3_h1_L32": (32,)}, seeds=(10_001,), screen_sizes=(32,),
              n_val=32, n_test=32, grid_size=101, em_checkpoints=(2, 4), energy_checkpoints=(2, 4),
              screen=dict(unet=[dict(base=8, lr=1e-3)], window=[dict(lr=1e-3)], em_energy=[dict(hidden=8)]),
              steps=64, net_checkpoints=(32, 64), batch_size=16, warmup=8, timing_steps=20, timing_em_iters=2,
+             cost_lengths=(32,), cost_unet_bases=(8,), cost_batches_cpu=(1, 4), cost_reps=2, cost_gpu=False,
              timing_probes=[("unet", dict(base=8, lr=1e-3), "T0.3_h1_L32", 32), ("em_energy", dict(hidden=8), "T0.3_h1_L32", 32),
                             ("em_pair_quartic", {}, "T0.3_h1_L32", 32), ("parity", dict(n_val=24, n_test=24), "T0.3_h1_L32", 32)])
 
@@ -173,6 +176,48 @@ def _private_compile_caches():
     return root
 
 
+def pooled_levels(mean_fn, bundle):
+    """e14._pooled -- the same sums in the same order, so the pooled value is identical -- and the relative score error at
+    each of the twelve levels, sqrt(sum (s_hat - s*)^2 / sum s*^2) over the test sequences and sites of that level."""
+    num = den = 0.0
+    per = {}
+    for t in T_SCHEDULE:
+        X, m_ref = bundle[t]
+        al, de = alpha_delta(t)
+        s_hat = -(X - al * mean_fn(X, t)) / de
+        s_ref = -(X - al * m_ref) / de
+        n_t = float(((s_hat - s_ref) ** 2).sum()); d_t = float((s_ref ** 2).sum())
+        num += n_t; den += d_t
+        per[t] = float(np.sqrt(n_t / d_t))
+    return float(np.sqrt(num / den)), per
+
+
+def _levels(per) -> str:
+    return ";".join(f"{t:g}:{v:.6f}" for t, v in sorted(per.items()))
+
+
+def dsm_validation_set(Av, cell_id, seed):
+    """The networks' own selection criterion: clean validation sequences (E33's validation chains) with one FIXED noise
+    draw per level, so every checkpoint is scored on the same examples."""
+    rng = rng_for("e55-dsmval", cell_id, seed)
+    out = []
+    for t in T_SCHEDULE:
+        al, de = alpha_delta(t)
+        eps = rng.standard_normal(Av.shape)
+        out.append((t, al * Av + np.sqrt(de) * eps, eps))
+    return out
+
+
+def dsm_loss(mean_fn, dsm_set) -> float:
+    """Validation DSM loss, mean over levels of mean (eps_hat - eps)^2, eps_hat = (x - alpha m(x)) / sqrt(Delta): the
+    training loss of the networks on held-out sequences (uniform over the levels, as in training)."""
+    tot = 0.0
+    for t, X, eps in dsm_set:
+        al, de = alpha_delta(t)
+        tot += float(np.mean(((X - al * mean_fn(X, t)) / np.sqrt(de) - eps) ** 2))
+    return tot / len(dsm_set)
+
+
 def _setup(cfg):
     _private_compile_caches()
     import torch
@@ -214,17 +259,32 @@ def _fit_net(cfg, arm, conf, cell_id, seed, n, dev, steps=None, checkpoints=None
     clock = {}
     saved = ud.train_dsm(model, A, T_SCHEDULE, dcfg, clock=clock)
     t_train = time.time() - t0
-    best, best_v, curve = None, np.inf, {}
+    mean_fn = lambda X, t: ud.posterior_mean(model, X, t, cfg["eval_chunk"])  # noqa: E731
+    dsm_set = dsm_validation_set(Av, cell_id, seed)
+    best, best_v, curve, dsm_best, dsm_v, dsm_curve = None, np.inf, {}, None, np.inf, {}
     for step in sorted(saved):
         model.load_state_dict(saved[step])
-        v = e14._pooled(lambda X, t: ud.posterior_mean(model, X, t, cfg["eval_chunk"]), val)
+        v = e14._pooled(mean_fn, val)
         curve[step] = v
         if v < best_v:
             best, best_v = step, v
+        d = dsm_loss(mean_fn, dsm_set)          # realistic selection: the network's own loss, no exact score
+        dsm_curve[step] = d
+        if d < dsm_v:
+            dsm_best, dsm_v = step, d
     model.load_state_dict(saved[best])
-    risk = e14._pooled(lambda X, t: ud.posterior_mean(model, X, t, cfg["eval_chunk"]), test)
+    risk, per = pooled_levels(mean_fn, test)
+    if dsm_best == best:
+        risk_dsm, per_dsm = risk, per
+    else:
+        model.load_state_dict(saved[dsm_best])
+        risk_dsm, per_dsm = pooled_levels(mean_fn, test)
+        model.load_state_dict(saved[best])
     return {**base, "arm": arm, "hp": json.dumps(hp), "lr": float(conf["lr"]), "steps": dcfg.steps, "compiled": int(dcfg.compile),
             "checkpoint": best, "at_cap": int(best == max(saved)), "val_selected": best_v, "risk": risk,
+            "risk_levels": _levels(per), "dsm_checkpoint": dsm_best, "dsm_at_cap": int(dsm_best == max(saved)),
+            "dsm_val_selected": dsm_v, "risk_dsm": risk_dsm, "risk_dsm_levels": _levels(per_dsm),
+            "dsm_curve": ";".join(f"{k}:{v:.6f}" for k, v in sorted(dsm_curve.items())),
             "n_params": ud.n_params(model), "train_seconds": t_train, "wall": time.time() - t0, "device": str(dev),
             "ckpt_seconds": ";".join(f"{k}:{v:.2f}" for k, v in sorted(clock.items())),
             "val_curve": ";".join(f"{k}:{v:.6f}" for k, v in sorted(curve.items()))}
@@ -279,16 +339,16 @@ def fit_kernel(cfg, arm, k0, grid, w, groups, val, val_groups, test, L, ladder, 
             continue
         kb = saved[it]
         try:
-            risk = e14._pooled(_mean_fn(grid, w, kb.log_transition_matrix(grid), mus[it], xp), test)
+            risk, per = pooled_levels(_mean_fn(grid, w, kb.log_transition_matrix(grid), mus[it], xp), test)
         except FloatingPointError as exc:
             rows.append(e33._failed_row(arm, selection, k0, wall, f"test scoring of checkpoint {it}: FloatingPointError: {exc}"))
             continue
-        rows.append(dict(arm=arm, selection=selection, risk=risk, failed=0, checkpoint=it, at_cap=int(it == max(saved)),
+        rows.append(dict(arm=arm, selection=selection, risk=risk, risk_levels=_levels(per), failed=0, checkpoint=it, at_cap=int(it == max(saved)),
                          val_selected=sel, n_params=int(len(np.asarray(kb.theta))), wall=wall,
                          converged=bool(trace.converged), stop_reason=trace.stop_reason,
                          monotone_violation=float(trace.monotone_violation), n_iters=len(trace.log_evidence),
                          **e33._kernel_diagnostics(kb, grid), final_lr=float(getattr(kb, "lr", np.nan)),
-                         theta=";".join(f"{v:.8g}" for v in np.asarray(kb.theta, dtype=float)) if arm != "em_energy" else "",
+                         theta=";".join(f"{v:.8g}" for v in np.asarray(kb.theta, dtype=float)),
                          val_curve=";".join(f"{i}:{a:.6f}/{b:.6f}" for i, (a, b) in sorted(curve.items()))))
     return rows
 
@@ -482,8 +542,87 @@ def part_timing(cfg, out, workers):
                                             key=lambda c: f"{c[1]}_{c[3]}_M{c[4]}_" + "_".join(f"{k}{v}" for k, v in sorted(c[2].items()))))
 
 
+COST_WINDOW = {32: "T0.3_h1_L32", 64: "T0.3_h0.5_L64", 128: "T0.3_h0.25_L128", 512: "T0.3_h1_L32"}   # the cell's window
+
+
+def _timed(fn, sync, reps):
+    """Median seconds per call after two warm-up calls; `sync` waits for the device."""
+    for _ in range(2):
+        fn(); sync()
+    ts = []
+    for _ in range(reps):
+        t0 = time.perf_counter(); fn(); sync(); ts.append(time.perf_counter() - t0)
+    return float(np.median(ts)), float(np.min(ts))
+
+
+def _cost_cell(args):
+    """Inference cost: seconds to produce the score of B sequences of L sites at one level, on the GPU or one CPU thread.
+    The cost of a network depends on its size only, and the cost of BP on the grid (N_g, L, B) only, never on the fitted
+    values, so untrained models are timed; 'build' rows time the one-off construction of a learned kernel's grid matrix
+    and stationary law."""
+    cfg, what, conf, L, B, device = args
+    import torch
+    torch.set_num_threads(1)
+    _private_compile_caches()
+    from markov_score import nn_torch as nt
+    from markov_score import unet_ddpm as ud
+    t = 0.3215
+    al, de = alpha_delta(t)
+    X = rng_for("e55-cost", L, B).standard_normal((B, L))
+    grid, w = make_grid(cfg["half_width"], cfg["grid_size"])
+    chain, _ = resolve_cell(find_cell("T0.3_h1_L32"))
+    lk, lmu = chain.log_transition_matrix(grid), chain.log_stationary(grid)
+    peak = np.nan
+    if what in ("unet", "window"):
+        dev = torch.device(device)
+        model = (ud.build(0, base=conf["base"]) if what == "unet" else nt.build("window", L, **_window_hp(COST_WINDOW[L])))
+        model = model.to(dev).eval()
+        sync = (lambda: torch.cuda.synchronize()) if dev.type == "cuda" else (lambda: None)
+        if dev.type == "cuda":
+            torch.cuda.reset_peak_memory_stats()
+        med, best = _timed(lambda: ud.posterior_mean(model, X, t, chunk=max(B, 1)), sync, cfg["cost_reps"])
+        if dev.type == "cuda":
+            peak = float(torch.cuda.max_memory_allocated())
+        n_par = ud.n_params(model)
+    elif what == "bp":
+        xp = get_xp() if device == "cuda" else np
+        sync = (lambda: xp.cuda.Device().synchronize()) if xp is not np else (lambda: None)
+        med, best = _timed(lambda: grid_bp_batch(grid, w, lk, X, al, de, log_mu=lmu, xp=xp), sync, cfg["cost_reps"])
+        if xp is not np:
+            peak = float(xp.get_default_memory_pool().total_bytes())
+        n_par = 0
+    else:                                   # build: a learned kernel's grid matrix and its stationary law, once per model
+        if what == "build_energy":
+            from markov_score.energy_kernel import NeuralEnergyKernel
+            k = NeuralEnergyKernel.init(hidden=int(conf["hidden"]), seed=0, half_width=cfg["half_width"], device=device)
+        else:
+            k = e33._init_kernel("em_pair_quartic", cfg, grid, 0, "T0.3_h1_L32", 32)
+        mu_fn = e33._stationary_mu(grid, w)
+        med, best = _timed(lambda: (k.log_transition_matrix(grid), mu_fn(k)), lambda: None, cfg["cost_reps"])
+        n_par = int(len(np.asarray(k.theta)))
+    row = dict(what=what, conf=json.dumps(conf), n_sites=L, batch=B, device=device, threads=1, grid_size=cfg["grid_size"],
+               seconds_per_call=med, seconds_min=best, seconds_per_sequence=med / max(B, 1), peak_bytes=peak, n_params=n_par)
+    print(f"  [E55 cost] {what} {conf} L={L} B={B} {device}: {med * 1e3:.2f} ms/call", flush=True)
+    return [row]
+
+
+def part_cost(cfg, out, workers):
+    devices = ("cuda", "cpu") if cfg["cost_gpu"] else ("cpu",)
+    cells = []
+    for L in cfg["cost_lengths"]:
+        for device in devices:
+            for B in (cfg["cost_batches_gpu"] if device == "cuda" else cfg["cost_batches_cpu"]):
+                cells += [(cfg, "unet", dict(base=b), L, B, device) for b in cfg["cost_unet_bases"]]
+                cells += [(cfg, "window", {}, L, B, device), (cfg, "bp", {}, L, B, device)]
+    for device in devices:
+        cells += [(cfg, "build_energy", dict(hidden=h), 0, 0, device) for h in (16, 32, 64)]
+    cells += [(cfg, "build_pair", {}, 0, 0, "cpu")]
+    write_csv(out / "cost.csv", run_cells(cells, _cost_cell, 1, out, "cost.csv",
+                                          key=lambda c: f"{c[1]}_L{c[3]}_B{c[4]}_{c[5]}_" + "_".join(f"{k}{v}" for k, v in sorted(c[2].items()))))
+
+
 PARTS = {"oracles": part_oracles, "timing": part_timing, "screen": part_screen, "winners": part_winners,
-         "nets": part_nets, "energy": part_energy, "pair": part_pair}
+         "nets": part_nets, "energy": part_energy, "pair": part_pair, "cost": part_cost}
 
 
 def main():
