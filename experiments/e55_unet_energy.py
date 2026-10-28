@@ -96,6 +96,10 @@ SETTINGS = dict(
     timing_probes=None,          # None = the registered probe list in part_timing; e55-timing8 passes its own
     cost_lengths=(32, 64, 128, 512), cost_unet_bases=(32, 64, 128), cost_batches_gpu=(1, 64, 1024), cost_batches_cpu=(1, 64),
     cost_reps=7, cost_gpu=True,
+    # generation (amendment 2026-10-28): networks retrained on log-uniform levels in [gen_tmin, gen_tmax], all arms through
+    # the same 400-level ancestral sampler (tests/test_ancestral.py: 0.98 of the variance with the exact denoiser)
+    gen_cells=("T0.3_h1_L32", "T1_iso_L32", "T0.3_h0.25_L128", "T0.3_h1_L512"), gen_sizes=(128, 2048), gen_seeds=(0, 1, 2, 3),
+    gen_n=2048, gen_steps=400, gen_tmin=0.005, gen_tmax=3.0, gen_kernel_csvs=(), gen_e33_csv="data/e55_gen_e33_site_energy.csv",
     screen_arms=("unet", "window", "em_energy"), screen_glob=None,   # winners: None = this directory's screening.csv
 )
 QUICK = dict(cells=("T0.3_h1_L32",), sizes={"T0.3_h1_L32": (32,)}, seeds=(10_001,), screen_sizes=(32,),
@@ -103,6 +107,7 @@ QUICK = dict(cells=("T0.3_h1_L32",), sizes={"T0.3_h1_L32": (32,)}, seeds=(10_001
              screen=dict(unet=[dict(base=8, lr=1e-3)], window=[dict(lr=1e-3)], em_energy=[dict(hidden=8)]),
              steps=64, net_checkpoints=(32, 64), batch_size=16, warmup=8, timing_steps=20, timing_em_iters=2,
              cost_lengths=(32,), cost_unet_bases=(8,), cost_batches_cpu=(1, 4), cost_reps=2, cost_gpu=False,
+             gen_cells=("T0.3_h1_L32",), gen_sizes=(32,), gen_seeds=(10_001,), gen_n=128, gen_steps=20,
              timing_probes=[("unet", dict(base=8, lr=1e-3), "T0.3_h1_L32", 32), ("em_energy", dict(hidden=8), "T0.3_h1_L32", 32),
                             ("em_pair_quartic", {}, "T0.3_h1_L32", 32), ("parity", dict(n_val=24, n_test=24), "T0.3_h1_L32", 32)])
 
@@ -234,7 +239,7 @@ def _window_hp(cell_id):
     return dict(E33_WINDOW_HP[WINDOW_CELL.get(cell_id, cell_id)])
 
 
-def _fit_net(cfg, arm, conf, cell_id, seed, n, dev, steps=None, checkpoints=None):
+def _fit_net(cfg, arm, conf, cell_id, seed, n, dev, steps=None, checkpoints=None, t_range=None, return_model=False):
     import torch
     from markov_score import nn_torch as nt
     from markov_score import unet_ddpm as ud
@@ -254,7 +259,7 @@ def _fit_net(cfg, arm, conf, cell_id, seed, n, dev, steps=None, checkpoints=None
                         warmup=cfg["warmup"], grad_clip=cfg["grad_clip"], ema_decay=cfg["ema_decay"], checkpoints=ck,
                         seed=int(rng_for("e55-train", arm, cell_id, seed, n).integers(0, 2**31 - 1)), device=dev,
                         compile=bool(conf.get("compile", cfg["compile"])),
-                        compile_mode=str(conf.get("compile_mode", cfg["compile_mode"])))
+                        compile_mode=str(conf.get("compile_mode", cfg["compile_mode"])), t_range=t_range)
     t0 = time.time()
     clock = {}
     saved = ud.train_dsm(model, A, T_SCHEDULE, dcfg, clock=clock)
@@ -280,14 +285,16 @@ def _fit_net(cfg, arm, conf, cell_id, seed, n, dev, steps=None, checkpoints=None
         model.load_state_dict(saved[dsm_best])
         risk_dsm, per_dsm = pooled_levels(mean_fn, test)
         model.load_state_dict(saved[best])
-    return {**base, "arm": arm, "hp": json.dumps(hp), "lr": float(conf["lr"]), "steps": dcfg.steps, "compiled": int(dcfg.compile),
+    row = {**base, "arm": arm, "hp": json.dumps(hp), "lr": float(conf["lr"]), "steps": dcfg.steps, "compiled": int(dcfg.compile),
             "checkpoint": best, "at_cap": int(best == max(saved)), "val_selected": best_v, "risk": risk,
             "risk_levels": _levels(per), "dsm_checkpoint": dsm_best, "dsm_at_cap": int(dsm_best == max(saved)),
             "dsm_val_selected": dsm_v, "risk_dsm": risk_dsm, "risk_dsm_levels": _levels(per_dsm),
             "dsm_curve": ";".join(f"{k}:{v:.6f}" for k, v in sorted(dsm_curve.items())),
             "n_params": ud.n_params(model), "train_seconds": t_train, "wall": time.time() - t0, "device": str(dev),
             "ckpt_seconds": ";".join(f"{k}:{v:.2f}" for k, v in sorted(clock.items())),
-            "val_curve": ";".join(f"{k}:{v:.6f}" for k, v in sorted(curve.items()))}
+            "val_curve": ";".join(f"{k}:{v:.6f}" for k, v in sorted(curve.items())),
+            "t_range": "" if t_range is None else f"{t_range[0]:g}-{t_range[1]:g}"}
+    return (row, model) if return_model else row
 
 
 # ------------------------------------------------------------------ kernels
@@ -621,8 +628,99 @@ def part_cost(cfg, out, workers):
                                           key=lambda c: f"{c[1]}_L{c[3]}_B{c[4]}_{c[5]}_" + "_".join(f"{k}{v}" for k, v in sorted(c[2].items()))))
 
 
+# ------------------------------------------------------------------ generation (amendment 2026-10-28, option A)
+
+
+def generation_stats(G, R, chain, info, L):
+    """Distances of a generated batch G to exact samples R of the same cell, and G's physical statistics (E34's)."""
+    from e34_field_physics import physical_statistics
+    from markov_score import gen_metrics as gm
+    st = physical_statistics(G, chain.scale, L, info["h"])
+    corr = np.array([float(v) for v in st["corr"].split(";")])
+    corr_true = chain.covariance(L)[0]
+    return dict(swd=gm.sliced_wasserstein2(G, R, n_proj=256, seed=0), w1_marginal=gm.wasserstein1_1d(G, R),
+                corr_max_err=float(np.max(np.abs(corr - corr_true))), corr_rms_err=float(np.sqrt(np.mean((corr - corr_true) ** 2))),
+                var=st["var"], excess_kurtosis=st["excess_kurtosis"], kink_density=st["kink_density"],
+                coarse_kink_density=st["coarse_kink_density"], coarse_mean_domain=st["coarse_mean_domain"],
+                barrier_mass=st["barrier_mass"], bimodality=st["bimodality_coefficient"])
+
+
+def _kernel_row(paths, arm, cell_id, n, seed):
+    """The risk-selected fit of `arm` at (cell, M, seed) from the CSVs that hold it, or None."""
+    import pandas as pd
+    for path in paths:
+        if not Path(path).exists():
+            continue
+        d = pd.read_csv(path)
+        d = d[(d.arm == arm) & (d.selection == "risk") & (d.cell == cell_id) & (d.n_chains == n) & (d.seed == seed)]
+        d = d[d.theta.notna() & (d.failed.fillna(0) == 0)] if "failed" in d else d[d.theta.notna()]
+        if len(d):
+            return d.iloc[0]
+    return None
+
+
+def _gen_cell(args):
+    """One (cell, M, seed): exact references, the exact denoiser through the sampler, the networks retrained on continuous
+    levels, and the fitted kernels (from the main fits) through the sampler and by direct sampling of their chain."""
+    cfg, cell_id, n, seed = args
+    torch, dev = _setup(cfg)
+    from markov_score import ancestral as an
+    from markov_score import unet_ddpm as ud
+    from markov_score.energy_kernel import NeuralEnergyKernel
+    from markov_score.pair_energy_kernel import PairEnergyKernel
+    xp = get_xp()
+    chain, grid, w, log_k, log_mu, sigma0, A, Av, val, test, base = common(cfg, cell_id, seed, n, xp)
+    info = resolve_cell(find_cell(cell_id))[1]
+    L, N = base["n_sites"], cfg["gen_n"]
+    ladder = np.geomspace(cfg["gen_tmax"], cfg["gen_tmin"], cfg["gen_steps"] + 1)
+    R = chain.sample_batch(rng_for("e55-gen-exact", cell_id, seed), N, L)
+    noise = lambda: rng_for("e55-gen-noise", cell_id, seed)  # noqa: E731   the same sampler noise for every arm
+    keep = {k: base[k] for k in ("cell", "T", "h", "n_sites", "role", "seed", "n_chains", "test_bundle", "test_draws")}
+    rows = []
+
+    def add(arm, G, **extra):
+        rows.append({**keep, "arm": arm, "n_gen": N, "gen_steps": cfg["gen_steps"], "gen_tmin": cfg["gen_tmin"],
+                     **generation_stats(G, R, chain, info, L), **extra})
+        print(f"  [E55 gen] {cell_id} M={n} seed={seed} {arm}: swd {rows[-1]['swd']:.4f} kinks {rows[-1]['coarse_kink_density']:.4f}", flush=True)
+
+    add("exact_ref", R)
+    add("exact", chain.sample_batch(rng_for("e55-gen-exact2", cell_id, seed), N, L))          # Monte Carlo noise floor
+    add("oracle_sampler", an.generate(_mean_fn(grid, w, log_k, log_mu, xp), N, L, ladder, noise()))
+    for arm in ("unet", "window"):
+        row, model = _fit_net(cfg, arm, _winner(cfg, cell_id, arm), cell_id, seed, n, dev,
+                              t_range=(cfg["gen_tmin"], cfg["gen_tmax"]), return_model=True)
+        G = an.generate(lambda X, t: ud.posterior_mean(model, X, t, cfg["eval_chunk"]), N, L, ladder, noise())
+        add(f"{arm}_cont", G, risk=row["risk"], risk_levels=row["risk_levels"], checkpoint=row["checkpoint"],
+            at_cap=row["at_cap"], hp=row["hp"])
+    paths = [str(Path(p_)) for p_ in cfg["gen_kernel_csvs"]] + [str(Path(__file__).resolve().parent / cfg["gen_e33_csv"])]
+    for arm, label in (("em_energy", "em_energy"), ("em_pair_quartic", "site_energy")):
+        r = _kernel_row(paths, arm, cell_id, n, seed)
+        if r is None:
+            rows.append({**keep, "arm": label, "failed": 1, "stop_reason": "no fitted kernel found"}); continue
+        theta = np.array([float(v) for v in str(r["theta"]).split(";")])
+        if arm == "em_energy":
+            k = NeuralEnergyKernel.from_theta(theta, int(json.loads(r["hp"])["hidden"]), cfg["half_width"])
+        else:
+            k = PairEnergyKernel(log_gamma=float(theta[0]), coef=theta[1:], half_width=float(cfg["half_width"]))
+        lk = k.log_transition_matrix(grid)
+        mu = e33._stationary_mu(grid, w)(k)
+        add(label, an.generate(_mean_fn(grid, w, lk, mu, xp), N, L, ladder, noise()), risk=float(r["risk"]))
+        add(f"{label}_direct", an.sample_grid_chain(lk, mu, grid, w, N, L, rng_for("e55-gen-direct", cell_id, seed)),
+            risk=float(r["risk"]))
+    return rows
+
+
+def part_gen(cfg, out, workers):
+    cells = [(cfg, c, n, s) for c in _shard_cells({**cfg, "cells": [c for c in cfg["cells"] if c in cfg["gen_cells"]]})
+             for n in cfg["gen_sizes"] for s in cfg["gen_seeds"]]
+    if not cells:
+        print("  [E55 gen] no generation cell in this shard", flush=True); return
+    write_csv(out / "generation.csv", run_cells(cells, _gen_cell, workers, out, "generation.csv",
+                                                key=lambda c: f"{c[1]}_M{c[2]}_s{c[3]}"))
+
+
 PARTS = {"oracles": part_oracles, "timing": part_timing, "screen": part_screen, "winners": part_winners,
-         "nets": part_nets, "energy": part_energy, "pair": part_pair, "cost": part_cost}
+         "nets": part_nets, "energy": part_energy, "pair": part_pair, "cost": part_cost, "gen": part_gen}
 
 
 def main():

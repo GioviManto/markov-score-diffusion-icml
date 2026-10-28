@@ -147,3 +147,24 @@ def test_the_dsm_validation_loss_ranks_the_exact_denoiser_first():
     bad = e55.dsm_loss(lambda X, t: X / np.exp(-t), dset)       # predicts no noise at all
     assert good < bad and abs(bad - 1.0) < 0.1                    # eps_hat = 0 costs E eps^2 = 1
     assert e55.dsm_validation_set(Av, "T2_iso_L32", 0)[3][2].tobytes() == dset[3][2].tobytes()   # fixed draws
+
+
+def test_generation_stats_see_exact_samples_as_close_and_noise_as_far():
+    chain, info = e55.resolve_cell(e55.find_cell("T0.3_h1_L32"))
+    L = 32
+    R = chain.sample_batch(np.random.default_rng(0), 2048, L)
+    R2 = chain.sample_batch(np.random.default_rng(1), 2048, L)
+    near = e55.generation_stats(R2, R, chain, info, L)
+    far = e55.generation_stats(np.random.default_rng(2).standard_normal((2048, L)), R, chain, info, L)
+    assert near["swd"] < 0.5 * far["swd"] and near["corr_max_err"] < 0.1 < far["corr_max_err"]
+    assert abs(near["coarse_kink_density"] / e55.generation_stats(R, R, chain, info, L)["coarse_kink_density"] - 1) < 0.1
+
+
+def test_kernel_row_picks_the_risk_selected_unfailed_fit(tmp_path):
+    import pandas as pd
+    rows = [dict(arm="em_energy", selection="risk", cell="c", n_chains=128, seed=0, theta="1;2", failed=0, hp='{"hidden": 16}'),
+            dict(arm="em_energy", selection="evidence", cell="c", n_chains=128, seed=0, theta="9;9", failed=0, hp='{"hidden": 16}'),
+            dict(arm="em_energy", selection="risk", cell="c", n_chains=128, seed=1, theta=None, failed=1, hp='{"hidden": 16}')]
+    pd.DataFrame(rows).to_csv(tmp_path / "k.csv", index=False)
+    assert e55._kernel_row([str(tmp_path / "missing.csv"), str(tmp_path / "k.csv")], "em_energy", "c", 128, 0).theta == "1;2"
+    assert e55._kernel_row([str(tmp_path / "k.csv")], "em_energy", "c", 128, 1) is None

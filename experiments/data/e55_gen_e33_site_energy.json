@@ -1,0 +1,10 @@
+{
+ "what": "E33's risk-selected site-energy fits (em_pair_quartic) for E55's generation subset, copied because outputs/ is not deployed",
+ "sources": {
+  "outputs/hpc_E33q_s0/kernels.csv": "286a18f34b4cfea0cb9b6216bc91e104a7d6a8c0e268994268dc6d5bb4eaacc8",
+  "outputs/hpc_E33q_s12/kernels.csv": "b70f7a99bfcb35d2fd0ae752ba3490604adb4dc7b3c2309c1d9fafce80096c8a",
+  "outputs/hpc_E33q_s4/kernels.csv": "caeadbf13f012f182b7974d40a52ee84ec25410c81f5f5a59a16f1b33f769dfe",
+  "outputs/hpc_E33q_s8/kernels.csv": "deed61ab6b29b87804dffd64222cffe9f5a61060b2ee700aef7b8e555451fa3a"
+ },
+ "rows": 24
+}

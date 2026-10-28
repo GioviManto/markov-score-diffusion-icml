@@ -91,3 +91,21 @@ def test_dsm_learns_the_score_of_a_gaussian_chain():
         s_0 = -(X - al * (X / al)) / de
         num += ((s_hat - s_ref) ** 2).sum(); den0 += ((s_0 - s_ref) ** 2).sum(); den += (s_ref ** 2).sum()
     assert np.sqrt(num / den) < 0.25 * np.sqrt(den0 / den)
+
+
+def test_continuous_levels_draw_log_uniform_in_the_range():
+    import math
+    seen = []
+    m = ud.build(0, base=8)
+    orig = m.forward
+    def spy(x, t):
+        seen.append(t.detach().cpu().numpy().copy()); return orig(x, t)
+    m.forward = spy
+    A = _gaussian_chain(np.random.default_rng(3), 64, 32)
+    cfg = ud.DSMConfig(steps=200, batch_size=64, lr=1e-3, warmup=5, checkpoints=(200,), seed=0, t_range=(0.005, 3.0))
+    ud.train_dsm(m, A, T, cfg)
+    t = np.concatenate(seen)
+    assert t.min() >= 0.005 * (1 - 1e-6) and t.max() <= 3.0 * (1 + 1e-6)
+    assert len(np.unique(np.round(t, 6))) > 1000                     # continuous, not the twelve levels
+    u = (np.log(t) - math.log(0.005)) / (math.log(3.0) - math.log(0.005))
+    assert abs(u.mean() - 0.5) < 0.02                                  # uniform in log t

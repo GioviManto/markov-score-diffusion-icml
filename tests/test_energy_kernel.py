@@ -104,3 +104,15 @@ def test_the_fitted_kernel_has_an_invariant_law():
         k = k.m_step(stats, grid)
     d = invariant_log_density_eig(k, grid, w)
     np.testing.assert_allclose(np.exp(d.log_density) @ w, 1.0, atol=1e-8)
+
+
+def test_a_kernel_is_rebuilt_exactly_from_its_saved_theta():
+    grid, w = _grid()
+    stats = _random_stats(grid, np.random.default_rng(7))
+    k = NeuralEnergyKernel.init(hidden=16, seed=3, half_width=A_HALF)
+    for _ in range(3):
+        k = k.m_step(stats, grid)
+    theta = np.array([float(f"{v:.8g}") for v in k.theta])               # as written to the CSV (8 significant digits)
+    k2 = NeuralEnergyKernel.from_theta(theta, hidden=16, half_width=A_HALF)
+    np.testing.assert_allclose(k2.log_transition_matrix(grid), k.log_transition_matrix(grid), atol=1e-5)
+    np.testing.assert_array_equal(NeuralEnergyKernel.from_theta(k.theta, 16, A_HALF).theta, k.theta)

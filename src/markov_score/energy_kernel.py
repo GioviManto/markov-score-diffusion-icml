@@ -67,6 +67,21 @@ class NeuralEnergyKernel:
         return cls(state={k: v.detach().clone() for k, v in net.state_dict().items()}, hidden=hidden,
                    half_width=float(half_width), lr=lr, lr_max=lr, n_inner=n_inner, device=device)
 
+    @classmethod
+    def from_theta(cls, theta, hidden: int, half_width: float, device: str = "cpu") -> "NeuralEnergyKernel":
+        """Rebuild a fitted kernel from its flat parameter vector (the `theta` column E55 writes)."""
+        shapes = {k: v.shape for k, v in _mlp(hidden).state_dict().items()}
+        theta = np.asarray(theta, dtype=np.float64)
+        if theta.size != sum(int(np.prod(s)) for s in shapes.values()):
+            raise ValueError(f"theta has {theta.size} entries; a width-{hidden} energy net has "
+                             f"{sum(int(np.prod(s)) for s in shapes.values())}")
+        state, pos = {}, 0
+        for k, shp in shapes.items():
+            n = int(np.prod(shp))
+            state[k] = torch.as_tensor(theta[pos:pos + n].reshape(shp), dtype=torch.float64)
+            pos += n
+        return cls(state=state, hidden=hidden, half_width=float(half_width), device=device)
+
     # ------------------------------------------------------------------ the kernel
 
     @property

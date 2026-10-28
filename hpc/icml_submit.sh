@@ -253,6 +253,9 @@ cmd_for() {
     e55-cost)    echo "e55_unet_energy.py --only cost --output-dir {OUT}/E55_cost";;
     e55-oracles) echo "e55_unet_energy.py --only oracles --output-dir {OUT}/E55_oracles";;
     e55-winners) echo "e55_unet_energy.py --only winners --set screen_glob=\"'{OUT}/E55_screen_*/screening.csv'\" --output-dir {OUT}/E55_winners";;
+    e55-gen-*)
+      local cell=${1#e55-gen-}
+      echo "e55_unet_energy.py --only gen --set \"cells=('$cell',)\" --set winners=\"'{OUT}/E55_winners/winners.json'\" --set \"gen_kernel_csvs=('{OUT}/E55_kern_$cell/kernels.csv', '{OUT}/E55_kern_$cell/pair.csv')\" --output-dir {OUT}/E55_gen_$cell";;
     e55-screen-*|e55-nets-*|e55-energy-*|e55-pair-*|e55-kern-*)
       local rest=${1#e55-}; local part=${rest%%-*}; local cell=${rest#*-}; local extra="" only=$part
       [[ $part != screen ]] && extra="--set winners=\"'{OUT}/E55_winners/winners.json'\""

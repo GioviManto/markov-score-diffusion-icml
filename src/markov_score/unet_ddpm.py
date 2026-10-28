@@ -174,6 +174,7 @@ class DSMConfig:
     checkpoints: tuple = DOUBLING_CHECKPOINTS
     seed: int = 0
     device: str = "cpu"
+    t_range: tuple | None = None   # (t_min, t_max): draw t log-uniformly instead of from `t_levels` (E55's generation nets)
     compile: bool = False          # torch.compile the training forward/backward (CUDA only; the same model and loss)
     compile_mode: str = "reduce-overhead"   # CUDA graphs: the step is replayed, not relaunched kernel by kernel
 
@@ -216,7 +217,11 @@ def train_dsm(model: nn.Module, A: np.ndarray, t_levels, cfg: DSMConfig, clock: 
     for step in range(1, cfg.steps + 1):
         idx = torch.randint(0, data.shape[0], (cfg.batch_size,), generator=gen, device=dev)
         a = data[idx]
-        t = levels[torch.randint(0, len(levels), (cfg.batch_size,), generator=gen, device=dev)]
+        if cfg.t_range is None:
+            t = levels[torch.randint(0, len(levels), (cfg.batch_size,), generator=gen, device=dev)]
+        else:                                   # continuous levels, uniform in log t
+            u = torch.rand((cfg.batch_size,), generator=gen, device=dev)
+            t = torch.exp(math.log(cfg.t_range[0]) + u * (math.log(cfg.t_range[1]) - math.log(cfg.t_range[0])))
         eps = torch.randn(a.shape, generator=gen, device=dev)
         x = torch.exp(-t)[:, None] * a + torch.sqrt(1.0 - torch.exp(-2.0 * t))[:, None] * eps
         loss = ((fwd(x, t) - eps) ** 2).mean()
