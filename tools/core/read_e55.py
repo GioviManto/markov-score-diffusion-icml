@@ -5,8 +5,10 @@
 Arms: unet, window (E55 nets), em_energy (E55 kernels), site_energy (E33's frozen em_pair_quartic on its six cells at
 M <= 2048, E55's pair part elsewhere), mdn (E33's em_mdn) and cnn_e54 (E54's window CNN) as references. Kernel rows are
 the risk-selected ones. Seeds 0-7. A missing or failed fit counts AGAINST every prediction it touches: a seed mean needs
-all eight seeds finite, a paired win needs the predicted winner's row. Ratios are risk / the cell's linear floor (the
-seed mean of E55's own lmmse_true rows).
+all eight seeds finite, a paired win needs the predicted winner's row. Everything is reported as the relative score error
+itself, e = (sum (s_hat - s*)^2 / sum s*^2)^(1/2) over the test sequences, sites and the twelve levels (0 = the exact score,
+1 = as wrong as answering zero); no ratio to a linear estimator (the user, 28 Oct 2026). Every prediction compares arms within
+one cell, so no verdict depends on that choice.
 
 The verdict functions take one long table (arm, cell, n_chains, seed, risk, at_cap) and the floor, so
 tests/test_read_e55.py drives them with made-up tables in both directions.
@@ -116,7 +118,7 @@ def at_cap_share(df, arm, cells, sizes):
 
 def verdicts(df, floor):
     v = {}
-    r = lambda arm, c, m: seed_mean(df, arm, c, m, floor)  # noqa: E731
+    r = lambda arm, c, m: seed_mean(df, arm, c, m)  # noqa: E731   (raw relative score error; `floor` unused)
     p1 = [c for c in E33_CELLS if _lt(r("em_energy", c, 2048), r("unet", c, 2048)) and wins(df, "em_energy", "unet", c, 2048) >= 6]
     v["P1"] = (len(p1) >= 4, f"{len(p1)}/6 cells: energy kernel below the U-Net at M=2048 (seed mean, >= 6/8 paired): {p1}")
     p2 = [c for c in E33_CELLS if _lt(r("em_energy", c, 2048), r("unet", c, 8192))]
@@ -159,10 +161,9 @@ def descriptive(df):
 
 def main(argv) -> int:
     df, floor = load()
-    df = df.assign(ratio=df.risk / df.cell.map(floor))
     pd.set_option("display.width", 220)
-    mean = df.groupby(["arm", "cell", "n_chains"]).ratio.mean()
-    print("seed-mean risk / linear floor (seeds 0-7):")
+    mean = df.groupby(["arm", "cell", "n_chains"]).risk.mean()
+    print("seed-mean relative score error (seeds 0-7; 0 = exact score, 1 = as wrong as a zero score):")
     print(mean.unstack("cell").round(3).to_string())
     for arm in ("unet", "window", "em_energy"):
         print(f"\n{arm}: last-checkpoint share\n" + df[df.arm == arm].groupby(["cell", "n_chains"]).at_cap.mean().unstack().round(2).to_string())
