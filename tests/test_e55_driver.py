@@ -117,3 +117,11 @@ def test_every_set_key_in_the_e55_job_commands_is_a_known_setting():
     keys = {k for l in lines for k in re.findall(r'--set \\?"?([A-Za-z_]+)=', l)}
     assert {"cells", "winners", "screen_glob", "timing_probes"} <= keys
     assert keys <= set(e55.SETTINGS), keys - set(e55.SETTINGS)
+
+
+def test_every_worker_compiles_into_its_own_cache():
+    import os
+    root = e55._private_compile_caches()
+    assert str(os.getpid()) in root.name
+    assert os.environ["TORCHINDUCTOR_CACHE_DIR"].startswith(str(root))
+    assert os.environ["TRITON_CACHE_DIR"].startswith(str(root))

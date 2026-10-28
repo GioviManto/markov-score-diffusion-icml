@@ -156,7 +156,25 @@ def draws_hash(bundle) -> str:
     return h.hexdigest()[:12]
 
 
+def _private_compile_caches():
+    """Each worker process compiles into its OWN cache directories on the node's local disk. With one shared cache, eight
+    workers compiling the same graph at once corrupted a Triton cache JSON (JSONDecodeError: Extra data) and killed three
+    screen jobs in their first minute (723257, 723260, 723261, 28 Oct 2026). Set before anything is compiled."""
+    import os
+    import tempfile
+    root = Path(os.environ.get("TMPDIR") or tempfile.gettempdir()) / f"e55_{os.environ.get('SLURM_JOB_ID', 'local')}_{os.getpid()}"
+    os.environ["TORCHINDUCTOR_CACHE_DIR"] = str(root / "inductor")
+    os.environ["TRITON_CACHE_DIR"] = str(root / "triton")
+    if not getattr(_private_compile_caches, "registered", False):     # the node's /tmp is shared: clean up at exit
+        import atexit
+        import shutil
+        atexit.register(shutil.rmtree, root, True)
+        _private_compile_caches.registered = True
+    return root
+
+
 def _setup(cfg):
+    _private_compile_caches()
     import torch
     torch.set_num_threads(cfg["torch_threads"])
     from markov_score import nn_torch as nt
