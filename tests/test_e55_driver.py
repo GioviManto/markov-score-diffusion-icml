@@ -168,3 +168,10 @@ def test_kernel_row_picks_the_risk_selected_unfailed_fit(tmp_path):
     pd.DataFrame(rows).to_csv(tmp_path / "k.csv", index=False)
     assert e55._kernel_row([str(tmp_path / "missing.csv"), str(tmp_path / "k.csv")], "em_energy", "c", 128, 0).theta == "1;2"
     assert e55._kernel_row([str(tmp_path / "k.csv")], "em_energy", "c", 128, 1) is None
+
+
+def test_each_network_uses_the_ladder_up_to_its_own_budget():
+    lad = e55.SETTINGS["net_checkpoints"]
+    assert lad[0] == 16 and lad[-1] == 2**20 == e55.SETTINGS["window_steps"] and e55.SETTINGS["steps"] == 2**18
+    assert all(b / a < 1.45 for a, b in zip(lad, lad[1:]))           # half-octave rungs (rounded: 23/16 = 1.44)
+    assert 2**18 in lad

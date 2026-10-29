@@ -253,12 +253,15 @@ cmd_for() {
     e55-cost)    echo "e55_unet_energy.py --only cost --output-dir {OUT}/E55_cost";;
     e55-oracles) echo "e55_unet_energy.py --only oracles --output-dir {OUT}/E55_oracles";;
     e55-winners) echo "e55_unet_energy.py --only winners --set screen_glob=\"'{OUT}/E55_screen_*/screening.csv'\" --output-dir {OUT}/E55_winners";;
+    # 29 Oct: the winners of the seven finished screens, in their own directory, so that the main jobs of those cells need
+    # not wait for the 512-site screen; MSD_E55_WINNERS=E55_winners7 points nets/kern/gen jobs at it (same rule, per cell)
+    e55-winners7) echo "e55_unet_energy.py --only winners --set screen_glob=\"'{OUT}/E55_screen_*/screening.csv'\" --output-dir {OUT}/E55_winners7";;
     e55-gen-*)
       local cell=${1#e55-gen-}
-      echo "e55_unet_energy.py --only gen --set \"cells=('$cell',)\" --set winners=\"'{OUT}/E55_winners/winners.json'\" --set \"gen_kernel_csvs=('{OUT}/E55_kern_$cell/kernels.csv', '{OUT}/E55_kern_$cell/pair.csv')\" --output-dir {OUT}/E55_gen_$cell";;
+      echo "e55_unet_energy.py --only gen --set \"cells=('$cell',)\" --set winners=\"'{OUT}/${MSD_E55_WINNERS:-E55_winners}/winners.json'\" --set \"gen_kernel_csvs=('{OUT}/E55_kern_$cell/kernels.csv', '{OUT}/E55_kern_$cell/pair.csv')\" --output-dir {OUT}/E55_gen_$cell";;
     e55-screen-*|e55-nets-*|e55-energy-*|e55-pair-*|e55-kern-*)
       local rest=${1#e55-}; local part=${rest%%-*}; local cell=${rest#*-}; local extra="" only=$part
-      [[ $part != screen ]] && extra="--set winners=\"'{OUT}/E55_winners/winners.json'\""
+      [[ $part != screen ]] && extra="--set winners=\"'{OUT}/${MSD_E55_WINNERS:-E55_winners}/winners.json'\""
       [[ $part == kern ]] && only="energy,pair"     # one job per cell for both kernel parts (QoS: 30 submitted jobs)
       echo "e55_unet_energy.py --only $only --set \"cells=('$cell',)\" $extra --output-dir {OUT}/E55_${part}_$cell";;
     *) echo "unknown experiment $1" >&2; exit 2;;

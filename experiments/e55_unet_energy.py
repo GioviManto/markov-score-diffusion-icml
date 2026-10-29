@@ -88,9 +88,11 @@ SETTINGS = dict(
                 window=[dict(lr=lr) for lr in (2e-4, 1e-3)],
                 em_energy=[dict(hidden=h) for h in (16, 32, 64)]),
     winners=None,
-    # half-octave ladder 256 ... 262144 (21 checkpoints; amendment 2026-10-27: the doubling ladder from 1024 could miss an
-    # early optimum, which only a network pays for)
-    steps=2**18, net_checkpoints=tuple(sorted({int(round(2 ** (k / 2))) for k in range(16, 37)})), batch_size=128, warmup=1000,
+    # half-octave ladder from 16 steps (amendments 2026-10-27 and 2026-10-29: in the screen every U-Net at M = 32 chose the
+    # then-first rung, 256); the window CNN trains to 2^20 steps (2026-10-29: at M = 2048 it chose the last rung, 2^18, on
+    # every cell); each net uses the rungs up to its own budget
+    steps=2**18, window_steps=2**20, net_checkpoints=tuple(sorted({int(round(2 ** (k / 2))) for k in range(8, 41)})),
+    batch_size=128, warmup=1000,
     ema_decay=0.999, grad_clip=1.0, torch_threads=2, device="auto", eval_chunk=512, compile=True, compile_mode="reduce-overhead",
     timing_steps=2000, timing_em_iters=5,
     timing_probes=None,          # None = the registered probe list in part_timing; e55-timing8 passes its own
@@ -105,7 +107,7 @@ SETTINGS = dict(
 QUICK = dict(cells=("T0.3_h1_L32",), sizes={"T0.3_h1_L32": (32,)}, seeds=(10_001,), screen_sizes=(32,),
              n_val=32, n_test=32, grid_size=101, em_checkpoints=(2, 4), energy_checkpoints=(2, 4),
              screen=dict(unet=[dict(base=8, lr=1e-3)], window=[dict(lr=1e-3)], em_energy=[dict(hidden=8)]),
-             steps=64, net_checkpoints=(32, 64), batch_size=16, warmup=8, timing_steps=20, timing_em_iters=2,
+             steps=64, window_steps=64, net_checkpoints=(32, 64), batch_size=16, warmup=8, timing_steps=20, timing_em_iters=2,
              cost_lengths=(32,), cost_unet_bases=(8,), cost_batches_cpu=(1, 4), cost_reps=2, cost_gpu=False,
              gen_cells=("T0.3_h1_L32",), gen_sizes=(32,), gen_seeds=(10_001,), gen_n=128, gen_steps=20,
              timing_probes=[("unet", dict(base=8, lr=1e-3), "T0.3_h1_L32", 32), ("em_energy", dict(hidden=8), "T0.3_h1_L32", 32),
@@ -254,8 +256,9 @@ def _fit_net(cfg, arm, conf, cell_id, seed, n, dev, steps=None, checkpoints=None
         with torch.random.fork_rng(devices=[]):
             torch.manual_seed(init_seed)
             model = nt.build("window", L, **hp)
-    ck = tuple(checkpoints or cfg["net_checkpoints"])
-    dcfg = ud.DSMConfig(steps=int(steps or cfg["steps"]), batch_size=cfg["batch_size"], lr=float(conf["lr"]),
+    budget = int(steps or (cfg.get("window_steps", cfg["steps"]) if arm == "window" else cfg["steps"]))
+    ck = tuple(checkpoints or tuple(c for c in cfg["net_checkpoints"] if c <= budget))
+    dcfg = ud.DSMConfig(steps=budget, batch_size=cfg["batch_size"], lr=float(conf["lr"]),
                         warmup=cfg["warmup"], grad_clip=cfg["grad_clip"], ema_decay=cfg["ema_decay"], checkpoints=ck,
                         seed=int(rng_for("e55-train", arm, cell_id, seed, n).integers(0, 2**31 - 1)), device=dev,
                         compile=bool(conf.get("compile", cfg["compile"])),
