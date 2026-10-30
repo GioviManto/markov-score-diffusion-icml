@@ -30,6 +30,17 @@ AGNOSTIC = ("loglinear2d", "energy")
 NETS = ("window", "mlp", "bigru", "tcn", "transformer", "unet")
 COLS = ["arm", "n_chains", "seed", "test_bundle", "risk", "at_cap", "checkpoint", "kernel_hellinger"]
 SQ_REF_RTOL = 1e-12
+CAP = 2400          # the last checkpoint of E56's registered ladder (E56.json; e56_kernel_families.LADDER)
+
+
+def e56_at_cap(e56: pd.DataFrame) -> pd.Series:
+    """G4's "at the ladder's cap", from the selected checkpoint.
+
+    The driver's own at_cap column is best == max(saved checkpoints), and fit_em also saves the FINAL iterate of a run
+    that converged early under that iterate's index, so a converged fit whose last iterate won the validation selection
+    reads at_cap = 1 there although it never reached the cap. Recomputed here from the checkpoint the fit selected.
+    """
+    return (pd.to_numeric(e56.checkpoint, errors="coerce") >= CAP).astype(int)
 
 
 def _csvs(*patterns):
@@ -52,7 +63,8 @@ def load(e56_pattern="outputs/hpc_E56_s*/kernels.csv"):
     worst = float(((a[common] - b[common]).abs() / b[common].abs()).max())
     assert worst <= SQ_REF_RTOL, f"E56 is not on E03's bundles: sq_ref differs by {worst:.2e} relative"
     # every row is then keyed by (seed, n_chains, test_bundle); a network row must pair with it
-    k56 = e56.drop_duplicates(["seed", "n_chains", "arm"]).assign(risk=lambda d: d.risk_pooled)
+    k56 = e56.drop_duplicates(["seed", "n_chains", "arm"]).assign(risk=lambda d: d.risk_pooled,
+                                                                   at_cap=lambda d: e56_at_cap(d))
     k30 = e30.drop_duplicates(["seed", "n_chains", "arm"]).assign(risk=lambda d: d.risk_pooled, kernel_hellinger=np.nan)
     n03 = e03[e03.region == "all"].assign(arm=lambda d: d.arch, kernel_hellinger=np.nan)
     df = pd.concat([d.reindex(columns=COLS) for d in (k56, k30, n03)], ignore_index=True)

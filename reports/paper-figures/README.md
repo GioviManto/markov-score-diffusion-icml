@@ -33,7 +33,7 @@ The data are read only from the thesis generators (`Diffusion/Markov_Score_Diffu
 | `fig_grid_gaussian` | 9 | Grid BP against the exact score −Σ_t⁻¹x on the Gaussian chain (α = 0.8), for N_g = 101, 201, 401. It reaches double-precision round-off for t ≥ 0.05. Appendix candidate. | `exp_01/grid_sweep_M.csv` (thesis Fig. 6.1c) |
 | `fig_closure` | 8 | Laplace chain. The Gaussian closure's score error (median, band 10–90 %) against grid BP's own error. The arrow marks the gap. Appendix candidate. | `thesis/tools/data/ch07_metrics.csv` |
 | `fig_em_innovation` | 13 | (a) Increment law learned by EM (C = 8) at N = 128, 512, 2048 against the Laplace truth. (b) Relative error of α, the variance and the excess kurtosis against N: α is within 0.1 % from N = 512 (2.4 % at 128), the kurtosis only within 6–25 %. One fit per N. | `exp_18` (thesis Fig. 6.3) |
-| `fig_value_of_structure` | 14 | Slide 14's two panels on one axis: EM–BP (C = 8), window CNN, global MLP and BiGRU (the best of E03's six networks) against N, all on the same test bundles (below). | `outputs/E02a/capacity.csv`, `outputs/E03/confirm.csv` |
+| `fig_value_of_structure` | 14 | Slide 14's two panels on one axis: EM–BP (C = 8), window CNN, global MLP and BiGRU (the best of E03's six networks from N = 128 up; at N = 32 the window CNN is) against N, all on the same test bundles (below). | `outputs/E02a/capacity.csv`, `outputs/E03/confirm.csv` |
 
 **About `fig_value_of_structure`.** No rerun was needed. E02a's EM–BP (C = 8 mixture) and E03's six networks were
 scored on the same `exp_31` test bundles: 16 seeds, N = 32, 128, 512, 2048, and all 384 network rows pair with an EM–BP
@@ -46,10 +46,11 @@ Mean per-seed ratio, network / EM–BP, at N = 32, 128, 512, 2048:
 |---|---|---|---|---|
 | global MLP | 5.79 | 7.95 | 7.88 | 9.85 |
 | window CNN | 2.07 | 2.87 | 3.45 | 5.58 |
-| BiGRU (best of six) | 2.22 | 2.45 | 2.24 | 2.83 |
+| BiGRU (best of six for N ≥ 128) | 2.22 | 2.45 | 2.24 | 2.83 |
 | U-Net | 2.52 | 3.06 | 2.72 | 3.14 |
 | transformer | 2.56 | 3.04 | 2.77 | 2.98 |
 | TCN | 2.45 | 2.81 | 2.74 | 3.23 |
 
 These replace the thesis and defence numbers (MLP 6.6–10.9×, CNN 2.3–6.1×). Those came from the archival `exp_07` and
-`exp_31`, where each network had its own EM–BP runs. **The honest headline is the best network: 2.2–2.8×.**
+`exp_31`, where each network had its own EM–BP runs. **The honest headline is the best network at each N: 2.1–2.8×** (the window CNN at N = 32, 2.07×; BiGRU
+above, 2.24–2.83×).

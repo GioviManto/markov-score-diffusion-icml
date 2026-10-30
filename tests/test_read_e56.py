@@ -84,6 +84,12 @@ def test_paired_wins_need_both_rows():
     assert r.wins(t, "window", "spline", 32) == 0
 
 
+def test_at_cap_is_read_from_the_selected_checkpoint_not_the_drivers_flag():
+    # the driver flags best == max(saved); after an early convergence the final iterate (here 900) is saved too
+    rows = pd.DataFrame({"checkpoint": [2400, 900, 1600, np.nan], "at_cap": [1, 1, 0, 0]})
+    assert r.e56_at_cap(rows).tolist() == [1, 0, 0, 0]
+
+
 def test_the_cap_flag():
     t = table()
     t.loc[(t.arm == "energy") & (t.n_chains == 2048) & (t.seed < 9), "at_cap"] = 1
