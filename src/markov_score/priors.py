@@ -280,6 +280,79 @@ class GaussianMixtureAR1:
 
 
 # ----------------------------------------------------------------------------
+# Chains outside the shift class (E57): matched to the Laplace chain in variance (1) and lag-one correlation (0.85)
+# by tools/core/calibrate_e57.py, from the true kernels only.
+# ----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class TanhDriftChain:
+    """a_i = amp tanh(a_{i-1}) + sigma eps: a nonlinear drift, so no shift kernel phi(a' - rho a) contains it.
+
+    With amp > 1 the map has two stable points and the stationary law two modes: a directed cousin of the phi^4 chain.
+    `rho` is the calibrated lag-one correlation, kept for the ChainPrior interface; it is not a drift coefficient.
+    """
+
+    amp: float = 1.303746
+    sigma: float = 0.497509
+    rho: float = 0.85
+
+    @property
+    def name(self) -> str:
+        return "tanh_drift"
+
+    @property
+    def innovation_excess_kurtosis(self) -> float:
+        return 0.0                                       # the noise added at each step is Gaussian
+
+    def sample(self, rng: np.random.Generator, n: int) -> np.ndarray:
+        a = np.empty(n)
+        a[0] = rng.standard_normal()
+        eps = rng.standard_normal(n - 1)
+        for i in range(1, n):
+            a[i] = self.amp * np.tanh(a[i - 1]) + self.sigma * eps[i - 1]
+        return a
+
+    def log_transition_matrix(self, grid: np.ndarray) -> np.ndarray:
+        e = grid[:, None] - self.amp * np.tanh(grid[None, :])
+        return -0.5 * e**2 / self.sigma**2 - 0.5 * np.log(2.0 * np.pi * self.sigma**2)
+
+
+@dataclass(frozen=True)
+class HeteroscedasticAR1:
+    """a_i = rho a_{i-1} + s0 sqrt(1 + c a_{i-1}^2) eps: the step's scale depends on the parent, so no shift kernel
+    contains it. s0^2 = (1 - rho^2) / (1 + c) keeps the stationary variance at 1 for any c."""
+
+    rho: float = 0.85
+    c: float = 0.25
+
+    @property
+    def name(self) -> str:
+        return f"hetero_c{self.c:g}"
+
+    @property
+    def s0(self) -> float:
+        return float(np.sqrt((1.0 - self.rho**2) / (1.0 + self.c)))
+
+    @property
+    def innovation_excess_kurtosis(self) -> float:
+        return float("nan")                              # Gaussian given the parent; the pooled increment is not
+
+    def sample(self, rng: np.random.Generator, n: int) -> np.ndarray:
+        a = np.empty(n)
+        a[0] = rng.standard_normal()
+        eps = rng.standard_normal(n - 1)
+        for i in range(1, n):
+            a[i] = self.rho * a[i - 1] + self.s0 * np.sqrt(1.0 + self.c * a[i - 1] ** 2) * eps[i - 1]
+        return a
+
+    def log_transition_matrix(self, grid: np.ndarray) -> np.ndarray:
+        sd = self.s0 * np.sqrt(1.0 + self.c * grid[None, :] ** 2)
+        e = _outer_residual(grid, self.rho)
+        return -0.5 * (e / sd) ** 2 - np.log(sd) - 0.5 * np.log(2.0 * np.pi)
+
+
+# ----------------------------------------------------------------------------
 # Gaussian, non-Markov priors (Layer 4)
 # ----------------------------------------------------------------------------
 

@@ -272,6 +272,16 @@ cmd_for() {
     e56-s0|e56-s4|e56-s8|e56-s12)
       local s=${1#e56-s}
       echo "e56_kernel_families.py --only fit,densities --set 'seeds=($s, $((s + 1)), $((s + 2)), $((s + 3)))' --set winners=\"'{OUT}/E56_dev/winners.json'\" --output-dir {OUT}/E56_s$s";;
+    # E57 (30 Oct 2026, registry E57.json): one job per (part, chain), each its own directory (N-27). The timing part
+    # times the energy kernel at its widest screened width (64); the kernel jobs read E56's screen winner from E56's
+    # deployment (MSD_E56_TAG, default the 30 Oct deployment), so they must be submitted after E56's screen finished.
+    e57-timing)  echo "e57_chain_families.py --only timing --set energy_hidden=64 --output-dir {OUT}/E57_dev";;
+    e57-kern-*|e57-nets-*)
+      local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
+      if [[ $part == kern ]]; then
+        only=kernels; extra="--set energy_winners=\"'{OUT}/../${MSD_E56_TAG:-001ae38-20261030T081448Z}/E56_dev/winners.json'\""
+      fi
+      echo "e57_chain_families.py --only $only --set \"chains=('$chain',)\" $extra --output-dir {OUT}/E57_${part}_$chain";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }
