@@ -43,6 +43,12 @@ OUTPUT_DIRS["E55"] = "hpc_E55_oracles"
 MAIN_CSV.update(_E55_DIRS)
 SCRIPTS.update({d: "e55_unet_energy.py" for d in _E55_DIRS})
 
+# E56 (29 Oct 2026): the dev parts (timing, screen) in one directory, the confirmatory fits in four by seed (N-27).
+_E56_DIRS = {"hpc_E56_dev": "timing.csv", **{f"hpc_E56_s{s}": "kernels.csv" for s in (0, 4, 8, 12)}}
+OUTPUT_DIRS["E56"] = "hpc_E56_s0"
+MAIN_CSV.update(_E56_DIRS)
+SCRIPTS.update({d: "e56_kernel_families.py" for d in _E56_DIRS})
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""
