@@ -49,6 +49,14 @@ OUTPUT_DIRS["E56"] = "hpc_E56_s0"
 MAIN_CSV.update(_E56_DIRS)
 SCRIPTS.update({d: "e56_kernel_families.py" for d in _E56_DIRS})
 
+# E57 (30 Oct 2026): one directory per chain and part (dev timing, kernels, networks), shards by seed where needed (N-27).
+_E57_CHAINS = ("bimodal", "tanh", "hetero")
+_E57_DIRS = {"hpc_E57_dev": "timing.csv", **{f"hpc_E57_kern_{c}": "kernels.csv" for c in _E57_CHAINS},
+             **{f"hpc_E57_nets_{c}": "nets.csv" for c in _E57_CHAINS}}
+OUTPUT_DIRS["E57"] = "hpc_E57_kern_bimodal"
+MAIN_CSV.update(_E57_DIRS)
+SCRIPTS.update({d: "e57_chain_families.py" for d in _E57_DIRS})
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""
