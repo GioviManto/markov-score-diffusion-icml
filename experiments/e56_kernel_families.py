@@ -64,7 +64,8 @@ SETTINGS = dict(
     shift_W=4.0, shift_lr=1e-2, shift_inner=10,
     loglinear_basis=10,
     energy_lr=1e-2, energy_inner=10, energy_widths=(16, 32, 64),
-    energy_hidden=0,          # 0: read <out>/winners.json, written by the screen part
+    energy_hidden=0,          # 0: read the screen's winners.json (`winners`, default <out>/winners.json)
+    winners="",               # path of the screen's winners.json when the fits write elsewhere (the cluster shards)
     screen_sizes=(32, 2048), ladder=LADDER,
     timing_n=2048, timing_iters=3,
     density_sizes=(128, 512, 2048), eps_half=3.0, eps_points=161, slice_a=(-1.0, 0.0, 1.0),
@@ -106,7 +107,7 @@ def _rebuild(arm, theta, hp, cfg):
 def _hidden(cfg, out):
     if cfg["energy_hidden"]:
         return int(cfg["energy_hidden"])
-    p = Path(out) / "winners.json"
+    p = Path(cfg["winners"]) if cfg["winners"] else Path(out) / "winners.json"
     return int(json.loads(p.read_text())["energy_hidden"]) if p.is_file() else 0
 
 

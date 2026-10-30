@@ -264,6 +264,14 @@ cmd_for() {
       [[ $part != screen ]] && extra="--set winners=\"'{OUT}/${MSD_E55_WINNERS:-E55_winners}/winners.json'\""
       [[ $part == kern ]] && only="energy,pair"     # one job per cell for both kernel parts (QoS: 30 submitted jobs)
       echo "e55_unet_energy.py --only $only --set \"cells=('$cell',)\" $extra --output-dir {OUT}/E55_${part}_$cell";;
+    # E56 (29 Oct 2026, registry E56.json): kernel families on the Laplace chain, CPU. The dev parts (timing, then the
+    # energy-width screen) write E56_dev; the fits are four shards of four seeds (N-27), each reading the screen's
+    # winners.json, so they can be chained with --after <screen id>; the densities of each shard come with it.
+    e56-timing)  echo "e56_kernel_families.py --only timing --output-dir {OUT}/E56_dev";;
+    e56-screen)  echo "e56_kernel_families.py --only screen --output-dir {OUT}/E56_dev";;
+    e56-s0|e56-s4|e56-s8|e56-s12)
+      local s=${1#e56-s}
+      echo "e56_kernel_families.py --only fit,densities --set 'seeds=($s, $((s + 1)), $((s + 2)), $((s + 3)))' --set winners=\"'{OUT}/E56_dev/winners.json'\" --output-dir {OUT}/E56_s$s";;
     *) echo "unknown experiment $1" >&2; exit 2;;
   esac
 }
