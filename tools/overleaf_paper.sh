@@ -1,30 +1,23 @@
 #!/usr/bin/env bash
-# Keep paper/ and the Overleaf-linked repository in step.
+# The Overleaf-linked repository GioviManto/markov-score-diffusion-icml-paper.
 #
-#   tools/overleaf_paper.sh push   # paper/ -> GioviManto/markov-score-diffusion-icml-paper
-#   tools/overleaf_paper.sh pull   # that repository -> paper/ (review with `git diff paper/`, then commit)
-#   tools/overleaf_paper.sh status # what each side has that the other has not
+# Since 31 Oct 2026 that repository holds the hand-written paper (Jerome's call of 29 Oct). It is the paper's source of
+# truth and is edited in Overleaf. The 6 Oct ICML paper that this script used to mirror from paper/ is in its old/
+# folder, and paper/ here is archival. The old `push` (rsync --delete of paper/) would have wiped the new paper, so it
+# is retired; only the figures travel from this repository now.
 #
-# The Overleaf project "markov-score-diffusion-icml-paper" was imported from that repository and is linked to it by
-# Overleaf's GitHub Sync (Menu -> GitHub): after a `push` here, press "Pull GitHub changes into Overleaf" there;
-# before a `pull` here, press "Push Overleaf changes to GitHub" there.
+#   tools/overleaf_paper.sh figures   # reports/paper-figures/twocol/ -> figures/ there, commit, push
+#   tools/overleaf_paper.sh status    # the remote head, and which figures differ from the generated ones
 #
-# Why a copy and not the folder itself: Overleaf caps a project at 2,000 files (this repository has ~2,500) and does
-# not follow symbolic links, and paper/ has three (icml2026.sty, icml2026.bst, fancyhdr.sty -> style/icml2026/).
-# The copy dereferences them and leaves out main.pdf (Overleaf compiles its own) and legacy-neurips/.
-#
-# Safety: `push` refuses when the remote has commits that were never pulled (Overleaf edits would be overwritten);
-# `pull` never deletes a local file and never touches the three symlinked style files. The local clone lives in
-# .overleaf-paper/ (git-ignored).
+# Before `figures`, if you edited in Overleaf: Menu -> GitHub -> Push Overleaf changes to GitHub (the script only
+# fast-forwards and refuses to merge). After it: Menu -> GitHub -> Pull GitHub changes into Overleaf.
+# The local clone lives in .overleaf-paper/ (git-ignored).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO="GioviManto/markov-score-diffusion-icml-paper"
 CLONE="$ROOT/.overleaf-paper"
-MARK="$CLONE/.git/last_sync"
-EXCLUDE=(--exclude .git --exclude main.pdf --exclude legacy-neurips/ --exclude '*.aux' --exclude '*.log'
-         --exclude '*.out' --exclude '*.bbl' --exclude '*.blg' --exclude '*.synctex.gz')
-STYLE=(icml2026.sty icml2026.bst fancyhdr.sty)
+FIGS="$ROOT/reports/paper-figures/twocol"
 
 ensure_clone() {
   if [ ! -d "$CLONE/.git" ]; then
@@ -33,46 +26,46 @@ ensure_clone() {
   git -C "$CLONE" fetch --quiet origin
 }
 
-remote_head() { git -C "$CLONE" rev-parse origin/main 2>/dev/null || echo none; }
-
 case "${1:-status}" in
-  push)
+  figures)
     ensure_clone
-    if [ -f "$MARK" ] && [ "$(remote_head)" != "$(cat "$MARK")" ]; then
-      echo "refusing: the remote has commits not yet pulled (Overleaf edits?). Run: tools/overleaf_paper.sh pull" >&2
+    if [ -n "$(git -C "$CLONE" status --porcelain)" ]; then
+      echo "refusing: $CLONE has uncommitted changes" >&2
       exit 2
     fi
-    git -C "$CLONE" checkout --quiet main 2>/dev/null || true
-    git -C "$CLONE" reset --quiet --hard origin/main 2>/dev/null || true
-    rsync -a --copy-links --delete "${EXCLUDE[@]}" "$ROOT/paper/" "$CLONE/"
-    git -C "$CLONE" add -A
-    if git -C "$CLONE" diff --cached --quiet; then
-      echo "nothing to push"
-    else
-      src="$(git -C "$ROOT" rev-parse --short HEAD)"
-      git -C "$CLONE" commit --quiet -m "paper/ from markov-score-diffusion-icml@$src"
-      git -C "$CLONE" push --quiet origin HEAD:main
-      echo "pushed paper/ at $src; in Overleaf: Menu -> GitHub -> Pull GitHub changes into Overleaf"
+    git -C "$CLONE" checkout --quiet main
+    if ! git -C "$CLONE" merge --quiet --ff-only origin/main; then
+      echo "refusing: the local clone has diverged from origin/main" >&2
+      exit 2
     fi
-    git -C "$CLONE" rev-parse HEAD > "$MARK"
-    ;;
-  pull)
-    ensure_clone
-    git -C "$CLONE" checkout --quiet main 2>/dev/null || true
-    git -C "$CLONE" reset --quiet --hard origin/main
-    excl=("${EXCLUDE[@]}")
-    for f in "${STYLE[@]}"; do excl+=(--exclude "/$f"); done
-    rsync -a "${excl[@]}" "$CLONE/" "$ROOT/paper/"
-    git -C "$CLONE" rev-parse HEAD > "$MARK"
-    echo "pulled $(git -C "$CLONE" rev-parse --short HEAD); review with: git -C \"$ROOT\" diff --stat paper/"
+    mkdir -p "$CLONE/figures"
+    cp "$FIGS"/*.pdf "$FIGS"/*.tikz "$CLONE/figures/"
+    git -C "$CLONE" add figures
+    if git -C "$CLONE" diff --cached --quiet; then
+      echo "figures already up to date"
+      exit 0
+    fi
+    src="$(git -C "$ROOT" rev-parse --short HEAD)"
+    git -C "$CLONE" commit --quiet -m "figures from markov-score-diffusion-icml@$src (tools/paper_figs)"
+    git -C "$CLONE" push --quiet origin HEAD:main
+    echo "pushed figures; in Overleaf: Menu -> GitHub -> Pull GitHub changes into Overleaf"
     ;;
   status)
     ensure_clone
-    echo "remote head: $(remote_head); last sync: $(cat "$MARK" 2>/dev/null || echo never)"
-    tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
-    rsync -a --copy-links "${EXCLUDE[@]}" "$ROOT/paper/" "$tmp/"
-    git -C "$CLONE" reset --quiet --hard origin/main 2>/dev/null || true
-    diff -rq -x .git "$tmp" "$CLONE" || true
+    echo "remote head: $(git -C "$CLONE" rev-parse --short origin/main); local: $(git -C "$CLONE" rev-parse --short HEAD)"
+    for f in "$FIGS"/*.pdf "$FIGS"/*.tikz; do
+      g="$CLONE/figures/$(basename "$f")"
+      if [ ! -f "$g" ]; then
+        echo "new:     $(basename "$f")"
+      elif ! cmp -s "$f" "$g"; then
+        echo "changed: $(basename "$f")"
+      fi
+    done
     ;;
-  *) echo "usage: $0 push|pull|status" >&2; exit 1 ;;
+  push|pull)
+    echo "'$1' is retired: it mirrored the old paper/ (now old/ in the Overleaf repository), and push would delete" >&2
+    echo "the new paper. Edit the paper in Overleaf; send figures with: $0 figures" >&2
+    exit 1
+    ;;
+  *) echo "usage: $0 figures|status" >&2; exit 1 ;;
 esac

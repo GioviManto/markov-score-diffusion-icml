@@ -89,6 +89,18 @@ def save(fig, name: str) -> None:
     print(f"  {name}.pdf")
 
 
+def panel(ax, letter: str) -> None:
+    """Panel letter above the top-left corner, outside the data."""
+    ax.set_title(f"({letter})", loc="left")
+
+
+def plain_log_y(ax, ticks) -> None:
+    """Log y axis with plain tick labels (0.05, 0.1, ...) instead of 5 x 10^-2."""
+    ax.set_yticks(ticks)
+    ax.set_yticklabels([f"{v:g}" for v in ticks])
+    ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+
+
 def log_n_axis(ax, ns) -> None:
     ax.set_xscale("log", base=2)
     ax.set_xticks(ns)
@@ -153,6 +165,7 @@ def fig_laplace(alpha: float = 0.85, L: int = 9) -> None:
     a0.set_xlim(e[0], e[-1]); a0.set_ylim(1e-4, 3e2)
     a0.set_xlabel(r"$\varepsilon$"); a0.set_ylabel(r"$\rho(\varepsilon)$")
     a0.legend(loc="upper right", frameon=False, handlelength=1.6)
+    panel(a0, "a")
 
     xk = np.linspace(-4.0, 4.0, 121)
     for ax, t in ((a1, 0.05), (a2, 1.0)):
@@ -166,6 +179,7 @@ def fig_laplace(alpha: float = 0.85, L: int = 9) -> None:
         ax.set_xlim(xk[0], xk[-1]); ax.set_ylim(-16, 16)
         ax.set_xlabel(r"$x_k$")
         ax.set_title(rf"$t={t:g}$")
+    panel(a1, "b"); panel(a2, "c")
     a1.set_ylabel(r"score $S_k(x)$")
     a2.set_yticklabels([])
     a2.legend(loc="lower left", frameon=False)
@@ -235,6 +249,7 @@ def fig_em_innovation() -> None:
     aL.set_xlim(-2.6, 2.6); aL.set_ylim(1e-4, 6.0)
     aL.set_xlabel(r"$\varepsilon$"); aL.set_ylabel(r"$\rho(\varepsilon)$")
     aL.legend(loc="lower center", frameon=False, ncol=2)
+    panel(aL, "a")
 
     rows = sorted((r for r in summ if int(r["n_components"]) == 8), key=lambda r: int(r["n_chains"]))
     n = np.array([int(r["n_chains"]) for r in rows], float)
@@ -250,6 +265,7 @@ def fig_em_innovation() -> None:
     aR.set_xlim(n[0] / 1.3, n[-1] * 1.3); aR.set_ylim(1e-4, 1.0)
     aR.set_xlabel(r"training sequences $N$"); aR.set_ylabel("relative error")
     aR.legend(loc="lower left", frameon=False)
+    panel(aR, "b")
     save(fig, "fig_em_innovation")
 
 
@@ -306,6 +322,219 @@ def fig_value_of_structure() -> None:
         print(f"    {a:12s} / EM-BP, mean per-seed ratio over N = {ns}: " + " ".join(f"{v:.2f}" for v in rat))
 
 
+# ------------------------------------------------------------------------------------- kernel families (E56) --
+FAMILIES = (("spline", "B-spline"), ("rbf", "RBF"), ("fourier", "Fourier"), ("legendre", "Legendre"),
+            ("loglinear2d", "log-linear 2-D"), ("energy", "neural energy"))
+SHIFT = ("spline", "rbf", "fourier", "legendre")
+
+
+def _e56(name: str):
+    """E56's per-shard CSVs concatenated, or None while the cluster fits have not landed."""
+    import glob
+
+    import pandas as pd
+    paths = sorted(glob.glob(str(REPO / "outputs" / "hpc_E56_s*" / name)))
+    return pd.concat([pd.read_csv(p) for p in paths], ignore_index=True) if paths else None
+
+
+def fig_families() -> None:
+    """Thesis Fig. 6.3 for every family: learned increment law against the Laplace truth at N = 128, 512, 2048.
+
+    The mixture (C = 8) is the thesis fit (exp_18). Shift families plot log phi(eps); the two agnostic ones plot
+    log K(eps | a = 0), the same function for a shift kernel. Until E56's densities exist only the truth is drawn there.
+    """
+    import fig_ch07 as c7
+    import fig_ch08 as c8
+    from matplotlib.lines import Line2D
+    dens = _e56("densities.csv")
+    mix = c8.read("exp_18/innovation_density.csv")
+    b = c7.laplace_scale(0.85)
+    eps = np.linspace(-2.6, 2.6, 400)
+    fig, axes = plt.subplots(2, 4, figsize=(W["full"], 3.5), sharex=True, sharey=True, constrained_layout=True)
+    sizes = (128, 512, 2048)
+    cols = (fs.BLUE_RAMP[1], fs.BLUE_RAMP[3], fs.BLUE_RAMP[4])
+    panels = (("mixture", "mixture, $C=8$"),) + FAMILIES
+    for ax, (arm, label) in zip(axes.flat, panels):
+        for n, c in zip(sizes, cols):
+            if arm == "mixture":
+                pts = sorted((float(r["e"]), float(r["density"])) for r in mix
+                             if r["arm"] == "fitted" and int(r["budget"]) == n and int(r["n_components"]) == 8)
+                if pts:
+                    ax.semilogy([p[0] for p in pts], [p[1] for p in pts], color=c)
+            elif dens is not None:
+                d = dens[(dens.arm == arm) & (dens.n_chains == n) & (dens.seed == 0)]
+                d = d[d.what == "log_phi"] if arm in SHIFT else d[(d.what == "log_K") & (d.a.abs() < 1e-9)]
+                if len(d):
+                    d = d.sort_values("x")
+                    ax.semilogy(d.x, np.exp(d.value), color=c)
+        ax.semilogy(eps, np.exp(-np.abs(eps) / b) / (2 * b), color=INK, ls="--")
+        ax.set_title(label)
+        ax.set_xlim(eps[0], eps[-1]); ax.set_ylim(1e-4, 6.0)
+    for ax in axes[1]:
+        ax.set_xlabel(r"$\varepsilon$")
+    for ax in axes[:, 0]:
+        ax.set_ylabel(r"$\rho(\varepsilon)$")
+    last = axes.flat[-1]
+    last.set_axis_off()
+    handles = [Line2D([], [], color=c, label=rf"$N={n}$") for n, c in zip(sizes, cols)]
+    handles.append(Line2D([], [], color=INK, ls="--", label="Laplace"))
+    last.legend(handles=handles, loc="center", frameon=False)
+    save(fig, "fig_families")
+
+
+def fig_families_error() -> None:
+    """Score error against N for every kernel family (E56), the thesis mixture (E02a) and the networks (E03)."""
+    risk = _paired_e03()
+    ns = sorted(risk["em_bp"])
+    fig, ax = figure(height=2.6)
+    mean = lambda a: np.array([np.mean(list(risk[a][n].values())) for n in ns])
+    best = np.minimum.reduce([mean(a) for a in ("mlp", "window", "bigru", "unet", "transformer", "tcn")])
+    ax.loglog(ns, best, "D-", color=GREY, lw=1.0, ms=4.0, label="best network")
+    ax.loglog(ns, mean("em_bp"), "s-", color=BLUE, lw=1.0, label="mixture")
+    k = _e56("kernels.csv")
+    if k is not None:
+        k = k[(k.failed == 0)].drop_duplicates(["seed", "n_chains", "arm"])
+        for (arm, label), c, m in zip(FAMILIES, fs.CAT[1:], "o^v<>p"):
+            s = k[k.arm == arm].groupby("n_chains").risk_pooled.mean()
+            if len(s):
+                ax.loglog(s.index, s.values, marker=m, color=c, lw=1.0, label=label)
+    log_n_axis(ax, ns)
+    ax.set_xlim(ns[0] / 1.4, ns[-1] * 1.4)
+    ax.set_ylim(0.015, 1.2)
+    plain_log_y(ax, [0.02, 0.05, 0.1, 0.2, 0.5])
+    ax.set_xlabel(r"training sequences $N$")
+    ax.set_ylabel("relative score error")
+    ax.legend(loc="upper right", frameon=False)
+    save(fig, "fig_families_error")
+
+
+def fig_em_dynamics() -> None:
+    """Step efficiency. (a) EM's log-likelihood against iteration, four starts. (b) Validation score error against
+    parameter updates: EM iterations for EM-BP (E56 ladder), SGD steps for E03's networks, N = 2048, seed means.
+
+    Panel (a) reads the thesis trace (exp_18, C = 8) until E56's per-edge evidence curves exist.
+    """
+    import csv
+    fig, (aL, aR) = figure(2, width=W["full"], height=2.45)
+    k = _e56("kernels.csv")
+    if k is None:
+        with open(THESIS_TOOLS.parents[2] / "research" / "nongaussian-bp" / "outputs" / "frozen" / "exp_18"
+                  / "em_trace.csv") as fh:
+            rows = [r for r in csv.DictReader(fh) if int(r["n_components"]) == 8]
+        by: dict[float, list] = defaultdict(list)
+        for r in rows:
+            by[float(r["rho_init"])].append((int(r["iteration"]) + 1, float(r["log_evidence"]) / 1e5))
+        for (a0, pts), c in zip(sorted(by.items()), fs.BLUE_RAMP[1:]):
+            it, ll = zip(*sorted(pts))
+            aL.semilogx(it, ll, color=c, label=rf"$\alpha_0={a0:g}$")
+        aL.set_ylabel(r"log-likelihood $/10^{5}$")
+        aL.legend(loc="lower right", frameon=False)
+    aL.set_xlabel("EM iteration")
+
+    curves: dict[str, dict[int, list[float]]] = defaultdict(lambda: defaultdict(list))
+    with open(REPO / "outputs" / "E03" / "confirm.csv") as fh:
+        for r in csv.DictReader(fh):
+            if r["region"] == "all" and int(r["n_chains"]) == 2048 and r["arch"] in ("mlp", "window", "bigru"):
+                for item in r["val_curve"].split(";"):
+                    step, v = item.split(":")
+                    curves[r["arch"]][int(step)].append(float(v))
+    for arch, c, m, lab in (("mlp", ORANGE, "o", "global MLP"), ("window", GREEN, "^", "window CNN"),
+                            ("bigru", GREY, "D", "BiGRU")):
+        st = sorted(curves[arch])
+        aR.loglog(st, [np.mean(curves[arch][s]) for s in st], marker=m, color=c, lw=1.0, ms=4.0, label=lab)
+    if k is not None:
+        ev = k[(k.failed == 0) & (k.n_chains == 2048) & (k.arm == "spline")].drop_duplicates(["seed"])
+        pts: dict[int, list[float]] = defaultdict(list)
+        for vc in ev.val_curve:
+            for item in str(vc).split(";"):
+                it, v = item.split(":")
+                pts[int(it)].append(float(v))
+        st = sorted(pts)
+        aR.loglog(st, [np.mean(pts[s]) for s in st], "s-", color=BLUE, lw=1.0, label="EM–BP")
+    aR.set_xlim(5, 5e4)
+    aR.set_ylim(0.04, 0.5)
+    plain_log_y(aR, [0.05, 0.1, 0.2, 0.5])
+    aR.set_xlabel("parameter updates")
+    aR.set_ylabel("relative score error")
+    aR.legend(loc="lower left", frameon=False)
+    panel(aL, "a"); panel(aR, "b")
+    save(fig, "fig_em_dynamics")
+
+
+# ------------------------------------------------------------------------------------- breaking Markov --
+def fig_nonmarkov() -> None:
+    """Network / EM-BP error ratio against the distance delta to the best first-order chain (thesis Fig. 10.x).
+
+    delta is closed form; the ratios are the frozen exp_21_clean measurements, averaged over the twelve levels.
+    """
+    import fig_ch10 as c10
+    from matplotlib.lines import Line2D
+    adv = c10._nonmarkov()
+    betas, gammas = [0.1, 0.25, 0.5, 1.0], [0.05, 0.1, 0.2, 0.4]
+    kl_b = [c10.kl_per_site(c10.global_cov(x), c10.CHOW_LIU[("global", x)]) for x in betas]
+    kl_g = [c10.kl_per_site(c10.longrange_cov(x), c10.CHOW_LIU[("longrange", x)]) for x in gammas]
+    fig, ax = figure(height=2.6)
+    series = ((("gauss", "global"), betas, kl_b, "o"), (("laplace", "global"), betas, kl_b, "s"),
+              (("gauss", "longrange"), gammas, kl_g, "^"))
+    for net, c in (("cnn", GREEN), ("mlp", ORANGE)):
+        for key, xs, kl, m in series:
+            ax.loglog(kl, [adv[(key[0], key[1], s)][net] for s in xs], m, color=c, ms=4.5, ls="none")
+    ax.axhline(1.0, color=INK, lw=0.8, ls="--")
+    ax.set_ylim(0.5, 60)
+    plain_log_y(ax, [0.5, 1, 2, 5, 10, 20, 50])
+    ax.set_xlabel(r"distance to a Markov chain $\delta$")
+    ax.set_ylabel("network / EM–BP error")
+    handles = [Line2D([], [], color=GREEN, marker="o", ls="none", label="window CNN"),
+               Line2D([], [], color=ORANGE, marker="o", ls="none", label="global MLP"),
+               Line2D([], [], color=INK, marker="o", ls="none", mfc="none", label=r"latent, Gauss"),
+               Line2D([], [], color=INK, marker="s", ls="none", mfc="none", label=r"latent, Laplace"),
+               Line2D([], [], color=INK, marker="^", ls="none", mfc="none", label=r"long-range")]
+    ax.legend(handles=handles, loc="upper right", frameon=False, fontsize=8)
+    save(fig, "fig_nonmarkov")
+    for key, xs, kl, _ in series:
+        print(f"    {key}: " + "  ".join(f"d={d:.2e} cnn={adv[(key[0], key[1], s)]['cnn']:.2f} "
+                                         f"mlp={adv[(key[0], key[1], s)]['mlp']:.2f}" for s, d in zip(xs, kl)))
+
+
+# ------------------------------------------------------------------------------------- Allen-Cahn --
+def fig_field() -> None:
+    """The Allen-Cahn chain: stationary law at the four temperature cells, the arrival tilt against the Gaussian
+    twin's quadratic, and one exact sample at Theta = 0.3. All closed form or exact sampling (E32 cells)."""
+    import json
+    sys.path.insert(0, str(REPO / "src"))
+    from markov_score.field import Phi4Chain
+    from markov_score.utils import rng_for
+    with open(REPO / "outputs" / "E32" / "cells.json") as fh:
+        cells = {c["cell"]: c for c in json.load(fh)}
+    tcells = (("T0.3_h1_L32", "0.3"), ("T0.5_iso_L32", "0.5"), ("T1_iso_L32", "1"), ("T2_iso_L32", "2"))
+    fig, (a0, a1, a2) = figure(3, width=W["full"], height=2.2)
+    g = np.linspace(-3.0, 3.0, 801)
+    for (cid, lab), c in zip(tcells, (fs.BLUE_RAMP[4], fs.BLUE_RAMP[3], fs.BLUE_RAMP[2], fs.BLUE_RAMP[0])):
+        ch = Phi4Chain(cells[cid]["T"], cells[cid]["h"])
+        a0.plot(g, np.exp(ch.log_stationary(g)), color=c, label=rf"$\Theta={lab}$")
+    a0.set_xlim(g[0], g[-1]); a0.set_ylim(0, 0.66)
+    a0.set_xlabel(r"$a$"); a0.set_ylabel(r"$\pi(a)$")
+    a0.legend(loc="upper center", frameon=False, fontsize=8, handlelength=1.2, ncol=2, columnspacing=0.8)
+    base = Phi4Chain(cells["T0.3_h1_L32"]["T"], cells["T0.3_h1_L32"]["h"])
+    lt = base.log_tilt(g); lt = lt - lt.max()
+    q = 1 - base.rho ** 2
+    quad = -(1 - base.rho) * g ** 2 / (2 * q); quad = quad - quad.max()
+    a1.plot(g, lt, color=BLUE, label=r"$\log g$")
+    a1.plot(g, quad, color=GREY, ls="--", label="Gaussian")
+    a1.set_xlim(g[0], g[-1]); a1.set_ylim(-12, 1)
+    a1.set_xlabel(r"$a'$"); a1.set_ylabel(r"$\log g(a')$")
+    a1.legend(loc="lower center", frameon=False)
+    A = base.sample_batch(rng_for("fig-field-chain"), 2, 128)
+    a2.plot(np.arange(128), A[0], color=BLUE, lw=1.0)
+    for y in (1 / base.scale, -1 / base.scale):
+        a2.axhline(y, color=GREY, lw=0.8, ls=":")
+    a2.set_xlim(0, 127)
+    a2.set_xlabel(r"site $i$"); a2.set_ylabel(r"$a_i$")
+    for ax, letter in zip((a0, a1, a2), "abc"):
+        panel(ax, letter)
+    save(fig, "fig_field")
+
+
 # ------------------------------------------------------------------------------------- TikZ --
 _PREAMBLE = r"""\documentclass[border=2pt]{standalone}
 %s
@@ -342,24 +571,24 @@ FACTOR_GRAPH = r"""\begin{tikzpicture}[
 \end{tikzpicture}"""
 
 EM_LOOP = r"""\begin{tikzpicture}[
-    box/.style={draw,thick,align=center,font=\small,minimum height=9mm,inner sep=3pt,text width=2.0cm},
+    box/.style={draw,thick,align=center,font=\small,minimum height=9mm,inner sep=3pt,text width=1.6cm},
     data/.style={box,fill=black!8},
     arr/.style={-{Stealth[length=2mm]},thick},
     lab/.style={font=\small,align=center}]
-  \node[font=\small\bfseries,anchor=west] at (-1.2,1.0) {learn};
+  \node[font=\small\bfseries,anchor=west] at (-1.1,1.0) {learn};
   \node[data] (d) at (0,0) {noisy\\ sequences};
-  \node[box] (p) at (3.4,0) {pair\\ posteriors};
-  \node[box] (k) at (6.8,0) {kernel $K_\theta$};
+  \node[box] (p) at (3.1,0) {pair\\ posteriors};
+  \node[box] (k) at (6.2,0) {kernel $K_\theta$};
   \draw[arr] (d) -- node[above,lab]{BP} node[below,lab]{E-step} (p);
   \draw[arr] (p) -- node[above,lab]{refit} node[below,lab]{M-step} (k);
   \draw[arr] (k.north) to[out=160,in=20] node[above,lab]{repeat} (d.north);
-  \node[font=\small\bfseries,anchor=west] at (-1.2,-1.55) {use};
+  \node[font=\small\bfseries,anchor=west] at (-1.1,-1.55) {use};
   \node[data] (x) at (0,-2.5) {noisy\\ sequence $x$};
-  \node[box] (m) at (3.4,-2.5) {$\mathbb{E}[a\mid x]$};
-  \node[box] (s) at (6.8,-2.5) {score $S_t(x)$};
+  \node[box] (m) at (3.1,-2.5) {$\mathbb{E}[a\mid x]$};
+  \node[box] (s) at (6.2,-2.5) {score $S_t(x)$};
   \draw[arr] (x) -- node[below,lab]{BP} (m);
   \draw[arr] (m) -- (s);
-  \draw[thick,dashed,-{Stealth[length=2mm]}] (k.south) -- (6.8,-1.25) -| (1.7,-2.47);
+  \draw[thick,dashed,-{Stealth[length=2mm]}] (k.south) -- (6.2,-1.25) -| (1.55,-2.47);
 \end{tikzpicture}"""
 
 
@@ -367,6 +596,7 @@ def _tikz(name: str, body: str) -> None:
     font = r"\usepackage{times}" if FONT == "times" else r"\usepackage{lmodern}"
     tex = OUT / f"{name}.tex"
     tex.write_text(_PREAMBLE % (font, body))
+    (OUT / f"{name}.tikz").write_text(body + "\n")      # the bare picture, for \input in the paper
     tectonic = shutil.which("tectonic")
     if tectonic is None:
         print(f"  {name}.tex written; tectonic not found, PDF not built")
@@ -385,7 +615,8 @@ def fig_em_loop() -> None:
 
 
 ALL = {f.__name__: f for f in (fig_locality, fig_locality_curve, fig_laplace, fig_factor_graph, fig_em_loop,
-                               fig_grid_gaussian, fig_closure, fig_em_innovation, fig_value_of_structure)}
+                               fig_grid_gaussian, fig_closure, fig_em_innovation, fig_value_of_structure,
+                               fig_families, fig_families_error, fig_em_dynamics, fig_nonmarkov, fig_field)}
 
 
 def main() -> int:
