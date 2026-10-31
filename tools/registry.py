@@ -57,6 +57,13 @@ OUTPUT_DIRS["E57"] = "hpc_E57_kern_bimodal"
 MAIN_CSV.update(_E57_DIRS)
 SCRIPTS.update({d: "e57_chain_families.py" for d in _E57_DIRS})
 
+# E58 (31 Oct 2026): clean-data kernels per (chain, seed half) and per field cell, one directory for the networks (N-27).
+_E58_DIRS = {**{f"hpc_E58_kern_{c}": "kernels.csv" for c in ("lap_s0", "lap_s8", "T0.3_h1_L32", "T1_iso_L32")},
+             "hpc_E58_nets": "nets.csv"}
+OUTPUT_DIRS["E58"] = "hpc_E58_kern_lap_s0"
+MAIN_CSV.update(_E58_DIRS)
+SCRIPTS.update({d: "e58_clean_kernel.py" for d in _E58_DIRS})
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""

@@ -276,6 +276,14 @@ cmd_for() {
     # times the energy kernel at its widest screened width (64); the kernel jobs read E56's screen winner from E56's
     # deployment (MSD_E56_TAG, default the 30 Oct deployment), so they must be submitted after E56's screen finished.
     e57-timing)  echo "e57_chain_families.py --only timing --set energy_hidden=64 --output-dir {OUT}/E57_dev";;
+    # E58 (31 Oct 2026, registry E58.json): clean-data kernels per (chain, seed half) and per field cell, and one job for
+    # both networks on every cell (N-27: each its own directory).
+    e58-kern-lap-s0) echo "e58_clean_kernel.py --only kernels --set \"cells=('laplace',)\" --set 'laplace_seeds=(0, 1, 2, 3, 4, 5, 6, 7)' --output-dir {OUT}/E58_kern_lap_s0";;
+    e58-kern-lap-s8) echo "e58_clean_kernel.py --only kernels --set \"cells=('laplace',)\" --set 'laplace_seeds=(8, 9, 10, 11, 12, 13, 14, 15)' --output-dir {OUT}/E58_kern_lap_s8";;
+    e58-kern-T0.3_h1_L32|e58-kern-T1_iso_L32)
+      local cell=${1#e58-kern-}
+      echo "e58_clean_kernel.py --only kernels --set \"cells=('$cell',)\" --output-dir {OUT}/E58_kern_$cell";;
+    e58-nets)    echo "e58_clean_kernel.py --only nets --output-dir {OUT}/E58_nets";;
     e57-kern-*|e57-nets-*)
       local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
       if [[ $part == kern ]]; then
