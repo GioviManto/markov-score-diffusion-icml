@@ -35,8 +35,9 @@ reports/*.aux
 reports/*.log
 reports/*.out
 
-# Third-party papers kept locally for reference (Jerome's ICML papers); not ours to redistribute
-icml-jerome/
+# Calls with Jérôme and Marc: transcripts, plans, briefings, their papers. Kept at hand in calls/ because
+# they guide the research, never published (this repository is public; third-party papers are not ours to redistribute).
+calls/
 
 # Fetched cluster tables above GitHub's 100 MB limit (docs/COMMIT_MAP_2026-10-01.md, N-32).
 # They stay on the laptop and on the cluster; nothing is frozen against them.

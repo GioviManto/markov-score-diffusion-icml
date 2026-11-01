@@ -14,11 +14,11 @@
 Style (transcript 45:26-46:57): a box around every panel, text in the paper's font, labels the size of the body text
 at placement, minor ticks, no background grid, markers for measurements and lines for closed forms.
 
-Data are read from the thesis generators and its frozen outputs (read only, nothing is written there):
+Data are read from the vendored thesis generators and the frozen outputs (read only, nothing is written there):
 
     .venv/bin/python tools/paper_figs/make_paper_figures.py [--layout onecol|twocol] [--font times|cm] [name ...]
 
-THESIS_TOOLS overrides the location of Diffusion/Markov_Score_Diffusion/thesis/tools.
+The thesis chapter modules are vendored in tools/paper_figs/thesis/; their data is outputs/frozen (same bytes as the archived thesis).
 """
 from __future__ import annotations
 
@@ -35,8 +35,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-THESIS_TOOLS = Path(os.environ.get(
-    "THESIS_TOOLS", REPO.parent / "Diffusion" / "Markov_Score_Diffusion" / "thesis" / "tools"))
+THESIS_TOOLS = HERE / "thesis"                   # vendored thesis chapter modules (read their figures' data from outputs/frozen)
 sys.path.insert(0, str(THESIS_TOOLS))            # the thesis modules import their own `figstyle` from here
 
 import matplotlib                                # noqa: E402
@@ -418,7 +417,7 @@ def fig_em_dynamics() -> None:
     fig, (aL, aR) = figure(2, width=W["full"], height=2.45)
     k = _e56("kernels.csv")
     if k is None:
-        with open(THESIS_TOOLS.parents[2] / "research" / "nongaussian-bp" / "outputs" / "frozen" / "exp_18"
+        with open(REPO / "outputs" / "frozen" / "exp_18"
                   / "em_trace.csv") as fh:
             rows = [r for r in csv.DictReader(fh) if int(r["n_components"]) == 8]
         by: dict[float, list] = defaultdict(list)
