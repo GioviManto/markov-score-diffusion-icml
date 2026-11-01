@@ -1,44 +1,32 @@
-# tools — gates and generators
+# tools — evidence gates and the paper's figures
 
-Scripts that check the work or produce what the documents include. Run from the
-package root (`research/nongaussian-bp`).
+Run from the repository root (`.venv/bin/python tools/<script>`).
 
-## Gates
+## Gates (the evidence ledger)
 
-| Script | What it enforces |
+| script | what it does |
 |---|---|
-| `check_paper.sh` | page limits, unfilled `\needsdata`, code references, hand-typed ratio ranges, orphaned shared sections, stray configuration |
-| `check_all.sh` | the above plus the full test suite |
-| `check_replicates.py` | every experiment's replicate count against the frozen config, block-aware so a `--quick` dict is not mistaken for a production one |
-| `check_reproducible.py` | re-runs deterministic outputs and diffs them |
-| `check_notebooks_fresh.py` | notebooks match the code they document |
+| [freeze.py](freeze.py) | pins every file a number may be read from by SHA-256 in `experiments/registry/<id>.json`; `--check` fails on any byte change, `--status` lists what is frozen |
+| [registry.py](registry.py) | checks each registry entry: output directory, params files, producing commit, dirty-tree flag |
+| [provenance_gate.py](provenance_gate.py) | refuses to typeset a table whose inputs cannot be attributed to a revision |
 
-`check_paper.sh` verifies its own inputs exist before running anything. Every
-check in it greps a file, so a wrong path meant grep found nothing and the check
-reported PASS — which is exactly what happened when the documents moved to
-`overleaf/` and this script still pointed at the old tree.
+`make check` runs `freeze.py --check` and `registry.py --check`. Run it before and after any move or clean-up.
 
-## Generators — their output is not to be hand-edited
+## The paper's figures
 
-| Script | Writes |
+| path | what |
 |---|---|
-| `make_tab_efficiency.py` | `overleaf/shared/sections/tab-efficiency.tex` and `efficiency-numbers.tex` |
-| `make_figures.py` | every figure into `overleaf/shared/figures/` |
+| [paper_figs/make_paper_figures.py](paper_figs/make_paper_figures.py) | every figure of the working paper (`--layout twocol --font times`); writes `reports/paper-figures/` |
+| [paper_figs/thesis/](paper_figs/thesis) | the four thesis chapter modules the figures reuse (`fig_ch05/07/08/10`), vendored so nothing reads outside this repository; their data is `outputs/frozen/` |
+| [figstyle.py](figstyle.py) | the save gate and palette: no prose in charts, symbols as math, paper fonts |
+| [overleaf_paper.sh](overleaf_paper.sh) | `figures` copies the generated PDFs into the Overleaf-synced paper repository; `status` shows its state |
 
-`efficiency-numbers.tex` defines the macros the prose cites (`\ratiolo`,
-`\nfreeparams`, …). The abstract once held "between 8 and 14" for three weeks
-after the table said 7.3–15.7; macros make that impossible rather than merely
-detectable. `make_tab_efficiency.py` also refuses to build the table if any cell
-failed the mixture-resolution check, and reports "NOT CERTIFIED" rather than
-passing quietly for outputs that predate that column.
+## Readers and calibrations (one per experiment that reaches the paper)
 
-## Cluster
+[core/](core): `read_e51.py` … `read_e59.py` print the frozen result of each experiment in the form the paper
+quotes it; `calibrate_e57.py` and `calibrate_e59.py` fix the settings before a run; `check_e54_pairing.py` verifies the
+paired design of the CNN comparison; `figures.py` draws the core figure set from frozen data; `audit_paper.py` recomputes every number typed in `reports/core/paper/main.tex` and exits 1 on any mismatch.
 
-| Script | What it does |
-|---|---|
-| `merge_replicates.py` | merges sharded output into one CSV |
-| `pull_and_check.sh` | rsyncs results down and validates them |
+## Audits
 
-See `../hpc/` for the sbatch files and `stamp_revision.sh`, which writes the
-`REVISION` file that provenance falls back to on compute nodes, where `.git` is
-not present and `git rev-parse` would otherwise record nothing.
+[audit/](audit): `oracle_ladder.py` (isotropic score, LMMSE twin and true-kernel grid BP on the Laplace chain, per level) and `scalar_exponents.py` (scalar high-noise exponents by FFT quadrature).

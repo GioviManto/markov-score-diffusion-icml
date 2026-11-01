@@ -6,17 +6,17 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 # Lean build products (mathlib cache is fetched by `lake exe cache get`)
-lean/.lake
+archive/lean/.lake
 *.olean
 # TeX build intermediates
-paper/*.aux
-paper/*.bbl
-paper/*.blg
-paper/*.log
-paper/*.out
-paper/*.toc
-paper/*.synctex.gz
-paper/build/
+archive/paper-icml-2026-10/*.aux
+archive/paper-icml-2026-10/*.bbl
+archive/paper-icml-2026-10/*.blg
+archive/paper-icml-2026-10/*.log
+archive/paper-icml-2026-10/*.out
+archive/paper-icml-2026-10/*.toc
+archive/paper-icml-2026-10/*.synctex.gz
+archive/paper-icml-2026-10/build/
 # Scratch outputs: only registered experiment outputs are tracked (see outputs/README.md)
 outputs/scratch/
 outputs/_determinism/
@@ -28,7 +28,7 @@ outputs/**/cells/
 outputs/**/ckpts/
 hpc/.last_deploy.env
 hpc/.deploy_*.env
-paper/figures/*.png
+archive/paper-icml-2026-10/figures/*.png
 
 # Internal reports (LaTeX, compiled with tectonic)
 reports/*.aux

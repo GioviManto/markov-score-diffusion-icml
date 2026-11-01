@@ -1,0 +1,219 @@
+{
+  "timestamp": "2026-10-26 19:02:41",
+  "git_commit": "14c3feb631e677b29dd4e676193da7d471fb909b",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "8443891cad9c699d5ab3b68989016ba805533efd0e2ee0b37f3b6a9b1f7b62a1",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode08",
+  "slurm_job_id": "720367",
+  "slurm_array_task_id": "",
+  "cpu_count": "40",
+  "blas_threads": "1",
+  "resolved_config_hash": "cdaec30186da",
+  "settings": {
+    "cells": [
+      "T0.3_h1_L32",
+      "T0.5_iso_L32",
+      "T1_iso_L32",
+      "T2_iso_L32",
+      "T0.3_h0.5_L64",
+      "T0.3_h0.25_L128",
+      "T0.3_h1_L128",
+      "T0.3_h1_L512"
+    ],
+    "sizes": {
+      "T0.3_h1_L32": [
+        32,
+        128,
+        512,
+        2048,
+        8192,
+        32768
+      ],
+      "T0.5_iso_L32": [
+        32,
+        128,
+        512,
+        2048,
+        8192
+      ],
+      "T1_iso_L32": [
+        32,
+        128,
+        512,
+        2048,
+        8192
+      ],
+      "T2_iso_L32": [
+        32,
+        128,
+        512,
+        2048,
+        8192
+      ],
+      "T0.3_h0.5_L64": [
+        32,
+        128,
+        512,
+        2048,
+        8192
+      ],
+      "T0.3_h0.25_L128": [
+        32,
+        128,
+        512,
+        2048,
+        8192
+      ],
+      "T0.3_h1_L128": [
+        32,
+        128,
+        512,
+        2048,
+        8192
+      ],
+      "T0.3_h1_L512": [
+        32,
+        128,
+        512,
+        2048
+      ]
+    },
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "dev_seed": 10000,
+    "screen_sizes": [
+      32,
+      2048
+    ],
+    "n_val": 1024,
+    "n_test": 2048,
+    "grid_size": 401,
+    "half_width": 8.0,
+    "em_init_rho": 0.3,
+    "em_init_var": 0.8,
+    "em_checkpoints": [
+      10,
+      20,
+      40,
+      60,
+      80,
+      120,
+      160,
+      220,
+      300,
+      400,
+      600,
+      800,
+      1200
+    ],
+    "energy_checkpoints": [
+      10,
+      20,
+      40,
+      60,
+      80,
+      120,
+      160,
+      220,
+      300,
+      400,
+      600,
+      800,
+      1200,
+      1600,
+      2400
+    ],
+    "energy_lr": 0.01,
+    "energy_inner": 10,
+    "net_arms": [
+      "unet",
+      "window"
+    ],
+    "screen": {
+      "unet": [
+        {
+          "base": 32,
+          "lr": 0.0002
+        },
+        {
+          "base": 32,
+          "lr": 0.001
+        },
+        {
+          "base": 64,
+          "lr": 0.0002
+        },
+        {
+          "base": 64,
+          "lr": 0.001
+        },
+        {
+          "base": 128,
+          "lr": 0.0002
+        },
+        {
+          "base": 128,
+          "lr": 0.001
+        }
+      ],
+      "window": [
+        {
+          "lr": 0.0002
+        },
+        {
+          "lr": 0.001
+        }
+      ],
+      "em_energy": [
+        {
+          "hidden": 16
+        },
+        {
+          "hidden": 32
+        },
+        {
+          "hidden": 64
+        }
+      ]
+    },
+    "winners": null,
+    "steps": 262144,
+    "net_checkpoints": [
+      1024,
+      2048,
+      4096,
+      8192,
+      16384,
+      32768,
+      65536,
+      131072,
+      262144
+    ],
+    "batch_size": 128,
+    "warmup": 1000,
+    "ema_decay": 0.999,
+    "grad_clip": 1.0,
+    "torch_threads": 2,
+    "device": "auto",
+    "eval_chunk": 512,
+    "timing_steps": 2000,
+    "timing_em_iters": 5
+  },
+  "quick": false,
+  "workers": 16,
+  "bp_device": "numpy"
+}

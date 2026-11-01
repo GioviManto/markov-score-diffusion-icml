@@ -1,15 +1,12 @@
 # tests — the executable audit
 
-32 files, 325 tests. Run from the package root:
+80 files, 583 tests (560 pass, 23 skip without a GPU or the slow marker). Run from the repository root:
 
 ```bash
 ./.venv/bin/python -m pytest tests/ -q
 ```
 
-Roughly 26 minutes for the full suite. It was 12 before the mixture M-step's
-inner-sweep cap went from 4 to 16 on 18 Aug 2026 — that default was
-under-converging the innovation shape, and the cost is accepted rather than
-tuned away.
+About 10 minutes for the full suite on an M1; `make test-fast` is the one-minute subset CI runs.
 
 `tests/test_backend_parity.py` needs a GPU and skips without one.
 
