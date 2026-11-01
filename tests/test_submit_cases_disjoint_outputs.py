@@ -26,7 +26,8 @@ SUBMIT = pathlib.Path(__file__).resolve().parents[1] / "hpc" / "icml_submit.sh"
 # other, but they were in fact submitted CONCURRENTLY and overlapped on one node for three
 # hours -- which this test does not and cannot catch, because it is about files, not about
 # contention. Wall-clock cases are protected by MSD_HPC_EXCLUSIVE instead (N-29).
-SEQUENTIAL_FAMILIES = {"e03", "e14", "e14b", "e24c", "e24", "e27"}
+# "e56": timing (timing.csv) was run and read on 30 Oct before the screen (screen.csv, winners.json) was submitted.
+SEQUENTIAL_FAMILIES = {"e03", "e14", "e14b", "e24c", "e24", "e27", "e56"}
 
 # `\s*` before the `)`: bash allows `e30-s0 )` and the first version of this regex did
 # not, so three of four E30 cases were invisible to the guard the moment they were added.
