@@ -1,0 +1,9 @@
+{
+  "energy_hidden": 16,
+  "pooled_val_risk": {
+    "16": 0.07209022575695868,
+    "32": 0.07871581898660195,
+    "64": 0.08183629203564333
+  },
+  "rule": "lowest mean validation risk over dev seeds x screen_sizes"
+}

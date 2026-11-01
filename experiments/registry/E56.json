@@ -24,8 +24,76 @@
  "budget_rule": "The ladder to 2400 is the registered plan. It may be changed ONCE, by an amendment written after the timing part and before any screen or confirmatory fit, on throughput grounds only.",
  "provenance_note": "Written 29 Oct 2026, the evening after the call with Jerome, before any E56 code was written or run. Seen beforehand, all frozen: E02a's em_bp and E03's six networks on these bundles (network / em_bp mean per-seed ratios: MLP 5.79-9.85, window 2.07-5.58, BiGRU 2.22-2.83, U-Net 2.52-3.14, transformer 2.56-3.04, TCN 2.45-3.23 over N = 32-2048); E30's em_bp and mdn on these bundles (seed means 0.0978, 0.0551, 0.0359, 0.0231 and 0.2101, 0.1418, 0.0893, 0.0660 at N = 32, 128, 512, 2048; mdn at cap in 14 of 16 seeds at N = 2048); E43's price of generality on the phi^4 cells (2.5-5.5x the site energy); E49's MDN results; the 29 Oct re-reading of slide 15 (jerome-call-2026-10-29-slide15.md). Nothing of any shift family, of the log-linear kernel or of the energy kernel on the Laplace chain has been seen.",
  "resources": "Bocconi HPC, CPU (medium_cpu), four jobs by seed into their own output directories hpc_E56_s0, s4, s8, s12 (N-27); the energy arm on gpuh200 if the timing part shows the CPU budget does not fit; layout fixed after the timing part.",
- "status": "REGISTERED and PREDECLARED 2026-10-29; code committed 32d0da9 and 001ae38; deployed 001ae38-20261030T081448Z; timing read 2026-10-30 (no amendment); submitted 2026-10-30 from hpc/.deploy_001ae38.env on defq: screen 728415 (12 cpus, outputs E56_dev), fit+densities shards 728417 (seeds 0-3), 728418 (4-7), 728419 (8-11), 728420 (12-15), 24 cpus each, afterok 728415.",
+ "status": "FROZEN and READ 2026-11-01: P1, P2 CONFIRMED; P3 FALSIFIED (the neural energy kernel ties the mixture), P4 FALSIFIED (the log-linear 2-D kernel loses to the window CNN), P5 FALSIFIED (the bases do not separate on the kernel error). Code 32d0da9/001ae38, deployed 001ae38-20261030T081448Z, jobs 728409 (timing), 728415 (screen), 728417-728420 (fits).",
  "registered": "2026-10-29",
  "timing_2026-10-30": "Deployment 001ae38-20261030T081448Z; part timing, job 728409 (short_cpu, cnode07, 2 min 59 s, dev seed 10000, N = 2048, one thread): seconds per EM iteration spline 3.19, rbf 3.73, fourier 3.50, legendre 3.92, loglinear2d 2.97, energy H16 3.47, H32 4.55, H64 6.57, i.e. 2.0-4.4 h for the full ladder at N = 2048, the largest cells. A shard of four seeds (96 cells, ~100 CPU-hours) fits the 1-day defq limit on 24 workers, so NO budget amendment: the ladder to 2400 stays as registered. Nothing but these seconds was printed or read.",
- "implementation_notes_2026-10-30": "Written during the review of 30 Oct, with the jobs queued and no E56 row seen; no prediction, gate or setting changes. (1) AT_CAP: the driver writes at_cap = (selected checkpoint == the last SAVED one), and fit_em also saves the final iterate of a run that converged early, so that column also flags converged fits whose last iterate won the selection. G4 is read from the selected checkpoint instead (at the cap iff checkpoint >= 2400), by tools/core/read_e56.e56_at_cap, tested. (2) COLUMN NAMES: what the design calls q_halvings is `kept_steps` for the shift arms (M-steps in which no halved attempt raised Q) and `final_lr` for every GEM arm; the energy kernel keeps no kept-step count (energy_kernel.py is E55's and was not changed), so its kept_steps is -1 and only final_lr is reported."
+ "implementation_notes_2026-10-30": "Written during the review of 30 Oct, with the jobs queued and no E56 row seen; no prediction, gate or setting changes. (1) AT_CAP: the driver writes at_cap = (selected checkpoint == the last SAVED one), and fit_em also saves the final iterate of a run that converged early, so that column also flags converged fits whose last iterate won the selection. G4 is read from the selected checkpoint instead (at the cap iff checkpoint >= 2400), by tools/core/read_e56.e56_at_cap, tested. (2) COLUMN NAMES: what the design calls q_halvings is `kept_steps` for the shift arms (M-steps in which no halved attempt raised Q) and `final_lr` for every GEM arm; the energy kernel keeps no kept-step count (energy_kernel.py is E55's and was not changed), so its kept_steps is -1 and only final_lr is reported.",
+ "frozen_outputs": {
+  "outputs/hpc_E56_dev/screening.csv": "6bf4616b487d4f7f66984dd1e5fe388932f3f39270bdb9eba731908d196bb68d",
+  "outputs/hpc_E56_dev/timing.csv": "625ef2daef1360c1ee789d9b095737c373e1e81fe455ec0620c80131e170b8d8",
+  "outputs/hpc_E56_dev/params_screen.json": "c7a8cb062864e1907bc9d2e6660a09d290ff960e0e0fb26ad0785397cfec5c65",
+  "outputs/hpc_E56_dev/params_timing.json": "9ba956a15815610c6d5a4dc34af6eb2e2731e485f67827023f08bde72d2c0042",
+  "outputs/hpc_E56_dev/winners.json": "f1406b5ec3e63dc44e33a2459bf1430fe6557d399399d2d3b81407ac26a21825",
+  "outputs/hpc_E56_s0/densities.csv": "2fe914be51de7ce0d4dbd033746846e9df1a4b82b3a5f904850a13abc9fd8934",
+  "outputs/hpc_E56_s0/kernels.csv": "cc2f343cd8a1fc13e825daa17f48b587043a79794aaf9b8961e43031a58c56bd",
+  "outputs/hpc_E56_s0/params_fit_densities.json": "200171566d619914f890fd04cc2787e832f74ffe3ca516960f0f0a9b65df0493",
+  "outputs/hpc_E56_s0/params_verify.json": "076ea79411feddb8a77e8286f8dabe3487cb7ba05c9b853b9284b920278a2c9e",
+  "outputs/hpc_E56_s4/densities.csv": "2631681d58d84df5726883377ff6a9e96babb3d642c51eed5f42f97e1170c1dd",
+  "outputs/hpc_E56_s4/kernels.csv": "bed0e416fd3f24da350f1aec134e2ab459d1b5269267da233fb8102c51b27bea",
+  "outputs/hpc_E56_s4/params_fit_densities.json": "0a3c0a03c630a39859cd222971e89bdfc641c79e746bc72e013069282fe3600f",
+  "outputs/hpc_E56_s4/params_verify.json": "3747a659e2110c0cfa89de4ff0d289d671fffcb2fa286a874a8ab21eb34b22d4",
+  "outputs/hpc_E56_s8/densities.csv": "af98075dee9fad1d57f0e0a812a3cf7a2753a2ebba2a76626e8a69a2633c0dbe",
+  "outputs/hpc_E56_s8/kernels.csv": "d406033c43332b4153259ae74841df8173cba9030bea8d7579005357be907f61",
+  "outputs/hpc_E56_s8/params_fit_densities.json": "8833115586df281148187f896d20fe617812777dbbcef427476ac4767388045e",
+  "outputs/hpc_E56_s8/params_verify.json": "fb387dac94ebff5727f60ee796e7d9993d6941fb0ba304a1fc2a5615b6a16161",
+  "outputs/hpc_E56_s12/densities.csv": "9d9a2f27660c0b6bbb177963da09747fcbaf5828ebae6d59a251bf126cd1441e",
+  "outputs/hpc_E56_s12/kernels.csv": "8f1b209652179e61850fa1a1a05bda2c751daa2188fc1a515b4c1160651d1635",
+  "outputs/hpc_E56_s12/params_fit_densities.json": "7316307472a03c125d86be24031ea26bc9c9400d75c7e32361894e3045890fe8",
+  "outputs/hpc_E56_s12/params_verify.json": "e673fc589a4bc84b5b5dbd16080e217268fd2c3e685268f9662f0794d4c259dc"
+ },
+ "frozen_at": {
+  "hpc_E56_dev": "2026-11-01T10:17:23Z",
+  "hpc_E56_s0": "2026-11-01T10:17:23Z",
+  "hpc_E56_s4": "2026-11-01T10:17:23Z",
+  "hpc_E56_s8": "2026-11-01T10:17:24Z",
+  "hpc_E56_s12": "2026-11-01T10:17:24Z"
+ },
+ "frozen_commit": {
+  "hpc_E56_dev": "967984c52e64a9914a9cc92e50c5beb1ee90a925",
+  "hpc_E56_s0": "967984c52e64a9914a9cc92e50c5beb1ee90a925",
+  "hpc_E56_s4": "967984c52e64a9914a9cc92e50c5beb1ee90a925",
+  "hpc_E56_s8": "967984c52e64a9914a9cc92e50c5beb1ee90a925",
+  "hpc_E56_s12": "967984c52e64a9914a9cc92e50c5beb1ee90a925"
+ },
+ "frozen_run_commits": {
+  "hpc_E56_dev": [
+   "001ae38"
+  ],
+  "hpc_E56_s0": [
+   "001ae38",
+   "967984c"
+  ],
+  "hpc_E56_s4": [
+   "001ae38",
+   "967984c"
+  ],
+  "hpc_E56_s8": [
+   "001ae38",
+   "967984c"
+  ],
+  "hpc_E56_s12": [
+   "001ae38",
+   "967984c"
+  ]
+ },
+ "outcome": {
+  "read": "2026-11-01, tools/core/read_e56.py as registered, on outputs/hpc_E56_s{0,4,8,12} (fetched, verify gate exit 0 on every shard with sq_ref equal to E30's to 0.0 relative, frozen), against E30's em_bp and mdn and E03's six networks on the same test bundles. 896 (arm, N, seed) rows, 0 failed fits, no arm at the cap in more than 8 of 16 seeds (G4).",
+  "P1": "CONFIRMED. Every shift family is below the best network at every N, in 16 of 16 paired seeds everywhere (best network: window CNN at N = 32, BiGRU above). Seed means at N = 32/128/512/2048: spline 0.0886/0.0588/0.0419/0.0276, rbf 0.0925/0.0598/0.0413/0.0273, fourier 0.1037/0.0712/0.0480/0.0289, legendre 0.0899/0.0608/0.0433/0.0284; best network 0.1861/0.1211/0.0782/0.0596.",
+  "P2": "CONFIRMED. Shift family / em_bp seed-mean ratios at N = 128, 512, 2048 lie in 1.07-1.34 (spline 1.07-1.19, rbf 1.09-1.18, legendre 1.10-1.23, fourier 1.25-1.34), inside the factor 1.5. The mixture (em_bp 0.0551/0.0359/0.0231) stays slightly the best of the 25-parameter shift kernels.",
+  "P3": "FALSIFIED, by the energy kernel only. The log-linear 2-D kernel is above em_bp in 16 of 16 seeds at every N (0.2383/0.1687/0.1451/0.1317), as predicted. The neural energy kernel (width 16, E56's screen) is not reliably worse: em_bp is lower in 8, 12, 12 and 8 of 16 seeds at N = 32, 128, 512, 2048, and at N = 2048 the seed means are 0.0235 (energy) against 0.0231 (em_bp). Generality cost the agnostic neural kernel nothing measurable at N = 2048.",
+  "P4": "FALSIFIED, by the log-linear 2-D kernel only. Both agnostic kernels beat the global MLP in 16 of 16 seeds at N = 128, 512, 2048, and the energy kernel beats the window CNN in 16 of 16 there, but the log-linear 2-D kernel loses to the window CNN in 16 of 16 (0.1687/0.1451/0.1317 against 0.1413/0.1209/0.1181).",
+  "P5": "FALSIFIED. At N = 2048 the kernel errors (stationary-weighted Hellinger) of the four shift families are within 0.046-0.049 (spline 0.0480, rbf 0.0458, fourier 0.0494, legendre 0.0461); local-below-global holds in 10, 4, 10 and 8 of 16 seeds (spline<fourier, spline<legendre, rbf<fourier, rbf<legendre), each short of 12. At this sample size the basis does not separate on the kink. The energy kernel has the lowest kernel error of all arms (0.0394; 0.1071 for the log-linear 2-D).",
+  "D1": "Median selected checkpoint at N = 32/128/512/2048: spline 20/40/60/120, rbf 20/40/60/140, fourier 20/60/120/300, legendre 20/50/70/300 EM iterations, loglinear2d 10/20/40/1400, energy 40/220/238/566, em_bp (E30) 40/120/500/1026; BiGRU 1000/4000/8000/16000 training steps.",
+  "D4": "The energy kernel against BiGRU: lower in 16, 16, 15, 16 of 16 seeds at N = 32, 128, 512, 2048; against E30's MDN: lower in 16 of 16 at every N. The log-linear 2-D kernel against BiGRU: lower in 2, 0, 0, 0 of 16."
+ }
 }
