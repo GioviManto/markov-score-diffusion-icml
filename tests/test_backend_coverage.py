@@ -37,7 +37,6 @@ HOT_MODULES = (
     "bp_grid.py",       # grid BP message passing
     "denoiser.py",      # DSM network training and inference
     "em.py",            # EM E-step: the dominant cost of every fit
-    "wavelet_bp.py",    # quadtree recursion for the image/video work
 )
 
 

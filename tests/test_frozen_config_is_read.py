@@ -38,7 +38,7 @@ sys.path.insert(0, str(ROOT / "experiments"))
 
 from frozen_config import FROZEN, FrozenConfig, config_hash  # noqa: E402
 
-SEARCH_DIRS = ("experiments", "src/markov_score", "tools", "hpc")
+SEARCH_DIRS = ("experiments", "src/markov_score", "tools", "hpc", "archive/legacy-code")   # archived readers still count: the frozen fields they consume are hash-pinned
 
 # Fields genuinely declared and consumed by nothing. Each entry is a defect
 # being recorded rather than a rule being bent, so each says what is actually
