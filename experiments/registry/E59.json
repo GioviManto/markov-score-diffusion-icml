@@ -17,10 +17,14 @@
   "D4": "Cost: training time per method and N."
  },
  "predeclared_analysis": "tools/core/read_e59.py, written with tests/test_read_e59.py in BOTH directions on made-up tables before any confirmatory row exists (a failed or missing fit counts AGAINST every prediction it enters; a paired win needs both rows). Every method of a (benchmark, scenario, seed, N) is scored on the same test windows and the same targets (one job; a hash of the test targets is recorded per row and must be unique per (benchmark, seed)).",
- "seeds": {"confirmatory": "0-7", "dev": "none"},
+ "seeds": {
+  "confirmatory": "0-7",
+  "dev": "none"
+ },
  "budget_rule": "Fixed at registration: kernel ladder to 1200 M-steps, networks 8000 steps; no amendment foreseen.",
  "provenance_note": "Written 1 Nov 2026 before any E59 code was written or run. Seen beforehand: the wind series' descriptive statistics after the registered transform (computed to design the grid and state the limitation: lag-1 0.973, lag-2 0.932, partial lag-2 -0.288, marginal skew -0.39 and excess kurtosis 0.07, one-hour change kurtosis 8.8, range [-4.10, 3.39], 61,368 training hours); the SETAR calibration (true kernel only). No forecast of any method has been computed.",
  "resources": "One job on the Bocconi HPC (defq, 24 cpus): about 20 CPU-hours (kernel fits 20-30 min each at most, networks seconds to minutes).",
- "status": "REGISTERED and PREDECLARED 2026-11-01, before any E59 code was written or run.",
- "registered": "2026-11-01"
+ "status": "REGISTERED and PREDECLARED 2026-11-01 (83095e3), before any E59 code was written or run. Code written 1 Nov: src/markov_score/forecast.py (kernel propagation, BP forward filter, quantile and exact CRPS, coverage, log score; tests/test_forecast.py), src/markov_score/quantile_nets.py (quantile MLP and GRU, pinball loss; tests/test_quantile_nets.py), SETARChain in src/markov_score/priors.py, experiments/e59_forecasting.py (tests/test_e59_driver.py: the wind file's SHA-256, the transform, the splits and window counts), tools/core/read_e59.py with two-direction tests (tests/test_read_e59.py), hpc/icml_submit.sh entry e59.",
+ "registered": "2026-11-01",
+ "implementation_notes_2026-11-01": "Written with the code, before any run. (1) The BP filter in the noisy scenario starts from a standard normal law at site 1 (both series are standardised), the same for the kernel, gauss_ar1 and the SETAR oracle. (2) The clean scenario conditions on the last observed value only (the Markov forecast), interpolating linearly between the two nearest kernel columns, then h - 1 kernel steps. (3) crps_exact (the CRPS of the full grid predictive) carries about 1e-4 relative quadrature error and is descriptive only; every prediction uses the quantile CRPS, the same rule for every method. (4) Laptop timing on 1 Nov, one thread: the kernel M-step costs 1.95 s on the 601-point wind grid and 0.76 s on the 401-point SETAR grid, independent of N, so a fit to 1200 M-steps takes about 39 and 15 min; the quantile MLP and GRU take 0.2 and 2 min for 8000 steps. The whole run is therefore about 40 CPU-hours, twice the registered estimate; the job is sized at 32 cpus, 64G, 12 h on defq. The ladder and the network budget are unchanged. (5) One --quick smoke run (seed 0, small grids and budgets) checked every method on both benchmarks and both scenarios and the target-hash gate; its numbers say nothing about any prediction."
 }

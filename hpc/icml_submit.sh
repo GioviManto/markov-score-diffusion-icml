@@ -284,6 +284,7 @@ cmd_for() {
       local cell=${1#e58-kern-}
       echo "e58_clean_kernel.py --only kernels --set \"cells=('$cell',)\" --output-dir {OUT}/E58_kern_$cell";;
     e58-nets)    echo "e58_clean_kernel.py --only nets --output-dir {OUT}/E58_nets";;
+    e59)         echo "e59_forecasting.py --only forecast --output-dir {OUT}/E59";;
     e57-kern-*|e57-nets-*)
       local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
       if [[ $part == kern ]]; then

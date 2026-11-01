@@ -352,6 +352,60 @@ class HeteroscedasticAR1:
         return -0.5 * (e / sd) ** 2 - np.log(sd) - 0.5 * np.log(2.0 * np.pi)
 
 
+@dataclass(frozen=True)
+class SETARChain:
+    """Tong's two-regime threshold autoregression SETAR(2; 1, 1), in standard units (E59).
+
+    Raw dynamics: a' = phi_l a + c_l + s_l eps if a <= r, else phi_h a + c_h + s_h eps. The chain the package sees is
+    b = (a - loc) / scale, with loc and scale the stationary mean and standard deviation from tools/core/calibrate_e59.py
+    (true kernel only), so b has mean 0 and variance 1. Neither the mean nor the scale of the next value is a fixed
+    shift of the current one: it is not a shift kernel. `rho` is the calibrated lag-one correlation.
+    """
+
+    phi_l: float = 0.95
+    c_l: float = 0.0
+    s_l: float = 0.4
+    phi_h: float = 0.5
+    c_h: float = 0.4
+    s_h: float = 0.8
+    r: float = 0.0
+    loc: float = -0.380078
+    scale: float = 1.262109
+    rho: float = 0.881272
+
+    @property
+    def name(self) -> str:
+        return "setar"
+
+    @property
+    def innovation_excess_kurtosis(self) -> float:
+        return float("nan")                              # Gaussian within a regime; the pooled increment is not
+
+    def step(self, rng: np.random.Generator, b: float) -> float:
+        a = self.loc + self.scale * b
+        if a <= self.r:
+            a2 = self.phi_l * a + self.c_l + self.s_l * rng.standard_normal()
+        else:
+            a2 = self.phi_h * a + self.c_h + self.s_h * rng.standard_normal()
+        return (a2 - self.loc) / self.scale
+
+    def sample(self, rng: np.random.Generator, n: int) -> np.ndarray:
+        b = np.empty(n)
+        b[0] = rng.standard_normal()
+        for i in range(1, n):
+            b[i] = self.step(rng, b[i - 1])
+        return b
+
+    def log_transition_matrix(self, grid: np.ndarray) -> np.ndarray:
+        a = self.loc + self.scale * grid
+        low = a[None, :] <= self.r
+        mean = np.where(low, self.phi_l * a[None, :] + self.c_l, self.phi_h * a[None, :] + self.c_h)
+        sd = np.where(low, self.s_l, self.s_h)
+        # density of b' = (a' - loc) / scale: the raw Gaussian density times the Jacobian `scale`
+        return (-0.5 * ((a[:, None] - mean) / sd) ** 2 - np.log(sd) - 0.5 * np.log(2.0 * np.pi)
+                + np.log(self.scale))
+
+
 # ----------------------------------------------------------------------------
 # Gaussian, non-Markov priors (Layer 4)
 # ----------------------------------------------------------------------------

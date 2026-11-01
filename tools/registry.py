@@ -64,6 +64,11 @@ OUTPUT_DIRS["E58"] = "hpc_E58_kern_lap_s0"
 MAIN_CSV.update(_E58_DIRS)
 SCRIPTS.update({d: "e58_clean_kernel.py" for d in _E58_DIRS})
 
+# E59 (1 Nov 2026): one directory, both benchmarks, both scenarios, every method.
+OUTPUT_DIRS["E59"] = "hpc_E59"
+MAIN_CSV["hpc_E59"] = "forecasts.csv"
+SCRIPTS["hpc_E59"] = "e59_forecasting.py"
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""
