@@ -27,7 +27,61 @@
  "budget_rule": "Fixed at registration from the laptop timing above; no amendment is foreseen. If a job exceeds its wall-time limit it is resubmitted unchanged (cells resume from their files); the budget itself is not changed.",
  "provenance_note": "Written 31 Oct 2026, the evening of the user's request, before any E58 code was written or run and BEFORE E56's outputs were fetched or read (E56 finished on the cluster the same day; no E56 number has been seen). Seen beforehand: E34's frozen clean-versus-noisy table on Allen-Cahn (read 31 Oct to answer the user: clean 1.6-3.0x better for the tilted spline and the MDN, no difference for the mixture, worse for the Legendre tilt); E03/E30/E02a frozen Laplace numbers; E33/E54 frozen field numbers; E57's network arms finished (not read).",
  "resources": "Bocconi HPC, defq, five jobs (the per-user cap is 30): kernels Laplace seeds 0-7 and 8-15, kernels field per cell (seeds 0-7), and one network job for both chains.",
- "status": "REGISTERED and PREDECLARED 2026-10-31 (25d547b), before any E58 code was written or run and before E56 was read. Code written 31 Oct: experiments/e58_clean_kernel.py (tests/test_e58_driver.py: the true kernel scores zero, clean ML recovers the Laplace parameters, the clean fit never lowers the likelihood), tools/core/read_e58.py with two-direction tests, hpc/icml_submit.sh entries e58-kern-lap-s0/-s8, e58-kern-<cell>, e58-nets. Deployed 45dc685-20261031T185943Z (hpc/.deploy_45dc685.env); submitted 2026-10-31 on defq: kernels 731623 (Laplace seeds 0-7), 731624 (Laplace 8-15), 731625 (T0.3_h1_L32), 731626 (T1_iso_L32), 24 cpus, 64G, 23 h; networks 731627 (all cells, 24 cpus, 48G, 12 h).",
+ "status": "FROZEN hpc_E58_kern_lap_s0 2026-11-02T11:40:46Z; REGISTERED and PREDECLARED 2026-10-31 (25d547b), before any E58 code was written or run and before E56 was read. Code written 31 Oct: experiments/e58_clean_kernel.py (tests/test_e58_driver.py: the true kernel scores zero, clean ML recovers the Laplace parameters, the clean fit never lowers the likelihood), tools/core/read_e58.py with two-direction tests, hpc/icml_submit.sh entries e58-kern-lap-s0/-s8, e58-kern-<cell>, e58-nets. Deployed 45dc685-20261031T185943Z (hpc/.deploy_45dc685.env); submitted 2026-10-31 on defq: kernels 731623 (Laplace seeds 0-7), 731624 (Laplace 8-15), 731625 (T0.3_h1_L32), 731626 (T1_iso_L32), 24 cpus, 64G, 23 h; networks 731627 (all cells, 24 cpus, 48G, 12 h).",
  "registered": "2026-10-31",
- "implementation_notes_2026-10-31": "Written with the code, before any run. (1) laplace_clean (LaplaceAR1Kernel) has an EXACT M-step (weighted median and mean absolute residual), so on clean data one step is the maximum-likelihood fit; its ladder is (1, 2, 5, 10), not E55's ladder to 2400. Every other kernel arm uses the ladder to 2400 as registered. (2) Laptop timing of the field arms on 31 Oct (N = 2048): site energy 0.09 s and mixture 1.05 s per M-step, so the five jobs fit defq (about 5 h each on 24 workers). (3) One --quick smoke run (grid 101, 32 validation and test chains, 4 M-steps, 100 network steps, seed 0) checked both parts on the Laplace chain and the cold field cell; its printed risks say nothing about any prediction."
+ "implementation_notes_2026-10-31": "Written with the code, before any run. (1) laplace_clean (LaplaceAR1Kernel) has an EXACT M-step (weighted median and mean absolute residual), so on clean data one step is the maximum-likelihood fit; its ladder is (1, 2, 5, 10), not E55's ladder to 2400. Every other kernel arm uses the ladder to 2400 as registered. (2) Laptop timing of the field arms on 31 Oct (N = 2048): site energy 0.09 s and mixture 1.05 s per M-step, so the five jobs fit defq (about 5 h each on 24 workers). (3) One --quick smoke run (grid 101, 32 validation and test chains, 4 M-steps, 100 network steps, seed 0) checked both parts on the Laplace chain and the cold field cell; its printed risks say nothing about any prediction.",
+ "frozen_outputs": {
+  "outputs/hpc_E58_kern_lap_s0/kernels.csv": "60ec8dd0a5a3b762442a4b0b02c0e96fb6b62046d0089ab06d9800dc84026c16",
+  "outputs/hpc_E58_kern_lap_s0/params_kernels.json": "691b5750af921bb3c396e632bdda8c151d0a1b0d16b5518da4f502c3fafc0906",
+  "outputs/hpc_E58_kern_lap_s8/kernels.csv": "b7e14f820b95929b349c2ce8dd6005d6762741303df744b049b4bfea649330c1",
+  "outputs/hpc_E58_kern_lap_s8/params_kernels.json": "1b16d24991475fa171255beb4a0aa7bf70500713982cbd453f02895c52bca369",
+  "outputs/hpc_E58_kern_T0.3_h1_L32/kernels.csv": "55089f1265dc6a45930e18aea1fa93172c56850aa7836452034e39f5c13453b9",
+  "outputs/hpc_E58_kern_T0.3_h1_L32/params_kernels.json": "4bd01c26d8b34f10f915c34ec4e2681ed09ccb615df5be06fabae751ff05799d",
+  "outputs/hpc_E58_kern_T1_iso_L32/kernels.csv": "f84527761cb7ca338b0f689063a95d3bf3713b6572a026dec9275f536871ae86",
+  "outputs/hpc_E58_kern_T1_iso_L32/params_kernels.json": "9bee5d370b47f88bbcb72a9f651904d24a70c4576edb02cfcbcc61616854a1a9",
+  "outputs/hpc_E58_nets/nets.csv": "5044231b61c47bdedfcebfb33cd93c2550e2ae6047cce97456c22afdcd550353",
+  "outputs/hpc_E58_nets/params_nets.json": "193044faa3618a31045d7c891097c57781b75e7b69e9523ee3e0e18761b577c8"
+ },
+ "frozen_at": {
+  "hpc_E58_kern_lap_s0": "2026-11-02T11:40:46Z",
+  "hpc_E58_kern_lap_s8": "2026-11-02T11:40:46Z",
+  "hpc_E58_kern_T0.3_h1_L32": "2026-11-02T11:40:47Z",
+  "hpc_E58_kern_T1_iso_L32": "2026-11-02T11:40:47Z",
+  "hpc_E58_nets": "2026-11-02T11:40:47Z"
+ },
+ "frozen_commit": {
+  "hpc_E58_kern_lap_s0": "4c91d426e722d6c3347b7888ad8229dd1ad69cf9",
+  "hpc_E58_kern_lap_s8": "4c91d426e722d6c3347b7888ad8229dd1ad69cf9",
+  "hpc_E58_kern_T0.3_h1_L32": "4c91d426e722d6c3347b7888ad8229dd1ad69cf9",
+  "hpc_E58_kern_T1_iso_L32": "4c91d426e722d6c3347b7888ad8229dd1ad69cf9",
+  "hpc_E58_nets": "4c91d426e722d6c3347b7888ad8229dd1ad69cf9"
+ },
+ "frozen_run_commits": {
+  "hpc_E58_kern_lap_s0": [
+   "45dc685"
+  ],
+  "hpc_E58_kern_lap_s8": [
+   "45dc685"
+  ],
+  "hpc_E58_kern_T0.3_h1_L32": [
+   "45dc685"
+  ],
+  "hpc_E58_kern_T1_iso_L32": [
+   "45dc685"
+  ],
+  "hpc_E58_nets": [
+   "45dc685"
+  ]
+ },
+ "outcome": {
+  "read": "2026-11-02, tools/core/read_e58.py on the frozen outputs (hpc_E58_kern_{lap_s0, lap_s8, T0.3_h1_L32, T1_iso_L32}, hpc_E58_nets); 3456 kernel rows per directory, 4608 network rows, 0 failed fits.",
+  "P1": "CONFIRMED: Laplace, energy_h16 below the MLP and the window CNN at every N, >= 13/16 paired.",
+  "P2": "CONFIRMED: Laplace, clean energy_h16 below E56's noisy energy kernel at N <= 2048 (noisy/clean 2.65-3.41).",
+  "P3": "CONFIRMED: Laplace, energy_h16 below the best of E03's six networks at N = 512, 2048.",
+  "P4": "FALSIFIED at one cell: T0.3_h1_L32 against the window CNN at N = 512, 6/8 paired wins (7/8 required). The two losing seeds (6, 7) are stalled fits at the linear floor (risk 0.272 against the CNN's 0.089); the other six beat the CNN about 4x. Every other (cell, network, N) holds.",
+  "P5": "CONFIRMED: Allen-Cahn, the clean site energy below energy_h16 at N <= 2048 on both cells.",
+  "P6": "CONFIRMED: Laplace, energy_h16 at N = 128 below the window CNN at N = 32768.",
+  "G2": "E03's MLP and window CNN reproduced at N <= 2048 (e.g. window 0.1212 vs 0.1209 at N = 512).",
+  "stalls": "23 of the 576 energy fits stalled (lap 3 + 2, T0.3 10, T1_iso 8): the GEM step-halving reloaded a stale Adam state on every retry and kept it after a fully rejected M-step, and on clean data (fixed Xi) the next M-step met the same state at a 128x smaller rate; final lr ~1e-18 against ~1e-3, selected checkpoint mostly 10 or 20, risk at the linear floor. Reproduced and fixed opt-in (NeuralEnergyKernel.fresh_on_reject, bf55e2c); E60-E62 use the fixed rule. The seed means are pulled up wherever a stall sits (e.g. T0.3 energy_h16: 0.031 / 0.083 / 0.008 at N = 128 / 512 / 2048). The registered verdicts stand as read."
+ }
 }

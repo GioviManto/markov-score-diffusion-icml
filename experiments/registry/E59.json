@@ -24,7 +24,32 @@
  "budget_rule": "Fixed at registration: kernel ladder to 1200 M-steps, networks 8000 steps; no amendment foreseen.",
  "provenance_note": "Written 1 Nov 2026 before any E59 code was written or run. Seen beforehand: the wind series' descriptive statistics after the registered transform (computed to design the grid and state the limitation: lag-1 0.973, lag-2 0.932, partial lag-2 -0.288, marginal skew -0.39 and excess kurtosis 0.07, one-hour change kurtosis 8.8, range [-4.10, 3.39], 61,368 training hours); the SETAR calibration (true kernel only). No forecast of any method has been computed.",
  "resources": "One job on the Bocconi HPC (defq, 24 cpus): about 20 CPU-hours (kernel fits 20-30 min each at most, networks seconds to minutes).",
- "status": "REGISTERED and PREDECLARED 2026-11-01 (83095e3), before any E59 code was written or run. Code written 1 Nov: src/markov_score/forecast.py (kernel propagation, BP forward filter, quantile and exact CRPS, coverage, log score; tests/test_forecast.py), src/markov_score/quantile_nets.py (quantile MLP and GRU, pinball loss; tests/test_quantile_nets.py), SETARChain in src/markov_score/priors.py, experiments/e59_forecasting.py (tests/test_e59_driver.py: the wind file's SHA-256, the transform, the splits and window counts), tools/core/read_e59.py with two-direction tests (tests/test_read_e59.py), hpc/icml_submit.sh entry e59. Deployed e78204c-20261101T100738Z (hpc/.deploy_e78204c.env); submitted 2026-11-01 on defq: job 732256 (all 64 cells, 32 cpus, 64G, 12 h).",
+ "status": "FROZEN hpc_E59 2026-11-02T11:40:47Z; REGISTERED and PREDECLARED 2026-11-01 (83095e3), before any E59 code was written or run. Code written 1 Nov: src/markov_score/forecast.py (kernel propagation, BP forward filter, quantile and exact CRPS, coverage, log score; tests/test_forecast.py), src/markov_score/quantile_nets.py (quantile MLP and GRU, pinball loss; tests/test_quantile_nets.py), SETARChain in src/markov_score/priors.py, experiments/e59_forecasting.py (tests/test_e59_driver.py: the wind file's SHA-256, the transform, the splits and window counts), tools/core/read_e59.py with two-direction tests (tests/test_read_e59.py), hpc/icml_submit.sh entry e59. Deployed e78204c-20261101T100738Z (hpc/.deploy_e78204c.env); submitted 2026-11-01 on defq: job 732256 (all 64 cells, 32 cpus, 64G, 12 h).",
  "registered": "2026-11-01",
- "implementation_notes_2026-11-01": "Written with the code, before any run. (1) The BP filter in the noisy scenario starts from a standard normal law at site 1 (both series are standardised), the same for the kernel, gauss_ar1 and the SETAR oracle. (2) The clean scenario conditions on the last observed value only (the Markov forecast), interpolating linearly between the two nearest kernel columns, then h - 1 kernel steps. (3) crps_exact (the CRPS of the full grid predictive) carries about 1e-4 relative quadrature error and is descriptive only; every prediction uses the quantile CRPS, the same rule for every method. (4) Laptop timing on 1 Nov, one thread: the kernel M-step costs 1.95 s on the 601-point wind grid and 0.76 s on the 401-point SETAR grid, independent of N, so a fit to 1200 M-steps takes about 39 and 15 min; the quantile MLP and GRU take 0.2 and 2 min for 8000 steps. The whole run is therefore about 40 CPU-hours, twice the registered estimate; the job is sized at 32 cpus, 64G, 12 h on defq. The ladder and the network budget are unchanged. (5) One --quick smoke run (seed 0, small grids and budgets) checked every method on both benchmarks and both scenarios and the target-hash gate; its numbers say nothing about any prediction."
+ "implementation_notes_2026-11-01": "Written with the code, before any run. (1) The BP filter in the noisy scenario starts from a standard normal law at site 1 (both series are standardised), the same for the kernel, gauss_ar1 and the SETAR oracle. (2) The clean scenario conditions on the last observed value only (the Markov forecast), interpolating linearly between the two nearest kernel columns, then h - 1 kernel steps. (3) crps_exact (the CRPS of the full grid predictive) carries about 1e-4 relative quadrature error and is descriptive only; every prediction uses the quantile CRPS, the same rule for every method. (4) Laptop timing on 1 Nov, one thread: the kernel M-step costs 1.95 s on the 601-point wind grid and 0.76 s on the 401-point SETAR grid, independent of N, so a fit to 1200 M-steps takes about 39 and 15 min; the quantile MLP and GRU take 0.2 and 2 min for 8000 steps. The whole run is therefore about 40 CPU-hours, twice the registered estimate; the job is sized at 32 cpus, 64G, 12 h on defq. The ladder and the network budget are unchanged. (5) One --quick smoke run (seed 0, small grids and budgets) checked every method on both benchmarks and both scenarios and the target-hash gate; its numbers say nothing about any prediction.",
+ "frozen_outputs": {
+  "outputs/hpc_E59/forecasts.csv": "0c469497ad85d417e3026334a0db408690beae8e2deeab38802003651a98fd32",
+  "outputs/hpc_E59/params_forecast.json": "340315d46a9718003fa17793d9180e4a14325489270fc331113105855f3a6182"
+ },
+ "frozen_at": {
+  "hpc_E59": "2026-11-02T11:40:47Z"
+ },
+ "frozen_commit": {
+  "hpc_E59": "4c91d426e722d6c3347b7888ad8229dd1ad69cf9"
+ },
+ "frozen_run_commits": {
+  "hpc_E59": [
+   "e78204c"
+  ]
+ },
+ "outcome": {
+  "read": "2026-11-02, tools/core/read_e59.py on the frozen outputs/hpc_E59/forecasts.csv (3328 rows, every benchmark x scenario x N x seed x method x h; one target hash per (benchmark, seed)).",
+  "P1": "CONFIRMED: SETAR clean, kernel CRPS below the Gaussian AR(1) at N >= 128, every h, >= 7/8 paired.",
+  "P2": "CONFIRMED: SETAR clean, kernel CRPS (mean over h) below both quantile networks at N <= 512.",
+  "P3": "CONFIRMED: SETAR noisy, N = 2048, h = 1: kernel below gauss_ar1, qmlp and qgru.",
+  "P4": "CONFIRMED: wind clean, kernel CRPS below gauss_ar1 at h = 1, 2 and N >= 128.",
+  "P5": "CONFIRMED: wind clean, N = 1917, h = 1: 5-95% coverage 0.856-0.859 in 8/8 seeds.",
+  "D1": "Descriptive: on wind the quantile GRU and MLP overtake the kernel from N = 128 (mean CRPS over h at N = 1917: qgru 0.2715, qmlp 0.2711, kernel 0.2911, gauss_ar1 0.2957). E62's calibration finds why it may be: the transformed wind series has a lag-2 partial autocorrelation of -0.29 (delta 0.045), i.e. it is not first order; E62 tests the pair-state kernel on it.",
+  "runtime": "Job 732256 ran 2 h 11 min (sized for 12 h)."
+ }
 }

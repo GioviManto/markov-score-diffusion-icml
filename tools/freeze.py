@@ -28,7 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REG = ROOT / "experiments" / "registry"
 sys.path.insert(0, str(ROOT / "tools"))
-from registry import OUTPUT_DIRS, inspect  # noqa: E402
+from registry import OUTPUT_DIRS, SCRIPTS, inspect  # noqa: E402
 
 FROZEN_GLOBS = ("*.csv", "params_*.json", "winners.json", "floor_fits.json")
 
@@ -79,6 +79,13 @@ def _registry_file(out_id: str) -> Path:
     m = re.match(r"^(?:hpc_)?(E\d+)[a-z0-9]*_(?:s\d+|[a-z]+)$", out_id)
     if m and (REG / f"{m.group(1)}.json").exists():
         return REG / f"{m.group(1)}.json"
+    # A shard listed in tools/registry.py (one directory per job, N-27; e.g. hpc_E58_kern_lap_s8, hpc_E61_k_su): the
+    # one registry entry whose script it runs. Never guesses: an ambiguous script (two entries) does not map.
+    script = SCRIPTS.get(out_id)
+    if script:
+        owners = [r for r in sorted(REG.glob("*.json")) if json.loads(r.read_text()).get("script", "").endswith(f"/{script}")]
+        if len(owners) == 1:
+            return owners[0]
     raise SystemExit(f"no registry entry maps to outputs/{out_id}")
 
 

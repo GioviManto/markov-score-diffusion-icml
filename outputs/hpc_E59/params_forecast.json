@@ -1,0 +1,94 @@
+{
+  "quick": false,
+  "parts": [
+    "forecast"
+  ],
+  "overrides": [],
+  "benchmarks": [
+    "setar",
+    "wind"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "sizes": {
+    "setar": [
+      32,
+      128,
+      512,
+      2048
+    ],
+    "wind": [
+      32,
+      128,
+      512,
+      1917
+    ]
+  },
+  "grids": {
+    "setar": [
+      8.0,
+      401
+    ],
+    "wind": [
+      6.0,
+      601
+    ]
+  },
+  "n_val_setar": 1024,
+  "n_test_setar": 4096,
+  "wind_test_stride": 8,
+  "max_test": 0,
+  "noisy_t": 0.2,
+  "ladder": [
+    10,
+    20,
+    40,
+    80,
+    160,
+    300,
+    600,
+    1200
+  ],
+  "energy_hidden": 16,
+  "energy_lr": 0.01,
+  "energy_inner": 10,
+  "init_rho": 0.3,
+  "init_var": 0.8,
+  "nets": [
+    "qmlp",
+    "qgru"
+  ],
+  "net_checkpoints": [
+    1000,
+    2000,
+    4000,
+    8000
+  ],
+  "net_lr": 0.001,
+  "net_batch": 256,
+  "torch_threads": 1,
+  "timestamp": "2026-11-02 02:52:32",
+  "git_commit": "e78204ccc1a4ae77477d1d80a8908339de488e36",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "3579aef8b4aaa8250bbf8af59d659fa3055ecd838296ff1c86d4cccbdf17313a",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode05",
+  "slurm_job_id": "732256",
+  "slurm_array_task_id": "",
+  "cpu_count": "40",
+  "blas_threads": "1",
+  "resolved_config_hash": "f048d118c400"
+}
