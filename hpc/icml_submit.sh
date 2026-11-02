@@ -294,6 +294,13 @@ cmd_for() {
     e61-k-sp)    echo "e61_chain_panel.py --only kernels --set \"chains=('skew', 'pearson')\" --output-dir {OUT}/E61_k_sp";;
     e61-k-lv)    echo "e61_chain_panel.py --only kernels --set \"chains=('langevin',)\" --output-dir {OUT}/E61_k_lv";;
     e61-nets)    echo "e61_chain_panel.py --only nets --output-dir {OUT}/E61_nets";;
+    # E62 (2 Nov 2026, registry E62.json): the AR(2) arms in four jobs by phi2 (bundles first, cached in the job's own
+    # directory), wind in one (N-27).
+    e62-p1)      echo "e62_second_order.py --only bundles,arms --set 'phi2=(-0.3, 0.0)' --output-dir {OUT}/E62_p1";;
+    e62-p2)      echo "e62_second_order.py --only bundles,arms --set 'phi2=(0.1, 0.2)' --output-dir {OUT}/E62_p2";;
+    e62-p3)      echo "e62_second_order.py --only bundles,arms --set 'phi2=(0.3, 0.4)' --output-dir {OUT}/E62_p3";;
+    e62-p4)      echo "e62_second_order.py --only bundles,arms --set 'phi2=(0.6,)' --output-dir {OUT}/E62_p4";;
+    e62-wind)    echo "e62_second_order.py --only wind --output-dir {OUT}/E62_wind";;
     e57-kern-*|e57-nets-*)
       local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
       if [[ $part == kern ]]; then

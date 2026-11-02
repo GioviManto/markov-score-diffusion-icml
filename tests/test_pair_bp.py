@@ -56,3 +56,32 @@ def test_the_gaussian_ar2_posterior_mean_is_exact():
         exact = X @ (al * cov @ np.linalg.inv(al ** 2 * cov + de * np.eye(L))).T
         m, _ = pair_bp_batch(grid, w, lk2, X, al, de, log_mu2)
         np.testing.assert_allclose(m, exact, atol=2e-3)
+
+
+def test_the_e_step_matches_brute_force_enumeration():
+    import itertools
+
+    from markov_score.pair_bp import pair_e_step, stationary_pair
+    grid, w = make_grid(2.0, 6)
+    n, L = len(grid), 5
+    rng = np.random.default_rng(4)
+    lk2 = _norm(np.log(rng.gamma(2.0, size=(n, n, n))), w)                      # an arbitrary second-order kernel
+    log_mu2 = np.log(stationary_pair(lk2, w))
+    X = rng.standard_normal((3, L))
+    al, de = 0.8, 0.36
+    xi = pair_e_step(grid, w, lk2, X, al, de, log_mu2)
+    want = np.zeros((n, n, n))
+    for x in X:
+        tot, acc = 0.0, np.zeros((n, n, n))
+        for path in itertools.product(range(n), repeat=L):
+            p = np.exp(log_mu2[path[1], path[0]]) * w[path[0]] * w[path[1]]
+            for t in range(2, L):
+                p *= np.exp(lk2[path[t], path[t - 1], path[t - 2]]) * w[path[t]]
+            p *= np.prod(np.exp(-0.5 * (x - al * grid[list(path)]) ** 2 / de))
+            tot += p
+            for t in range(2, L):
+                acc[path[t], path[t - 1], path[t - 2]] += p
+        want += acc / tot
+    # xi is the expected NUMBER of each grid triple (the trapezoid weights are inside, as in em.ExpectedStatistics.xi)
+    np.testing.assert_allclose(xi, want, atol=1e-12)
+    np.testing.assert_allclose(np.sum(xi), len(X) * (L - 2), rtol=1e-12)

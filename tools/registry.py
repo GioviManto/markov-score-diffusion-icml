@@ -81,6 +81,12 @@ OUTPUT_DIRS["E61"] = "hpc_E61_k_gl"
 MAIN_CSV.update(_E61_DIRS)
 SCRIPTS.update({d: "e61_chain_panel.py" for d in _E61_DIRS})
 
+# E62 (2 Nov 2026): the AR(2) arms in four directories by phi2, wind in one (N-27).
+_E62_DIRS = {**{f"hpc_E62_p{i}": "arms.csv" for i in (1, 2, 3, 4)}, "hpc_E62_wind": "wind.csv"}
+OUTPUT_DIRS["E62"] = "hpc_E62_p1"
+MAIN_CSV.update(_E62_DIRS)
+SCRIPTS.update({d: "e62_second_order.py" for d in _E62_DIRS})
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""

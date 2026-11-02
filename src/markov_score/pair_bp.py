@@ -80,3 +80,65 @@ def pair_bp_batch(grid, weights, log_k2, X, alpha, delta, log_mu2, chunk="auto")
         bk = np.transpose(g, (1, 2, 0))                                        # [b, i, j]
         bk /= bk.max(axis=(1, 2), keepdims=True)
     return means, vars_
+
+
+def pair_e_step(grid, weights, log_k2, X, alpha, delta, log_mu2, chunk="auto"):
+    """Expected triple counts xi3[k, j, i] = sum over chains and sites t >= 3 of the posterior mass of (a_t = u_k,
+    a_{t-1} = u_j, a_{t-2} = u_i): the E-step of EM for the second-order kernel (the first pair is drawn from the
+    initial law, which this E-step does not count). Same forward pass as pair_bp_batch; 2 B n^3 per site."""
+    X = np.asarray(X, dtype=float)
+    if chunk == "auto":
+        chunk = max(1, int(MEMORY_BYTES // (X.shape[1] * len(grid) ** 2 * 8)))
+    if chunk is not None and len(X) > chunk:
+        return sum(pair_e_step(grid, weights, log_k2, X[s:s + chunk], alpha, delta, log_mu2, chunk=None)
+                   for s in range(0, len(X), chunk))
+    B, L = X.shape
+    n = len(grid)
+    w = np.asarray(weights, dtype=float)
+    k2 = np.exp(log_k2)
+    kw = np.ascontiguousarray(np.transpose(k2, (1, 2, 0)) * w[None, :, None])
+    kb = np.ascontiguousarray(np.transpose(k2, (1, 0, 2)) * w[None, :, None])
+    kt = np.ascontiguousarray(np.transpose(k2, (1, 2, 0)))     # kt[j, i, k] = K2(u_k | u_j, u_i)
+    phi = _likelihood(grid, X, alpha, delta)
+    mu2 = np.exp(log_mu2)
+    fw = np.empty((L, B, n, n))
+    f = mu2.T[None, :, :] * phi[:, 0, :, None] * phi[:, 1, None, :]
+    f /= f.sum(axis=(1, 2), keepdims=True)
+    fw[1] = f
+    for t in range(2, L):
+        g = np.matmul(np.transpose(f, (2, 0, 1)), kw)
+        f = np.transpose(g, (1, 0, 2)) * phi[:, t, None, :]
+        f /= f.sum(axis=(1, 2), keepdims=True)
+        fw[t] = f
+    xi = np.zeros((n, n, n))                                   # accumulated as [j, i, k]
+    bk = np.ones((B, n, n))
+    ww = w[None, :, None] * w[None, None, :]
+    for t in range(L - 1, 1, -1):
+        a = fw[t - 1] * ww                                     # [b, i, j]: mass of (a_{t-2}, a_{t-1})
+        bm = bk * phi[:, t, None, :] * w[None, None, :]        # [b, j, k]
+        g = np.matmul(np.transpose(a, (2, 0, 1)), kt)          # (j, b, k) = sum_i a[b, i, j] K2(k | j, i)
+        z = np.einsum("jbk,bjk->b", g, bm)                     # each chain's normaliser at this site
+        xi += np.matmul(np.transpose(a / z[:, None, None], (2, 1, 0)), np.transpose(bm, (1, 0, 2)))   # (j, i, k)
+        h = bk * phi[:, t, None, :]
+        g = np.matmul(np.transpose(h, (1, 0, 2)), kb)
+        bk = np.transpose(g, (1, 2, 0))
+        bk /= bk.max(axis=(1, 2), keepdims=True)
+    return np.transpose(xi, (2, 0, 1)) * k2                     # [k, j, i]
+
+
+def stationary_pair(log_k2, weights, init=None, iters=20000, tol=1e-12):
+    """mu2[j, i] = p(a_t = u_j, a_{t-1} = u_i), the fixed point of the pair operator (normalised with w (x) w), by power
+    iteration; `init` (a previous mu2) warm-starts it, as EM does between iterations."""
+    k2 = np.exp(log_k2)
+    w = np.asarray(weights, dtype=float)
+    n = len(w)
+    kw = np.ascontiguousarray(np.transpose(k2, (1, 2, 0)) * w[None, :, None])        # [j, i, k]
+    f = np.full((n, n), 1.0) if init is None else np.asarray(init, dtype=float).T.copy()   # f[i, j]
+    for _ in range(iters):
+        g = np.matmul(np.ascontiguousarray(f.T)[:, None, :], kw)[:, 0, :]           # g[j, k] = sum_i f[i, j] kw[j, i, k]
+        g /= np.sum(g * w[:, None] * w[None, :])
+        done = np.max(np.abs(g - f)) < tol * np.max(g)
+        f = g
+        if done:
+            break
+    return f.T
