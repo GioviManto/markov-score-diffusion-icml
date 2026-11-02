@@ -1,0 +1,122 @@
+{
+ "id": "E62",
+ "script": "experiments/e62_second_order.py",
+ "hypothesis": "Jerome's question 'how long does it stay good?' when the data are not first-order Markov (2 Nov 2026; the user approved the design and these predictions). The truth is an AR(2) with Laplace innovations at E03's lag-one correlation 0.85 and variance 1, so a first-order method sees the same lag-one covariance at every phi2 and only the memory beyond one step changes. Three questions: (1) is first-order EM-BP's loss structural (a floor that data do not lower)? (2) where does it stop beating the networks? (3) does enlarging the state to the pair (a_{t-1}, a_t), which makes the chain first order again, restore the advantage? The misspecification is measured by delta, the KL rate to the best first-order chain: for a Gaussian process -1/2 sum_{j >= 2} log(1 - pi_j^2) over the partial autocorrelations (for the AR(2) -(L-2)/(2L) log(1 - phi2^2)); for the Laplace AR(2) exactly (L-2)/L I(a_t; a_{t-2} | a_{t-1}). The same delta places a real series on the axis: the Horns Rev wind of E59 has a lag-2 partial autocorrelation of -0.2884 and small ones after it (|pi_j| <= 0.035 for j = 3-6; delta_gauss over lags 2-24 0.04451), as far from first order as phi2 = +-0.3. E08 measured the Gaussian AR(2) with a first-order kernel against the window CNN at M = 512, 2048; E62 adds Laplace innovations, the pair-state repair, small M, delta, and wind.",
+ "design": "CHAINS: a_t = phi1 a_{t-1} + phi2 a_{t-2} + eps, eps Laplace with Var (1 - 0.85^2)(1 - phi2^2), phi1 = 0.85 (1 - phi2), phi2 in (-0.3, 0, 0.1, 0.2, 0.3, 0.4, 0.6), started from the stationary law (600 burn-in steps from 0). L = 32, E03's twelve levels, M in (128, 512, 2048), seeds 0-7, 1024 validation and 2048 test chains per (phi2, seed), E62's tags. REFERENCE: pair-state BP (markov_score.pair_bp) with the true K2 and its stationary pair law on 151 points over [-8, 8] (relative score difference to 201 points: below 7.5e-4 in the calibration). ARMS: first (the thesis mixture, C = 8, by EM through first-order grid BP on 401 points from one noisy view per chain, the kernel's own invariant law as initial law; E56's selection on the validation risk, E33's ladder to 1200); pair (a two-lag mixture-innovation kernel a_t = phi1 a_{t-1} + phi2 a_{t-2} + eps, eps a C = 8 Gaussian mixture, 2 + 3C parameters, by EM through pair-state BP on 101 points, its own stationary pair law as initial law; ladder (10, 20, 40, 80, 120, 160, 220, 300); same selection); mlp and window (E03's screened winners on the clean chains); lmmse (the LMMSE of the true AR(2) covariance). WIND (P5): E59's transformed Horns Rev series and splits; training windows of L = 32 from the training years (N in (32, 128, 512, 1917), E59's windows), test windows from the test year; kernels by clean-data maximum likelihood: first (the C = 8 mixture, first order) and pair (the two-lag mixture); the networks as above. No exact reference exists on real data, so the wind metric is the pooled denoising error against the clean value, sum (alpha/delta)^2 |m_hat - a|^2 over sites and levels: it equals the score error plus a term that is the same for every method, so it ranks methods exactly as the score error does (paired comparisons only).",
+ "predeclared_predictions": {
+  "P1": "Structural bias: at M = 2048 the seed-mean of first is within +-25% of the calibrated first-order floor (first_order_floor below) at every phi2 >= 0.2, and its seed-mean at 2048 is not more than 10% below its seed-mean at 512 at those phi2.",
+  "P2": "The repair: pair below first at M = 2048 in >= 7/8 seeds at every phi2 >= 0.1.",
+  "P3": "The break-even: at M = 2048 the seed-mean of first is below the best network's (the lower seed-mean of mlp and window) at phi2 <= 0.1 (phi2 in 0, 0.1) and above it at phi2 >= 0.4 (0.4, 0.6).",
+  "P4": "The repair restores the advantage: pair below the best network at every phi2 and every M in >= 7/8 seeds.",
+  "P5": "Wind: pair's wind denoising error below first's in >= 7/8 seeds (training subsets) at every N."
+ },
+ "descriptive": {
+  "D1": "Seed-mean risk per phi2 x arm x M, against delta_gauss and delta_exact (the robustness figure), with the calibrated first-order floor and the linear floor drawn in.",
+  "D2": "The break-even delta, interpolated between the phi2 values.",
+  "D3": "The fitted (phi1, phi2) of pair against the truth; wall time per fit of first and pair.",
+  "D4": "Wind: every arm's wind denoising error by N; wind's delta on the D1 axis.",
+  "D5": "Appendix (AR(p) cost): pair-state BP time per chain for p = 1, 2, 3 at n = 51, 101 (p = 3 on the triple state, laptop) and one coarse-grid (n = 51) Laplace AR(3) reference against its first-order projection."
+ },
+ "predeclared_analysis": "tools/core/read_e62.py. Gates: one row per (phi2, seed, n_chains, arm, t); for every (phi2, seed, n_chains) every arm scored on the same test bundle (hash); the reference recomputed on one bundle at 201 points agrees with the 151-point reference to 1e-3 relative. A failed or missing fit counts AGAINST every prediction it enters. Paired by seed; no bootstrap, no other selection.",
+ "seeds": "0-7",
+ "budget_rule": "first: E33's ladder to 1200; pair: the ladder to 300 (cost: one EM iteration at M = 2048 is ~1 min at 101 points); networks: E03's budget. No extension.",
+ "provenance_note": "Registered on 2 Nov 2026 after the user approved the design and the predictions ('Ok go on'), before any E62 driver or two-lag kernel code. The calibration (tools/core/calibrate_e62.py, commit 18dced8) reads only the true kernels, a calibration-only bundle (tag e62-calibration, 256 chains) and the training years of E59's wind series; markov_score.pair_bp (same commit) is the exact pair-state BP it uses, tested against first-order BP and against the Gaussian AR(2) posterior mean.",
+ "calibration_2026-11-02": {
+  "script": "tools/core/calibrate_e62.py",
+  "per_phi2": {
+   "-0.30": {
+    "phi1": 1.105,
+    "rho2": 0.6392,
+    "delta_gauss": 0.04421,
+    "delta_exact": 0.066,
+    "first_order_floor": 0.1598,
+    "linear_floor": 0.1458
+   },
+   "0.00": {
+    "phi1": 0.85,
+    "rho2": 0.7225,
+    "delta_gauss": -0.0,
+    "delta_exact": -0.0,
+    "first_order_floor": 0.0,
+    "linear_floor": 0.1676
+   },
+   "0.10": {
+    "phi1": 0.765,
+    "rho2": 0.7502,
+    "delta_gauss": 0.00471,
+    "delta_exact": 0.00837,
+    "first_order_floor": 0.0554,
+    "linear_floor": 0.1624
+   },
+   "0.20": {
+    "phi1": 0.68,
+    "rho2": 0.778,
+    "delta_gauss": 0.01914,
+    "delta_exact": 0.03092,
+    "first_order_floor": 0.1132,
+    "linear_floor": 0.1719
+   },
+   "0.30": {
+    "phi1": 0.595,
+    "rho2": 0.8057,
+    "delta_gauss": 0.04421,
+    "delta_exact": 0.06578,
+    "first_order_floor": 0.1717,
+    "linear_floor": 0.1686
+   },
+   "0.40": {
+    "phi1": 0.51,
+    "rho2": 0.8335,
+    "delta_gauss": 0.08173,
+    "delta_exact": 0.1133,
+    "first_order_floor": 0.2282,
+    "linear_floor": 0.1613
+   },
+   "0.50": {
+    "phi1": 0.425,
+    "rho2": 0.8612,
+    "delta_gauss": 0.13485,
+    "delta_exact": 0.17587,
+    "first_order_floor": 0.2816,
+    "linear_floor": 0.151
+   },
+   "0.60": {
+    "phi1": 0.34,
+    "rho2": 0.889,
+    "delta_gauss": 0.2092,
+    "delta_exact": 0.25868,
+    "first_order_floor": 0.3419,
+    "linear_floor": 0.1409
+   }
+  },
+  "reference_refinement": {
+   "phi2 0.0": {
+    "n101_vs_201": 0.00285,
+    "n151_vs_201": 0.000741
+   },
+   "phi2 0.4": {
+    "n101_vs_201": 0.000393,
+    "n151_vs_201": 4.68e-05
+   },
+   "phi2 0.6": {
+    "n101_vs_201": 0.000254,
+    "n151_vs_201": 3.42e-05
+   }
+  },
+  "wind": {
+   "lag1_corr": 0.9731,
+   "pacf_2_to_6": [
+    -0.2884,
+    -0.0002,
+    -0.0345,
+    -0.0066,
+    -0.0077
+   ],
+   "delta_gauss_lags_2_24": 0.04451
+  },
+  "note": "first_order_floor: BP with the best first-order kernel (the stationary pair law's conditional) against the pair-state reference, E03's estimand on 256 chains; linear_floor: the LMMSE of the true AR(2) covariance."
+ },
+ "resources": "Estimate before timing: pair-state EM at M = 2048 about 1 min per EM iteration on 101 points (E-step plus triple statistics, three pair-BP passes at 11 ms per chain), up to 300 iterations, so ~5 h per fit; ~450 CPU-h for the pair arm over 7 phi2 x 3 M x 8 seeds, first and the networks ~150 CPU-h; jobs split by phi2, defq, 32 CPUs. Timed on a dev seed before submission; submitted when the 30-job cap allows.",
+ "status": "REGISTERED 2026-11-02; no E62 driver or two-lag kernel code written.",
+ "registered": "2026-11-02"
+}
