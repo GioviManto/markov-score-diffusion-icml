@@ -285,6 +285,9 @@ cmd_for() {
       echo "e58_clean_kernel.py --only kernels --set \"cells=('$cell',)\" --output-dir {OUT}/E58_kern_$cell";;
     e58-nets)    echo "e58_clean_kernel.py --only nets --output-dir {OUT}/E58_nets";;
     e59)         echo "e59_forecasting.py --only forecast --output-dir {OUT}/E59";;
+    # E60 (2 Nov 2026, registry E60.json): the free 2-D mixture on E33's slide-15 cells, two cells per job (N-27).
+    e60-a)       echo "e60_free_mixture.py --only kernels --set \"cells=('T0.3_h1_L32', 'T0.5_iso_L32')\" --output-dir {OUT}/E60_a";;
+    e60-b)       echo "e60_free_mixture.py --only kernels --set \"cells=('T1_iso_L32', 'T2_iso_L32')\" --output-dir {OUT}/E60_b";;
     e57-kern-*|e57-nets-*)
       local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
       if [[ $part == kern ]]; then

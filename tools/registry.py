@@ -69,6 +69,12 @@ OUTPUT_DIRS["E59"] = "hpc_E59"
 MAIN_CSV["hpc_E59"] = "forecasts.csv"
 SCRIPTS["hpc_E59"] = "e59_forecasting.py"
 
+# E60 (2 Nov 2026): the free 2-D mixture on E33's four slide-15 cells, two cells per directory (N-27).
+_E60_DIRS = {f"hpc_E60_{p}": "kernels.csv" for p in ("a", "b")}
+OUTPUT_DIRS["E60"] = "hpc_E60_a"
+MAIN_CSV.update(_E60_DIRS)
+SCRIPTS.update({d: "e60_free_mixture.py" for d in _E60_DIRS})
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""
