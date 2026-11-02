@@ -143,6 +143,7 @@
   "note": "Best member of each family fitted to the exact pair law; error = BP score error (E03's estimand, raw) on the calibration bundle (1024 chains), then / floor. A best member bounds what EM can reach."
  },
  "resources": "4 kernel jobs of up to two chains ((gauss, laplace), (student, uniform), (skew, pearson), (langevin)) and 1 network job, defq, 32 CPUs, 64 GB, 23 h. Estimate from E57 (six kernel arms, about 7 h per chain on 40 CPUs): four kernel arms, about 5 h per chain on 40 CPUs.",
- "status": "REGISTERED 2026-11-02; no E61 code written.",
- "registered": "2026-11-02"
+ "status": "REGISTERED 2026-11-02 (b4f1302); code 92744ee; deployed 92744ee-20261102T103915Z (hpc/.deploy_92744ee.env); submitted 2 Nov 2026 on defq, 32 CPUs, 64 GB: kernels e61-k-gl 734082 (gauss, laplace), e61-k-su 734083 (student, uniform), e61-k-sp 734084 (skew, pearson), e61-k-lv 734085 (langevin), 23 h each; networks e61-nets 734086, 12 h. Fetch to outputs/hpc_E61_k_{gl,su,sp,lv} and outputs/hpc_E61_nets.",
+ "registered": "2026-11-02",
+ "implementation_notes_2026-11-02": "Chains: markov_score.panel_chains reproduces the calibrated parameters (tests/test_panel_chains.py: eps 0.744734, r 0.858016, Delta 0.307898 and 0.162369 to 1e-6). Its heavy-tailed Pearson columns near |a| = 5 lose up to 0.6% of their mass past the grid edge at 8 (step sd ~1.4 there; stationary mass beyond 8 is 6e-5): the truncation every chain on E03's grid shares, kept as it is. Sizing from E56 (noisy-EM energy fits 3200-5200 s) and E58 (clean energy fits ~2800 s): ~120 CPU-h per chain, so ~8 h per two-chain job on 32 CPUs. Quick smoke (QUICK settings, seed 0, N = 32): every arm on all seven chains, kernels and networks on one test bundle per cell."
 }
