@@ -75,6 +75,12 @@ OUTPUT_DIRS["E60"] = "hpc_E60_a"
 MAIN_CSV.update(_E60_DIRS)
 SCRIPTS.update({d: "e60_free_mixture.py" for d in _E60_DIRS})
 
+# E61 (2 Nov 2026): kernels in four directories of up to two chains, the networks in one (N-27).
+_E61_DIRS = {**{f"hpc_E61_k_{p}": "kernels.csv" for p in ("gl", "su", "sp", "lv")}, "hpc_E61_nets": "nets.csv"}
+OUTPUT_DIRS["E61"] = "hpc_E61_k_gl"
+MAIN_CSV.update(_E61_DIRS)
+SCRIPTS.update({d: "e61_chain_panel.py" for d in _E61_DIRS})
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""

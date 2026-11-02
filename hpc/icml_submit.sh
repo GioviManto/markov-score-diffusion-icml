@@ -288,6 +288,12 @@ cmd_for() {
     # E60 (2 Nov 2026, registry E60.json): the free 2-D mixture on E33's slide-15 cells, two cells per job (N-27).
     e60-a)       echo "e60_free_mixture.py --only kernels --set \"cells=('T0.3_h1_L32', 'T0.5_iso_L32')\" --output-dir {OUT}/E60_a";;
     e60-b)       echo "e60_free_mixture.py --only kernels --set \"cells=('T1_iso_L32', 'T2_iso_L32')\" --output-dir {OUT}/E60_b";;
+    # E61 (2 Nov 2026, registry E61.json): kernels in four jobs of up to two chains, the networks in one (N-27).
+    e61-k-gl)    echo "e61_chain_panel.py --only kernels --set \"chains=('gauss', 'laplace')\" --output-dir {OUT}/E61_k_gl";;
+    e61-k-su)    echo "e61_chain_panel.py --only kernels --set \"chains=('student', 'uniform')\" --output-dir {OUT}/E61_k_su";;
+    e61-k-sp)    echo "e61_chain_panel.py --only kernels --set \"chains=('skew', 'pearson')\" --output-dir {OUT}/E61_k_sp";;
+    e61-k-lv)    echo "e61_chain_panel.py --only kernels --set \"chains=('langevin',)\" --output-dir {OUT}/E61_k_lv";;
+    e61-nets)    echo "e61_chain_panel.py --only nets --output-dir {OUT}/E61_nets";;
     e57-kern-*|e57-nets-*)
       local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
       if [[ $part == kern ]]; then
