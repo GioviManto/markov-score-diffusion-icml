@@ -1,0 +1,148 @@
+{
+ "id": "E61",
+ "script": "experiments/e61_chain_panel.py",
+ "hypothesis": "Asked on 2 Nov 2026: every model so far has been tested on the Laplace chain (and the Allen-Cahn field); test the same models on other chains whose kernels are known exactly, including 'real' first-order Markov processes. E61 runs one panel of arms on seven chains, all matched to E03's Laplace chain in variance (1) and lag-one correlation (0.85), so that a linear method sees the same covariance on every chain and every difference comes from shape: a Gaussian control (linear is optimal), Laplace (the anchor), Student-t and uniform innovations (inside the shift class), a skewed chain, and two textbook diffusions sampled at a fixed step, a double-well Langevin diffusion and the Student (Pearson) diffusion (outside it). The question is whether the kernel's advantage over the networks, and the ranking of the kernel families, are a property of the Laplace chain or of the method. The calibration from the true kernels says where the shift class must fail: its best member sits at 0.83 (skew), 0.98 (Langevin) and 0.86 (Pearson) of the linear floor, while the free mixture's reaches 0.16, 0.32 and 0.10; inside the class both are within 1-5% of it.",
+ "design": "CHAINS (tools/core/calibrate_e61.py, true kernels only): gauss = GaussianAR1(0.85); laplace = LaplaceAR1(0.85); student = StudentTAR1(0.85, nu = 4) (the smallest of 3, 4, 5 with stationary mass beyond |a| > 8 below 1e-4); uniform = UniformAR1(0.85); skew: a = (sinh(asinh(z) + eps) - m)/s with z a Gaussian AR(1) of correlation r, eps = 0.744734 (marginal skewness 1), r = 0.858016 (lag-one correlation 0.85); langevin: dX = -V'(X) dt + sqrt(2) dW, V = 2 (x^2/s^2 - 1)^2 (barrier 2), s for variance 1, sampled every Delta = 0.307898; pearson: the Student diffusion dX = -X dt + sqrt(2 (nu + X^2)/(nu - 1)) dW with nu = 6 (rule as for student, among 5, 6, 8), standardised, sampled every Delta = 0.162369. The two diffusions' transitions are exact for the sampled process: square-root-approximation generator on the 0.02 lattice of [-12, 12] (detailed balance with the closed-form stationary law), matrix exponential over Delta, a sample sits uniformly inside its lattice cell. Every chain starts from a_1 ~ N(0, 1) (the package's convention; the diffusions snap it to its lattice cell), so the reference BP with the default initial law is exact. PROTOCOL: E57's (E03's): L = 32, the twelve frozen levels, grid 401 on [-8, 8], N in (32, 128, 512, 2048), seeds 0-7, 1024 validation and 2048 test chains per seed, E61's own tags e61-<chain>-train/val/test/em-split/em-noise; reference: exact grid BP with each chain's true kernel; floor (lmmse): the LMMSE of the chain's exact covariance on the same test bundle. ARMS: mixture (MixtureInnovationKernel, C = 8, E57's start), free4 (FreeMixtureKernel, C = 4, E60's), energy (NeuralEnergyKernel, width 16 = E56's screen winner, with fresh_on_reject), each by EM through exact grid BP from one noisy view per training chain (E56's _fit_and_select: E55's ladder to 2400, the checkpoint with the lowest pooled validation BP risk); energy_clean (the same kernel by clean-data maximum likelihood: E58's histogram Xi and the same M-step, the same ladder and selection); mlp and window (E03's screened winners, trained on the clean chains by E03's recipe, selected on the validation bundle). Driver: E57's helpers, chains and arms added in process; e57_chain_families.py byte-identical.",
+ "predeclared_predictions": {
+  "P1": "Control (gauss): every kernel arm (mixture, free4, energy, energy_clean) below both networks at every N, in >= 7/8 seeds each (paired).",
+  "P2": "Inside the shift class (laplace, student, uniform): the mixture below the window CNN at every N in >= 7/8 seeds, and at N = 2048 its seed-mean within 1.5x of the best of the three noisy-EM kernels (mixture, free4, energy) on every one of the three chains. (energy_clean is left out of this comparison: it learns from clean chains, a different information regime.)",
+  "P3": "Outside the shift class (skew, langevin, pearson): at N = 2048 free4 and energy each below the mixture in >= 7/8 seeds on every one of the three chains.",
+  "P4": "energy_clean below energy (noisy EM) at every N on >= 6 of the 7 chains, in >= 6/8 seeds at each N.",
+  "P5": "Generality: on every chain and at every N, the best kernel arm (the lowest seed-mean of the four) below the best network (the lower seed-mean of mlp and window) in >= 7/8 seeds (paired)."
+ },
+ "descriptive": {
+  "D1": "Seed-mean risk per chain x arm x N (raw E03 estimand; also / lmmse where the floor is above 1e-3).",
+  "D2": "kernel_hellinger of every kernel arm to the chain's true kernel at N = 2048.",
+  "D3": "E57's three chains (bimodal, tanh, hetero) joined to the panel through E57's frozen rows for the arms they share (mixture, mlp, window; E57's energy without the fresh-state rule, marked as such).",
+  "D4": "Selected checkpoints, at-cap shares and failed fits per arm.",
+  "D5": "Stalled energy fits (final lr below 1e-10) in energy and energy_clean: does the fresh-state rule hold?"
+ },
+ "predeclared_analysis": "tools/core/read_e61.py. Gates: one row per (chain, seed, n_chains, arm, t), no duplicates; for every (chain, seed, n_chains) every arm, kernels and networks, scored on the same test bundle (hash). Risk = risk_pooled. A failed or missing fit counts AGAINST every prediction it enters: a seed-mean needs all eight seeds finite, a paired win needs both rows, 'best' is the lowest seed-mean among the arms that have one. No bootstrap, no other selection.",
+ "seeds": "0-7 (E57's count)",
+ "budget_rule": "E55's ladder to 2400 EM iterations (or M-steps for energy_clean), no extension; E03's network budget.",
+ "provenance_note": "Registered on 2 Nov 2026, after the user approved the predictions ('Ok go on') and before any E61 driver code. The calibration (commit 18dced8) reads only the true kernels and a calibration-only bundle (tag e61-calibration, not a registered seed). The skewed chain and the diffusion chains move from the calibration script into markov_score, with tests that they reproduce the calibrated moments.",
+ "calibration_2026-11-02": {
+  "script": "tools/core/calibrate_e61.py (--families)",
+  "chains": {
+   "gauss": {
+    "mean": -0.0,
+    "var": 1.0,
+    "lag1": 0.85,
+    "skew": -0.0,
+    "excess_kurtosis": -0.0,
+    "mass_beyond_8": 1.3e-15
+   },
+   "laplace": {
+    "mean": -0.0,
+    "var": 1.0,
+    "lag1": 0.85,
+    "skew": 0.0,
+    "excess_kurtosis": 0.483,
+    "mass_beyond_8": 1.5e-08
+   },
+   "uniform": {
+    "mean": 0.0,
+    "var": 1.0001,
+    "lag1": 0.85,
+    "skew": 0.0,
+    "excess_kurtosis": -0.193,
+    "mass_beyond_8": 1.4e-16
+   },
+   "student_nu3": {
+    "mean": 0.0,
+    "var": 0.9434,
+    "lag1": 0.8499,
+    "skew": 0.0,
+    "excess_kurtosis": 4.134,
+    "mass_beyond_8": 0.00015
+   },
+   "student_nu4": {
+    "mean": -0.0,
+    "var": 0.994,
+    "lag1": 0.85,
+    "skew": -0.0,
+    "excess_kurtosis": 1.59,
+    "mass_beyond_8": 4e-05
+   },
+   "student_nu5": {
+    "mean": 0.0,
+    "var": 0.9992,
+    "lag1": 0.85,
+    "skew": -0.0,
+    "excess_kurtosis": 0.777,
+    "mass_beyond_8": 1e-05
+   },
+   "skew": {
+    "mean": 0.0,
+    "var": 1.0,
+    "lag1": 0.85,
+    "skew": 1.0,
+    "excess_kurtosis": 1.004,
+    "mass_beyond_8": 1.4e-08
+   },
+   "langevin": {
+    "mean": 0.0,
+    "var": 1.0,
+    "lag1": 0.85,
+    "skew": 0.0,
+    "excess_kurtosis": -1.654,
+    "mass_beyond_8": 1.1e-14,
+    "Delta": "0.307898"
+   },
+   "pearson_nu5": {
+    "mean": 0.0,
+    "var": 1.0,
+    "lag1": 0.85,
+    "skew": 0.0,
+    "excess_kurtosis": 3.902,
+    "mass_beyond_8": 0.00013,
+    "Delta": "0.161994"
+   },
+   "pearson_nu6": {
+    "mean": -0.0,
+    "var": 1.0,
+    "lag1": 0.85,
+    "skew": -0.0,
+    "excess_kurtosis": 2.617,
+    "mass_beyond_8": 5.9e-05,
+    "Delta": "0.162369"
+   },
+   "pearson_nu8": {
+    "mean": -0.0,
+    "var": 1.0,
+    "lag1": 0.85,
+    "skew": -0.0,
+    "excess_kurtosis": 1.471,
+    "mass_beyond_8": 1.4e-05,
+    "Delta": "0.162510"
+   }
+  },
+  "best_members": {
+   "gauss floor": "0.0000 the true kernel through the same BP: 0.00e+00",
+   "gauss shift8": "5.78e-08 0.0001 - rho 0.850",
+   "gauss free4": "7.00e-10 0.0000 - effective components 3.91, slopes [0.85, 0.85, 0.85, 0.85]",
+   "laplace floor": "0.1687 the true kernel through the same BP: 0.00e+00",
+   "laplace shift8": "3.89e-05 0.0026 0.015 rho 0.850",
+   "laplace free4": "1.77e-04 0.0077 0.046 effective components 3.21, slopes [0.85, 0.85, 0.85, 0.85]",
+   "student floor": "0.2082 the true kernel through the same BP: 0.00e+00",
+   "student shift8": "1.30e-05 0.0026 0.012 rho 0.850",
+   "student free4": "3.74e-05 0.0039 0.019 effective components 2.65, slopes [0.83, 0.85, 0.85, 0.85]",
+   "uniform floor": "0.1522 the true kernel through the same BP: 0.00e+00",
+   "uniform shift8": "1.07e-02 0.0014 0.009 rho 0.850",
+   "uniform free4": "3.98e-02 0.0075 0.050 effective components 3.49, slopes [0.85, 0.85, 0.85, 0.85]",
+   "skew floor": "0.2519 the true kernel through the same BP: 0.00e+00",
+   "skew shift8": "9.59e-02 0.2080 0.826 rho 0.788",
+   "skew free4": "4.50e-03 0.0404 0.161 effective components 3.95, slopes [0.42, 0.62, 0.72, 0.99]",
+   "langevin floor": "0.4135 the true kernel through the same BP: 0.00e+00",
+   "langevin shift8": "2.95e-01 0.4060 0.982 rho 0.887",
+   "langevin free4": "2.74e-03 0.1318 0.319 effective components 3.85, slopes [0.03, 0.03, 0.17, 0.17]",
+   "pearson floor": "0.1146 the true kernel through the same BP: 0.00e+00",
+   "pearson shift8": "1.61e-02 0.0981 0.856 rho 0.838",
+   "pearson free4": "2.70e-04 0.0112 0.098 effective components 2.61, slopes [0.63, 0.84, 0.94, 1.32]"
+  },
+  "note": "Best member of each family fitted to the exact pair law; error = BP score error (E03's estimand, raw) on the calibration bundle (1024 chains), then / floor. A best member bounds what EM can reach."
+ },
+ "resources": "4 kernel jobs of up to two chains ((gauss, laplace), (student, uniform), (skew, pearson), (langevin)) and 1 network job, defq, 32 CPUs, 64 GB, 23 h. Estimate from E57 (six kernel arms, about 7 h per chain on 40 CPUs): four kernel arms, about 5 h per chain on 40 CPUs.",
+ "status": "REGISTERED 2026-11-02; no E61 code written.",
+ "registered": "2026-11-02"
+}
