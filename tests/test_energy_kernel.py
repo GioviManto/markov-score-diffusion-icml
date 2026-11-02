@@ -4,6 +4,8 @@ kernel has an invariant law the learning drivers can use."""
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -104,6 +106,43 @@ def test_the_fitted_kernel_has_an_invariant_law():
         k = k.m_step(stats, grid)
     d = invariant_log_density_eig(k, grid, w)
     np.testing.assert_allclose(np.exp(d.log_density) @ w, 1.0, atol=1e-8)
+
+
+def _poisoned(k, stats, grid):
+    """k with Adam moments that point DOWNHILL in Q: a carried state that no learning rate can rescue."""
+    import copy
+
+    import torch
+    net = k._net()
+    (-(torch.as_tensor(stats.xi) * k._log_k(net, grid)).sum() / stats.n_edges).backward()
+    state = copy.deepcopy(k.opt_state)
+    for i, p in enumerate(net.parameters()):
+        state["state"][i]["exp_avg"] = -1e3 * p.grad.sign()
+        state["state"][i]["exp_avg_sq"] = torch.full_like(p, 1e6)
+    return replace(k, opt_state=state)
+
+
+def test_a_stale_adam_state_cannot_freeze_the_fit():
+    # E58 (2 Nov 2026): 23 of 576 clean fits froze because every halved retry reloaded the same carried Adam state
+    grid, _ = _grid()
+    stats = _random_stats(grid, np.random.default_rng(11))
+    q = lambda kk: float(np.sum(stats.xi * kk.log_transition_matrix(grid)))  # noqa: E731
+    for fresh in (False, True):
+        k = NeuralEnergyKernel.init(hidden=16, seed=1, half_width=A_HALF, fresh_on_reject=fresh)
+        k = _poisoned(k.m_step(stats, grid).m_step(stats, grid), stats, grid)
+        k1 = k.m_step(stats, grid)
+        if not fresh:                                          # the old rule: rejected at every rate, state kept
+            np.testing.assert_array_equal(k1.theta, k.theta)
+            assert k1.lr < k.lr / 100 and k1.opt_state is k.opt_state
+        else:                                                  # a retry starts Adam afresh and climbs
+            assert q(k1) > q(k) and k1.lr == k.lr / 2
+    # every attempt rejected: the next M-step must not see the state that failed
+    k = NeuralEnergyKernel.init(hidden=16, seed=1, half_width=A_HALF, fresh_on_reject=True)
+    k = replace(_poisoned(k.m_step(stats, grid).m_step(stats, grid), stats, grid), max_halvings=0)
+    k1 = k.m_step(stats, grid)
+    np.testing.assert_array_equal(k1.theta, k.theta)
+    assert k1.opt_state is None
+    assert q(k1.m_step(stats, grid)) > q(k1)
 
 
 def test_a_kernel_is_rebuilt_exactly_from_its_saved_theta():

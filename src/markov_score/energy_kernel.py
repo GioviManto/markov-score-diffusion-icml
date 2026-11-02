@@ -23,6 +23,12 @@ adopted after E25, amendment N-24). A first-attempt success lets the rate grow b
 So Q never decreases, and EM's evidence never decreases except through the site-1 term when the initial law is the
 kernel's own stationary law (recorded by `fit_em` as `monotone_violation`).
 
+`fresh_on_reject` (off by default, so E55-E58 reproduce; on from E60): every retry after a rejected first attempt starts
+Adam from a FRESH state, and an M-step that rejects every attempt drops the carried state. Without it a carried state can
+point downhill at every learning rate; each retry reloads it, and on clean data (fixed Xi) the next M-step meets the same
+state at a 128 times smaller rate, so the fit freezes for good: 23 of E58's 576 clean energy fits did (final lr ~1e-18;
+the frozen T0.3_h1_L32 seed-7 N=512 fit climbs from Q = -0.839 to -0.728 in 40 M-steps once restarted fresh).
+
 Every M-step returns a NEW kernel and leaves its input untouched: `fit_em` keeps checkpoints by reference (amendment N-25,
 the MDN's checkpoints were once all aliases of the final kernel).
 """
@@ -55,17 +61,19 @@ class NeuralEnergyKernel:
     max_halvings: int = 6
     opt_state: dict | None = None
     device: str = "cpu"
+    fresh_on_reject: bool = False
 
     @classmethod
     def init(cls, hidden: int, seed: int, half_width: float, lr: float = 1e-2, n_inner: int = 10,
-             device: str = "cpu") -> "NeuralEnergyKernel":
+             device: str = "cpu", fresh_on_reject: bool = False) -> "NeuralEnergyKernel":
         with torch.random.fork_rng(devices=[]):
             torch.manual_seed(seed)
             net = _mlp(hidden)
         nn.init.zeros_(net[-1].weight)
         nn.init.zeros_(net[-1].bias)
         return cls(state={k: v.detach().clone() for k, v in net.state_dict().items()}, hidden=hidden,
-                   half_width=float(half_width), lr=lr, lr_max=lr, n_inner=n_inner, device=device)
+                   half_width=float(half_width), lr=lr, lr_max=lr, n_inner=n_inner, device=device,
+                   fresh_on_reject=fresh_on_reject)
 
     @classmethod
     def from_theta(cls, theta, hidden: int, half_width: float, device: str = "cpu") -> "NeuralEnergyKernel":
@@ -130,7 +138,7 @@ class NeuralEnergyKernel:
         for attempt in range(self.max_halvings + 1):
             net.load_state_dict(self.state)
             opt = torch.optim.Adam(net.parameters(), lr=lr)
-            if self.opt_state is not None:
+            if self.opt_state is not None and not (self.fresh_on_reject and attempt > 0):
                 opt.load_state_dict(copy.deepcopy(self.opt_state))
                 for g in opt.param_groups:
                     g["lr"] = lr
@@ -145,7 +153,7 @@ class NeuralEnergyKernel:
                 return replace(self, state={k: v.detach().cpu().clone() for k, v in net.state_dict().items()},
                                lr=new_lr, opt_state=_cpu(opt.state_dict()))
             lr *= 0.5
-        return replace(self, lr=lr)
+        return replace(self, lr=lr, opt_state=None) if self.fresh_on_reject else replace(self, lr=lr)
 
 
 def _cpu(obj):
