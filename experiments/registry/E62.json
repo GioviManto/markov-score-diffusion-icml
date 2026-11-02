@@ -118,5 +118,46 @@
  },
  "resources": "Estimate before timing: pair-state EM at M = 2048 about 1 min per EM iteration on 101 points (E-step plus triple statistics, three pair-BP passes at 11 ms per chain), up to 300 iterations, so ~5 h per fit; ~450 CPU-h for the pair arm over 7 phi2 x 3 M x 8 seeds, first and the networks ~150 CPU-h; jobs split by phi2, defq, 32 CPUs. Timed on a dev seed before submission; submitted when the 30-job cap allows.",
  "status": "REGISTERED 2026-11-02; no E62 driver or two-lag kernel code written.",
- "registered": "2026-11-02"
+ "registered": "2026-11-02",
+ "appendix_D5_2026-11-02": {
+  "script": "tools/core/appendix_e62_arp.py (laptop, one thread, true kernels only)",
+  "exact_bp_seconds_per_chain_L32": {
+   "n51": {
+    "p1": 0.00012,
+    "p2": 0.0011,
+    "p3": 0.173
+   },
+   "n101": {
+    "p1": 0.00012,
+    "p2": 0.005,
+    "p3": "not run: the n^4 kernel tensor is 0.8 GB per copy (forward messages 264 MB per chain)"
+   }
+  },
+  "laplace_ar3": {
+   "pacf": [
+    0.85,
+    0.3,
+    0.2
+   ],
+   "phi": [
+    0.535,
+    0.181,
+    0.2
+   ],
+   "innovation_var": 0.2424,
+   "delta_gauss_asymptotic": 0.0676,
+   "delta_gauss_lag3_part": 0.0204,
+   "grid": 51,
+   "chains": 48,
+   "levels": [
+    0.05,
+    0.3,
+    1.0
+   ],
+   "risk_best_first_order_projection": 0.2387,
+   "risk_best_second_order_projection": 0.1305
+  },
+  "reading": "The cost per site grows as n^(p+1): from p = 2 to p = 3 at n = 51 the time per chain rose 157x. On the Laplace AR(3) the best second-order kernel halves the best first-order kernel's error (0.131 against 0.239); the rest is the third lag, which a grid pays n^4 to represent.",
+  "pair_em_timing": "Single-thread, n = 101: pair-state E-step 9.8 ms per chain, BP 5.9 ms per chain, ECM M-step 0.76 s; one EM iteration at M = 2048 ~21 s, a 300-iteration fit ~1.75 h (the resources estimate above was 3x high)."
+ }
 }

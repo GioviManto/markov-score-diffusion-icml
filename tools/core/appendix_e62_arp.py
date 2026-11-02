@@ -129,7 +129,9 @@ def timing():
             t0 = time.perf_counter(); triple_bp_means(grid, w, k3, Xs, 0.9, 0.19, np.full((n, n, n), 1.0 / 16 ** 3))
             t3 = f"{(time.perf_counter() - t0) / 4:.3f}"
         else:
-            t3 = f"~{t2 * n:.1f} (n^4 / n^3 scaling from the pair timing; the n^3 forward messages are 4 GB per chain)"
+            t3 = (f"not run (the n^4 kernel tensor is {n ** 4 * 8 / 1e9:.1f} GB per copy, the forward messages "
+                  f"{n ** 3 * L * 8 / 1e6:.0f} MB per chain; n^4 / n^3 scaling from the pair timing gives at least "
+                  f"{t2 * n:.1f} s, and at n = 51 the measured ratio exceeded n)")
         print(f"  n = {n}: p = 1 {t1:.5f}, p = 2 {t2:.4f}, p = 3 {t3}", flush=True)
 
 
