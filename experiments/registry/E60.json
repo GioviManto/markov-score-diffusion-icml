@@ -44,7 +44,8 @@
   }
  },
  "resources": "2 defq jobs of 2 cells each (16 seeds x 3 sizes x 2 arms per cell), 32 CPUs and 64 GB, 23 h. Estimate before timing: E33's em_mdn took a median 652 / 1237 / 4110 s at M = 128 / 512 / 2048, about 210 CPU-h in total for E60. A dev-seed timing (seed 10000, not a registered seed; M = 2048; 20 EM iterations) is recorded before submission.",
- "status": "REGISTERED 2026-11-02 (3326001); code c02513a; deployed 18dced8-20261102T093804Z (hpc/.deploy_18dced8.env); submitted 2 Nov 2026: e60-a job 733999 (T0.3_h1_L32, T0.5_iso_L32) and e60-b job 734000 (T1_iso_L32, T2_iso_L32), defq, 32 CPUs, 64 GB, 12 h. Fetch to outputs/hpc_E60_a and outputs/hpc_E60_b.",
+ "status": "REGISTERED 2026-11-02 (3326001); code c02513a; deployed 18dced8-20261102T093804Z (hpc/.deploy_18dced8.env); submitted 2 Nov 2026: e60-a job 734158 (T0.3_h1_L32, T0.5_iso_L32) and e60-b job 734160 (T1_iso_L32, T2_iso_L32), defq, 16 CPUs, 48 GB, 23 h (first submitted as 733999 / 734000 at 32 CPUs, cancelled unstarted). Fetch to outputs/hpc_E60_a and outputs/hpc_E60_b.",
  "registered": "2026-11-02",
- "timing_2026-11-02": "Dev seed 10000 (not registered), T0.3_h1_L32, M = 2048, ladder (10, 20), on the laptop under a load of ~7: em_free_C4 51.0 s and em_free_C8 55.2 s for 20 EM iterations with two checkpoints scored, so about 2.5 s per iteration and ~1 h per full M = 2048 fit (E33's em_mdn: 4110 s); ~100 CPU-h per job, under 4 h on 32 CPUs, hence the 12 h limit."
+ "timing_2026-11-02": "Dev seed 10000 (not registered), T0.3_h1_L32, M = 2048, ladder (10, 20), on the laptop under a load of ~7: em_free_C4 51.0 s and em_free_C8 55.2 s for 20 EM iterations with two checkpoints scored, so about 2.5 s per iteration and ~1 h per full M = 2048 fit (E33's em_mdn: 4110 s); ~100 CPU-h per job, under 4 h on 32 CPUs, hence the 12 h limit.",
+ "resubmission_2026-11-02": "2 Nov 12:45 CET: the 32-CPU jobs could only run on defq's two 40-core nodes (cnode01-04 have 24 cores), both held by multi-day jobs; SLURM's start estimate was 5 Nov 03:12. Cancelled before any had started and resubmitted unchanged except for 16 CPUs / 48 GB (start estimates then 2 Nov 13:37 and 13:42)."
 }
