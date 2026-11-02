@@ -1,0 +1,49 @@
+{
+ "id": "E60",
+ "script": "experiments/e60_free_mixture.py",
+ "hypothesis": "Asked on 1 Nov 2026 (after Jerome's 29 Oct call): do not give the kernel a form; fit a Gaussian mixture without the shift. E60 fits K(a'|a) = p(a, a')/p(a) with p a FREE C-component 2-D Gaussian mixture on the pair (markov_score.free_mixture_kernel: every component has its own centre, slope and spread and is switched on by a Gaussian gate in a; 6C parameters; the shift mixture a' = rho a + eps is the special case of one gate for every component) by EM through exact grid BP from noisy data, on the four Allen-Cahn cells of the slide-15 table, against E33's frozen rows on the same bundles. On these cells the calibration from the TRUE kernels puts the best shift mixture AT the linear floor (error/floor 0.996-1.001) and the best free mixture far below it (C = 2: 0.27-0.30; C = 4: 0.019-0.025; C = 8: <= 0.003). The question is how much of that room EM collects from 128-2048 noisy chains, and at what price against the exact-class site energy (em_pair_quartic) and the networks.",
+ "design": "Cells T0.3_h1_L32, T0.5_iso_L32, T1_iso_L32, T2_iso_L32 (E33's slide-15 cells); M in (128, 512, 2048); seeds 0-15. E33's protocol unchanged, through E33's own code (e33._kernels_cell): its data, validation and test bundles and their tags, one noisy view per training chain, 1024 validation and 2048 test chains, the twelve frozen levels, grid 401 on [-8, 8], the EM ladder (10, 20, 40, 60, 80, 120, 160, 220, 300, 400, 600, 800, 1200), the kernel's own invariant law as the initial law, selection by the pooled validation BP risk (registered) and by held-out evidence (secondary). ARMS (new): em_free_C4 (the headline, 24 parameters) and em_free_C8 (48). Both start from the AR(1) every E33 arm starts from (rho 0.3, innovation variance 0.8), every component equal and the gates at the C quantiles of that chain's stationary law; generalised M-step of n_inner = 10 Adam steps at lr 1e-2 with step-halving, a fresh Adam state on every retry and none carried after a rejected M-step (the rule E58's clean fits lacked); log sd projected onto [-6, 3]. COMPARATORS (no refit, frozen rows): em_mixture and em_mdn (outputs/hpc_E33k_*), em_pair_quartic (hpc_E33q_*), the networks window and transformer x dsm_one_corruption and ism_one_view at M = 128 and 2048 (hpc_E33n*), the floor lmmse_true (hpc_E33o). Driver: the E43 pattern (e33._init_kernel extended in process; e33_field_learning.py byte-identical); rows have E33's schema.",
+ "predeclared_predictions": {
+  "P1": "M = 512 and 2048: em_free_C4 below em_mixture in >= 14/16 seeds on every cell, and the seed-mean of em_free_C4 / lmmse_true at M = 2048 below 0.5 on every cell.",
+  "P2": "M = 128: em_free_C4 below em_mdn in >= 12/16 seeds on >= 3 of the 4 cells (24 parameters against 1516 when data are few).",
+  "P3": "The seed-mean ratio em_free_C8 / em_free_C4 is smaller at M = 2048 than at M = 128 on every cell.",
+  "P4": "M = 2048: em_pair_quartic below em_free_C4 in >= 12/16 seeds on >= 3 of the 4 cells (the exact class still wins with the most data).",
+  "P5": "M = 128 and 2048: em_free_C4 below the best of E33's networks (the lowest seed-mean of arch x objective at that cell and M) in >= 14/16 seeds on every cell."
+ },
+ "descriptive": {
+  "D1": "The seed-mean table of risk / lmmse_true per cell x M for E60's two arms and E33's comparators (the row that joins the slide-15 table).",
+  "D2": "The fitted em_free_C4 at M = 2048: effective number of components and the slopes, from the theta column, against the calibration's best member.",
+  "D3": "Evidence-selected against risk-selected risk for both free arms.",
+  "D4": "Selected checkpoints and the fraction at the cap (1200) per arm and M.",
+  "D5": "Wall time per fit against E33's em_mdn and em_pair_quartic."
+ },
+ "predeclared_analysis": "tools/core/read_e60.py. Gates before any verdict: one row per (cell, seed, n_chains, arm, selection), no duplicates; for every (cell, seed, n_chains) the val_bundle and test_bundle hashes equal E33's (a mismatch stops the read); every comparator row present. Risk selection throughout; risks in units of the same cell and seed's lmmse_true. Paired comparisons by seed. A failed fit (failed = 1) or a missing row counts AGAINST every prediction it enters. No bootstrap, no other selection, no re-reading with other thresholds.",
+ "seeds": "0-15 (E33's)",
+ "budget_rule": "E33's ladder to 1200 EM iterations, no extension; a fit selected at the cap is read as it is and counted in D4.",
+ "provenance_note": "Registered on 2 Nov 2026 before any fit on any Allen-Cahn bundle. The calibration below reads only the TRUE kernels and E33's seed-0 test bundle for the floor; no training data, no noisy view, no E33 fit. The kernel module and its unit tests (synthetic statistics only) were written before this entry was committed and are committed after it; the driver's only run so far is the --quick smoke on E33's QUICK cell (seed 10000, M = 32, not a registered seed or size).",
+ "calibration_2026-11-01": {
+  "script": "tools/core/calibrate_e60.py",
+  "what": "Best member of each family fitted to the exact pair law P(a, a') = mu(a) K(a'|a) on E33's grid (population M-step); KL per edge from the true kernel; BP score error on E33's seed-0 test bundle divided by the linear floor's. A best member bounds what EM can reach; it says nothing about how close EM gets.",
+  "table": {
+   "T0.3_h1_L32 shift8": "KL/edge 1.06e-01, error/floor 1.001; rho 0.840",
+   "T0.3_h1_L32 free2": "KL/edge 1.36e-02, error/floor 0.286; effective components 2.00, slopes [0.39, 0.39]",
+   "T0.3_h1_L32 free4": "KL/edge 3.25e-04, error/floor 0.021; effective components 3.97, slopes [0.19, 0.19, 0.34, 0.34]",
+   "T0.3_h1_L32 free8": "KL/edge 4.50e-07, error/floor 0.000; effective components 7.13, slopes [0.1, 0.1, 0.14, 0.15, 0.19, 0.2, 0.24, 0.3]",
+   "T0.5_iso_L32 shift8": "KL/edge 1.87e-02, error/floor 1.000; rho 0.842",
+   "T0.5_iso_L32 free2": "KL/edge 1.75e-03, error/floor 0.303; effective components 2.00, slopes [0.59, 0.59]",
+   "T0.5_iso_L32 free4": "KL/edge 2.40e-05, error/floor 0.025; effective components 3.50, slopes [0.38, 0.38, 0.52, 0.52]",
+   "T0.5_iso_L32 free8": "KL/edge 1.15e-07, error/floor 0.001; effective components 6.66, slopes [0.26, 0.28, 0.32, 0.34, 0.37, 0.38, 0.43, 0.45]",
+   "T1_iso_L32 shift8": "KL/edge 5.20e-03, error/floor 0.997; rho 0.847",
+   "T1_iso_L32 free2": "KL/edge 3.97e-04, error/floor 0.289; effective components 2.00, slopes [0.68, 0.68]",
+   "T1_iso_L32 free4": "KL/edge 3.68e-06, error/floor 0.021; effective components 3.23, slopes [0.49, 0.49, 0.61, 0.61]",
+   "T1_iso_L32 free8": "KL/edge 1.36e-07, error/floor 0.003; effective components 6.15, slopes [0.43, 0.43, 0.43, 0.44, 0.49, 0.53, 0.57, 0.58]",
+   "T2_iso_L32 shift8": "KL/edge 2.64e-03, error/floor 0.996; rho 0.848",
+   "T2_iso_L32 free2": "KL/edge 1.80e-04, error/floor 0.274; effective components 2.00, slopes [0.71, 0.71]",
+   "T2_iso_L32 free4": "KL/edge 1.36e-06, error/floor 0.019; effective components 3.03, slopes [0.55, 0.55, 0.65, 0.65]",
+   "T2_iso_L32 free8": "KL/edge 7.36e-08, error/floor 0.003; effective components 6.18, slopes [0.4, 0.47, 0.48, 0.49, 0.5, 0.52, 0.63, 0.68]"
+  }
+ },
+ "resources": "2 defq jobs of 2 cells each (16 seeds x 3 sizes x 2 arms per cell), 32 CPUs and 64 GB, 23 h. Estimate before timing: E33's em_mdn took a median 652 / 1237 / 4110 s at M = 128 / 512 / 2048, about 210 CPU-h in total for E60. A dev-seed timing (seed 10000, not a registered seed; M = 2048; 20 EM iterations) is recorded before submission.",
+ "status": "REGISTERED 2026-11-02; no fit on any registered cell has run.",
+ "registered": "2026-11-02"
+}
