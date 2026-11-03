@@ -110,6 +110,13 @@ OUTPUT_DIRS["E66"] = "hpc_E66_s0"
 MAIN_CSV.update(_E66_DIRS)
 SCRIPTS.update({d: "e66_bp_dsm.py" for d in _E66_DIRS})
 
+# E67 (3 Nov 2026): the grid check and the timing in their own directories, kernel fits by seed pair, the networks in one.
+_E67_DIRS = {"hpc_E67_check": "gridcheck.csv", "hpc_E67_timing": "timing.csv",
+             **{f"hpc_E67_k_s{s}": "arms.csv" for s in (0, 2, 4, 6)}, "hpc_E67_nets": "nets.csv"}
+OUTPUT_DIRS["E67"] = "hpc_E67_k_s0"
+MAIN_CSV.update(_E67_DIRS)
+SCRIPTS.update({d: "e67_vector_state.py" for d in _E67_DIRS})
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""

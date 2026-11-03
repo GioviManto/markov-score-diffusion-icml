@@ -318,6 +318,14 @@ cmd_for() {
     e66-fit-s0|e66-fit-s4|e66-fit-s8|e66-fit-s12)
       local s0=${1#e66-fit-s}
       echo "e66_bp_dsm.py --only fit --set 'seeds=($s0, $((s0 + 1)), $((s0 + 2)), $((s0 + 3)))' --set \"winners='{OUT}/E66_dev/winners.json'\" --output-dir {OUT}/E66_s$s0";;
+    # E67 (3 Nov 2026, registry E67.json): the grid check, the timing (MSD_HPC_EXCLUSIVE=1 MSD_HPC_THREADS=16), kernel
+    # fits by seed pair, the networks in one job (N-27).
+    e67-check)   echo "e67_vector_state.py --only gridcheck --output-dir {OUT}/E67_check";;
+    e67-timing)  echo "e67_vector_state.py --only timing --output-dir {OUT}/E67_timing";;
+    e67-k-s0|e67-k-s2|e67-k-s4|e67-k-s6)
+      local s0=${1#e67-k-s}
+      echo "e67_vector_state.py --only kernels --set 'seeds=($s0, $((s0 + 1)))' --output-dir {OUT}/E67_k_s$s0";;
+    e67-nets)    echo "e67_vector_state.py --only nets --output-dir {OUT}/E67_nets";;
     e57-kern-*|e57-nets-*)
       local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
       if [[ $part == kern ]]; then
