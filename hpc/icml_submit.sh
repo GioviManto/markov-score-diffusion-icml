@@ -301,6 +301,10 @@ cmd_for() {
     e62-p3)      echo "e62_second_order.py --only bundles,arms --set 'phi2=(0.3, 0.4)' --output-dir {OUT}/E62_p3";;
     e62-p4)      echo "e62_second_order.py --only bundles,arms --set 'phi2=(0.6,)' --output-dir {OUT}/E62_p4";;
     e62-wind)    echo "e62_second_order.py --only wind --output-dir {OUT}/E62_wind";;
+    # E63 (3 Nov 2026, registry E63.json): timings. Submit with MSD_HPC_EXCLUSIVE=1 MSD_HPC_THREADS=1 (a wall-clock
+    # experiment, N-29); the GPU job with MSD_HPC_GRES=gpu:1 MSD_HPC_VENV=venv-cuda.
+    e63-timing)     echo "e63_compute.py --only timing --output-dir {OUT}/E63";;
+    e63-timing-gpu) echo "e63_compute.py --only timing_gpu --output-dir {OUT}/E63_gpu";;
     e57-kern-*|e57-nets-*)
       local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
       if [[ $part == kern ]]; then

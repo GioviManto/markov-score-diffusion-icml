@@ -87,6 +87,12 @@ OUTPUT_DIRS["E62"] = "hpc_E62_p1"
 MAIN_CSV.update(_E62_DIRS)
 SCRIPTS.update({d: "e62_second_order.py" for d in _E62_DIRS})
 
+# E63 (3 Nov 2026): timings only, one exclusive CPU job and one GPU job; the curves are E65's.
+_E63_DIRS = {"hpc_E63": "timing.csv", "hpc_E63_gpu": "timing_gpu.csv"}
+OUTPUT_DIRS["E63"] = "hpc_E63"
+MAIN_CSV.update(_E63_DIRS)
+SCRIPTS.update({d: "e63_compute.py" for d in _E63_DIRS})
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""
