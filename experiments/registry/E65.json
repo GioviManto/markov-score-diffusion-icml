@@ -1,0 +1,24 @@
+{
+  "id": "E65",
+  "script": "experiments/e65_selection.py",
+  "hypothesis": "Registered after the adversarial review of the paper draft (2-3 Nov 2026), which asked for: compute-matched comparisons (E63), generation quality (E64), checkpoint selection without the exact score (E65), a stronger structured neural baseline (E66) and a vector-state proof of concept (E67). The user said 'Then go build those experiments'. Registered before any E63-E67 code was written or run. Every learned arm in the paper, EM and networks alike, chooses its checkpoint by the score error on validation data, which needs the exact score: fair between arms, but unavailable in practice. E65 refits with the same recipes and records, at every checkpoint, both the oracle criterion and a practitioner's one: for EM the held-out log-likelihood of noisy validation sequences (from BP's forward normalisers, no clean data), for the networks the validation denoising loss on clean validation chains (standard practice).",
+  "design": "The Laplace chain of E03 (alpha = 0.85, L = 32, variance 1, Laplace innovations), E03's bundles (e03._cell_common, tags exp31-*), the twelve log-spaced levels t = 0.05 ... 3, the 401-point grid on [-8, 8]. Seeds 0-15, N in (32, 128, 512, 2048). KERNEL ARMS, noisy EM on E03's one-view data, recipes unchanged: em_bp (E30: MixtureInnovationKernel C = 8, init rho 0.3 var 0.8 from rng e30-em-init, checkpoints 10 ... 1200), spline and energy (E56: ShiftKernel spline W = 4, NeuralEnergyKernel width 16 from rng e56-energy-init, lr 1e-2, 10 inner steps, checkpoints 10 ... 2400). At every checkpoint: val_risk (the oracle criterion, pooled score error on the validation bundle's bulk, as E30/E56) and heldout_evidence (mean log p(x) per validation view under BP: every validation chain at every one of the twelve levels, the bundle's own noisy X). NETWORK ARMS: E03's six screened winners retrained with E03's recipe and seeds (e03 net seed stream), recording at every checkpoint val_risk (oracle, E03's rule) and val_dsm (the eps-prediction DSM loss on the 1024 clean validation chains, each at each of the twelve levels with a fixed noise draw, tag e65-valdsm). For every arm the test error of BOTH selected checkpoints is recorded.",
+  "predeclared_predictions": {
+    "P1": "Reproduction gate: oracle-selected test errors reproduce the frozen rows (E30 em_bp, E56 spline and energy, E03 networks) to within 2% in seed mean at every N.",
+    "P2": "For each EM arm, the evidence-selected test error is within 10% of its oracle-selected test error (seed mean) at every N >= 128.",
+    "P3": "Under oracle-free selection on both sides (evidence for EM, val_dsm for the networks), every EM arm is below the best network (lowest seed mean under val_dsm) at every N, in >= 14/16 seeds.",
+    "P4": "For BiGRU, the val_dsm-selected test error is within 10% of its oracle-selected test error (seed mean) at every N."
+  },
+  "descriptive": {
+    "D1": "Selected checkpoints under each rule.",
+    "D2": "Spearman correlation across checkpoints between val_risk and each oracle-free criterion.",
+    "D3": "The full table of test errors under both rules."
+  },
+  "predeclared_analysis": "tools/core/read_e65.py. Gates: same (seed, N) test-bundle hash for every arm and equal to E03's; P1 is the reproduction gate and a failure voids P2-P4 for the arm that fails it. A failed fit counts AGAINST every prediction it enters. Paired by seed.",
+  "seeds": "0-15",
+  "budget_rule": "E30's and E56's ladders and E03's 32000 steps; no extension.",
+  "provenance_note": "The fits repeat frozen recipes on frozen bundles; only the recorded criteria are new.",
+  "resources": "Energy fits dominate (E56: 1.6-4.7 s per iteration, up to 2400 iterations) plus held-out evidence on 12288 validation views per checkpoint; ~250 CPU-h for the kernels, ~60 CPU-h for the networks; four defq shards by seed plus one networks job.",
+  "status": "REGISTERED 2026-11-03; no E65 code written.",
+  "registered": "2026-11-03"
+}

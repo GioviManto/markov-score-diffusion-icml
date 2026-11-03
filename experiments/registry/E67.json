@@ -1,0 +1,22 @@
+{
+  "id": "E67",
+  "script": "experiments/e67_vector_state.py",
+  "hypothesis": "Registered after the adversarial review of the paper draft (2-3 Nov 2026), which asked for: compute-matched comparisons (E63), generation quality (E64), checkpoint selection without the exact score (E65), a stronger structured neural baseline (E66) and a vector-state proof of concept (E67). The user said 'Then go build those experiments'. Registered before any E63-E67 code was written or run. The method's state is one number per site. With d numbers per site the grid has N_g^d points and the kernel N_g^(2d) entries. E67 is a proof of concept at d = 2: a bivariate Markov chain, learned by EM through BP on a 2-D state grid, against networks with two input channels; it states the cost honestly.",
+  "design": "CHAIN: b_{k+1} = 0.85 R(pi/6) b_k + eps_k in R^2, R a rotation, eps_k with independent Laplace components of variance 1 - 0.85^2, so the stationary covariance is the identity; L = 32; the first site after a burn-in of 64 steps; each component noised independently at level t. GRID: 41 points per axis on [-5, 5] (h = 0.25), 1681 states, the transition a 1681 x 1681 matrix; levels: eight log-spaced t from 0.3 to 3 (the resolution rule sqrt(2t) >= 3h sets t >= 0.28). Reference: BP with the true kernel on this grid, checked against 61 points per axis on one bundle. Seeds 0-7, N in (128, 512, 2048). ARMS: oracle (true kernel, the reference); lmmse (the true covariance); var1 (a Gaussian VAR(1) learned by EM, closed-form M-step); energy2d (NeuralEnergyKernel on (b, b') in R^4, width 16, uniform start, noisy EM, one view per sequence split over the levels, checkpoints 10 ... 600, selection by validation error); networks with two input channels trained by DSM on the clean chains with E03's recipe: window CNN (radius 4, width 64) and BiGRU (hidden 32).",
+  "predeclared_predictions": {
+    "P1": "energy2d below the best network at N = 128 and 512, in >= 6/8 seeds.",
+    "P2": "energy2d below var1 at N = 2048 in >= 7/8 seeds (the learned kernel uses the non-Gaussian structure).",
+    "P3": "Cost: one EM iteration at N = 2048 takes at most 10 minutes on 16 CPU threads."
+  },
+  "descriptive": {
+    "D1": "Seconds per EM iteration and memory against the 1-D chain (the N_g^(2d) scaling).",
+    "D2": "The reference's grid error (41 against 61 points per axis)."
+  },
+  "predeclared_analysis": "tools/core/read_e67.py. Gates: one test bundle per (seed) shared by all arms; the 41/61 grid check below 1e-2 relative on the pooled reference score, otherwise the levels are raised before the confirmatory run and recorded as an amendment. A failed fit counts AGAINST every prediction it enters. Paired by seed.",
+  "seeds": "0-7",
+  "budget_rule": "EM to 600 iterations; networks 32000 steps; no extension.",
+  "provenance_note": "New chain and code (markov_score.vector_chain).",
+  "resources": "To be timed: E-step at N = 2048 about 2048 x 31 x 1681^2 = 1.8e11 multiply-adds (~1 min on 16 threads); ~600 iterations, so ~10 h per fit at N = 2048; one defq job per seed pair, 16 CPUs.",
+  "status": "REGISTERED 2026-11-03; no E67 code written.",
+  "registered": "2026-11-03"
+}

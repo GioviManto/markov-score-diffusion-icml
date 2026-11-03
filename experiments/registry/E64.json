@@ -1,0 +1,25 @@
+{
+  "id": "E64",
+  "script": "experiments/e64_generation.py",
+  "hypothesis": "Registered after the adversarial review of the paper draft (2-3 Nov 2026), which asked for: compute-matched comparisons (E63), generation quality (E64), checkpoint selection without the exact score (E65), a stronger structured neural baseline (E66) and a vector-state proof of concept (E67). The user said 'Then go build those experiments'. Registered before any E63-E67 code was written or run. The paper measures score error only, for t >= 0.05. A diffusion paper has to generate. E64 generates Laplace chains with every learned denoiser through the same ancestral sampler, down to t = 0.005, and measures the samples against exact draws of the chain.",
+  "design": "The Laplace chain of E03 (alpha = 0.85, L = 32, variance 1, Laplace innovations), E03's bundles (e03._cell_common, tags exp31-*), the twelve log-spaced levels t = 0.05 ... 3, the 401-point grid on [-8, 8]. Cells: N in (128, 2048) training sequences, seeds 0-7, the training chains of e03._cell_common. SAMPLER (E55's): ancestral.generate, x ~ N(0, 1) at t = 3, 400 geometric steps down to t_min = 0.005, posterior-mean readout at t_min, 2048 generated sequences, the SAME sampler noise for every arm (tag e64-gen-noise). ARMS: exact_ref (direct samples of the chain, the reference R) and exact (a second independent draw: the Monte Carlo floor); oracle_sampler (the true kernel through BP in the sampler); learned kernels through BP in the sampler, rebuilt from frozen theta at the same (seed, N): em_bp (E02a, C = 8), spline and energy (E56, noisy EM), clean_energy (E58 energy_h16); the same kernels sampled directly as Markov chains (ancestral.sample_grid_chain, the 'if you know K, sample it' control) for em_bp and clean_energy; networks RETRAINED for generation on log-uniform continuous levels in [0.005, 3] with E03's recipe otherwise (batch 64, Adam, lr and configuration of E03's winners, 32000 steps, checkpoints 500 ... 32000, selection by the validation score error on the twelve levels): unet, bigru, window. METRICS (markov_score.gen_metrics.compare): sliced Wasserstein-2 (SW2) and energy distance to R, W1 of the marginal, covariance error, AR(0.85) residual excess kurtosis (truth 3) and residual autocorrelation error, and the mean log-likelihood gap of the samples under the true chain at t_min.",
+  "predeclared_predictions": {
+    "P1": "Sampler sanity: oracle_sampler's SW2 to R is at most 1.5 x the exact-vs-exact SW2, in >= 7/8 seeds at each N.",
+    "P2": "clean_energy through the sampler has a lower SW2 than every network at N = 128 in >= 7/8 seeds, and than the best network (lowest seed-mean SW2) at N = 2048 in >= 6/8 seeds.",
+    "P3": "Shape: |residual excess kurtosis - reference| is smaller for clean_energy than for the best network at both N in >= 6/8 seeds.",
+    "P4": "Likelihood: the log-likelihood gap under the true chain is smaller for clean_energy than for every network at both N in >= 6/8 seeds."
+  },
+  "descriptive": {
+    "D1": "Every metric for every arm, seed means.",
+    "D2": "Sampler error isolated: the same kernel through the sampler and sampled directly.",
+    "D3": "Noisy-EM kernels (em_bp, spline, energy) against clean_energy.",
+    "D4": "The networks' score error on the twelve levels after continuous-level training (comparability with E03)."
+  },
+  "predeclared_analysis": "tools/core/read_e64.py. Gates: every arm of a (seed, N) uses the same R and the same sampler noise (hash recorded); every kernel arm is rebuilt from a frozen theta whose (seed, N, arm) matches; a missing kernel or a failed network counts AGAINST every prediction it enters. Paired by seed.",
+  "seeds": "0-7",
+  "budget_rule": "networks: 32000 steps, E03's checkpoints; no extension.",
+  "provenance_note": "Kernel arms are rebuilt from frozen theta (E02a, E56, E58); nothing is refitted.",
+  "resources": "Networks: 3 archs x 2 N x 8 seeds x ~10 min = ~8 CPU-h; sampling: 400 BP posterior means of 2048 sequences per kernel arm (~2 min each) x 7 arms x 16 cells = ~4 CPU-h. One defq job.",
+  "status": "REGISTERED 2026-11-03; no E64 code written.",
+  "registered": "2026-11-03"
+}
