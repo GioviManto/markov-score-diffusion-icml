@@ -117,7 +117,7 @@
   "note": "first_order_floor: BP with the best first-order kernel (the stationary pair law's conditional) against the pair-state reference, E03's estimand on 256 chains; linear_floor: the LMMSE of the true AR(2) covariance."
  },
  "resources": "Estimate before timing: pair-state EM at M = 2048 about 1 min per EM iteration on 101 points (E-step plus triple statistics, three pair-BP passes at 11 ms per chain), up to 300 iterations, so ~5 h per fit; ~450 CPU-h for the pair arm over 7 phi2 x 3 M x 8 seeds, first and the networks ~150 CPU-h; jobs split by phi2, defq, 32 CPUs. Timed on a dev seed before submission; submitted when the 30-job cap allows.",
- "status": "REGISTERED 2026-11-02; no E62 driver or two-lag kernel code written.",
+ "status": "SUBMITTED: code 5763fe3, deploy 5763fe3-20261102T105801Z; jobs e62-p1 734637 (2 Nov), e62-p2 736497, e62-p3 736498, e62-p4 736500, e62-wind 736501 (3 Nov 19:21 CET); defq, 16 CPUs / 48G / 23 h.",
  "registered": "2026-11-02",
  "appendix_D5_2026-11-02": {
   "script": "tools/core/appendix_e62_arp.py (laptop, one thread, true kernels only)",
