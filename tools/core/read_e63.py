@@ -3,7 +3,7 @@
     python tools/core/read_e63.py                  # gates, D1 table, verdicts P1-P4, writes the wall-clock curves
 
 Inputs: E63's timing (outputs/hpc_E63/timing.csv: seconds per update for every (arm, N), use time per test sequence)
-and E65's per-checkpoint curves (outputs/hpc_E65_*/curves.csv: for every (seed, N, arm, checkpoint) the TEST error on
+and E65's per-checkpoint curves (outputs/hpc_E65_*/curves_{kernels,nets}.csv: for every (seed, N, arm, checkpoint) the TEST error on
 all 32 sites, `test_all`, and the flag `sel_oracle` on the checkpoint each arm's original rule selects). A curve is put
 on a wall-clock axis as wall(c) = c x seconds per update at that N (plus, for clean_energy, the one-off histogram).
 
@@ -26,7 +26,7 @@ SIZES = (32, 128, 512, 2048)
 NETS = ("mlp", "window", "tcn", "bigru", "transformer", "unet")
 
 
-def load(timing="outputs/hpc_E63/timing.csv", curves="outputs/hpc_E65_*/curves.csv"):
+def load(timing="outputs/hpc_E63/timing.csv", curves="outputs/hpc_E65_*/curves_*.csv"):
     t = pd.read_csv(ROOT / timing) if not Path(timing).is_absolute() else pd.read_csv(timing)
     paths = sorted(glob.glob(str(ROOT / curves)) if not Path(curves).is_absolute() else glob.glob(curves))
     if not paths:

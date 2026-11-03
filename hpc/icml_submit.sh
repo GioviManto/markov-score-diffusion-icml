@@ -305,6 +305,11 @@ cmd_for() {
     # experiment, N-29); the GPU job with MSD_HPC_GRES=gpu:1 MSD_HPC_VENV=venv-cuda.
     e63-timing)     echo "e63_compute.py --only timing --output-dir {OUT}/E63";;
     e63-timing-gpu) echo "e63_compute.py --only timing_gpu --output-dir {OUT}/E63_gpu";;
+    # E65 (3 Nov 2026, registry E65.json): kernel refits by seed quarter, the networks in one job (N-27).
+    e65-k-s0|e65-k-s4|e65-k-s8|e65-k-s12)
+      local s0=${1#e65-k-s}
+      echo "e65_selection.py --only kernels --set 'seeds=($s0, $((s0 + 1)), $((s0 + 2)), $((s0 + 3)))' --output-dir {OUT}/E65_k_s$s0";;
+    e65-nets)    echo "e65_selection.py --only nets --output-dir {OUT}/E65_nets";;
     e57-kern-*|e57-nets-*)
       local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
       if [[ $part == kern ]]; then
