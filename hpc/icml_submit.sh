@@ -305,6 +305,8 @@ cmd_for() {
     # experiment, N-29); the GPU job with MSD_HPC_GRES=gpu:1 MSD_HPC_VENV=venv-cuda.
     e63-timing)     echo "e63_compute.py --only timing --output-dir {OUT}/E63";;
     e63-timing-gpu) echo "e63_compute.py --only timing_gpu --output-dir {OUT}/E63_gpu";;
+    # E64 (3 Nov 2026, registry E64.json): generation, every arm of a (seed, N) in one cell, one job.
+    e64)         echo "e64_generation.py --only gen --output-dir {OUT}/E64";;
     # E65 (3 Nov 2026, registry E65.json): kernel refits by seed quarter, the networks in one job (N-27).
     e65-k-s0|e65-k-s4|e65-k-s8|e65-k-s12)
       local s0=${1#e65-k-s}
