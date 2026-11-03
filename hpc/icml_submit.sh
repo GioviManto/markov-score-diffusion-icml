@@ -310,6 +310,12 @@ cmd_for() {
       local s0=${1#e65-k-s}
       echo "e65_selection.py --only kernels --set 'seeds=($s0, $((s0 + 1)), $((s0 + 2)), $((s0 + 3)))' --output-dir {OUT}/E65_k_s$s0";;
     e65-nets)    echo "e65_selection.py --only nets --output-dir {OUT}/E65_nets";;
+    # E66 (3 Nov 2026, registry E66.json): the learning-rate screen, then four fit jobs by seed quarter that read its
+    # winners.json (submit them --after the screen) (N-27).
+    e66-screen)  echo "e66_bp_dsm.py --only screen --output-dir {OUT}/E66_dev";;
+    e66-fit-s0|e66-fit-s4|e66-fit-s8|e66-fit-s12)
+      local s0=${1#e66-fit-s}
+      echo "e66_bp_dsm.py --only fit --set 'seeds=($s0, $((s0 + 1)), $((s0 + 2)), $((s0 + 3)))' --set \"winners='{OUT}/E66_dev/winners.json'\" --output-dir {OUT}/E66_s$s0";;
     e57-kern-*|e57-nets-*)
       local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
       if [[ $part == kern ]]; then

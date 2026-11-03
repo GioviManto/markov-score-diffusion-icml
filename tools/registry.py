@@ -99,6 +99,12 @@ OUTPUT_DIRS["E65"] = "hpc_E65_k_s0"
 MAIN_CSV.update(_E65_DIRS)
 SCRIPTS.update({d: "e65_selection.py" for d in _E65_DIRS})
 
+# E66 (3 Nov 2026): the learning-rate screen in one directory, the confirmatory fits in four by seed quarter (N-27).
+_E66_DIRS = {"hpc_E66_dev": "screen.csv", **{f"hpc_E66_s{s}": "kernels.csv" for s in (0, 4, 8, 12)}}
+OUTPUT_DIRS["E66"] = "hpc_E66_s0"
+MAIN_CSV.update(_E66_DIRS)
+SCRIPTS.update({d: "e66_bp_dsm.py" for d in _E66_DIRS})
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""
