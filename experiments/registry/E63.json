@@ -20,6 +20,7 @@
   "budget_rule": "timing only; no fit is extended or rerun.",
   "provenance_note": "The curves are frozen outputs (E02a, E03, E56, E58); E63 adds only timings.",
   "resources": "About 2 CPU-h (one exclusive node, one thread); timing_gpu about 0.5 GPU-h.",
-  "status": "REGISTERED 2026-11-03; no E63 code written.",
-  "registered": "2026-11-03"
+  "status": "REGISTERED 2026-11-03; amended before code (curves from E65); no E63 code written.",
+  "registered": "2026-11-03",
+  "amendment_2026-11-03_before_code": "Found while reading the frozen curves, before any E63/E65 code: the frozen validation curves are on DIFFERENT site sets. E03's networks and E02a's mixture score validation on the bulk sites 4-27 (e03.REGIONS['bulk']); E30, E56 and E58 score all 32 sites. They cannot share an axis. CHANGE: the curves come from E65's refits, which record at every checkpoint the TEST error on all 32 sites for every arm (EM arms, clean_energy, E03's six networks), on the same test bundles. P1-P3 are read with 'test error of BiGRU's selected checkpoint' in place of 'validation error of BiGRU's selected checkpoint', and the E56/E58 curves by E65's curves for the same arms. The frozen curves remain a descriptive cross-check. P4 and the timing part are unchanged."
 }
