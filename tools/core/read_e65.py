@@ -2,7 +2,7 @@
 
     python tools/core/read_e65.py              # gates, tables, verdicts P1-P4, descriptive D1-D2
 
-Inputs: E65's per-checkpoint curves (outputs/hpc_E65_k_s*/curves_kernels.csv, outputs/hpc_E65_nets/curves_nets.csv),
+Inputs: E65's per-checkpoint curves (outputs/hpc_E65_k_h*/curves_kernels.csv, outputs/hpc_E65_nets/curves_nets.csv),
 each row a (seed, N, arm, checkpoint) with the test error on all 32 sites (`test_all`), the flag of the checkpoint the
 arm's ORIGINAL oracle rule selects (`sel_oracle`) and of the one its oracle-free criterion selects (`sel_free`).
 Frozen comparators for the reproduction gate P1: E30's em_bp, E56's spline and energy, E58's clean energy_h16 (Laplace),
@@ -36,7 +36,7 @@ def _csvs(pattern):
 
 
 def load():
-    c = pd.concat([_csvs("outputs/hpc_E65_k_s*/curves_kernels.csv"), _csvs("outputs/hpc_E65_nets/curves_nets.csv")],
+    c = pd.concat([_csvs("outputs/hpc_E65_k_*/curves_kernels.csv"), _csvs("outputs/hpc_E65_nets/curves_nets.csv")],
                   ignore_index=True)
     if c.empty:
         raise SystemExit("no E65 curves on disk")

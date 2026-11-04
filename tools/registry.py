@@ -98,22 +98,22 @@ OUTPUT_DIRS["E64"] = "hpc_E64"
 MAIN_CSV["hpc_E64"] = "generation.csv"
 SCRIPTS["hpc_E64"] = "e64_generation.py"
 
-# E65 (3 Nov 2026): kernel refits in four directories by seed quarter, the networks in one (N-27).
-_E65_DIRS = {**{f"hpc_E65_k_s{s}": "curves_kernels.csv" for s in (0, 4, 8, 12)}, "hpc_E65_nets": "curves_nets.csv"}
-OUTPUT_DIRS["E65"] = "hpc_E65_k_s0"
+# E65 (3 Nov 2026): kernel refits in two directories by seed half, the networks in one (N-27).
+_E65_DIRS = {**{f"hpc_E65_k_h{s}": "curves_kernels.csv" for s in (0, 8)}, "hpc_E65_nets": "curves_nets.csv"}
+OUTPUT_DIRS["E65"] = "hpc_E65_k_h0"
 MAIN_CSV.update(_E65_DIRS)
 SCRIPTS.update({d: "e65_selection.py" for d in _E65_DIRS})
 
-# E66 (3 Nov 2026): the learning-rate screen in one directory, the confirmatory fits in four by seed quarter (N-27).
-_E66_DIRS = {"hpc_E66_dev": "screen.csv", **{f"hpc_E66_s{s}": "kernels.csv" for s in (0, 4, 8, 12)}}
-OUTPUT_DIRS["E66"] = "hpc_E66_s0"
+# E66 (3 Nov 2026): the learning-rate screen in one directory, the confirmatory fits in two by seed half (N-27).
+_E66_DIRS = {"hpc_E66_dev": "screen.csv", **{f"hpc_E66_h{s}": "kernels.csv" for s in (0, 8)}}
+OUTPUT_DIRS["E66"] = "hpc_E66_h0"
 MAIN_CSV.update(_E66_DIRS)
 SCRIPTS.update({d: "e66_bp_dsm.py" for d in _E66_DIRS})
 
-# E67 (3 Nov 2026): the grid check and the timing in their own directories, kernel fits by seed pair, the networks in one.
+# E67 (3 Nov 2026): the grid check and the timing in their own directories, kernel fits by seed half, the networks in one.
 _E67_DIRS = {"hpc_E67_check": "gridcheck.csv", "hpc_E67_timing": "timing.csv",
-             **{f"hpc_E67_k_s{s}": "arms.csv" for s in (0, 2, 4, 6)}, "hpc_E67_nets": "nets.csv"}
-OUTPUT_DIRS["E67"] = "hpc_E67_k_s0"
+             **{f"hpc_E67_k_h{s}": "arms.csv" for s in (0, 4)}, "hpc_E67_nets": "nets.csv"}
+OUTPUT_DIRS["E67"] = "hpc_E67_k_h0"
 MAIN_CSV.update(_E67_DIRS)
 SCRIPTS.update({d: "e67_vector_state.py" for d in _E67_DIRS})
 

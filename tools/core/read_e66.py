@@ -31,7 +31,7 @@ def _csvs(pattern):
     return pd.concat([pd.read_csv(p) for p in paths], ignore_index=True)
 
 
-def load(pattern="outputs/hpc_E66_s*/kernels.csv"):
+def load(pattern="outputs/hpc_E66_h*/kernels.csv"):
     k = _csvs(pattern)
     k = k.drop_duplicates(["seed", "n_chains", "arm"]).assign(risk=lambda d: np.where(d.failed == 0, d.risk_pooled, np.nan))
     e03 = pd.read_csv(ROOT / "outputs/E03/confirm.csv")
