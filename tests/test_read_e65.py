@@ -51,7 +51,7 @@ def test_a_failed_reproduction_voids_the_rest():
 
 
 def test_a_missing_seed_makes_the_seed_mean_undefined():
-    c, f = _tables()
+    c, _ = _tables()
     c = c[~((c.arm == "energy") & (c.seed == 3))]
     o = r.selected(c, "oracle")
     assert pd.isna(r.seed_mean(o, "energy", 2048))

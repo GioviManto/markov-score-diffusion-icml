@@ -61,8 +61,8 @@ def verdicts(d):
     p4 = {n: min(below(d, "clean_energy", net, n, "abs_gap") for net in NETS) for n in SIZES}
     return {
         "P1": (all(v >= 7 for v in p1.values()), "oracle sampler SW2 <= 1.5 x Monte Carlo floor: " + ", ".join(f"N={n} {v}/8" for n, v in p1.items())),
-        "P2": (p2a >= 7 and p2b >= 6, f"clean_energy SW2 below every network at N=128 (min over nets {p2a}/8, need 7) and below "
-                                      f"{best_net(d, 2048)} at N=2048 ({p2b}/8, need 6)"),
+        "P2": (p2a >= 7 and p2b >= 6, (f"clean_energy SW2 below every network at N=128 (min over nets {p2a}/8, need 7) and below "
+                                       f"{best_net(d, 2048)} at N=2048 ({p2b}/8, need 6)")),
         "P3": (all(v >= 6 for v in p3.values()), "|kurtosis error| below the best network: " + ", ".join(f"N={n} {v}/8" for n, v in p3.items())),
         "P4": (all(v >= 6 for v in p4.values()), "|log-likelihood gap| below every network: " + ", ".join(f"N={n} min {v}/8" for n, v in p4.items())),
     }

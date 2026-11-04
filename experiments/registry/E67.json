@@ -17,6 +17,7 @@
   "budget_rule": "EM to 600 iterations; networks 32000 steps; no extension.",
   "provenance_note": "New chain and code (markov_score.vector_chain).",
   "resources": "To be timed: E-step at N = 2048 about 2048 x 31 x 1681^2 = 1.8e11 multiply-adds (~1 min on 16 threads); ~600 iterations, so ~10 h per fit at N = 2048; one defq job per seed pair, 16 CPUs.",
-  "status": "REGISTERED 2026-11-03; no E67 code written.",
-  "registered": "2026-11-03"
+  "status": "REGISTERED 2026-11-03; code d7decc6; grid gate passed (4.1e-5); not deployed.",
+  "registered": "2026-11-03",
+  "implementation_notes_2026-11-03": "Before any confirmatory run. (i) Gate check at full settings (part gridcheck, 256 sequences, laptop 8 threads): the 41-point reference against 61 points per axis differs by 7.2e-5 at t = 0.3, falling to 8.7e-7 at t = 3; pooled 4.1e-5, far inside the 1e-2 gate. (ii) A part `timing` was added for P3: the fits run as many single-threaded workers, so P3 (one EM iteration at N = 2048 on 16 threads) is measured separately on dev seed 10000 with the job's BLAS threads (submit e67-timing with MSD_HPC_EXCLUSIVE=1 MSD_HPC_THREADS=16). (iii) Every arm is selected by its validation score error on ALL sites and both components (the registration did not name a site set). (iv) The 2-D BP is tested against two independent 1-D chains (theta = 0): means to 1e-10, evidence to 1e-6 relative."
 }

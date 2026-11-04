@@ -12,7 +12,7 @@ import pytest
 from markov_score.bp_grid import grid_bp_batch
 from markov_score.noising import alpha_delta
 from markov_score.priors import LaplaceAR1
-from markov_score.vector_chain import (GaussianVAR1, RotatedLaplaceVAR, Stats2D, bp2d, e_step2d, normalise, state_grid)
+from markov_score.vector_chain import GaussianVAR1, RotatedLaplaceVAR, Stats2D, bp2d, e_step2d, state_grid
 
 
 def _one_d_normalised(g, w):

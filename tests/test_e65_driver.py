@@ -30,7 +30,6 @@ def test_flag_maximises_evidence_and_minimises_the_rest():
 
 
 def test_the_clean_validation_chains_are_e03s():
-    from markov_score.bp_grid import make_grid
     from markov_score.noising import alpha_delta
     a_val = e65._a_val(QUICK, 0)
     _, val, _, _ = e65.e03._cell_common(QUICK, 0, 32)

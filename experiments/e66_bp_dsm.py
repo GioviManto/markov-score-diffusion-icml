@@ -156,7 +156,7 @@ def _fit_cell(args):
     cfg, seed, n, lr = args
     t0 = time.perf_counter()
     try:
-        k, lk, grid, w, val, test, base, info = _fit_select(cfg, seed, n, lr, cfg["steps"], cfg["checkpoints"])
+        _, lk, grid, w, _, test, base, info = _fit_select(cfg, seed, n, lr, cfg["steps"], cfg["checkpoints"])
         pairs = _eval(lk, test, grid, w, "all")
     except FloatingPointError as exc:                        # a failed fit is a row and counts against (E33 amendment 3)
         print(f"  [E66] seed={seed} n={n:>5} FAILED: {exc}", flush=True)

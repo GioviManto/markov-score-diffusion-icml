@@ -43,7 +43,8 @@ from markov_score.utils import ensure_dir, rng_for, write_csv, write_json  # noq
 import e03_baselines as e03  # noqa: E402
 import e56_kernel_families as e56  # noqa: E402
 import e58_clean_kernel as e58  # noqa: E402
-from e63_compute import NETS  # noqa: E402   E03's winners, hp as tuples so E03's seed stream (str(hp)) is reproduced
+# E03's winners, hp as tuples so that E03's seed stream (str(hp)) is reproduced
+from e63_compute import NETS  # noqa: E402
 
 N_SITES = FROZEN.n_sites
 T_SCHEDULE = tuple(FROZEN.t_grid)

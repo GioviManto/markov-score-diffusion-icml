@@ -18,7 +18,7 @@ def _table(kernel_sw2, net_sw2, oracle_sw2, kernel_kurt, net_kurt, kernel_gap, n
     rows = []
     for seed in r.SEEDS:
         for n in r.SIZES:
-            def row(arm, sw2, kurt, gap, **x):
+            def row(arm, sw2, kurt, gap, seed=seed, n=n, **x):
                 rows.append(dict(seed=seed, n_chains=n, arm=arm, sw2=sw2, energy=0.0, w1_marginal=0.0, cov_fro=0.0,
                                  kurt_gen=3.0 + kurt, kurt_ref=3.0, acf_err_max=0.0, loglik_gap=gap, failed=0,
                                  ref_hash=f"h{seed}{n}", frozen_risk=x.get("fr"), rebuilt_risk=x.get("rb")))
