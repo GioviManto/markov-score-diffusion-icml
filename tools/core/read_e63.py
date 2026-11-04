@@ -133,7 +133,7 @@ def main(argv) -> int:
     for a in ("em_bp", "spline", "energy", "clean_energy"):
         if (a, 2048) in sec and ("bigru", 2048) in sec:
             print(f"    {a:12s} / bigru step at N = 2048: {sec[(a, 2048)] / sec[('bigru', 2048)]:.0f}x")
-    out = ROOT / "outputs" / "hpc_E63" / "curves_wall.csv"
+    out = ROOT / "reports" / "core" / "e63_curves_wall.csv"   # derived: never inside a frozen output directory
     on_wall(curves, sec).to_csv(out, index=False)
     print(f"D2  curves on the wall-clock axis -> {out.relative_to(ROOT)}")
     for k, (ok, msg) in verdicts(timing, curves).items():

@@ -1,0 +1,3 @@
+arm,n_chains,n_axis,blas_threads,sec_per_iter,n_measured
+var1,2048,41,16,13.73034529783763,3
+energy2d,2048,41,16,15.323912048479542,3

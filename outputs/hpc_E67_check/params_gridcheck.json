@@ -1,0 +1,96 @@
+{
+  "n_sites": 32,
+  "quick": false,
+  "parts": [
+    "gridcheck"
+  ],
+  "overrides": [],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "sizes": [
+    128,
+    512,
+    2048
+  ],
+  "n_axis": 41,
+  "n_axis_check": 61,
+  "half_width": 5.0,
+  "levels": [
+    0.3,
+    0.41684864831194124,
+    0.5792093186649749,
+    0.8048087385839175,
+    1.118278116094482,
+    1.5538424037693628,
+    2.1590570190034555,
+    3.0
+  ],
+  "n_val": 1024,
+  "n_test": 2048,
+  "n_check": 256,
+  "chunk": 128,
+  "kernel_arms": [
+    "lmmse",
+    "var1",
+    "energy2d"
+  ],
+  "net_arms": [
+    "window2",
+    "bigru2"
+  ],
+  "ladder": [
+    10,
+    20,
+    40,
+    60,
+    80,
+    120,
+    160,
+    220,
+    300,
+    400,
+    600
+  ],
+  "energy_hidden": 16,
+  "energy_lr": 0.01,
+  "energy_inner": 10,
+  "net_steps": 32000,
+  "net_checkpoints": [
+    500,
+    1000,
+    2000,
+    4000,
+    8000,
+    16000,
+    32000
+  ],
+  "batch_size": 64,
+  "grad_clip": 1.0,
+  "net_lr": 0.001,
+  "torch_threads": 1,
+  "timing_iters": 3,
+  "timestamp": "2026-11-04 11:41:02",
+  "git_commit": "fd116f2a82fe5facdb95c85800d3ef55c7302112",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "417c170ea4f72a15c3f1e166668389bb1f437323a5b00d7249487931e39c5e78",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode04",
+  "slurm_job_id": "737533",
+  "slurm_array_task_id": "",
+  "cpu_count": "24",
+  "blas_threads": "8",
+  "resolved_config_hash": "b260eb3d795e"
+}
