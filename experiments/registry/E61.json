@@ -143,8 +143,59 @@
   "note": "Best member of each family fitted to the exact pair law; error = BP score error (E03's estimand, raw) on the calibration bundle (1024 chains), then / floor. A best member bounds what EM can reach."
  },
  "resources": "4 kernel jobs of up to two chains ((gauss, laplace), (student, uniform), (skew, pearson), (langevin)) and 1 network job, defq, 32 CPUs, 64 GB, 23 h. Estimate from E57 (six kernel arms, about 7 h per chain on 40 CPUs): four kernel arms, about 5 h per chain on 40 CPUs.",
- "status": "REGISTERED 2026-11-02 (b4f1302); code 92744ee; deployed 92744ee-20261102T103915Z (hpc/.deploy_92744ee.env); submitted 2 Nov 2026 on defq, 16 CPUs, 48 GB, 23 h: kernels e61-k-gl 734161 (gauss, laplace), e61-k-su 734162 (student, uniform), e61-k-sp 734166 (skew, pearson), e61-k-lv 734167 (langevin); networks e61-nets 734168 (first submitted as 734082-734086 at 32 CPUs, cancelled unstarted). Fetch to outputs/hpc_E61_k_{gl,su,sp,lv} and outputs/hpc_E61_nets.",
+ "status": "FROZEN and READ 2026-11-06 (P1, P2, P3, P4 CONFIRMED; P5 FALSIFIED); FROZEN hpc_E61_k_gl 2026-11-06T09:49:40Z; REGISTERED 2026-11-02 (b4f1302); code 92744ee; deployed 92744ee-20261102T103915Z (hpc/.deploy_92744ee.env); submitted 2 Nov 2026 on defq, 16 CPUs, 48 GB, 23 h: kernels e61-k-gl 734161 (gauss, laplace), e61-k-su 734162 (student, uniform), e61-k-sp 734166 (skew, pearson), e61-k-lv 734167 (langevin); networks e61-nets 734168 (first submitted as 734082-734086 at 32 CPUs, cancelled unstarted). Fetch to outputs/hpc_E61_k_{gl,su,sp,lv} and outputs/hpc_E61_nets.",
  "registered": "2026-11-02",
  "implementation_notes_2026-11-02": "Chains: markov_score.panel_chains reproduces the calibrated parameters (tests/test_panel_chains.py: eps 0.744734, r 0.858016, Delta 0.307898 and 0.162369 to 1e-6). Its heavy-tailed Pearson columns near |a| = 5 lose up to 0.6% of their mass past the grid edge at 8 (step sd ~1.4 there; stationary mass beyond 8 is 6e-5): the truncation every chain on E03's grid shares, kept as it is. Sizing from E56 (noisy-EM energy fits 3200-5200 s) and E58 (clean energy fits ~2800 s): ~120 CPU-h per chain, so ~8 h per two-chain job on 32 CPUs. Quick smoke (QUICK settings, seed 0, N = 32): every arm on all seven chains, kernels and networks on one test bundle per cell.",
- "resubmission_2026-11-02": "2 Nov 12:45 CET: the 32-CPU jobs could only run on defq's two 40-core nodes (cnode01-04 have 24 cores), both held by multi-day jobs; SLURM's start estimate was 5 Nov 03:12. Cancelled before any had started and resubmitted unchanged except for 16 CPUs / 48 GB (start estimates then 2 Nov 17:24 for e61-k-gl, 3 Nov 08:32-12:43 for the other kernel jobs)."
+ "resubmission_2026-11-02": "2 Nov 12:45 CET: the 32-CPU jobs could only run on defq's two 40-core nodes (cnode01-04 have 24 cores), both held by multi-day jobs; SLURM's start estimate was 5 Nov 03:12. Cancelled before any had started and resubmitted unchanged except for 16 CPUs / 48 GB (start estimates then 2 Nov 17:24 for e61-k-gl, 3 Nov 08:32-12:43 for the other kernel jobs).",
+ "frozen_outputs": {
+  "outputs/hpc_E61_k_gl/kernels.csv": "7b6fdc3363be569bf56bc99e627236ca28525e5a9fd2c2f1b13d0e9f8bd5e8d8",
+  "outputs/hpc_E61_k_gl/params_kernels.json": "4195e49edeabf11e8ef028921977334a6b5aceb87c4b780927f3e46754449dbb",
+  "outputs/hpc_E61_k_lv/kernels.csv": "9900ff1108a9e73aae532736238d851f74be4ecee14a03aa3de362f153696159",
+  "outputs/hpc_E61_k_lv/params_kernels.json": "cd84871e001b739103de82491717f95c87e90869bc26a396aaaa6d84657244af",
+  "outputs/hpc_E61_k_sp/kernels.csv": "7b994e69000b9cb5e432734fd4332705643f75e336d5f541afb96fde9926cc7d",
+  "outputs/hpc_E61_k_sp/params_kernels.json": "17373ce89e248c2529fc205a18a2eaef2de2eae66ac4b0148a4d75d8ab8720c3",
+  "outputs/hpc_E61_k_su/kernels.csv": "3941ceb6d0b28b26ea95cb19a7aa92aa6e549e487b508b7567beff373f93faf7",
+  "outputs/hpc_E61_k_su/params_kernels.json": "9307dc0ad0281d22fc70673bbba1ec14270eb4643c532cf56925b4f883696761",
+  "outputs/hpc_E61_nets/nets.csv": "ae9a9fd92acddf58d4a6d3e2f3fd0c89366bddc1ec9663b27218b59985ce8eb1",
+  "outputs/hpc_E61_nets/params_nets.json": "8319384a348eed72f25778ac01eaed024179c5b271484c8a8bd87c5e35cf96c2"
+ },
+ "frozen_at": {
+  "hpc_E61_k_gl": "2026-11-06T09:49:40Z",
+  "hpc_E61_k_lv": "2026-11-06T09:49:40Z",
+  "hpc_E61_k_sp": "2026-11-06T09:49:41Z",
+  "hpc_E61_k_su": "2026-11-06T09:49:41Z",
+  "hpc_E61_nets": "2026-11-06T09:49:41Z"
+ },
+ "frozen_commit": {
+  "hpc_E61_k_gl": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E61_k_lv": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E61_k_sp": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E61_k_su": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E61_nets": "559c8f79b065f689c9aca1086335c5009b4261ae"
+ },
+ "frozen_run_commits": {
+  "hpc_E61_k_gl": [
+   "92744ee"
+  ],
+  "hpc_E61_k_lv": [
+   "92744ee"
+  ],
+  "hpc_E61_k_sp": [
+   "92744ee"
+  ],
+  "hpc_E61_k_su": [
+   "92744ee"
+  ],
+  "hpc_E61_nets": [
+   "92744ee"
+  ]
+ },
+ "outcome": {
+  "read": "2026-11-06, tools/core/read_e61.py on the frozen hpc_E61_k_{gl,su,sp,lv} and hpc_E61_nets (jobs 734161-734168, COMPLETED exit 0, empty .err); 0 failed fits, 0 of 448 energy fits stalled.",
+  "P1": "CONFIRMED: Gaussian control, every kernel arm below both networks at every N, >= 7/8.",
+  "P2": "CONFIRMED: inside the shift class (Laplace, Student-t, uniform) the mixture below the window CNN at every N (>= 7/8) and within 1.5x of the best noisy-EM kernel at N = 2048 (ratios 1.00, 1.04, 1.00).",
+  "P3": "CONFIRMED: outside it (skew, Langevin, Pearson) at N = 2048, free4 and energy each below the mixture in 8/8 on every chain.",
+  "P4": "CONFIRMED: clean-data energy below noisy-EM energy at every N in >= 6/8 on 7 of 7 chains (8/8 except Langevin, 6/8).",
+  "P5": "FALSIFIED on one chain: on the double-well Langevin chain the window CNN beats the best kernel at N = 32 (5/8), 128 (6/8) and 512 (6/8); at 2048 the clean energy kernel wins (0.029 against 0.112). Every other chain and N: the best kernel below the best network in >= 7/8."
+ }
 }

@@ -23,8 +23,73 @@
  "budget_rule": "The kernel ladder (to 2400) and E03's network budget are the registered plan. Either may be changed ONCE, by an amendment written after the timing part and before any confirmatory fit, on throughput grounds only.",
  "provenance_note": "Written 30 Oct 2026, before any E57 code was written or run. Seen beforehand: the calibration numbers above (true kernels only, no sample, no fit); E56's timing part (3.0-6.6 s per EM iteration at N = 2048, no E56 fit seen: its screen and fits were queued); the frozen E03, E30 and E02a rows on the Laplace chain; E14b's frozen bimodal numbers (mixture EM-BP against screened networks under the information-matched protocol, a different training protocol from E57's), seen in September. Nothing of any arm on the tanh or heteroscedastic chain exists.",
  "resources": "Bocconi HPC, CPU (defq): kernels and networks per chain in shards by seed into their own output directories (N-27); layout fixed after the timing part.",
- "status": "REGISTERED and PREDECLARED 2026-10-30 (746413b); code 185aaa5; deployed 185aaa5-20261031T103807Z (hpc/.deploy_185aaa5.env); timing read 2026-10-31, no amendment; submitted 2026-10-31: kernels 730841 (bimodal), 730842 (tanh), 730843 (hetero) on compute, 40 cpus, 200G, 3 days; networks 730844 (bimodal), 730846 (tanh), 730847 (hetero) on defq, 16 cpus, 32G, 6 h. The energy arm reads E56's screen winner (width 16) from deployment 001ae38-20261030T081448Z.",
+ "status": "FROZEN and READ 2026-11-06 (P1, P2, P3, P4 CONFIRMED); FROZEN hpc_E57_dev 2026-11-06T09:49:39Z; REGISTERED and PREDECLARED 2026-10-30 (746413b); code 185aaa5; deployed 185aaa5-20261031T103807Z (hpc/.deploy_185aaa5.env); timing read 2026-10-31, no amendment; submitted 2026-10-31: kernels 730841 (bimodal), 730842 (tanh), 730843 (hetero) on compute, 40 cpus, 200G, 3 days; networks 730844 (bimodal), 730846 (tanh), 730847 (hetero) on defq, 16 cpus, 32G, 6 h. The energy arm reads E56's screen winner (width 16) from deployment 001ae38-20261030T081448Z.",
  "registered": "2026-10-30",
  "smoke_2026-10-30": "One --quick run on the laptop (grid 101, 64 validation and test chains, ladder (2, 4), 200 network steps, seed 0) to check the three parts end to end. It printed pooled risks of every arm on quick bundles after 4 EM iterations and 200 network steps; these say nothing about any prediction and were not used for anything.",
- "timing_2026-10-31": "Deployment 185aaa5-20261031T103807Z; part timing, job 730831 (short_cpu, 8 min 21 s, dev seed 10000, N = 2048, one thread; energy timed at width 64, the widest screened): seconds per EM iteration 2.88-4.65 for the shift, log-linear and mixture kernels on all three chains, 6.37-6.80 for the energy kernel at width 64 (E56's screen chose width 16, ~3.5 s in E56's timing); milliseconds per training step, validation included, mlp 1.5-2.9, window 4.6-5.0, bigru 20.5-21.0, unet 28.4-33.1. The largest kernel cell is 2-4.5 h for the full ladder; one chain's kernel part is ~500 CPU-hours, so it runs on the compute partition (40 workers, 3-day limit); the networks fit 6 h on 16 workers. NO budget amendment: the ladder to 2400 and E03's 32k steps stay as registered."
+ "timing_2026-10-31": "Deployment 185aaa5-20261031T103807Z; part timing, job 730831 (short_cpu, 8 min 21 s, dev seed 10000, N = 2048, one thread; energy timed at width 64, the widest screened): seconds per EM iteration 2.88-4.65 for the shift, log-linear and mixture kernels on all three chains, 6.37-6.80 for the energy kernel at width 64 (E56's screen chose width 16, ~3.5 s in E56's timing); milliseconds per training step, validation included, mlp 1.5-2.9, window 4.6-5.0, bigru 20.5-21.0, unet 28.4-33.1. The largest kernel cell is 2-4.5 h for the full ladder; one chain's kernel part is ~500 CPU-hours, so it runs on the compute partition (40 workers, 3-day limit); the networks fit 6 h on 16 workers. NO budget amendment: the ladder to 2400 and E03's 32k steps stay as registered.",
+ "frozen_outputs": {
+  "outputs/hpc_E57_dev/timing.csv": "e070a9fb353acdfe662c3ab6440d56b2d2a791f0ca8f20295d7e35cab7ee7129",
+  "outputs/hpc_E57_dev/params_timing.json": "071946731d7df9b52f266bee48879265a15e2a0b25e36f15ffa7c61dd54cf5da",
+  "outputs/hpc_E57_kern_bimodal/kernels.csv": "9917fdbe5f3d05d9b098ad9ccdc699721b4b5540a84a7f7974ef873928f8f484",
+  "outputs/hpc_E57_kern_bimodal/params_kernels.json": "acd63212588bf594c65d30ad0f5296b3347c5f563e41205396ad2efcedd839ca",
+  "outputs/hpc_E57_kern_hetero/kernels.csv": "4e45fbaeb5399fb6314e9e69171601ef946f82c6baa39f52dd94f528d6f49617",
+  "outputs/hpc_E57_kern_hetero/params_kernels.json": "05b16788dce0c6aca36a6cb1a9bef2d0802ca526e2c8a312113782c3b337fc34",
+  "outputs/hpc_E57_kern_tanh/kernels.csv": "a319322cc4c5f9b25a4d32ea2289d0f8b44d0f573740f02f004658d4d1c08d82",
+  "outputs/hpc_E57_kern_tanh/params_kernels.json": "a22b892bc7097639106c6b8144f242d5d511bc713466d4232ac8e433fff3bf3d",
+  "outputs/hpc_E57_nets_bimodal/nets.csv": "bc63d9a3c2a71f836adc3f71a07e77a660866cae4605f0e75b0012fb80a8231e",
+  "outputs/hpc_E57_nets_bimodal/params_nets.json": "42ccb71deff986f6d7f377432dd726d58109f5ca7cfd8fd962c32138d1e3fbee",
+  "outputs/hpc_E57_nets_hetero/nets.csv": "5e8ce9035d1782d361c6baa109f792f50157a43ffe3929a91309b712c37cb938",
+  "outputs/hpc_E57_nets_hetero/params_nets.json": "7f6cc5b7d7fe6543fb05fde46941e0049d1d0997a9e28607ab393041024b775c",
+  "outputs/hpc_E57_nets_tanh/nets.csv": "f28136480e39da4b21d526085ca1ee16373d4397e67681083fc6a65866b3cd50",
+  "outputs/hpc_E57_nets_tanh/params_nets.json": "47ac04ca80c517d7dccaeda5e8a2e03ae7582f5cac491818d38a21898dd84609"
+ },
+ "frozen_at": {
+  "hpc_E57_dev": "2026-11-06T09:49:39Z",
+  "hpc_E57_kern_bimodal": "2026-11-06T09:49:39Z",
+  "hpc_E57_kern_hetero": "2026-11-06T09:49:39Z",
+  "hpc_E57_kern_tanh": "2026-11-06T09:49:39Z",
+  "hpc_E57_nets_bimodal": "2026-11-06T09:49:40Z",
+  "hpc_E57_nets_hetero": "2026-11-06T09:49:40Z",
+  "hpc_E57_nets_tanh": "2026-11-06T09:49:40Z"
+ },
+ "frozen_commit": {
+  "hpc_E57_dev": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E57_kern_bimodal": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E57_kern_hetero": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E57_kern_tanh": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E57_nets_bimodal": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E57_nets_hetero": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E57_nets_tanh": "559c8f79b065f689c9aca1086335c5009b4261ae"
+ },
+ "frozen_run_commits": {
+  "hpc_E57_dev": [
+   "185aaa5"
+  ],
+  "hpc_E57_kern_bimodal": [
+   "185aaa5"
+  ],
+  "hpc_E57_kern_hetero": [
+   "185aaa5"
+  ],
+  "hpc_E57_kern_tanh": [
+   "185aaa5"
+  ],
+  "hpc_E57_nets_bimodal": [
+   "185aaa5"
+  ],
+  "hpc_E57_nets_hetero": [
+   "185aaa5"
+  ],
+  "hpc_E57_nets_tanh": [
+   "185aaa5"
+  ]
+ },
+ "outcome": {
+  "read": "2026-11-06, tools/core/read_e57.py on the frozen hpc_E57_{dev,kern_bimodal,kern_tanh,kern_hetero,nets_bimodal,nets_tanh,nets_hetero} (jobs 730841-730847, all COMPLETED exit 0, empty .err); 1152 rows, 0 failed kernel fits, G4: no arm at the cap in > 4/8.",
+  "P1": "CONFIRMED: bimodal, every shift family and the mixture below the best network (BiGRU) at every N, >= 7/8 paired (N = 2048: shift families 0.0155-0.0184 against BiGRU 0.0564).",
+  "P2": "CONFIRMED: tanh and hetero at N = 2048, the better agnostic kernel below every shift family and the mixture, >= 7/8 paired (tanh: loglinear2d 0.0277, energy 0.0306 against shift 0.180; hetero: energy 0.0303 against shift 0.101).",
+  "P3": "CONFIRMED: tanh and hetero at N = 512 and 2048, the better agnostic kernel below the best network, >= 6/8 paired.",
+  "P4": "CONFIRMED: tanh and hetero at N = 2048, the better agnostic kernel's kernel error below every shift family's and the mixture's, >= 7/8 paired.",
+  "note": "Outside the shift class the shift families sit at the linear floor (ratio to LMMSE 0.98-1.07, D2); inside it they reach 0.19 of it at N = 2048."
+ }
 }

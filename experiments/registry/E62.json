@@ -117,7 +117,7 @@
   "note": "first_order_floor: BP with the best first-order kernel (the stationary pair law's conditional) against the pair-state reference, E03's estimand on 256 chains; linear_floor: the LMMSE of the true AR(2) covariance."
  },
  "resources": "Estimate before timing: pair-state EM at M = 2048 about 1 min per EM iteration on 101 points (E-step plus triple statistics, three pair-BP passes at 11 ms per chain), up to 300 iterations, so ~5 h per fit; ~450 CPU-h for the pair arm over 7 phi2 x 3 M x 8 seeds, first and the networks ~150 CPU-h; jobs split by phi2, defq, 32 CPUs. Timed on a dev seed before submission; submitted when the 30-job cap allows.",
- "status": "SUBMITTED: code 5763fe3, deploy 5763fe3-20261102T105801Z; jobs e62-p1 734637 (2 Nov), e62-p2 736497, e62-p3 736498, e62-p4 736500, e62-wind 736501 (3 Nov 19:21 CET); defq, 16 CPUs / 48G / 23 h.",
+ "status": "FROZEN and READ 2026-11-06 (P1, P2, P3, P4, P5 CONFIRMED); FROZEN hpc_E62_p1 2026-11-06T09:49:41Z; SUBMITTED: code 5763fe3, deploy 5763fe3-20261102T105801Z; jobs e62-p1 734637 (2 Nov), e62-p2 736497, e62-p3 736498, e62-p4 736500, e62-wind 736501 (3 Nov 19:21 CET); defq, 16 CPUs / 48G / 23 h.",
  "registered": "2026-11-02",
  "appendix_D5_2026-11-02": {
   "script": "tools/core/appendix_e62_arp.py (laptop, one thread, true kernels only)",
@@ -159,5 +159,61 @@
   },
   "reading": "The cost per site grows as n^(p+1): from p = 2 to p = 3 at n = 51 the time per chain rose 157x. On the Laplace AR(3) the best second-order kernel halves the best first-order kernel's error (0.131 against 0.239); the rest is the third lag, which a grid pays n^4 to represent.",
   "pair_em_timing": "Single-thread, n = 101: pair-state E-step 9.8 ms per chain, BP 5.9 ms per chain, ECM M-step 0.76 s; one EM iteration at M = 2048 ~21 s, a 300-iteration fit ~1.75 h (the resources estimate above was 3x high)."
+ },
+ "frozen_outputs": {
+  "outputs/hpc_E62_p1/arms.csv": "319dc0834833a121a72c70bd0974ca911de0693a5dc95a82ce424c125fd22f91",
+  "outputs/hpc_E62_p1/bundles.csv": "9598b0ae7c31f1070ed823e2132a56bc6dbe4c026e819e7809e8eedcf181fbd3",
+  "outputs/hpc_E62_p1/params_bundles_arms.json": "30746b404c1a3b1dccb5bc6645ed7bff88b17a1fde73ffa58a5ce9acba7f4224",
+  "outputs/hpc_E62_p2/arms.csv": "0f1f0a645a148affbf44334f229c876bb445580bf977c44ca0228d2d2fd20abc",
+  "outputs/hpc_E62_p2/bundles.csv": "6c7e1262b92aa84c3e2cd0a4c1508d3e26f7be6b0804f3822ba69734fdd7b4b9",
+  "outputs/hpc_E62_p2/params_bundles_arms.json": "9886fa0a6f07446c7dcae2d775cc2687368137928cdb95b7fcfdf4ad85d68d6a",
+  "outputs/hpc_E62_p3/arms.csv": "84d73888b676d60c86aee8d80afd707fad403d2bee3e59a159607623a4d946b2",
+  "outputs/hpc_E62_p3/bundles.csv": "e9d80ebb7b3952cd4128021a3084ef132b50982c575819b88e8a062eb60a6a22",
+  "outputs/hpc_E62_p3/params_bundles_arms.json": "ac13fe65a4339c286cbb5d40452780cc006b68a3ddc8efe43e0a297263ac94f1",
+  "outputs/hpc_E62_p4/arms.csv": "cb5309b78096cb9bb77a1bbd6d5a18a1559171b10ab4a47636817d642c799fc6",
+  "outputs/hpc_E62_p4/bundles.csv": "d6720f182b0fcc8b37c389bacb5eba4c10595874e0a149f8fef1ea40d72bcc22",
+  "outputs/hpc_E62_p4/params_bundles_arms.json": "25c1cd5d19455c7f1b021e1866aa35cec56c5a83e155aab2e374d1a54f8e0373",
+  "outputs/hpc_E62_wind/wind.csv": "03f6e23f4ea82cc59d83783769a343afb66fddf7dbbfcdab880b40ce759577da",
+  "outputs/hpc_E62_wind/params_wind.json": "6142b9184a969b394c346f4fa2a19a1b26c9108fa163583ff3d1e13321fb7eb3"
+ },
+ "frozen_at": {
+  "hpc_E62_p1": "2026-11-06T09:49:41Z",
+  "hpc_E62_p2": "2026-11-06T09:49:41Z",
+  "hpc_E62_p3": "2026-11-06T09:49:42Z",
+  "hpc_E62_p4": "2026-11-06T09:49:42Z",
+  "hpc_E62_wind": "2026-11-06T09:49:42Z"
+ },
+ "frozen_commit": {
+  "hpc_E62_p1": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E62_p2": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E62_p3": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E62_p4": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E62_wind": "559c8f79b065f689c9aca1086335c5009b4261ae"
+ },
+ "frozen_run_commits": {
+  "hpc_E62_p1": [
+   "5763fe3"
+  ],
+  "hpc_E62_p2": [
+   "5763fe3"
+  ],
+  "hpc_E62_p3": [
+   "5763fe3"
+  ],
+  "hpc_E62_p4": [
+   "5763fe3"
+  ],
+  "hpc_E62_wind": [
+   "5763fe3"
+  ]
+ },
+ "outcome": {
+  "read": "2026-11-06, tools/core/read_e62.py on the frozen hpc_E62_p1-p4 and hpc_E62_wind (jobs 734637, 736497, 736498, 736500, 736501, COMPLETED exit 0).",
+  "P1": "CONFIRMED: first-order EM-BP at M = 2048 within +-25% of the calibrated first-order floor and flat from 512, phi2 >= 0.2 (ratios 1.125, 1.092, 1.049, 1.011).",
+  "P2": "CONFIRMED: the pair-state kernel below first-order at M = 2048 in 8/8 for every phi2 >= 0.1.",
+  "P3": "CONFIRMED: first-order below the best network at phi2 <= 0.1 and above it at phi2 >= 0.4 (M = 2048); break-even delta 0.030 (D2).",
+  "P4": "CONFIRMED: the pair-state kernel below the best network at every phi2 and M in >= 7/8; its fitted phi2 matches the truth to 0.008 (D3).",
+  "P5": "CONFIRMED: wind, pair below first in 8/8 at every N; the gain is small (0.506 against 0.513 at N = 1917, against the clean value) and every arm is near 0.51.",
+  "caveat": "wind job log: 3 evaluations where the first-order C = 8 mixture's grid kernel columns did not integrate to 1 (top eigenvalue 3.11), standard normal initial law used for those; not recorded per row."
  }
 }

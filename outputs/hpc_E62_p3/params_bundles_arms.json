@@ -1,0 +1,222 @@
+{
+  "n_sites": 32,
+  "t_schedule": [
+    0.05,
+    0.0725,
+    0.1053,
+    0.1527,
+    0.2216,
+    0.3215,
+    0.4665,
+    0.6769,
+    0.9821,
+    1.425,
+    2.0676,
+    3.0
+  ],
+  "quick": false,
+  "parts": [
+    "bundles",
+    "arms"
+  ],
+  "overrides": [
+    "phi2=(0.3, 0.4)"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "dev_seeds": [
+    10000
+  ],
+  "sizes": [
+    128,
+    512,
+    2048
+  ],
+  "n_val": 1024,
+  "n_test": 2048,
+  "grid_size": 401,
+  "half_width": 8.0,
+  "arms": [
+    "pair",
+    "first",
+    "window",
+    "mlp",
+    "lmmse"
+  ],
+  "em_init_rho": 0.3,
+  "em_init_var": 0.8,
+  "shift_W": 4.0,
+  "shift_lr": 0.01,
+  "shift_inner": 10,
+  "loglinear_basis": 10,
+  "energy_lr": 0.01,
+  "energy_inner": 10,
+  "energy_widths": [
+    16,
+    32,
+    64
+  ],
+  "energy_hidden": 0,
+  "winners": "",
+  "screen_sizes": [
+    32,
+    2048
+  ],
+  "ladder": [
+    10,
+    20,
+    40,
+    60,
+    80,
+    120,
+    160,
+    220,
+    300,
+    400,
+    600,
+    800,
+    1200,
+    1600,
+    2400
+  ],
+  "timing_n": 2048,
+  "timing_iters": 3,
+  "density_sizes": [
+    128,
+    512,
+    2048
+  ],
+  "eps_half": 3.0,
+  "eps_points": 161,
+  "slice_a": [
+    -1.0,
+    0.0,
+    1.0
+  ],
+  "device": "cpu",
+  "torch_threads": 1,
+  "chains": [
+    "bimodal",
+    "tanh",
+    "hetero"
+  ],
+  "kernel_arms": [
+    "spline",
+    "rbf",
+    "fourier",
+    "legendre",
+    "loglinear2d",
+    "energy",
+    "mixture"
+  ],
+  "net_archs": [
+    "mlp",
+    "window",
+    "bigru",
+    "unet"
+  ],
+  "energy_winners": "",
+  "nets": {
+    "mlp": {
+      "hp": {
+        "hidden": [
+          128,
+          128
+        ]
+      },
+      "lr": 0.001,
+      "mode": "eps"
+    },
+    "window": {
+      "hp": {
+        "radius": 4,
+        "width": 64
+      },
+      "lr": 0.001,
+      "mode": "eps"
+    }
+  },
+  "net_steps": 32000,
+  "net_checkpoints": [
+    500,
+    1000,
+    2000,
+    4000,
+    8000,
+    16000,
+    32000
+  ],
+  "batch_size": 64,
+  "grad_clip": 1.0,
+  "timing_net_steps": 200,
+  "phi2": [
+    0.3,
+    0.4
+  ],
+  "pair_grid": 101,
+  "ref_grid": 151,
+  "components": 8,
+  "burn": 600,
+  "first_ladder": [
+    10,
+    20,
+    40,
+    60,
+    80,
+    120,
+    160,
+    220,
+    300,
+    400,
+    600,
+    800,
+    1200
+  ],
+  "pair_ladder": [
+    10,
+    20,
+    40,
+    80,
+    120,
+    160,
+    220,
+    300
+  ],
+  "wind_sizes": [
+    32,
+    128,
+    512,
+    1917
+  ],
+  "wind_arms": [
+    "pair",
+    "first",
+    "window",
+    "mlp"
+  ],
+  "wind_test_stride": 8,
+  "timestamp": "2026-11-03 19:23:01",
+  "git_commit": "5763fe3a3b1b34f3a416035e64c4c82fcdc0c3cd",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "9c1395cdfc77fccdaa6d83fb643a6071335144a07720b7e08cc6939ad360c637",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode04",
+  "slurm_job_id": "736498",
+  "slurm_array_task_id": "",
+  "cpu_count": "24",
+  "blas_threads": "1",
+  "resolved_config_hash": "3f67471ef029"
+}

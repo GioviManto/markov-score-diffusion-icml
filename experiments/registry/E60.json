@@ -44,8 +44,39 @@
   }
  },
  "resources": "2 defq jobs of 2 cells each (16 seeds x 3 sizes x 2 arms per cell), 32 CPUs and 64 GB, 23 h. Estimate before timing: E33's em_mdn took a median 652 / 1237 / 4110 s at M = 128 / 512 / 2048, about 210 CPU-h in total for E60. A dev-seed timing (seed 10000, not a registered seed; M = 2048; 20 EM iterations) is recorded before submission.",
- "status": "REGISTERED 2026-11-02 (3326001); code c02513a; deployed 18dced8-20261102T093804Z (hpc/.deploy_18dced8.env); submitted 2 Nov 2026: e60-a job 734158 (T0.3_h1_L32, T0.5_iso_L32) and e60-b job 734160 (T1_iso_L32, T2_iso_L32), defq, 16 CPUs, 48 GB, 23 h (first submitted as 733999 / 734000 at 32 CPUs, cancelled unstarted). Fetch to outputs/hpc_E60_a and outputs/hpc_E60_b.",
+ "status": "FROZEN and READ 2026-11-06 (P2, P4, P5 CONFIRMED; P1, P3 FALSIFIED); FROZEN hpc_E60_a 2026-11-06T09:49:40Z; REGISTERED 2026-11-02 (3326001); code c02513a; deployed 18dced8-20261102T093804Z (hpc/.deploy_18dced8.env); submitted 2 Nov 2026: e60-a job 734158 (T0.3_h1_L32, T0.5_iso_L32) and e60-b job 734160 (T1_iso_L32, T2_iso_L32), defq, 16 CPUs, 48 GB, 23 h (first submitted as 733999 / 734000 at 32 CPUs, cancelled unstarted). Fetch to outputs/hpc_E60_a and outputs/hpc_E60_b.",
  "registered": "2026-11-02",
  "timing_2026-11-02": "Dev seed 10000 (not registered), T0.3_h1_L32, M = 2048, ladder (10, 20), on the laptop under a load of ~7: em_free_C4 51.0 s and em_free_C8 55.2 s for 20 EM iterations with two checkpoints scored, so about 2.5 s per iteration and ~1 h per full M = 2048 fit (E33's em_mdn: 4110 s); ~100 CPU-h per job, under 4 h on 32 CPUs, hence the 12 h limit.",
- "resubmission_2026-11-02": "2 Nov 12:45 CET: the 32-CPU jobs could only run on defq's two 40-core nodes (cnode01-04 have 24 cores), both held by multi-day jobs; SLURM's start estimate was 5 Nov 03:12. Cancelled before any had started and resubmitted unchanged except for 16 CPUs / 48 GB (start estimates then 2 Nov 13:37 and 13:42)."
+ "resubmission_2026-11-02": "2 Nov 12:45 CET: the 32-CPU jobs could only run on defq's two 40-core nodes (cnode01-04 have 24 cores), both held by multi-day jobs; SLURM's start estimate was 5 Nov 03:12. Cancelled before any had started and resubmitted unchanged except for 16 CPUs / 48 GB (start estimates then 2 Nov 13:37 and 13:42).",
+ "frozen_outputs": {
+  "outputs/hpc_E60_a/kernels.csv": "2104fd5201e4d24a9490e8baa9a5522fb21bc81b5f4f29f56782b648398c859a",
+  "outputs/hpc_E60_a/params_kernels.json": "16644d9e92c18bb97e3805688b4cbfd0534c5b9dc8d34d9dc42aa1d64e9e443d",
+  "outputs/hpc_E60_b/kernels.csv": "1ee5a05c9d5e11532da02e9ca646d8cde520657880d67ef3d65584aa094efe15",
+  "outputs/hpc_E60_b/params_kernels.json": "0137c585ed33593de02e46a7eb6c732f9d7d1345a2e2683866559ac686992593"
+ },
+ "frozen_at": {
+  "hpc_E60_a": "2026-11-06T09:49:40Z",
+  "hpc_E60_b": "2026-11-06T09:49:40Z"
+ },
+ "frozen_commit": {
+  "hpc_E60_a": "559c8f79b065f689c9aca1086335c5009b4261ae",
+  "hpc_E60_b": "559c8f79b065f689c9aca1086335c5009b4261ae"
+ },
+ "frozen_run_commits": {
+  "hpc_E60_a": [
+   "18dced8"
+  ],
+  "hpc_E60_b": [
+   "18dced8"
+  ]
+ },
+ "outcome": {
+  "read": "2026-11-06, tools/core/read_e60.py on the frozen hpc_E60_a, hpc_E60_b (jobs 734158, 734160, COMPLETED exit 0); 768 rows, risk selection; comparators E33's frozen rows on the same bundles (E33 has no network rows at M = 512, hence NaN there).",
+  "P1": "FALSIFIED by one cell: em_free_C4 below em_mixture at M = 512 and 2048 in >= 14/16 everywhere except T2_iso_L32 at M = 512 (12/16); below 0.5 of the floor at 2048 on every cell (0.14-0.46).",
+  "P2": "CONFIRMED: M = 128, em_free_C4 below em_mdn in 16/16 on all four cells.",
+  "P3": "FALSIFIED: the seed-mean C8/C4 ratio does not shrink from 128 to 2048; it grows on three of four cells (1.04 -> 0.98, 1.04 -> 1.05, 1.03 -> 1.07, 1.06 -> 1.13). Doubling the components does not pay.",
+  "P4": "CONFIRMED: M = 2048, the 5-parameter site energy (em_pair_quartic) below em_free_C4 in 16/16 on all four cells (0.033-0.169 of the floor against 0.14-0.46).",
+  "P5": "CONFIRMED: em_free_C4 below the best network at M = 128 and 2048 in 16/16 on every cell.",
+  "caveat": "The kernel's invariant law (the initial law of site 1) was unavailable 165 times in the job logs (free_mixture_C4 46, free_mixture_C8 119: the eigensolve's invariant vector had a negative component) and the standard normal was used for that evaluation. The rows do not record which fits were affected; it changes only the first site's prior. Read with care, as the driver says; no rerun."
+ }
 }
