@@ -301,6 +301,12 @@ cmd_for() {
     e62-p3)      echo "e62_second_order.py --only bundles,arms --set 'phi2=(0.3, 0.4)' --output-dir {OUT}/E62_p3";;
     e62-p4)      echo "e62_second_order.py --only bundles,arms --set 'phi2=(0.6,)' --output-dir {OUT}/E62_p4";;
     e62-wind)    echo "e62_second_order.py --only wind --output-dir {OUT}/E62_wind";;
+    # E68 (7 Nov 2026, registry E68.json): one job per non-stationary cell, bundles cached in the job's own directory;
+    # the dev-seed timing apart (N-27).
+    e68-timing)  echo "e68_nonstationary.py --only timing --output-dir {OUT}/E68_timing";;
+    e68-stationary|e68-drift05|e68-drift10|e68-switch025|e68-switch05)
+      local cell=${1#e68-}
+      echo "e68_nonstationary.py --only bundles,arms --set \"cells=('$cell',)\" --output-dir {OUT}/E68_$cell";;
     e57-kern-*|e57-nets-*)
       local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
       if [[ $part == kern ]]; then

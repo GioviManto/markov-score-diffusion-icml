@@ -142,6 +142,31 @@ class WindowHead(nn.Module):
         return self.mlp(h)[:, 0, :]
 
 
+class WindowPosHead(nn.Module):
+    """WindowHead plus the site's position (E68): features (s, sin(pi m s), cos(pi m s)), m = 1..n_pos, with s running
+    from -1 at the first site to +1 at the last, projected to the hidden width and added like the time features. It can
+    therefore learn a different local denoiser at each site, which a translation-invariant window cannot."""
+
+    def __init__(self, radius: int = 2, width: int = 64, n_freq: int = 4, n_pos: int = 4):
+        super().__init__()
+        self.tf = TimeFeatures(n_freq)
+        self.radius = radius
+        self.receptive_radius = radius
+        self.n_pos = n_pos
+        self.conv = FastConv1d(1, width, 2 * radius + 1, padding=radius)
+        self.tproj = nn.Linear(self.tf.dim, width)
+        self.pproj = nn.Linear(2 * n_pos + 1, width)
+        self.mlp = nn.Sequential(nn.Tanh(), FastConv1d(width, width, 1), nn.Tanh(), FastConv1d(width, 1, 1))
+        self.length_agnostic = False
+
+    def forward(self, x, t):
+        s = torch.linspace(-1.0, 1.0, x.shape[1], device=x.device, dtype=x.dtype)[:, None]
+        m = torch.arange(1, self.n_pos + 1, device=x.device, dtype=x.dtype)[None, :]
+        pos = torch.cat([s, torch.sin(np.pi * m * s), torch.cos(np.pi * m * s)], dim=1)       # (L, 2 n_pos + 1)
+        h = self.conv(x[:, None, :]) + self.tproj(self.tf(t))[:, :, None] + self.pproj(pos).T[None]
+        return self.mlp(h)[:, 0, :]
+
+
 class TCN(nn.Module):
     """Residual stack of dilated 3-tap non-causal convolutions; receptive radius sum(dilations)."""
 
@@ -257,7 +282,7 @@ class UNet1D(nn.Module):
         return self.head(self.dec1(torch.cat([u, h1], dim=1)))[:, 0, :]
 
 
-ARCHS = {"mlp": MLP, "window": WindowHead, "tcn": TCN, "bigru": BiGRU, "transformer": Transformer, "unet": UNet1D}
+ARCHS = {"mlp": MLP, "window": WindowHead, "window_pos": WindowPosHead, "tcn": TCN, "bigru": BiGRU, "transformer": Transformer, "unet": UNet1D}
 
 
 def build(arch: str, L: int, **hp) -> nn.Module:

@@ -100,7 +100,26 @@
     }
   },
   "provenance_note": "Registered on 7 Nov 2026 after the user approved the design and the qualitative predictions ('Yes go on with the experiments', after the sketch with P1-P4), before any E68 driver code. The thresholds come from the calibration above, which reads only true kernels. markov_score.site_bp (tests/test_site_bp.py: = grid_bp_batch and em.e_step with one kernel, exact on a non-stationary Gaussian chain) and markov_score.nonstationary were written for the calibration, before this registration. Nothing is submitted before the user has seen these predictions.",
-  "resources": "Estimate before timing: E-step ~0.5 s at N = 2048 (201 points); M-steps ~0.3 s (shared mixture), ~9 s (31 per-link mixtures), ~2 s (site_energy, 31 x 201^2 network evaluations per Adam step); ~3.5 h for all arms of one (cell, seed) at N = 2048, ~300 CPU-h in all. Jobs split by cell (no shared output file, N-27). Timed on a dev seed before submission.",
+  "resources": "Timed (timing_2026-11-07): at the ladder caps about 44 min per persite_mixture fit and 1.8 h per site_energy fit (M-step dominated, so nearly independent of N), 15 min per shared fit at N = 2048, 2 min per network; about 480 CPU-h in all. Five jobs, one per cell (e68-<cell>), 32 CPUs each on defq; plus e68-timing. Submitted only after the user has seen the predictions.",
   "status": "REGISTERED 2026-11-07 (not run)",
-  "registered": "2026-11-07"
+  "registered": "2026-11-07",
+  "amendments_2026-11-07": {
+    "note": "Both made on 7 Nov 2026 before any confirmatory run (only a quick smoke run, the dev-seed timing and a dev-seed pilot of the kernel arms on drift10 at N = 512 had run). No prediction changed.",
+    "1_early_stop": "The early stop (mean log-evidence per chain rising by less than 1e-9 in one iteration) applies to the two MIXTURE arms only. The energy arms run to their ladder cap: their generalised M-step keeps the parameters when no step raises Q, which leaves the evidence flat for one iteration without convergence.",
+    "2_reference_grid": "The reference is per-link BP on 601 points (not 401) and the gate recomputes it on 1201 points (not 801), tolerance unchanged at 1e-4. Measured before any run on 256 chains per cell against 1601 points: 401 points gives 1.2e-4 on drift10 (above the gate), 601 points 2.8e-5 (drift10), 3.5e-6 (switch05), 6.7e-7 (stationary)."
+  },
+  "timing_2026-11-07": {
+    "where": "laptop, one thread, dev seed 10000, drift10, N = 2048, 201 points (experiments/e68_nonstationary.py --only timing)",
+    "seconds_per_em_iteration": {
+      "persite_mixture": 8.8,
+      "site_energy": 10.8,
+      "shared_energy": 0.65,
+      "shared_mixture": 0.74
+    },
+    "seconds_per_1000_net_steps": {
+      "window_pos": 3.4,
+      "window": 2.2,
+      "mlp": 0.7
+    }
+  }
 }

@@ -88,7 +88,8 @@ MAIN_CSV.update(_E62_DIRS)
 SCRIPTS.update({d: "e62_second_order.py" for d in _E62_DIRS})
 
 # E68 (7 Nov 2026): one directory per non-stationary cell, every arm of that cell in it (N-27).
-_E68_DIRS = {f"hpc_E68_{c}": "arms.csv" for c in ("stationary", "drift05", "drift10", "switch025", "switch05")}
+_E68_DIRS = {**{f"hpc_E68_{c}": "arms.csv" for c in ("stationary", "drift05", "drift10", "switch025", "switch05")},
+             "hpc_E68_timing": "timing.csv"}
 OUTPUT_DIRS["E68"] = "hpc_E68_stationary"
 MAIN_CSV.update(_E68_DIRS)
 SCRIPTS.update({d: "e68_nonstationary.py" for d in _E68_DIRS})
