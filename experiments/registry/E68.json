@@ -1,0 +1,106 @@
+{
+  "id": "E68",
+  "script": "experiments/e68_nonstationary.py",
+  "hypothesis": "The user's ablation (7 Nov 2026): every chain so far is stationary, with one kernel for every link. What if the kernel changes along the sequence, so that a different kernel K_k has to be learned for each link k? (The site index k, not the diffusion time: the noise channel and the twelve levels are unchanged.) The draft says 'a site-dependent kernel changes the bookkeeping, not the method' (Sec. 2); that is true of BP (markov_score.site_bp: per-link kernels at the same cost) but not of learning: L - 1 independent kernels see N transitions each instead of N (L - 1). Three questions: (1) how much does wrongly assuming stationarity cost, and is the cost a floor? (2) do independent per-link kernels pay the data price (lose at small N, win at large N)? (3) does ONE neural kernel that also takes the site, E(a, a', k), get both: the sharing of a stationary kernel and the flexibility of per-link kernels? The networks are the comparison: a global MLP assumes nothing, a window CNN assumes translation invariance, a window CNN with position features does not.",
+  "design": "CHAINS (markov_score.nonstationary.NonstationaryLaplaceChain, d_rho = 0.1, d_logsd = 0.35): a_1 ~ N(0, s_1^2), a_{k+1} = alpha_k a_k + Laplace(0, b_k) with alpha_k = rho_k s_{k+1}/s_k, 2 b_k^2 = s_{k+1}^2 (1 - rho_k^2). Five cells: stationary (delta 0 = E03's chain, rho 0.85, s 1); drift05 and drift10 (rho_k linear from 0.85 - 0.1 delta to 0.85 + 0.1 delta over the links, log s_k linear from -0.35 delta to +0.35 delta over the sites, delta 0.5 and 1); switch025 and switch05 (first half (0.85 + 0.1 delta, s = e^{-0.35 delta}), second half (0.85 - 0.1 delta, s = e^{+0.35 delta}), delta 0.25 and 0.5; switch at delta 1 was dropped in calibration: its 201-point grid error is 0.9%). L = 32, E03's twelve levels, N in (32, 128, 512, 2048), seeds 0-7, 1024 validation and 2048 test chains per (cell, seed), tags e68-*. REFERENCE: per-link BP (markov_score.site_bp) with the true kernels and the true first-site law N(0, s_1^2) on 401 points over [-8, 8]. KERNEL ARMS (EM through per-link BP from one noisy view per training chain, the chains split evenly over the twelve levels as in E62; 201 points over [-8, 8]; every kernel arm also learns a Gaussian first-site law N(m, v) by its closed-form EM update, started at N(0, 1); checkpoint selected on the pooled validation risk against the reference): shared_mixture (the thesis mixture, C = 8, one kernel for all links, statistics summed over links; init rho 0.3, var 0.8; E56's ladder to 1200); persite_mixture (31 independent C = 8 mixtures, one per link, each M-step on its own link's statistics; same init; the ladder to 300); shared_energy (markov_score.energy_kernel.NeuralEnergyKernel, width 16, lr 1e-2, 10 inner Adam steps, fresh_on_reject; the ladder to 1200); site_energy (new: the same network with a third input, the link position s = 2k/(L - 2) - 1 in [-1, 1], width 16 (353 parameters), normalised per (link, a) on the grid, the same generalised M-step on Q = sum_k sum_ij xi_k log K_k / n_edges; the ladder to 600). EM stops early when the mean log-evidence per chain rises by less than 1e-9 in one iteration; later checkpoints then equal the final iterate. NETWORKS (E03's recipe on the clean chains, fresh noise per step, 32000 steps, E03's checkpoints, selected on the validation risk): mlp and window (E03's screened winners), window_pos (the window winner plus position features (s, sin(pi m s), cos(pi m s), m = 1..4) projected to the hidden width; not screened). lmmse: the exact covariance.",
+  "predeclared_predictions": {
+    "P1": "Stationarity is a structural cost: in drift10, switch025 and switch05 (calibrated shared floor >= 0.06), the seed mean of BOTH shared arms (shared_mixture, shared_energy) at N = 2048 is >= 0.8 x the cell's calibrated shared floor, and is not more than 10% below the same arm's seed mean at N = 512.",
+    "P2": "Independent per-link kernels pay in data: persite_mixture above shared_mixture at N = 32 in stationary and drift05 (>= 6/8 seeds each), and below shared_mixture at N = 2048 in drift10, switch025 and switch05 (>= 7/8 seeds each).",
+    "P3": "One site-conditioned kernel gets both: (a) site_energy below shared_energy at every N >= 128 in every non-stationary cell (>= 6/8 seeds each); (b) site_energy below persite_mixture at every N in drift05 and drift10 (>= 6/8 each); (c) in every cell and at every N, site_energy's seed mean below the best network's (the lowest seed mean of mlp, window, window_pos).",
+    "P4": "Networks: (a) window_pos below window at N = 2048 in every non-stationary cell (>= 6/8 seeds each); (b) window's seed mean at N = 2048 higher in drift10 than in stationary, and higher in switch05 than in stationary.",
+    "P5": "No price for flexibility when the chain is stationary: in the stationary cell, site_energy's seed mean at N = 2048 within +-15% of shared_energy's, and persite_mixture above shared_mixture at every N (>= 7/8 seeds each)."
+  },
+  "descriptive": {
+    "D1": "Seed-mean (and median) risk per cell x arm x N, with the calibrated shared floor and the linear floor drawn in.",
+    "D2": "persite_mixture's fitted (alpha_k, innovation sd) per link against the truth; site_energy's conditional mean slope and sd per link read off its kernel, against the truth.",
+    "D3": "The crossover N at which persite_mixture overtakes shared_mixture, per cell (log-linear interpolation of the seed means).",
+    "D4": "Wall time per EM iteration and per fit of each kernel arm; selected checkpoints; at_cap counts; failed fits."
+  },
+  "predeclared_analysis": "tools/core/read_e68.py. Gates: one row per (cell, seed, n_chains, arm, t); for every (cell, seed, n_chains) every arm is scored on the same test bundle (hash); the reference recomputed on one bundle per cell at 801 points agrees with the 401-point reference to 1e-4 relative. A failed or missing fit counts AGAINST every prediction it enters. Paired by seed; no bootstrap, no other selection.",
+  "seeds": "0-7",
+  "budget_rule": "shared_mixture and shared_energy: E56's ladder to 1200; site_energy: to 600; persite_mixture: to 300 (31 M-steps per iteration); networks: E03's 32000 steps. No extension.",
+  "calibration_2026-11-07": {
+    "script": "tools/core/calibrate_e68.py",
+    "note": "TRUE kernels only, on a calibration-only bundle (tag e68-calibration, 256 chains, the twelve levels), reference per-link BP at 401 points. shared_floor = BP with the pooled transition law (the clean-ML limit of one shared kernel) and the true first-site law; e03_kernel = BP with E03's stationary kernel and N(0, 1); grid_201 = relative change of the reference from 401 to 201 points.",
+    "per_cell": {
+      "drift05": {
+        "delta": 0.5,
+        "rho": [
+          0.8,
+          0.9
+        ],
+        "sd": [
+          0.839,
+          1.191
+        ],
+        "linear_floor": 0.16842,
+        "shared_floor": 0.03037,
+        "e03_kernel": 0.0418,
+        "grid_201": 0.00038
+      },
+      "drift10": {
+        "delta": 1.0,
+        "rho": [
+          0.75,
+          0.95
+        ],
+        "sd": [
+          0.705,
+          1.419
+        ],
+        "linear_floor": 0.15759,
+        "shared_floor": 0.06264,
+        "e03_kernel": 0.09147,
+        "grid_201": 0.00094
+      },
+      "switch025": {
+        "delta": 0.25,
+        "rho": [
+          0.825,
+          0.875
+        ],
+        "sd": [
+          0.916,
+          1.091
+        ],
+        "linear_floor": 0.16608,
+        "shared_floor": 0.094,
+        "e03_kernel": 0.09645,
+        "grid_201": 0.00043
+      },
+      "switch05": {
+        "delta": 0.5,
+        "rho": [
+          0.8,
+          0.9
+        ],
+        "sd": [
+          0.839,
+          1.191
+        ],
+        "linear_floor": 0.16491,
+        "shared_floor": 0.17421,
+        "e03_kernel": 0.19082,
+        "grid_201": 0.00134
+      },
+      "stationary": {
+        "delta": 0.0,
+        "rho": [
+          0.85,
+          0.85
+        ],
+        "sd": [
+          1.0,
+          1.0
+        ],
+        "linear_floor": 0.16641,
+        "shared_floor": 0.0,
+        "grid_201": 0.00016
+      }
+    }
+  },
+  "provenance_note": "Registered on 7 Nov 2026 after the user approved the design and the qualitative predictions ('Yes go on with the experiments', after the sketch with P1-P4), before any E68 driver code. The thresholds come from the calibration above, which reads only true kernels. markov_score.site_bp (tests/test_site_bp.py: = grid_bp_batch and em.e_step with one kernel, exact on a non-stationary Gaussian chain) and markov_score.nonstationary were written for the calibration, before this registration. Nothing is submitted before the user has seen these predictions.",
+  "resources": "Estimate before timing: E-step ~0.5 s at N = 2048 (201 points); M-steps ~0.3 s (shared mixture), ~9 s (31 per-link mixtures), ~2 s (site_energy, 31 x 201^2 network evaluations per Adam step); ~3.5 h for all arms of one (cell, seed) at N = 2048, ~300 CPU-h in all. Jobs split by cell (no shared output file, N-27). Timed on a dev seed before submission.",
+  "status": "REGISTERED 2026-11-07 (not run)",
+  "registered": "2026-11-07"
+}

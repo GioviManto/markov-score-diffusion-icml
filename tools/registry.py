@@ -87,6 +87,13 @@ OUTPUT_DIRS["E62"] = "hpc_E62_p1"
 MAIN_CSV.update(_E62_DIRS)
 SCRIPTS.update({d: "e62_second_order.py" for d in _E62_DIRS})
 
+# E68 (7 Nov 2026): one directory per non-stationary cell, every arm of that cell in it (N-27).
+_E68_DIRS = {f"hpc_E68_{c}": "arms.csv" for c in ("stationary", "drift05", "drift10", "switch025", "switch05")}
+OUTPUT_DIRS["E68"] = "hpc_E68_stationary"
+MAIN_CSV.update(_E68_DIRS)
+SCRIPTS.update({d: "e68_nonstationary.py" for d in _E68_DIRS})
+
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""
