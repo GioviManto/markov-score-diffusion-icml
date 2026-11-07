@@ -303,6 +303,21 @@ def fig_value_of_structure() -> None:
     ax.loglog(ns, mean["window"], "^-", color=GREEN, lw=1.0)
     ax.loglog(ns, mean["bigru"], "D-", color=GREY, lw=1.0, ms=4.0)
     ax.loglog(ns, mean["em_bp"], "s-", color=BLUE, lw=1.0)
+    k = _e56("kernels.csv")
+    if k is not None:                  # E56's neural energy kernel, paired with E03 on the same test bundles (read_e56)
+        log_n_axis(ax, ns)
+        ax.set_xlim(ns[0] / 1.4, ns[-1] * 1.4)
+        ax.set_ylim(0.015, 1.2)
+        e = k[(k.failed == 0) & (k.arm == "energy")].drop_duplicates(["seed", "n_chains"])
+        en = e.groupby("n_chains").risk_pooled.mean().reindex(ns).to_numpy()
+        ax.loglog(ns, en, "p--", color=fs.CAT[4], lw=1.0, ms=4.5)
+        # on-curve label in the gap between the neural kernel and BiGRU, along their common slope (N = 128..512)
+        xm = np.sqrt(ns[1] * ns[2])
+        ym = (np.sqrt(en[1] * en[2]) * np.sqrt(mean["bigru"][1] * mean["bigru"][2])) ** 0.5
+        p0, p1 = ax.transData.transform([(ns[1], en[1]), (ns[2], en[2])])
+        ang = np.degrees(np.arctan2(p1[1] - p0[1], p1[0] - p0[0]))
+        ax.text(xm, ym, "neural kernel", color=fs.CAT[4], va="center", ha="center", rotation=ang,
+                rotation_mode="anchor")
     log_n_axis(ax, ns)
     ax.set_xlim(ns[0] / 1.4, ns[-1] * 1.4)
     ticks = [0.02, 0.05, 0.1, 0.2, 0.5]
@@ -349,7 +364,7 @@ def fig_families() -> None:
     mix = c8.read("exp_18/innovation_density.csv")
     b = c7.laplace_scale(0.85)
     eps = np.linspace(-2.6, 2.6, 400)
-    fig, axes = plt.subplots(2, 4, figsize=(W["full"], 3.5), sharex=True, sharey=True, constrained_layout=True)
+    fig, axes = plt.subplots(2, 4, figsize=(W["full"], 3.1), sharex=True, sharey=True, constrained_layout=True)
     sizes = (128, 512, 2048)
     cols = (fs.BLUE_RAMP[1], fs.BLUE_RAMP[3], fs.BLUE_RAMP[4])
     panels = (("mixture", "mixture, $C=8$"),) + FAMILIES
@@ -408,26 +423,21 @@ def fig_families_error() -> None:
 
 
 def fig_em_dynamics() -> None:
-    """Step efficiency. (a) EM's log-likelihood against iteration, four starts. (b) Validation score error against
-    parameter updates: EM iterations for EM-BP (E56 ladder), SGD steps for E03's networks, N = 2048, seed means.
-
-    Panel (a) reads the thesis trace (exp_18, C = 8) until E56's per-edge evidence curves exist.
-    """
+    """Step efficiency. (a) EM's log-likelihood against iteration from four starts (thesis exp_18, C = 8). (b) Validation
+    score error against parameter updates at N = 2048, seed means: EM iterations for the spline and the neural energy
+    kernel (E56's ladder), SGD steps for E03's networks."""
     import csv
     fig, (aL, aR) = figure(2, width=W["full"], height=2.45)
-    k = _e56("kernels.csv")
-    if k is None:
-        with open(REPO / "outputs" / "frozen" / "exp_18"
-                  / "em_trace.csv") as fh:
-            rows = [r for r in csv.DictReader(fh) if int(r["n_components"]) == 8]
-        by: dict[float, list] = defaultdict(list)
-        for r in rows:
-            by[float(r["rho_init"])].append((int(r["iteration"]) + 1, float(r["log_evidence"]) / 1e5))
-        for (a0, pts), c in zip(sorted(by.items()), fs.BLUE_RAMP[1:]):
-            it, ll = zip(*sorted(pts))
-            aL.semilogx(it, ll, color=c, label=rf"$\alpha_0={a0:g}$")
-        aL.set_ylabel(r"log-likelihood $/10^{5}$")
-        aL.legend(loc="lower right", frameon=False)
+    with open(REPO / "outputs" / "frozen" / "exp_18" / "em_trace.csv") as fh:
+        rows = [r for r in csv.DictReader(fh) if int(r["n_components"]) == 8]
+    by: dict[float, list] = defaultdict(list)
+    for r in rows:
+        by[float(r["rho_init"])].append((int(r["iteration"]) + 1, float(r["log_evidence"]) / 1e5))
+    for (a0, pts), c in zip(sorted(by.items()), fs.BLUE_RAMP[1:]):
+        it, ll = zip(*sorted(pts))
+        aL.semilogx(it, ll, color=c, label=rf"$\alpha_0={a0:g}$")
+    aL.set_ylabel(r"log-likelihood $/10^{5}$")
+    aL.legend(loc="lower right", frameon=False)
     aL.set_xlabel("EM iteration")
 
     curves: dict[str, dict[int, list[float]]] = defaultdict(lambda: defaultdict(list))
@@ -441,58 +451,191 @@ def fig_em_dynamics() -> None:
                             ("bigru", GREY, "D", "BiGRU")):
         st = sorted(curves[arch])
         aR.loglog(st, [np.mean(curves[arch][s]) for s in st], marker=m, color=c, lw=1.0, ms=4.0, label=lab)
+    k = _e56("kernels.csv")
     if k is not None:
-        ev = k[(k.failed == 0) & (k.n_chains == 2048) & (k.arm == "spline")].drop_duplicates(["seed"])
-        pts: dict[int, list[float]] = defaultdict(list)
-        for vc in ev.val_curve:
-            for item in str(vc).split(";"):
-                it, v = item.split(":")
-                pts[int(it)].append(float(v))
-        st = sorted(pts)
-        aR.loglog(st, [np.mean(pts[s]) for s in st], "s-", color=BLUE, lw=1.0, label="EM–BP")
+        for arm, c, m, lab in (("spline", BLUE, "s", "spline kernel"), ("energy", fs.CAT[4], "p", "neural kernel")):
+            ev = k[(k.failed == 0) & (k.n_chains == 2048) & (k.arm == arm)].drop_duplicates(["seed"])
+            pts: dict[int, list[float]] = defaultdict(list)
+            for vc in ev.val_curve:
+                for item in str(vc).split(";"):
+                    it, v = item.split(":")
+                    pts[int(it)].append(float(v))
+            st = [s for s in sorted(pts) if len(pts[s]) == len(ev)]      # iterations every seed reached
+            aR.loglog(st, [np.mean(pts[s]) for s in st], marker=m, color=c, lw=1.0, ms=4.0, label=lab)
     aR.set_xlim(5, 5e4)
-    aR.set_ylim(0.04, 0.5)
-    plain_log_y(aR, [0.05, 0.1, 0.2, 0.5])
+    aR.set_ylim(0.015, 1.5)
+    plain_log_y(aR, [0.02, 0.05, 0.1, 0.2, 0.5, 1])
     aR.set_xlabel("parameter updates")
     aR.set_ylabel("relative score error")
-    aR.legend(loc="lower left", frameon=False)
+    aR.legend(loc="upper right", frameon=False, fontsize=8, ncol=2, columnspacing=1.0)
     panel(aL, "a"); panel(aR, "b")
     save(fig, "fig_em_dynamics")
 
 
 # ------------------------------------------------------------------------------------- breaking Markov --
-def fig_nonmarkov() -> None:
-    """Network / EM-BP error ratio against the distance delta to the best first-order chain (thesis Fig. 10.x).
+def _core(name: str):
+    """A registered reader from tools/core (the paper reads the frozen outputs through the same code as the verdicts)."""
+    sys.path.insert(0, str(REPO / "tools" / "core"))
+    return importlib.import_module(name)
 
-    delta is closed form; the ratios are the frozen exp_21_clean measurements, averaged over the twelve levels.
-    """
+
+def fig_nonmarkov() -> None:
+    """(a) Network / EM-BP error ratio against the distance delta to the best first-order chain: thesis exp_21_clean
+    (global latent, long-range couplings; delta from the covariance) and E62's Laplace AR(2) chains (delta exact, the
+    conditional mutual information), N = 2048. (b) E62: error against phi2 at N = 2048 for first-order EM-BP, the
+    pair-state kernel, the best network and the true-covariance linear denoiser; the line is the exact error of the best
+    first-order kernel (E62's registered calibration)."""
     import fig_ch10 as c10
     from matplotlib.lines import Line2D
     adv = c10._nonmarkov()
     betas, gammas = [0.1, 0.25, 0.5, 1.0], [0.05, 0.1, 0.2, 0.4]
     kl_b = [c10.kl_per_site(c10.global_cov(x), c10.CHOW_LIU[("global", x)]) for x in betas]
     kl_g = [c10.kl_per_site(c10.longrange_cov(x), c10.CHOW_LIU[("longrange", x)]) for x in gammas]
-    fig, ax = figure(height=2.6)
+    r62 = _core("read_e62")
+    arms, _ = r62.load()
+    cal = r62.calibration()
+    fig, (ax, bx) = figure(2, width=W["full"], height=2.4)
     series = ((("gauss", "global"), betas, kl_b, "o"), (("laplace", "global"), betas, kl_b, "s"),
               (("gauss", "longrange"), gammas, kl_g, "^"))
+    phis = [p for p in r62.PHI2 if p > 0]
+    d62 = [cal[p]["delta_exact"] for p in phis]
     for net, c in (("cnn", GREEN), ("mlp", ORANGE)):
         for key, xs, kl, m in series:
             ax.loglog(kl, [adv[(key[0], key[1], s)][net] for s in xs], m, color=c, ms=4.5, ls="none")
+        net62 = "window" if net == "cnn" else "mlp"
+        ax.loglog(d62, [r62.seed_mean(arms, net62, 2048, p) / r62.seed_mean(arms, "first", 2048, p) for p in phis],
+                  "D", color=c, ms=4.0, ls="none")
     ax.axhline(1.0, color=INK, lw=0.8, ls="--")
-    ax.set_ylim(0.5, 60)
+    ax.set_ylim(0.3, 60)
     plain_log_y(ax, [0.5, 1, 2, 5, 10, 20, 50])
     ax.set_xlabel(r"distance to a Markov chain $\delta$")
     ax.set_ylabel("network / EM–BP error")
     handles = [Line2D([], [], color=GREEN, marker="o", ls="none", label="window CNN"),
                Line2D([], [], color=ORANGE, marker="o", ls="none", label="global MLP"),
-               Line2D([], [], color=INK, marker="o", ls="none", mfc="none", label=r"latent, Gauss"),
-               Line2D([], [], color=INK, marker="s", ls="none", mfc="none", label=r"latent, Laplace"),
-               Line2D([], [], color=INK, marker="^", ls="none", mfc="none", label=r"long-range")]
+               Line2D([], [], color=INK, marker="o", ls="none", mfc="none", label="latent, Gauss"),
+               Line2D([], [], color=INK, marker="s", ls="none", mfc="none", label="latent, Laplace"),
+               Line2D([], [], color=INK, marker="^", ls="none", mfc="none", label="long-range"),
+               Line2D([], [], color=INK, marker="D", ls="none", mfc="none", label="AR(2), Laplace")]
     ax.legend(handles=handles, loc="upper right", frameon=False, fontsize=8)
+
+    P = list(r62.PHI2)
+    sm = lambda a: [r62.seed_mean(arms, a, 2048, p) for p in P]
+    best = [min(r62.seed_mean(arms, a, 2048, p) for a in r62.NETS) for p in P]
+    bx.plot(P, [cal[p]["first_order_floor"] for p in P], "-", color=BLUE, lw=1.0)
+    bx.plot(P, sm("first"), "o", color=BLUE, ms=4.5, ls="none", label="first order")
+    bx.plot(P, sm("pair"), "s", color=fs.CAT[4], ms=4.5, ls="none", label="pair state")
+    bx.plot(P, best, "D", color=GREY, ms=4.0, ls="none", label="best network")
+    bx.plot(P, sm("lmmse"), "--", color=INK, lw=0.8, label="linear")
+    bx.set_xlim(-0.36, 0.66)
+    bx.set_ylim(0, 0.37)
+    bx.set_xlabel(r"second-order coefficient $\phi_2$")
+    bx.set_ylabel("relative score error")
+    bx.legend(loc="upper left", frameon=False, fontsize=8)
+    panel(ax, "a"); panel(bx, "b")
     save(fig, "fig_nonmarkov")
     for key, xs, kl, _ in series:
         print(f"    {key}: " + "  ".join(f"d={d:.2e} cnn={adv[(key[0], key[1], s)]['cnn']:.2f} "
                                          f"mlp={adv[(key[0], key[1], s)]['mlp']:.2f}" for s, d in zip(xs, kl)))
+    print("    E62 N=2048: " + "  ".join(f"phi2={p:g} d={cal[p]['delta_exact']:.3f} first={f:.4f} pair={q:.4f} net={b:.4f}"
+                                         for p, f, q, b in zip(P, sm("first"), sm("pair"), best)))
+
+
+# ------------------------------------------------------------------------------------- tables --
+def _write_table(name: str, body: str) -> None:
+    (OUT / f"{name}.tex").write_text(body)
+    print(f"  {name}.tex")
+
+
+def _field_rows():
+    """Allen-Cahn rows, relative score error divided by the linear floor per seed, then averaged over seeds.
+    E33/E43/E60 on seeds 0-15 (frozen); E55's neural energy kernel and U-Net on seeds 0-7 (finished cells, fetched 7 Nov
+    2026). E55's fit parts share one draws hash per (cell, seed); the oracle hash differs only where the recorded cell scale
+    differs in its last bits between the CPU and GPU nodes (checked here), so E33's per-seed floor applies."""
+    import glob
+
+    import pandas as pd
+    r60 = _core("read_e60")
+    risk, _ = r60.load()
+    orc = pd.read_csv(REPO / "outputs/hpc_E33o/oracles.csv")
+    floor = orc[orc.arm == "lmmse_true"].drop_duplicates(["cell", "seed"]).set_index(["cell", "seed"]).risk
+    cat = lambda pat: pd.concat([pd.read_csv(p) for p in sorted(glob.glob(str(REPO / pat)))], ignore_index=True)
+    ll = cat("outputs/hpc_E43a_s*/kernels.csv")
+    ll = ll[(ll.selection == "risk") & (ll.arm == "em_loglinear")].assign(arm="loglinear2d")
+    ts = cat("outputs/hpc_E33k_s*/kernels.csv")
+    ll = pd.concat([ll, ts[(ts.selection == "risk") & (ts.arm == "em_tilted_spline")]], ignore_index=True)
+    nets55, k55 = cat("outputs/hpc_E55_nets_*/nets.csv"), cat("outputs/hpc_E55_kern_*/kernels.csv")
+    fits = pd.concat([d[["cell", "seed", "test_draws"]] for d in (nets55, k55)])
+    assert (fits.groupby(["cell", "seed"]).test_draws.nunique() == 1).all(), "E55 fit parts disagree on the test draws"
+    o55 = cat("outputs/hpc_E55_oracles/oracles.csv").drop_duplicates("cell").set_index("cell").scale
+    s55 = nets55.drop_duplicates("cell").set_index("cell").scale
+    assert float((s55 / o55.reindex(s55.index) - 1).abs().max()) < 1e-14, "E55 cell scale differs beyond round-off"
+    e55 = pd.concat([k55[k55.selection == "risk"].assign(arm="em_energy"), nets55[nets55.arm == "unet"]])
+    e55 = e55[e55.seed < 8]
+    extra = pd.concat([ll, e55], ignore_index=True)
+    extra = extra.assign(risk=extra.risk / floor.reindex(pd.MultiIndex.from_frame(extra[["cell", "seed"]])).to_numpy())
+    cols = ["cell", "arm", "n_chains", "seed", "risk", "n_params"]
+    return r60, pd.concat([risk.reindex(columns=cols), extra.reindex(columns=cols)], ignore_index=True)
+
+
+FIELD_ROWS = (("site energy", "em_pair_quartic", "5"), ("neural energy", "em_energy", None),
+              ("free mixture", "em_free_C4", "24"), ("tilted spline", "em_tilted_spline", "25"),
+              ("log-linear 2-D", "loglinear2d", "100"), ("MDN", "em_mdn", "1{,}516"),
+              ("shift mixture", "em_mixture", "25"), (None, None, None),
+              ("U-Net", "unet", r"$1.2\times10^{7}$"), ("best of four", "best", None))
+
+
+def tab_field() -> None:
+    """Table 1 and its M = 128 twin: the Allen-Cahn cells, every kernel family and network, over the linear floor."""
+    r60, df = _field_rows()
+    cells = ("T0.3_h1_L32", "T0.5_iso_L32", "T1_iso_L32", "T2_iso_L32")
+    for m, name in ((2048, "tab_field"), (128, "tab_field_128")):
+        lines = [r"\begin{tabular}{@{}lrcccc@{}}", r"\toprule",
+                 r" & param. & $\Theta=0.3$ & $0.5$ & $1$ & $2$\\", r"\midrule"]
+        for label, arm, npar in FIELD_ROWS:
+            if label is None:
+                lines.append(r"\midrule")
+                continue
+            vals = []
+            for c in cells:
+                if arm == "best":
+                    v = min(r60.seed_mean(df, c, a, m) for a in r60.NETS)
+                else:
+                    d = df[(df.cell == c) & (df.arm == arm) & (df.n_chains == m)]
+                    v = float(d.risk.mean()) if len(d) and d.risk.notna().all() else float("nan")
+                vals.append("--" if not np.isfinite(v) else f"{v:.3f}")
+            if npar is None and arm == "em_energy":
+                ps = sorted({int(p) for p in df[(df.arm == arm) & df.cell.isin(cells)].n_params.dropna()})
+                npar = "--".join(f"{p:,}".replace(",", "{,}") for p in (ps[0], ps[-1])) if len(ps) > 1 else f"{ps[0]}"
+            lines.append(f"{label} & {npar or ''} & " + " & ".join(vals) + r"\\")
+        lines += [r"\bottomrule", r"\end{tabular}"]
+        _write_table(name, "\n".join(lines) + "\n")
+
+
+def tab_chains() -> None:
+    """Table 2: relative score error at N = 2048 on E61's and E57's chains (seed means over seeds 0-7)."""
+    r61, r57 = _core("read_e61"), _core("read_e57")
+    d61 = r61.load()
+    d57, _ = r57.load()
+    f = lambda v: "--" if not np.isfinite(v) else ("0" if abs(v) < 5e-5 else f"{v:.3f}") 
+    rows = {"inside": [("Gaussian", "gauss", 61), ("Student-$t$", "student", 61), ("uniform", "uniform", 61),
+                       ("bimodal$^\\dagger$", "bimodal", 57)],
+            "outside": [("skewed", "skew", 61), ("tanh drift$^\\dagger$", "tanh", 57),
+                        ("heteroscedastic$^\\dagger$", "hetero", 57), ("double well", "langevin", 61),
+                        ("Pearson", "pearson", 61)]}
+    lines = [r"\begin{tabular}{@{}lccccc@{}}", r"\toprule",
+             r" & & \multicolumn{3}{c}{kernel inside BP} & \\", r"\cmidrule(lr){3-5}",
+             r"chain & linear & shift & neural & neural$^{\ast}$ & network\\", r"\midrule"]
+    for group, title in (("inside", "inside the shift class"), ("outside", "outside it")):
+        lines.append(r"\multicolumn{6}{@{}l}{\emph{" + title + r"}}\\")
+        for label, chain, src in rows[group]:
+            r, d = (r61, d61) if src == 61 else (r57, d57)
+            vals = [r.seed_mean(d, chain, "lmmse", 2048), r.seed_mean(d, chain, "mixture", 2048),
+                    r.seed_mean(d, chain, "energy", 2048),
+                    r.seed_mean(d, chain, "energy_clean", 2048) if src == 61 else float("nan"),
+                    min(r.seed_mean(d, chain, a, 2048) for a in r.NETS)]
+            lines.append(f"{label} & " + " & ".join(f(v) for v in vals) + r"\\")
+    lines += [r"\bottomrule", r"\end{tabular}"]
+    _write_table("tab_chains", "\n".join(lines) + "\n")
 
 
 # ------------------------------------------------------------------------------------- Allen-Cahn --
@@ -615,7 +758,8 @@ def fig_em_loop() -> None:
 
 ALL = {f.__name__: f for f in (fig_locality, fig_locality_curve, fig_laplace, fig_factor_graph, fig_em_loop,
                                fig_grid_gaussian, fig_closure, fig_em_innovation, fig_value_of_structure,
-                               fig_families, fig_families_error, fig_em_dynamics, fig_nonmarkov, fig_field)}
+                               fig_families, fig_families_error, fig_em_dynamics, fig_nonmarkov, fig_field,
+                               tab_field, tab_chains)}
 
 
 def main() -> int:

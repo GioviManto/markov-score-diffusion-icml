@@ -1,0 +1,19 @@
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+ & & \multicolumn{3}{c}{kernel inside BP} & \\
+\cmidrule(lr){3-5}
+chain & linear & shift & neural & neural$^{\ast}$ & network\\
+\midrule
+\multicolumn{6}{@{}l}{\emph{inside the shift class}}\\
+Gaussian & 0 & 0.010 & 0.016 & 0.005 & 0.115\\
+Student-$t$ & 0.234 & 0.019 & 0.018 & 0.008 & 0.179\\
+uniform & 0.151 & 0.025 & 0.026 & 0.004 & 0.131\\
+bimodal$^\dagger$ & 0.082 & 0.016 & 0.033 & -- & 0.056\\
+\multicolumn{6}{@{}l}{\emph{outside it}}\\
+skewed & 0.250 & 0.219 & 0.027 & 0.010 & 0.116\\
+tanh drift$^\dagger$ & 0.171 & 0.179 & 0.031 & -- & 0.057\\
+heteroscedastic$^\dagger$ & 0.103 & 0.102 & 0.030 & -- & 0.063\\
+double well & 0.415 & 0.407 & 0.086 & 0.029 & 0.112\\
+Pearson & 0.115 & 0.101 & 0.024 & 0.011 & 0.124\\
+\bottomrule
+\end{tabular}
