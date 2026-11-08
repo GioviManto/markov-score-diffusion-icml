@@ -87,6 +87,36 @@ OUTPUT_DIRS["E62"] = "hpc_E62_p1"
 MAIN_CSV.update(_E62_DIRS)
 SCRIPTS.update({d: "e62_second_order.py" for d in _E62_DIRS})
 
+# E63 (3 Nov 2026): timings only, one exclusive CPU job and one GPU job; the curves are E65's.
+_E63_DIRS = {"hpc_E63": "timing.csv", "hpc_E63_gpu": "timing_gpu.csv"}
+OUTPUT_DIRS["E63"] = "hpc_E63"
+MAIN_CSV.update(_E63_DIRS)
+SCRIPTS.update({d: "e63_compute.py" for d in _E63_DIRS})
+
+# E64 (3 Nov 2026): generation, one directory.
+OUTPUT_DIRS["E64"] = "hpc_E64"
+MAIN_CSV["hpc_E64"] = "generation.csv"
+SCRIPTS["hpc_E64"] = "e64_generation.py"
+
+# E65 (3 Nov 2026): kernel refits in two directories by seed half, the networks in one (N-27).
+_E65_DIRS = {**{f"hpc_E65_k_h{s}": "curves_kernels.csv" for s in (0, 8)}, "hpc_E65_nets": "curves_nets.csv"}
+OUTPUT_DIRS["E65"] = "hpc_E65_k_h0"
+MAIN_CSV.update(_E65_DIRS)
+SCRIPTS.update({d: "e65_selection.py" for d in _E65_DIRS})
+
+# E66 (3 Nov 2026): the learning-rate screen in one directory, the confirmatory fits in two by seed half (N-27).
+_E66_DIRS = {"hpc_E66_dev": "screen.csv", **{f"hpc_E66_h{s}": "kernels.csv" for s in (0, 8)}}
+OUTPUT_DIRS["E66"] = "hpc_E66_h0"
+MAIN_CSV.update(_E66_DIRS)
+SCRIPTS.update({d: "e66_bp_dsm.py" for d in _E66_DIRS})
+
+# E67 (3 Nov 2026): the grid check and the timing in their own directories, kernel fits by seed half, the networks in one.
+_E67_DIRS = {"hpc_E67_check": "gridcheck.csv", "hpc_E67_timing": "timing.csv",
+             **{f"hpc_E67_k_h{s}": "arms.csv" for s in (0, 4)}, "hpc_E67_nets": "nets.csv"}
+OUTPUT_DIRS["E67"] = "hpc_E67_k_h0"
+MAIN_CSV.update(_E67_DIRS)
+SCRIPTS.update({d: "e67_vector_state.py" for d in _E67_DIRS})
+
 def inspect(out_id: str) -> dict:
     """Provenance of one output directory; `dirty` lists only uncommitted files ON THE CODE PATH
     (the static import closure of the experiment script, tools/provenance_gate.import_closure)."""

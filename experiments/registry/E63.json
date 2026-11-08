@@ -1,0 +1,51 @@
+{
+ "id": "E63",
+ "script": "experiments/e63_compute.py",
+ "hypothesis": "Registered after the adversarial review of the paper draft (2-3 Nov 2026), which asked for: compute-matched comparisons (E63), generation quality (E64), checkpoint selection without the exact score (E65), a stronger structured neural baseline (E66) and a vector-state proof of concept (E67). The user said 'Then go build those experiments'. Registered before any E63-E67 code was written or run. The draft counts parameter updates: EM iterations against SGD steps. One EM iteration is a full BP pass over the data plus an M-step (0.7-4.7 s on one CPU thread in E56), one SGD step is one minibatch (about 15 ms for BiGRU in E03), so update counts say nothing about compute. E63 measures seconds per update for every arm on the same hardware and puts the frozen validation curves on a wall-clock axis.",
+ "design": "The Laplace chain of E03 (alpha = 0.85, L = 32, variance 1, Laplace innovations), E03's bundles (e03._cell_common, tags exp31-*), the twelve log-spaced levels t = 0.05 ... 3, the 401-point grid on [-8, 8]. PART timing (new runs, dev seed 10000, never a confirmatory seed): for N in (32, 128, 512, 2048), on ONE CPU thread (torch and BLAS), the median over 3 repetitions after one warm-up of: seconds per EM iteration (E-step over the N one-view noisy sequences of e03._one_view_groups plus the M-step) for em_bp (E30's mixture, C = 8), spline and energy (E56's recipes, energy width 16); seconds per clean M-step for clean_energy (E58's energy_h16 on the clean histogram, plus the one-off histogram time); seconds per SGD step at batch 64 for E03's six screened networks (median over 200 steps after 20 warm-up); and use-time seconds per test sequence over the twelve levels for BP on the 401 grid and for each network's forward pass. An optional part timing_gpu repeats the network steps and BP on one GPU. PART curves (no new fits, in the reader): the frozen validation curves (E56 val_curve for spline and energy, E02a val_curve for the C = 8 mixture, E58 val_curve for clean energy_h16, E03 val_curve for the networks) are put on a wall-clock axis, wall(c) = c x seconds per update at that N. Time to a target = the wall-clock of the FIRST checkpoint whose validation error is at or below the target (conservative: no interpolation between checkpoints).",
+ "predeclared_predictions": {
+  "P1": "Time to the networks' accuracy, noisy data: at N = 2048 the noisy-EM energy kernel (E56 curve) reaches the validation error of BiGRU's selected checkpoint in less wall-clock than BiGRU needs to reach it, in >= 12/16 seeds.",
+  "P2": "Time to the networks' accuracy, clean data: the clean-ML energy kernel (E58 curve) reaches BiGRU's selected validation error in less wall-clock than BiGRU at N = 128, 512 and 2048, in >= 12/16 seeds at each N.",
+  "P3": "Full training cost, the honest direction: at N = 2048 the noisy-EM energy kernel's wall-clock to ITS selected checkpoint exceeds BiGRU's wall-clock to its selected checkpoint, in >= 12/16 seeds.",
+  "P4": "Use time: BP on the 401 grid costs more per test sequence (twelve levels) than BiGRU's forward pass, by more than a factor 10, on one CPU thread at batch 2048."
+ },
+ "descriptive": {
+  "D1": "Seconds per update for every arm and N, and the ratio EM iteration / SGD step.",
+  "D2": "Validation error against wall-clock for every arm, one figure per N.",
+  "D3": "Analytic operation counts: an EM iteration ~ N (L-1) N_g^2 multiply-adds for the E-step plus the M-step's grid evaluations; an SGD step ~ 6 x parameters x batch x L.",
+  "D4": "GPU timings (timing_gpu), if run."
+ },
+ "predeclared_analysis": "tools/core/read_e63.py. Gates: timing rows for every (arm, N); every frozen curve used is the one of the frozen row with the same (seed, N, arm) as the paper's tables. A seed whose curve never reaches the target counts AGAINST P1/P2. Paired by seed; no bootstrap.",
+ "seeds": "timing: dev seed 10000; curves: the frozen confirmatory seeds 0-15 of E02a, E03, E56 and E58",
+ "budget_rule": "timing only; no fit is extended or rerun.",
+ "provenance_note": "The curves are frozen outputs (E02a, E03, E56, E58); E63 adds only timings.",
+ "resources": "About 2 CPU-h (one exclusive node, one thread); timing_gpu about 0.5 GPU-h.",
+ "status": "FROZEN and READ 2026-11-04 (P1 FALSIFIED, P2 CONFIRMED, P3 CONFIRMED, P4 CONFIRMED); FROZEN hpc_E63 2026-11-04T18:06:05Z; REGISTERED 2026-11-03; amended before code (curves from E65); code f2e2983; deployed fd116f2-20261104T103501Z (hpc/.deploy_fd116f2.env); submitted 2026-11-04 ~11:40 CET: e63-timing 737521 (defq, exclusive, 1 thread); timing_gpu not submitted. Curves come from E65.",
+ "registered": "2026-11-03",
+ "amendment_2026-11-03_before_code": "Found while reading the frozen curves, before any E63/E65 code: the frozen validation curves are on DIFFERENT site sets. E03's networks and E02a's mixture score validation on the bulk sites 4-27 (e03.REGIONS['bulk']); E30, E56 and E58 score all 32 sites. They cannot share an axis. CHANGE: the curves come from E65's refits, which record at every checkpoint the TEST error on all 32 sites for every arm (EM arms, clean_energy, E03's six networks), on the same test bundles. P1-P3 are read with 'test error of BiGRU's selected checkpoint' in place of 'validation error of BiGRU's selected checkpoint', and the E56/E58 curves by E65's curves for the same arms. The frozen curves remain a descriptive cross-check. P4 and the timing part are unchanged.",
+ "implementation_notes_2026-11-03": "Repetitions for EM iterations and clean M-steps raised from 3 to 10 (median after one warm-up), before any confirmatory run: the dev-seed smoke run (N = 32, 401 points, laptop) showed a clean M-step costing 0.76 s against 0.42 s for a whole noisy EM iteration of the same kernel, because the generalised M-step's step-halving retries early on; a 3-iteration median right after the start is not representative. Smoke numbers (laptop, one thread, N = 32): energy 0.42 s and em_bp 0.57 s per EM iteration, BiGRU 7.8 ms per SGD step, BP 3.4 ms and BiGRU 0.44 ms per test sequence over twelve levels.",
+ "deployment_2026-11-04": "Jobs by seed HALF, not the registered quarters/pairs, to fit the 30-job cap (17 E55 jobs were queued); one output directory per job (N-27). Fetch to outputs/hpc_<dir> per tools/registry.py, then freeze.py, then the reader. e63-timing 737521 (defq, exclusive, 1 thread); timing_gpu not submitted. Curves come from E65.",
+ "frozen_outputs": {
+  "outputs/hpc_E63/timing.csv": "db6c735c7ec8cc10a98d0a258f07c04e4ef51d5c70c24698933782081d50044f",
+  "outputs/hpc_E63/params_timing.json": "88122889160cb72ea1afc43299c512e5c11efcd1085ded1f254cbe4d8a6d8126"
+ },
+ "frozen_at": {
+  "hpc_E63": "2026-11-04T18:06:05Z"
+ },
+ "frozen_commit": {
+  "hpc_E63": "36fe9703e01fd90bcd4b832511c90d49274d1848"
+ },
+ "frozen_run_commits": {
+  "hpc_E63": [
+   "fd116f2"
+  ]
+ },
+ "outcome": {
+  "read": "2026-11-04, tools/core/read_e63.py on the frozen hpc_E63 (timing, one CPU thread, dev seed) and E65's frozen per-checkpoint curves (hpc_E65_k_h0, hpc_E65_k_h8, hpc_E65_nets); derived wall-clock curves in reports/core/e63_curves_wall.csv.",
+  "P1": "FALSIFIED: at N = 2048 the noisy-EM energy kernel reaches BiGRU's selected test error in less wall-clock than BiGRU in 7/16 seeds (12 required).",
+  "P2": "CONFIRMED: the clean-ML energy kernel reaches BiGRU's selected error first in 16/16 seeds at N = 128, 512 and 2048.",
+  "P3": "CONFIRMED: at N = 2048 the noisy-EM energy kernel's wall-clock to its own selected checkpoint exceeds BiGRU's in 16/16 seeds.",
+  "P4": "CONFIRMED: BP on the 401 grid costs 20.3x BiGRU's forward pass per test sequence (6972 us).",
+  "D1": "seconds per update at N = 2048, one thread: em_bp 3.40, spline 2.34, energy 2.49, clean_energy 0.482 per EM iteration / M-step; BiGRU 0.0126, U-Net 0.0170, TCN 0.0166, Transformer 0.0117, window 0.0025, MLP 0.0010 per SGD step (em_bp / BiGRU 271x, clean_energy / BiGRU 38x)."
+ }
+}

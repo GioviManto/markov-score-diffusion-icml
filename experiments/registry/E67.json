@@ -1,0 +1,74 @@
+{
+ "id": "E67",
+ "script": "experiments/e67_vector_state.py",
+ "hypothesis": "Registered after the adversarial review of the paper draft (2-3 Nov 2026), which asked for: compute-matched comparisons (E63), generation quality (E64), checkpoint selection without the exact score (E65), a stronger structured neural baseline (E66) and a vector-state proof of concept (E67). The user said 'Then go build those experiments'. Registered before any E63-E67 code was written or run. The method's state is one number per site. With d numbers per site the grid has N_g^d points and the kernel N_g^(2d) entries. E67 is a proof of concept at d = 2: a bivariate Markov chain, learned by EM through BP on a 2-D state grid, against networks with two input channels; it states the cost honestly.",
+ "design": "CHAIN: b_{k+1} = 0.85 R(pi/6) b_k + eps_k in R^2, R a rotation, eps_k with independent Laplace components of variance 1 - 0.85^2, so the stationary covariance is the identity; L = 32; the first site after a burn-in of 64 steps; each component noised independently at level t. GRID: 41 points per axis on [-5, 5] (h = 0.25), 1681 states, the transition a 1681 x 1681 matrix; levels: eight log-spaced t from 0.3 to 3 (the resolution rule sqrt(2t) >= 3h sets t >= 0.28). Reference: BP with the true kernel on this grid, checked against 61 points per axis on one bundle. Seeds 0-7, N in (128, 512, 2048). ARMS: oracle (true kernel, the reference); lmmse (the true covariance); var1 (a Gaussian VAR(1) learned by EM, closed-form M-step); energy2d (NeuralEnergyKernel on (b, b') in R^4, width 16, uniform start, noisy EM, one view per sequence split over the levels, checkpoints 10 ... 600, selection by validation error); networks with two input channels trained by DSM on the clean chains with E03's recipe: window CNN (radius 4, width 64) and BiGRU (hidden 32).",
+ "predeclared_predictions": {
+  "P1": "energy2d below the best network at N = 128 and 512, in >= 6/8 seeds.",
+  "P2": "energy2d below var1 at N = 2048 in >= 7/8 seeds (the learned kernel uses the non-Gaussian structure).",
+  "P3": "Cost: one EM iteration at N = 2048 takes at most 10 minutes on 16 CPU threads."
+ },
+ "descriptive": {
+  "D1": "Seconds per EM iteration and memory against the 1-D chain (the N_g^(2d) scaling).",
+  "D2": "The reference's grid error (41 against 61 points per axis)."
+ },
+ "predeclared_analysis": "tools/core/read_e67.py. Gates: one test bundle per (seed) shared by all arms; the 41/61 grid check below 1e-2 relative on the pooled reference score, otherwise the levels are raised before the confirmatory run and recorded as an amendment. A failed fit counts AGAINST every prediction it enters. Paired by seed.",
+ "seeds": "0-7",
+ "budget_rule": "EM to 600 iterations; networks 32000 steps; no extension.",
+ "provenance_note": "New chain and code (markov_score.vector_chain).",
+ "resources": "To be timed: E-step at N = 2048 about 2048 x 31 x 1681^2 = 1.8e11 multiply-adds (~1 min on 16 threads); ~600 iterations, so ~10 h per fit at N = 2048; one defq job per seed pair, 16 CPUs.",
+ "status": "FROZEN and READ 2026-11-05 (P1 CONFIRMED, P2 CONFIRMED, P3 CONFIRMED); FROZEN hpc_E67_check 2026-11-04T18:06:06Z; REGISTERED 2026-11-03; code d7decc6; grid gate passed (4.1e-5); deployed fd116f2-20261104T103501Z (hpc/.deploy_fd116f2.env); submitted 2026-11-04 ~11:40 CET: e67-check 737533 COMPLETED in 34 s (pooled 4.11e-5, as on the laptop); e67-timing 737534 (defq, exclusive, 16 threads); e67-k-h0 737537, e67-k-h4 737538 (compute 24 cpus, 96G, 3 days; seeds 0-3 / 4-7); e67-nets 737540 (defq 16 cpus).",
+ "registered": "2026-11-03",
+ "implementation_notes_2026-11-03": "Before any confirmatory run. (i) Gate check at full settings (part gridcheck, 256 sequences, laptop 8 threads): the 41-point reference against 61 points per axis differs by 7.2e-5 at t = 0.3, falling to 8.7e-7 at t = 3; pooled 4.1e-5, far inside the 1e-2 gate. (ii) A part `timing` was added for P3: the fits run as many single-threaded workers, so P3 (one EM iteration at N = 2048 on 16 threads) is measured separately on dev seed 10000 with the job's BLAS threads (submit e67-timing with MSD_HPC_EXCLUSIVE=1 MSD_HPC_THREADS=16). (iii) Every arm is selected by its validation score error on ALL sites and both components (the registration did not name a site set). (iv) The 2-D BP is tested against two independent 1-D chains (theta = 0): means to 1e-10, evidence to 1e-6 relative.",
+ "deployment_2026-11-04": "Jobs by seed HALF, not the registered quarters/pairs, to fit the 30-job cap (17 E55 jobs were queued); one output directory per job (N-27). Fetch to outputs/hpc_<dir> per tools/registry.py, then freeze.py, then the reader. e67-check 737533 COMPLETED in 34 s (pooled 4.11e-5, as on the laptop); e67-timing 737534 (defq, exclusive, 16 threads); e67-k-h0 737537, e67-k-h4 737538 (compute 24 cpus, 96G, 3 days; seeds 0-3 / 4-7); e67-nets 737540 (defq 16 cpus).",
+ "frozen_outputs": {
+  "outputs/hpc_E67_check/gridcheck.csv": "a6918052bfa0364bdab9509b7b0841eac6f30124b27b953499ddeabe4d71b1ad",
+  "outputs/hpc_E67_check/params_gridcheck.json": "a9cf8edb626fc20a17fa367a4da7c14fa72a8a18b9624e3f2b1a96e9d865cbf7",
+  "outputs/hpc_E67_timing/timing.csv": "86423bc27430cb23f1cb1f2c8319ece4df53ce63ac9fb0bc23d5a5b47702a880",
+  "outputs/hpc_E67_timing/params_timing.json": "700ac70568285711fa362e8139085155c0e058a485e277819b0ec0567807d768",
+  "outputs/hpc_E67_nets/nets.csv": "e535297d502ae232bea8afee74f205d77305ffa5ae849eeb43bdbd9641c617bf",
+  "outputs/hpc_E67_nets/params_nets.json": "74cee47b0eed1a1acdc72f485a5a97b946f83dffd933faea64823c22d88f6112",
+  "outputs/hpc_E67_k_h0/arms.csv": "8bd7672446e092dccf2947966cd7df98d696031028bc2ddfdb94eba246705895",
+  "outputs/hpc_E67_k_h0/params_kernels.json": "cd27f3cc0f22a1c0196c299001250b8145cfb8c75ba897ec7fc8098d5b933021",
+  "outputs/hpc_E67_k_h4/arms.csv": "c9b9e9334d6b69eac9f641043a59baad69088a240d810232defc2a9e0990e018",
+  "outputs/hpc_E67_k_h4/params_kernels.json": "92a44ff3b0a07fc965412834257c88c0844f6923e5e72420542c145449c41cf2"
+ },
+ "frozen_at": {
+  "hpc_E67_check": "2026-11-04T18:06:06Z",
+  "hpc_E67_timing": "2026-11-04T18:06:06Z",
+  "hpc_E67_nets": "2026-11-04T18:06:06Z",
+  "hpc_E67_k_h0": "2026-11-05T12:23:58Z",
+  "hpc_E67_k_h4": "2026-11-05T12:23:58Z"
+ },
+ "frozen_commit": {
+  "hpc_E67_check": "36fe9703e01fd90bcd4b832511c90d49274d1848",
+  "hpc_E67_timing": "36fe9703e01fd90bcd4b832511c90d49274d1848",
+  "hpc_E67_nets": "36fe9703e01fd90bcd4b832511c90d49274d1848",
+  "hpc_E67_k_h0": "976b595b2b0168ed73be87e63ecd53ed3d828873",
+  "hpc_E67_k_h4": "976b595b2b0168ed73be87e63ecd53ed3d828873"
+ },
+ "frozen_run_commits": {
+  "hpc_E67_check": [
+   "fd116f2"
+  ],
+  "hpc_E67_timing": [
+   "fd116f2"
+  ],
+  "hpc_E67_nets": [
+   "fd116f2"
+  ],
+  "hpc_E67_k_h0": [
+   "fd116f2"
+  ],
+  "hpc_E67_k_h4": [
+   "fd116f2"
+  ]
+ },
+ "outcome": {
+  "read": "2026-11-05, tools/core/read_e67.py on the frozen hpc_E67_{check,timing,nets,k_h0,k_h4}; 72 kernel rows, seeds 0-7.",
+  "P1": "CONFIRMED: energy2d below the best network (bigru2) in 7/8 seeds at N = 128 and at N = 512.",
+  "P2": "CONFIRMED: energy2d below var1 at N = 2048 in 8/8 seeds.",
+  "P3": "CONFIRMED: one energy2d EM iteration at N = 2048 takes 15.3 s on 16 threads (<= 600 s).",
+  "D": "seed means energy2d 0.0532/0.0406/0.0304, var1 0.0455/0.0381/0.0360, bigru2 0.0599/0.0438/0.0344, window2 0.0752/0.0705/0.0688 at N = 128/512/2048. The true-covariance linear denoiser (lmmse, an oracle reference) scores 0.0351: every learned model is above it at N <= 512 and only energy2d goes below it, at N = 2048. var1 beats energy2d at N = 128 and 512."
+ }
+}

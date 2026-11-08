@@ -301,6 +301,34 @@ cmd_for() {
     e62-p3)      echo "e62_second_order.py --only bundles,arms --set 'phi2=(0.3, 0.4)' --output-dir {OUT}/E62_p3";;
     e62-p4)      echo "e62_second_order.py --only bundles,arms --set 'phi2=(0.6,)' --output-dir {OUT}/E62_p4";;
     e62-wind)    echo "e62_second_order.py --only wind --output-dir {OUT}/E62_wind";;
+    # E63 (3 Nov 2026, registry E63.json): timings. Submit with MSD_HPC_EXCLUSIVE=1 MSD_HPC_THREADS=1 (a wall-clock
+    # experiment, N-29); the GPU job with MSD_HPC_GRES=gpu:1 MSD_HPC_VENV=venv-cuda.
+    e63-timing)     echo "e63_compute.py --only timing --output-dir {OUT}/E63";;
+    e63-timing-gpu) echo "e63_compute.py --only timing_gpu --output-dir {OUT}/E63_gpu";;
+    # E64 (3 Nov 2026, registry E64.json): generation, every arm of a (seed, N) in one cell, one job.
+    e64)         echo "e64_generation.py --only gen --output-dir {OUT}/E64";;
+    # E65 (3 Nov 2026, registry E65.json): kernel refits by seed half (the 30-job cap), the networks in one job (N-27).
+    e65-k-h0|e65-k-h8)
+      local s0=${1#e65-k-h}
+      local seeds; seeds=$(for ((i = s0; i < s0 + 8; i++)); do printf "%d, " $i; done)
+      echo "e65_selection.py --only kernels --set 'seeds=($seeds)' --output-dir {OUT}/E65_k_h$s0";;
+    e65-nets)    echo "e65_selection.py --only nets --output-dir {OUT}/E65_nets";;
+    # E66 (3 Nov 2026, registry E66.json): the learning-rate screen, then two fit jobs by seed half that read its
+    # winners.json (submit them --after the screen) (N-27).
+    e66-screen)  echo "e66_bp_dsm.py --only screen --output-dir {OUT}/E66_dev";;
+    e66-fit-h0|e66-fit-h8)
+      local s0=${1#e66-fit-h}
+      local seeds; seeds=$(for ((i = s0; i < s0 + 8; i++)); do printf "%d, " $i; done)
+      echo "e66_bp_dsm.py --only fit --set 'seeds=($seeds)' --set \"winners='{OUT}/E66_dev/winners.json'\" --output-dir {OUT}/E66_h$s0";;
+    # E67 (3 Nov 2026, registry E67.json): the grid check, the timing (MSD_HPC_EXCLUSIVE=1 MSD_HPC_THREADS=16), kernel
+    # fits by seed half on `compute` (a neural M-step is ~35 s at any N: fits run 6-18 h), the networks in one job (N-27).
+    e67-check)   echo "e67_vector_state.py --only gridcheck --output-dir {OUT}/E67_check";;
+    e67-timing)  echo "e67_vector_state.py --only timing --output-dir {OUT}/E67_timing";;
+    e67-k-h0|e67-k-h4)
+      local s0=${1#e67-k-h}
+      local seeds; seeds=$(for ((i = s0; i < s0 + 4; i++)); do printf "%d, " $i; done)
+      echo "e67_vector_state.py --only kernels --set 'seeds=($seeds)' --output-dir {OUT}/E67_k_h$s0";;
+    e67-nets)    echo "e67_vector_state.py --only nets --output-dir {OUT}/E67_nets";;
     e57-kern-*|e57-nets-*)
       local rest=${1#e57-}; local part=${rest%%-*}; local chain=${rest#*-}; local only=nets extra=""
       if [[ $part == kern ]]; then

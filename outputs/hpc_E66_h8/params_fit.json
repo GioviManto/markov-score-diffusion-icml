@@ -1,0 +1,93 @@
+{
+  "n_sites": 32,
+  "t_schedule": [
+    0.05,
+    0.0725,
+    0.1053,
+    0.1527,
+    0.2216,
+    0.3215,
+    0.4665,
+    0.6769,
+    0.9821,
+    1.425,
+    2.0676,
+    3.0
+  ],
+  "quick": false,
+  "parts": [
+    "fit"
+  ],
+  "overrides": [
+    "seeds=(8, 9, 10, 11, 12, 13, 14, 15, )",
+    "winners='/home/3164542/msd-icml/outputs/fd116f2-20261104T103501Z/E66_dev/winners.json'"
+  ],
+  "seeds": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "sizes": [
+    32,
+    128,
+    512,
+    2048
+  ],
+  "dev_seeds": [
+    10000,
+    10001
+  ],
+  "screen_sizes": [
+    32,
+    2048
+  ],
+  "lrs": [
+    0.001,
+    0.003,
+    0.01
+  ],
+  "screen_steps": 8000,
+  "lr": 0.0,
+  "winners": "/home/3164542/msd-icml/outputs/fd116f2-20261104T103501Z/E66_dev/winners.json",
+  "hidden": 16,
+  "train_grid": 201,
+  "grid_size": 401,
+  "half_width": 8.0,
+  "n_val": 1024,
+  "n_test": 2048,
+  "steps": 32000,
+  "checkpoints": [
+    500,
+    1000,
+    2000,
+    4000,
+    8000,
+    16000,
+    32000
+  ],
+  "batch_size": 64,
+  "grad_clip": 1.0,
+  "torch_threads": 1,
+  "device": "cpu",
+  "timestamp": "2026-11-04 13:30:06",
+  "git_commit": "fd116f2a82fe5facdb95c85800d3ef55c7302112",
+  "git_branch": "",
+  "git_dirty": "",
+  "source_archive_sha256": "417c170ea4f72a15c3f1e166668389bb1f437323a5b00d7249487931e39c5e78",
+  "source_is_clean": true,
+  "revision_source": "REVISION file",
+  "python": "3.13.11",
+  "numpy": "2.5.3",
+  "platform": "Linux-5.14.0-687.5.3.el9_8.x86_64-x86_64-with-glibc2.34",
+  "hostname": "cnode01",
+  "slurm_job_id": "737527",
+  "slurm_array_task_id": "",
+  "cpu_count": "24",
+  "blas_threads": "1",
+  "resolved_config_hash": "7d3d722f870a"
+}

@@ -1,0 +1,62 @@
+{
+ "id": "E66",
+ "script": "experiments/e66_bp_dsm.py",
+ "hypothesis": "Registered after the adversarial review of the paper draft (2-3 Nov 2026), which asked for: compute-matched comparisons (E63), generation quality (E64), checkpoint selection without the exact score (E65), a stronger structured neural baseline (E66) and a vector-state proof of concept (E67). The user said 'Then go build those experiments'. Registered before any E63-E67 code was written or run. A reviewer will ask whether the gain comes from the BP structure or from likelihood training. E66 trains the SAME neural energy kernel (width 16) with the networks' own objective: denoising score matching on clean sequences, backpropagated through a differentiable grid BP (markov_score.bp_torch). It is a diffusion model whose denoiser is BP with a learned kernel, trained exactly like the networks.",
+ "design": "The Laplace chain of E03 (alpha = 0.85, L = 32, variance 1, Laplace innovations), E03's bundles (e03._cell_common, tags exp31-*), the twelve log-spaced levels t = 0.05 ... 3, the 401-point grid on [-8, 8]. Seeds 0-15, N in (32, 128, 512, 2048). MODEL: NeuralEnergyKernel width 16 (uniform start: last layer zero), K normalised on the grid; the posterior mean by normalised forward-backward in torch, float64. TRAINING (E03's recipe): clean training chains, batch 64, each example at a level drawn from the twelve, fresh Gaussian noise every step, the eps-prediction loss with eps_hat = (x - alpha m_hat)/sqrt(Delta), Adam, gradient clipping 1, 32000 steps, checkpoints 500 ... 32000, selection by the validation score error (E03's rule; val_dsm recorded too). Training grid 201 points on [-8, 8] (resolution rule satisfied for t >= 0.05); evaluation on the 401 grid (the kernel is a function, not a table). LEARNING RATE: screened on dev seeds 10000-10001 at N = 32 and 2048 over (1e-3, 3e-3, 1e-2), 8000 steps, by validation error; the winner is used for every confirmatory fit.",
+ "predeclared_predictions": {
+  "P1": "bp_dsm below the best of E03's six networks (lowest seed mean at that N) at every N, in >= 12/16 seeds.",
+  "P2": "bp_dsm within a factor 1.5 of E58's clean-ML energy_h16 (seed mean) at every N.",
+  "P3": "bp_dsm below E56's noisy-EM energy kernel at every N, in >= 12/16 seeds."
+ },
+ "descriptive": {
+  "D1": "Selected step and the validation curve against E03's networks.",
+  "D2": "Kernel Hellinger distance to the truth (E56's measure) against E58's clean-ML fit.",
+  "D3": "Seconds per step against the networks (feeds E63)."
+ },
+ "predeclared_analysis": "tools/core/read_e66.py. Gates: test bundles equal E03's (hash); the differentiable BP equals grid_bp_batch to 1e-10 on the true kernel (unit test and a run-time check on one batch). A failed fit counts AGAINST every prediction it enters. Paired by seed.",
+ "seeds": "screen: dev 10000-10001; confirm: 0-15",
+ "budget_rule": "32000 steps; no extension.",
+ "provenance_note": "New arm; comparators are frozen (E03, E56, E58).",
+ "resources": "About 0.1 s per step on one CPU thread at 201 points (to be timed), ~1 h per fit, 64 fits ~70 CPU-h; one defq job, or one GPU.",
+ "status": "FROZEN and READ 2026-11-04 (P1 CONFIRMED, P2 FALSIFIED, P3 CONFIRMED); FROZEN hpc_E66_dev 2026-11-04T18:06:06Z; REGISTERED 2026-11-03; code aeec9eb; dev learning check recorded; deployed fd116f2-20261104T103501Z (hpc/.deploy_fd116f2.env); submitted 2026-11-04 ~11:40 CET: e66-screen 737523 (defq 12 cpus); e66-fit-h0 737526, e66-fit-h8 737527 afterok 737523 (defq 16 cpus, 12 h).",
+ "registered": "2026-11-03",
+ "implementation_notes_2026-11-03": "Before any confirmatory run. markov_score.bp_torch equals grid_bp_batch to 1e-10 (one level and per-sequence levels) and its gradient through the energy kernel matches finite differences (tests/test_bp_torch.py). Laptop, one thread: 93 ms per DSM step at 201 points (53 ms at 101), i.e. ~50 min per 32000-step fit. Dev-seed learning check (seed 10000, N = 128, lr 3e-3, 2000 steps, NOT the screen): bulk validation error 0.118 (250 steps), 0.113 (500), 0.095 (1000), 0.057 (2000), still falling; 133 ms per step including evaluation. The screen and the confirmatory fits are untouched by this check.",
+ "deployment_2026-11-04": "Jobs by seed HALF, not the registered quarters/pairs, to fit the 30-job cap (17 E55 jobs were queued); one output directory per job (N-27). Fetch to outputs/hpc_<dir> per tools/registry.py, then freeze.py, then the reader. e66-screen 737523 (defq 12 cpus); e66-fit-h0 737526, e66-fit-h8 737527 afterok 737523 (defq 16 cpus, 12 h).",
+ "frozen_outputs": {
+  "outputs/hpc_E66_dev/screen.csv": "a64df1877100df1781fa27594f97df01c6dbd01137b047f04c9a397e1c27f0a5",
+  "outputs/hpc_E66_dev/params_screen.json": "51fd4d74565019b28196e77fa5be452bbb0780ce88b9085bfb5480109b3d6e64",
+  "outputs/hpc_E66_dev/winners.json": "933ecd5db3ebbf7fc6d493afe73cfa4f4b30b7de3acbc84a3b4022cf76b475ef",
+  "outputs/hpc_E66_h0/kernels.csv": "4443bf8e28417c8ef426af2d37b1f17c6586e3558b3dc9746ed1439ff9213caf",
+  "outputs/hpc_E66_h0/params_fit.json": "4e1f49be576dabcd3d2443b375b80a989a833b1eba89cf3d32be380a7db737e3",
+  "outputs/hpc_E66_h8/kernels.csv": "248a6c981179d62b6f74e5c2f11545b6a2cd76ae39428d05931e30ba196346e0",
+  "outputs/hpc_E66_h8/params_fit.json": "c406da3406a79d50c6bcd0f7232e00727a12be8c0b3d2fe4b36a6c68fddac1c6"
+ },
+ "frozen_at": {
+  "hpc_E66_dev": "2026-11-04T18:06:06Z",
+  "hpc_E66_h0": "2026-11-04T18:06:06Z",
+  "hpc_E66_h8": "2026-11-04T18:06:06Z"
+ },
+ "frozen_commit": {
+  "hpc_E66_dev": "36fe9703e01fd90bcd4b832511c90d49274d1848",
+  "hpc_E66_h0": "36fe9703e01fd90bcd4b832511c90d49274d1848",
+  "hpc_E66_h8": "36fe9703e01fd90bcd4b832511c90d49274d1848"
+ },
+ "frozen_run_commits": {
+  "hpc_E66_dev": [
+   "fd116f2"
+  ],
+  "hpc_E66_h0": [
+   "fd116f2"
+  ],
+  "hpc_E66_h8": [
+   "fd116f2"
+  ]
+ },
+ "outcome": {
+  "read": "2026-11-04, tools/core/read_e66.py on the frozen hpc_E66_dev (screen: lr 1e-2 won, pooled validation 0.0508), hpc_E66_h0 and hpc_E66_h8; comparators E03 confirm.csv (all sites), E58 hpc_E58_kern_lap_s*, E56 hpc_E56_s*.",
+  "P1": "CONFIRMED: bp_dsm below the best network in 16/16 seeds at every N (N = 2048: 0.0183 vs BiGRU 0.0596).",
+  "P2": "FALSIFIED: bp_dsm / E58 clean-ML energy_h16 seed means 1.33, 1.31, 1.82, 2.46 at N = 32, 128, 512, 2048 (within 1.5 required at every N).",
+  "P3": "CONFIRMED: bp_dsm below E56's noisy-EM energy kernel in 15, 15, 16 and 13 of 16 seeds at N = 32, 128, 512, 2048.",
+  "D": "median kernel Hellinger bp_dsm / E58: 0.057/0.046, 0.040/0.032, 0.035/0.019, 0.032/0.011 (bp_dsm levels off with N); median selected step 2000, 8000, 24000, 12000; 68 ms per step on the cluster."
+ }
+}
