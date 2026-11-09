@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import glob
 import sys
+from pathlib import Path
 
 import numpy as np
 
@@ -570,5 +571,60 @@ def fig_families_error(ctx) -> None:
     ctx.save(fig, "fig_families_error")
 
 
+# ============================================================================================ E74 images ==
+GEN_COLS = (("reference", "exact"), ("oracle", "true kernel"), ("energy_clean", "neural kernel"),
+            ("mixture", "shift mixture"), ("window_cont", "window CNN"), ("unet_cont", "U-Net"))
+GEN_ROWS = (("langevin", "double well"), ("T0.3_h1_L32", "Allen–Cahn"))
+
+
+def _e74_dir(ctx):
+    import os
+    return Path(os.environ.get("E74_DIR", ctx.REPO / "outputs" / "hpc_E74"))
+
+
+def fig_generation_images(ctx) -> None:
+    """Generated sequences as images: each panel stacks 64 sequences (rows) of 32 sites (columns), colour = value.
+    Rows of panels: the double-well chain and the Allen-Cahn field (seed 0, N = 2048). Columns: exact draws, the true
+    kernel, the clean-data neural kernel and the shift mixture inside BP, and the retrained networks when present."""
+    d = _e74_dir(ctx) / "samples"
+    data = {cell: np.load(d / f"{cell}_n2048.npz") for cell, _ in GEN_ROWS}
+    cols = [c for c in GEN_COLS if all(c[0] in data[cell].files for cell, _ in GEN_ROWS)]
+    fig, axes = ctx.plt.subplots(len(GEN_ROWS), len(cols), figsize=(ctx.W["full"], 3.3), constrained_layout=True,
+                                 squeeze=False)
+    im = None
+    for r, (cell, rlab) in enumerate(GEN_ROWS):
+        for c, (key, clab) in enumerate(cols):
+            ax = axes[r, c]
+            im = ax.imshow(data[cell][key][:64], cmap="RdBu_r", vmin=-2.5, vmax=2.5, aspect="auto",
+                           interpolation="nearest")
+            ax.set_xticks([]); ax.set_yticks([]); ax.set_xticks([], minor=True); ax.set_yticks([], minor=True)
+            if r == 0:
+                ax.set_title(clab)
+            if c == 0:
+                ax.set_ylabel(rlab)
+    cb = fig.colorbar(im, ax=axes, location="right", shrink=0.9, pad=0.01)
+    cb.set_label(r"$a_k$")
+    cb.ax.minorticks_off()
+    ctx.save(fig, "fig_generation_images")
+
+
+def fig_generation_long(ctx) -> None:
+    """Long chains (128 sites) generated with kernels learned on chains of 32 sites, against exact draws: the field."""
+    z = np.load(_e74_dir(ctx) / "long" / "T0.3_h1_L32.npz")
+    cols = [(k, lab) for k, lab in (("exact", "exact"), ("oracle", "true kernel"), ("energy_clean", "neural kernel"))
+            if k in z.files]
+    fig, axes = ctx.plt.subplots(1, len(cols), figsize=(ctx.W["full"], 1.9), constrained_layout=True, squeeze=False)
+    im = None
+    for ax, (k, lab) in zip(axes[0], cols):
+        im = ax.imshow(z[k][:32], cmap="RdBu_r", vmin=-2.5, vmax=2.5, aspect="auto", interpolation="nearest")
+        ax.set_xticks([0, 63, 127]); ax.set_xticklabels(["1", "64", "128"]); ax.set_yticks([])
+        ax.set_yticks([], minor=True); ax.set_xticks([], minor=True)
+        ax.set_title(lab); ax.set_xlabel(r"site $k$")
+    cb = fig.colorbar(im, ax=axes, location="right", shrink=0.9, pad=0.01)
+    cb.set_label(r"$a_k$"); cb.ax.minorticks_off()
+    ctx.save(fig, "fig_generation_long")
+
+
 NAMES = ("fig_factor_graph", "fig_em_loop", "fig_routes", "fig_closure", "fig_results", "fig_steps", "fig_wall",
-         "fig_networks", "fig_nonmarkov_delta", "fig_nonmarkov_ar2", "fig_field", "fig_families_error")
+         "fig_networks", "fig_nonmarkov_delta", "fig_nonmarkov_ar2", "fig_field", "fig_families_error",
+         "fig_generation_images", "fig_generation_long")
