@@ -101,7 +101,7 @@
   },
   "provenance_note": "Registered on 7 Nov 2026 after the user approved the design and the qualitative predictions ('Yes go on with the experiments', after the sketch with P1-P4), before any E68 driver code. The thresholds come from the calibration above, which reads only true kernels. markov_score.site_bp (tests/test_site_bp.py: = grid_bp_batch and em.e_step with one kernel, exact on a non-stationary Gaussian chain) and markov_score.nonstationary were written for the calibration, before this registration. Nothing is submitted before the user has seen these predictions.",
   "resources": "Timed (timing_2026-11-07): at the ladder caps about 44 min per persite_mixture fit and 1.8 h per site_energy fit (M-step dominated, so nearly independent of N), 15 min per shared fit at N = 2048, 2 min per network; about 480 CPU-h in all. Five jobs, one per cell (e68-<cell>), 32 CPUs each on defq; plus e68-timing. Submitted only after the user has seen the predictions.",
-  "status": "REGISTERED 2026-11-07 (not run)",
+  "status": "REGISTERED 2026-11-07 ; deployed 252e4f4, submitted 8 Nov",
   "registered": "2026-11-07",
   "amendments_2026-11-07": {
     "note": "Both made on 7 Nov 2026 before any confirmatory run (only a quick smoke run, the dev-seed timing and a dev-seed pilot of the kernel arms on drift10 at N = 512 had run). No prediction changed.",
@@ -121,5 +121,6 @@
       "window": 2.2,
       "mlp": 0.7
     }
-  }
+  },
+  "deployment_2026-11-08": "252e4f4-20261108T233924Z (hpc/.deploy_252e4f4.env); submitted 2026-11-08 ~23:45 GMT: e68-timing 748220, e68-stationary 748221, e68-drift05 748222, e68-drift10 748223, e68-switch025 748224, e68-switch05 748225 (defq, 16 cpus, 23 h)."
 }
