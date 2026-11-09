@@ -16,6 +16,7 @@
   "predeclared_analysis": "tools/core/read_e71.py: gate P4 first, then P1-P3 on seed means; a failed or missing row counts against.",
   "seeds": "0-7",
   "budget_rule": "E30's and E56's ladders unchanged.",
-  "status": "REGISTERED 2026-11-09 (not run)",
-  "registered": "2026-11-09"
+  "status": "REGISTERED 2026-11-09 ; deployed 25c05f9, submitted 9 Nov",
+  "registered": "2026-11-09",
+  "deployment_2026-11-09": "25c05f9-20261109T171342Z (hpc/.deploy_25c05f9.env); submitted 2026-11-09 ~17:15 GMT: jobs 749730 (n512), 749731 (n32,128); Slurm start estimates 11 Nov."
 }

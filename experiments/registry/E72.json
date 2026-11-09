@@ -19,6 +19,7 @@
   "predeclared_analysis": "tools/core/read_e72.py: gates first, then P1-P4 as written; a failed or missing row counts against.",
   "seeds": "0-7",
   "budget_rule": "E64's network recipe; kernels frozen.",
-  "status": "REGISTERED 2026-11-09 (not run)",
-  "registered": "2026-11-09"
+  "status": "REGISTERED 2026-11-09 ; deployed 25c05f9, submitted 9 Nov",
+  "registered": "2026-11-09",
+  "deployment_2026-11-09": "25c05f9-20261109T171342Z (hpc/.deploy_25c05f9.env); submitted 2026-11-09 ~17:15 GMT: jobs 749719; Slurm start estimates 11 Nov."
 }
