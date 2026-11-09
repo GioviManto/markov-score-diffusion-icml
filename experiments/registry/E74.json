@@ -1,0 +1,21 @@
+{
+  "id": "E74",
+  "script": "experiments/e74_generation_hard.py",
+  "hypothesis": "E64 generated only the Laplace chain. The user asked (9 Nov 2026) for generation on harder chains and for samples that can be shown as images. Here every model generates through the same reverse sampler on three of E61's chains outside the shift class (the double-well Langevin chain, the skewed chain, the Pearson chain) and on the Allen-Cahn field at Theta = 0.3. Expected: the kernels inside BP reproduce the double-well switching and the field's domains and kinks better than networks trained on the same sequences, and the shift mixture does not; a kernel learned on chains of 32 sites also generates long chains (128 sites), which a fixed-length network cannot.",
+  "design": "Cells: langevin, skew, pearson (E61's chains, E61's training sequences e61._cell_common) and the field T0.3_h1_L32 (E33's training sequences via e58.context). N in {128, 2048}, seeds 0-7. Frozen kernels, no refit: experiments/data/e74_kernels.csv (E61 energy = neural kernel by EM with the optimiser restart, energy_clean = by clean maximum likelihood, mixture = C = 8 shift mixture by EM) and experiments/data/e72_kernels.csv for the field (E55 em_energy, E58 energy_h16, E58 mixture_clean). Sampler: E64's (x ~ N(0, 1) at t = 3, 400 geometric bridge steps to t = 0.005, posterior-mean readout, the same sampler noise for every arm, 2048 sequences), BP on the 401-point grid with each kernel's own stationary law for the first site. Arms: exact (a second independent draw, the floor), oracle (the true kernel in the sampler), energy, energy_clean, mixture, and mlp/window/unet retrained on log-uniform continuous levels in [0.005, 3] (E64's recipe). Metrics against exact draws R: sliced Wasserstein-2 (sw2), marginal W1, energy distance, and the sign-change rate per link (switches between wells; kinks on the field), as |rate_gen - rate_ref|. Images: the first 64 generated sequences of seed 0 for every (cell, N, arm), and 64 long sequences (L = 128) from the oracle and the two neural kernels at N = 2048, saved as .npz for figures.",
+  "predeclared_predictions": {
+    "P1": "Sampler sanity: on every cell the oracle's sw2 is within 1.5 times the exact-vs-exact sw2 in >= 7/8 seeds at each N.",
+    "P2": "The clean-data neural kernel has lower sw2 than every network on every cell at N = 128 in >= 6/8 seeds.",
+    "P3": "Switching: on langevin and on the field, the clean-data neural kernel's |sign-change rate error| is below the best network's (lowest seed mean) at both N in >= 6/8 seeds.",
+    "P4": "The family matters in generation too: on the field the shift mixture's sw2 is above the clean-data neural kernel's at both N in >= 7/8 seeds."
+  },
+  "descriptive": {
+    "D1": "Every metric for every arm, cell and N.",
+    "D2": "Images: generated sequences stacked as rows (exact, oracle, kernels, networks), and the long kernel samples."
+  },
+  "predeclared_analysis": "tools/core/read_e74.py, written before any output: P1-P4 as written; a failed or missing row counts against.",
+  "seeds": "0-7",
+  "budget_rule": "E64's sampler and network recipe, unchanged.",
+  "status": "REGISTERED 2026-11-09 (not run)",
+  "registered": "2026-11-09"
+}

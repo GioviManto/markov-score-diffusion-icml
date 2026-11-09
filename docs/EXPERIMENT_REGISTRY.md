@@ -94,6 +94,7 @@ not re-registered; their status there is authoritative.
 | E71 | `experiments/e71_views.py` | EM with 1, 4 or 12 noisy copies of each training sequence (mixture and neural kernel, Laplace chain) | `experiments/registry/E71.json` | 0-7 | REGISTERED 9 Nov 2026 |
 | E72 | `experiments/e72_small_t_field.py` | E69 on the Allen-Cahn field (T0.3): frozen field kernels at t 0.005-0.05 against retrained networks | `experiments/registry/E72.json` | 0-7 | REGISTERED 9 Nov 2026 |
 | E73 | `experiments/e73_real_and_hidden.py` | a hidden-regime Markov chain (BP on value x regime, EM for the regime model) and two real series, the daily 3-month T-bill rate (FRED DTB3) and Milan's daily temperature anomaly (GHCN-Daily), kernels against networks | `experiments/registry/E73.json` | 0-7 | REGISTERED 9 Nov 2026 |
+| E74 | `experiments/e74_generation_hard.py` | generation on harder chains (double well, skewed, Pearson) and the Allen-Cahn field: frozen kernels through BP in E64's sampler against MLP, window CNN and U-Net retrained on continuous levels; samples saved for images, long chains from the kernels | `experiments/registry/E74.json` | 0-7 | REGISTERED 9 Nov 2026 |
 
 Dev seeds are 10000–10003 everywhere; confirmatory seeds 0–15. A confirmatory row's
 config file is committed before the run starts, and the commit that produced the
