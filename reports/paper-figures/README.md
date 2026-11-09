@@ -62,3 +62,26 @@ Mean per-seed ratio, network / EM–BP, at N = 32, 128, 512, 2048:
 These replace the thesis and defence numbers (MLP 6.6–10.9×, CNN 2.3–6.1×). Those came from the archival `exp_07` and
 `exp_31`, where each network had its own EM–BP runs. **The honest headline is the best network at each N: 2.1–2.8×** (the window CNN at N = 32, 2.07×; BiGRU
 above, 2.24–2.83×).
+
+## Restructured paper (8 Nov 2026)
+
+The user's plan for `main.tex`: the main text compares the kernels (mixture, Fourier, neural) with the global MLP and
+the window CNN only; every ablation goes to the appendix. The new figures are in `tools/paper_figs/figs_v2.py`
+(registered in `make_paper_figures.py`; same style, same save gate). `twocol/` only.
+
+| file | where | what it shows | source |
+|---|---|---|---|
+| `fig_factor_graph` (.tikz) | Sec. 4 | posterior factor graph with the messages $f_k$, $b_k$ of the paper's BP recursion | diagram |
+| `fig_closure` | Sec. 5 | grid BP against the Gaussian approximation (Kalman), Laplace chain, 2,000 sequences per level | `data/closure_sweep_2000.csv`, computed by the generator |
+| `fig_em_loop` (.tikz) | Sec. 6.1 | learn the kernel by EM through BP, use it through BP | diagram |
+| `fig_routes` (.tikz) | Sec. 6.3 | clean data: kernel by maximum likelihood then BP, network by DSM | diagram |
+| `fig_results` | Sec. 6.4 | mixture (EM), neural kernel (EM, clean), MLP, CNN, linear floor against N; Laplace and Allen-Cahn Theta=0.3; seed medians | E02a, E56, E58, E33 (read_e60), E55 |
+| `fig_steps` | Sec. 6.5 | test error against parameter updates at N=2048 (neural kernel counted in Adam steps) | `reports/core/e63_curves_wall.csv` (E65 refits) |
+| `fig_wall` | App. D | the same against wall-clock seconds, one CPU thread | same, with E63 timings |
+| `fig_em_trace` | App. C | EM log-likelihood from four starts (panel a of the old `fig_em_dynamics`) | thesis exp_18 |
+| `fig_networks` | App. F | the six networks against the mixture and the neural kernel | E02a, E56, E03 |
+| `fig_nonmarkov_delta`, `fig_nonmarkov_ar2` | App. G | the two panels of the old `fig_nonmarkov`, as separate figures | thesis exp_21_clean, E62 |
+| `fig_field` | App. I | Allen-Cahn: potential, samples at Theta 0.3 and 2, single-site law, exact kernel at three states | closed form / exact sampling (E32 cells) |
+
+`fig_closure`, `fig_factor_graph`, `fig_em_loop` and `fig_field` replace the earlier versions under the same names. The
+closure curve now uses 2,000 sequences per level (the thesis sweep used 60): median 0.239 at t=0.05, not 0.27.

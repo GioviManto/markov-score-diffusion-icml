@@ -10,6 +10,9 @@
     fig_closure          Gaussian closure error against the grid's own error, Laplace chain
     fig_em_innovation    what EM recovers: the learned increment law and its moments against N (thesis Fig. 6.3)
     fig_value_of_structure  EM-BP, window CNN and global MLP on one plot (thesis Fig. 8.1a-b merged)
+    ... and the restructured paper's figures (8 Nov 2026), in figs_v2.py: fig_factor_graph, fig_em_loop, fig_routes,
+    fig_closure (2,000 sequences), fig_results, fig_steps, fig_wall, fig_networks, fig_em_trace, fig_nonmarkov_delta,
+    fig_nonmarkov_ar2, fig_field (four panels)
 
 Style (transcript 45:26-46:57): a box around every panel, text in the paper's font, labels the size of the body text
 at placement, minor ticks, no background grid, markers for measurements and lines for closed forms.
@@ -127,7 +130,7 @@ def fig_locality(L: int = 24, alpha: float = 0.85) -> None:
                        interpolation="nearest")
         ax.set_xticks([]); ax.set_yticks([])
         ax.set_xticks([], minor=True); ax.set_yticks([], minor=True)
-        ax.set_title(rf"$t^\star={t_star:.3f}$" if t == t_star else rf"$t={t:g}$")
+        ax.set_title(rf"$t^{{*}}={t_star:.3f}$" if t == t_star else rf"$t={t:g}$")
     axes[2].add_patch(Rectangle((-0.5, -0.5), L, L, fill=False, ec=BLUE, lw=1.6, clip_on=False, zorder=5))
     axes[0].set_ylabel(r"$|Q_t|$")
     cb = fig.colorbar(im, ax=list(axes), location="right", shrink=0.92, pad=0.015)
@@ -206,27 +209,6 @@ def fig_grid_gaussian() -> None:
     ax.set_ylim(1e-17, 1e-1)
     ax.legend(loc="upper right", frameon=False)
     save(fig, "fig_grid_gaussian")
-
-
-def fig_closure() -> None:
-    import csv
-    with open(THESIS_TOOLS / "data" / "ch07_metrics.csv") as fh:
-        rows = list(csv.DictReader(fh))
-    d = {k: np.array([float(r[k]) for r in rows]) for k in rows[0]}
-    t = d["t"]
-    fig, ax = figure(height=2.45)
-    ax.fill_between(t, d["score_q10"], d["score_q90"], color=ORANGE, alpha=0.18, lw=0)
-    ax.loglog(t, d["score_med"], color=ORANGE)
-    ax.loglog(t, d["grid_selfconv_med"], color=BLUE, ls="--")
-    i = int(np.argmin(np.abs(t - 0.0725)))
-    ax.annotate("", xy=(t[i], d["score_med"][i] * 0.8), xytext=(t[i], d["grid_selfconv_med"][i] * 1.4),
-                arrowprops=dict(arrowstyle="<->", color=INK, lw=0.9, shrinkA=0, shrinkB=0))
-    ax.text(t[0] * 1.15, d["score_q90"][0] * 2.5, "Gaussian closure", color=ORANGE, va="bottom")
-    ax.text(t[0] * 1.15, d["grid_selfconv_med"][0] / 4, "grid BP", color=BLUE, va="top")
-    ax.set_xlim(t[0], t[-1]); ax.set_ylim(1e-8, 30.0)
-    ax.set_xlabel(r"diffusion time $t$")
-    ax.set_ylabel("relative score error")
-    save(fig, "fig_closure")
 
 
 # ------------------------------------------------------------------------------------- EM --
@@ -338,7 +320,7 @@ def fig_value_of_structure() -> None:
 
 # ------------------------------------------------------------------------------------- kernel families (E56) --
 FAMILIES = (("spline", "B-spline"), ("rbf", "RBF"), ("fourier", "Fourier"), ("legendre", "Legendre"),
-            ("loglinear2d", "log-linear 2-D"), ("energy", "neural energy"))
+            ("loglinear2d", "log-linear 2-D"), ("energy", "neural kernel"))
 SHIFT = ("spline", "rbf", "fourier", "legendre")
 
 
@@ -394,32 +376,6 @@ def fig_families() -> None:
     handles.append(Line2D([], [], color=INK, ls="--", label="Laplace"))
     last.legend(handles=handles, loc="center", frameon=False)
     save(fig, "fig_families")
-
-
-def fig_families_error() -> None:
-    """Score error against N for every kernel family (E56), the thesis mixture (E02a) and the networks (E03)."""
-    risk = _paired_e03()
-    ns = sorted(risk["em_bp"])
-    fig, ax = figure(height=2.6)
-    mean = lambda a: np.array([np.mean(list(risk[a][n].values())) for n in ns])
-    best = np.minimum.reduce([mean(a) for a in ("mlp", "window", "bigru", "unet", "transformer", "tcn")])
-    ax.loglog(ns, best, "D-", color=GREY, lw=1.0, ms=4.0, label="best network")
-    ax.loglog(ns, mean("em_bp"), "s-", color=BLUE, lw=1.0, label="mixture")
-    k = _e56("kernels.csv")
-    if k is not None:
-        k = k[(k.failed == 0)].drop_duplicates(["seed", "n_chains", "arm"])
-        for (arm, label), c, m in zip(FAMILIES, fs.CAT[1:], "o^v<>p"):
-            s = k[k.arm == arm].groupby("n_chains").risk_pooled.mean()
-            if len(s):
-                ax.loglog(s.index, s.values, marker=m, color=c, lw=1.0, label=label)
-    log_n_axis(ax, ns)
-    ax.set_xlim(ns[0] / 1.4, ns[-1] * 1.4)
-    ax.set_ylim(0.015, 1.2)
-    plain_log_y(ax, [0.02, 0.05, 0.1, 0.2, 0.5])
-    ax.set_xlabel(r"training sequences $N$")
-    ax.set_ylabel("relative score error")
-    ax.legend(loc="upper right", frameon=False)
-    save(fig, "fig_families_error")
 
 
 def fig_em_dynamics() -> None:
@@ -577,7 +533,7 @@ def _field_rows():
     return r60, pd.concat([risk.reindex(columns=cols), extra.reindex(columns=cols)], ignore_index=True)
 
 
-FIELD_ROWS = (("site energy", "em_pair_quartic", "5"), ("neural energy", "em_energy", None),
+FIELD_ROWS = (("site energy", "em_pair_quartic", "5"), ("neural kernel", "em_energy", None),
               ("free mixture", "em_free_C4", "24"), ("tilted spline", "em_tilted_spline", "25"),
               ("log-linear 2-D", "loglinear2d", "100"), ("MDN", "em_mdn", "1{,}516"),
               ("shift mixture", "em_mixture", "25"), (None, None, None),
@@ -638,45 +594,6 @@ def tab_chains() -> None:
     _write_table("tab_chains", "\n".join(lines) + "\n")
 
 
-# ------------------------------------------------------------------------------------- Allen-Cahn --
-def fig_field() -> None:
-    """The Allen-Cahn chain: stationary law at the four temperature cells, the arrival tilt against the Gaussian
-    twin's quadratic, and one exact sample at Theta = 0.3. All closed form or exact sampling (E32 cells)."""
-    import json
-    sys.path.insert(0, str(REPO / "src"))
-    from markov_score.field import Phi4Chain
-    from markov_score.utils import rng_for
-    with open(REPO / "outputs" / "E32" / "cells.json") as fh:
-        cells = {c["cell"]: c for c in json.load(fh)}
-    tcells = (("T0.3_h1_L32", "0.3"), ("T0.5_iso_L32", "0.5"), ("T1_iso_L32", "1"), ("T2_iso_L32", "2"))
-    fig, (a0, a1, a2) = figure(3, width=W["full"], height=2.2)
-    g = np.linspace(-3.0, 3.0, 801)
-    for (cid, lab), c in zip(tcells, (fs.BLUE_RAMP[4], fs.BLUE_RAMP[3], fs.BLUE_RAMP[2], fs.BLUE_RAMP[0])):
-        ch = Phi4Chain(cells[cid]["T"], cells[cid]["h"])
-        a0.plot(g, np.exp(ch.log_stationary(g)), color=c, label=rf"$\Theta={lab}$")
-    a0.set_xlim(g[0], g[-1]); a0.set_ylim(0, 0.66)
-    a0.set_xlabel(r"$a$"); a0.set_ylabel(r"$\pi(a)$")
-    a0.legend(loc="upper center", frameon=False, fontsize=8, handlelength=1.2, ncol=2, columnspacing=0.8)
-    base = Phi4Chain(cells["T0.3_h1_L32"]["T"], cells["T0.3_h1_L32"]["h"])
-    lt = base.log_tilt(g); lt = lt - lt.max()
-    q = 1 - base.rho ** 2
-    quad = -(1 - base.rho) * g ** 2 / (2 * q); quad = quad - quad.max()
-    a1.plot(g, lt, color=BLUE, label=r"$\log g$")
-    a1.plot(g, quad, color=GREY, ls="--", label="Gaussian")
-    a1.set_xlim(g[0], g[-1]); a1.set_ylim(-12, 1)
-    a1.set_xlabel(r"$a'$"); a1.set_ylabel(r"$\log g(a')$")
-    a1.legend(loc="lower center", frameon=False)
-    A = base.sample_batch(rng_for("fig-field-chain"), 2, 128)
-    a2.plot(np.arange(128), A[0], color=BLUE, lw=1.0)
-    for y in (1 / base.scale, -1 / base.scale):
-        a2.axhline(y, color=GREY, lw=0.8, ls=":")
-    a2.set_xlim(0, 127)
-    a2.set_xlabel(r"site $i$"); a2.set_ylabel(r"$a_i$")
-    for ax, letter in zip((a0, a1, a2), "abc"):
-        panel(ax, letter)
-    save(fig, "fig_field")
-
-
 # ------------------------------------------------------------------------------------- TikZ --
 _PREAMBLE = r"""\documentclass[border=2pt]{standalone}
 %s
@@ -687,51 +604,6 @@ _PREAMBLE = r"""\documentclass[border=2pt]{standalone}
 %s
 \end{document}
 """
-
-FACTOR_GRAPH = r"""\begin{tikzpicture}[
-    var/.style={circle,draw,thick,minimum size=8mm,inner sep=0pt},
-    obs/.style={circle,draw,thick,fill=black!12,minimum size=8mm,inner sep=0pt},
-    fac/.style={rectangle,fill=black,minimum size=2.4mm,inner sep=0pt},
-    lab/.style={font=\small}]
-  \foreach \i/\n in {0/1,1/2,2/3,3/L} {
-    \node[var] (a\i) at (1.6*\i,0) {$a_{\n}$};
-    \node[fac] (o\i) at (1.6*\i,-0.95) {};
-    \node[obs] (x\i) at (1.6*\i,-1.9) {$x_{\n}$};
-    \draw (a\i) -- (o\i) -- (x\i);
-  }
-  \foreach \i/\j in {0/1,1/2} {
-    \node[fac] (k\i) at ($(a\i)!0.5!(a\j)$) {};
-    \draw (a\i) -- (k\i) -- (a\j);
-  }
-  \draw (a2) -- ($(a2)!0.32!(a3)$);
-  \node at ($(a2)!0.5!(a3)$) {$\cdots$};
-  \draw ($(a2)!0.68!(a3)$) -- (a3);
-  \node[lab,above=1.2mm of k1] {$K(a_3\,|\,a_2)$};
-  \node[lab,right=1.2mm of o3] {$\ell_t(x_L\mid a_L)$};
-  \draw[-{Stealth[length=2mm]},thick] ($(a0)+(-0.1,0.95)$) -- node[above,lab]{$\mu_{\to}$} ($(a1)+(0.3,0.95)$);
-  \draw[-{Stealth[length=2mm]},thick] ($(a3)+(0.1,0.95)$) -- node[above,lab]{$\mu_{\leftarrow}$} ($(a2)+(-0.3,0.95)$);
-\end{tikzpicture}"""
-
-EM_LOOP = r"""\begin{tikzpicture}[
-    box/.style={draw,thick,align=center,font=\small,minimum height=9mm,inner sep=3pt,text width=1.6cm},
-    data/.style={box,fill=black!8},
-    arr/.style={-{Stealth[length=2mm]},thick},
-    lab/.style={font=\small,align=center}]
-  \node[font=\small\bfseries,anchor=west] at (-1.1,1.0) {learn};
-  \node[data] (d) at (0,0) {noisy\\ sequences};
-  \node[box] (p) at (3.1,0) {pair\\ posteriors};
-  \node[box] (k) at (6.2,0) {kernel $K_\theta$};
-  \draw[arr] (d) -- node[above,lab]{BP} node[below,lab]{E-step} (p);
-  \draw[arr] (p) -- node[above,lab]{refit} node[below,lab]{M-step} (k);
-  \draw[arr] (k.north) to[out=160,in=20] node[above,lab]{repeat} (d.north);
-  \node[font=\small\bfseries,anchor=west] at (-1.1,-1.55) {use};
-  \node[data] (x) at (0,-2.5) {noisy\\ sequence $x$};
-  \node[box] (m) at (3.1,-2.5) {$\mathbb{E}[a\mid x]$};
-  \node[box] (s) at (6.2,-2.5) {score $S_t(x)$};
-  \draw[arr] (x) -- node[below,lab]{BP} (m);
-  \draw[arr] (m) -- (s);
-  \draw[thick,dashed,-{Stealth[length=2mm]}] (k.south) -- (6.2,-1.25) -| (1.55,-2.47);
-\end{tikzpicture}"""
 
 
 def _tikz(name: str, body: str) -> None:
@@ -748,18 +620,21 @@ def _tikz(name: str, body: str) -> None:
     print(f"  {name}.pdf (from {name}.tex)")
 
 
-def fig_factor_graph() -> None:
-    _tikz("fig_factor_graph", FACTOR_GRAPH)
+import figs_v2  # the restructured paper's figures, 8 Nov 2026 (tools/paper_figs/figs_v2.py)
 
 
-def fig_em_loop() -> None:
-    _tikz("fig_em_loop", EM_LOOP)
+def _v2(name: str):
+    """A figs_v2 figure, run against this module's layout, style and save gate."""
+    def run() -> None:
+        getattr(figs_v2, name)(sys.modules[__name__])
+    run.__name__ = name
+    return run
 
 
-ALL = {f.__name__: f for f in (fig_locality, fig_locality_curve, fig_laplace, fig_factor_graph, fig_em_loop,
-                               fig_grid_gaussian, fig_closure, fig_em_innovation, fig_value_of_structure,
-                               fig_families, fig_families_error, fig_em_dynamics, fig_nonmarkov, fig_field,
-                               tab_field, tab_chains)}
+ALL = {f.__name__: f for f in (fig_locality, fig_locality_curve, fig_laplace, fig_grid_gaussian, fig_em_innovation,
+                               fig_value_of_structure, fig_families, fig_em_dynamics,
+                               fig_nonmarkov, tab_field, tab_chains)}
+ALL.update({n: _v2(n) for n in figs_v2.NAMES})
 
 
 def main() -> int:
