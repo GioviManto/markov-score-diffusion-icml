@@ -26,7 +26,8 @@
   "predeclared_analysis": "tools/core/read_e73.py, written before any output: P1-P7 as written; a failed or missing row counts against.",
   "seeds": "0-7",
   "budget_rule": "E30/E56/E62 ladders and E03's network recipe, unchanged.",
-  "status": "REGISTERED 2026-11-09 (not run)",
+  "status": "REGISTERED 2026-11-09 ; deployed 15010cf, submitted 9 Nov",
   "registered": "2026-11-09",
-  "amendments_2026-11-09": "Pre-run: the full training sets have 398 (DTB3) and 913 (Milan) complete windows, not 397 and 912 as written; 'all' in the design means the full set, so the sizes are (32, 128, 398) and (32, 128, 512, 913). Descriptive D1 computed during the smoke run (data only, no model): DTB3 lag-1 0.9994, lag-2 partial -0.142; Milan lag-1 0.817, lag-2 partial -0.075."
+  "amendments_2026-11-09": "Pre-run: the full training sets have 398 (DTB3) and 913 (Milan) complete windows, not 397 and 912 as written; 'all' in the design means the full set, so the sizes are (32, 128, 398) and (32, 128, 512, 913). Descriptive D1 computed during the smoke run (data only, no model): DTB3 lag-1 0.9994, lag-2 partial -0.142; Milan lag-1 0.817, lag-2 partial -0.075.",
+  "deployment_2026-11-09": "15010cf-20261109T173459Z (hpc/.deploy_15010cf.env); submitted 2026-11-09 ~17:40 GMT: e73-regime 749831, e73-real 749832 (defq, 16 cpus, 23 h)."
 }

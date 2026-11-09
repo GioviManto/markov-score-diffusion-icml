@@ -16,6 +16,8 @@
   "predeclared_analysis": "tools/core/read_e74.py, written before any output: P1-P4 as written; a failed or missing row counts against.",
   "seeds": "0-7",
   "budget_rule": "E64's sampler and network recipe, unchanged.",
-  "status": "REGISTERED 2026-11-09 (not run)",
-  "registered": "2026-11-09"
+  "status": "REGISTERED 2026-11-09 ; deployed 15010cf, submitted 9 Nov",
+  "registered": "2026-11-09",
+  "deployment_2026-11-09": "15010cf-20261109T173459Z (hpc/.deploy_15010cf.env); submitted 2026-11-09 ~17:40 GMT: e74 749834 (defq, 16 cpus, 23 h).",
+  "preview_2026-11-09": "Before the jobs ran, a laptop preview (seed 0, N = 2048, kernels only, 256 generated sequences, langevin and the field) was run to build the image figure. It printed seed 0's kernel metrics: switch rate exact 0.071 / oracle 0.071 / energy 0.067 / energy_clean 0.068 / mixture 0.134 on langevin; 0.118 / 0.123 / 0.128 / 0.123 / 0.177 on the field. So P3 and P4 were partly seen for one seed (networks not run). No prediction was changed."
 }
