@@ -1,0 +1,31 @@
+{
+  "id": "E73",
+  "script": "experiments/e73_real_and_hidden.py",
+  "hypothesis": "The user asked (9 Nov 2026) for Markov processes from finance and nature and for hidden Markov data. Three tests of the method beyond synthetic first-order chains. (1) A hidden Markov chain: the noise of a first-order chain switches between a calm and a stormy regime that persists in time; the value alone is not first-order Markov, but the pair (value, regime) is, so BP on a doubled grid (one copy per regime) is exact and EM on it learns the regime model. (2) The daily 3-month US Treasury bill rate (FRED DTB3), a textbook first-order Markov process (Vasicek, CIR). (3) The daily mean temperature anomaly at Milan Brera (NOAA GHCN-Daily ITE00100554), close to first-order Markov.",
+  "data": {
+    "DTB3": "experiments/data/raw_dtb3/DTB3.csv, downloaded 2026-11-09 from https://fred.stlouisfed.org/graph/fredgraph.csv?id=DTB3, SHA-256 124e0cc2985c721af0c859e3c94e09f6a8003ff1e4fde8accfd8c4f109bc267f, 19,004 rows 1954-01-04 to 2026-11, public domain",
+    "Milan": "experiments/data/raw_ghcn/ITE00100554.csv, downloaded 2026-11-09 from https://www.ncei.noaa.gov/data/global-historical-climatology-network-daily/access/ITE00100554.csv, SHA-256 b0c66a7e605f3c9ff2ef76695312b86614667547782672abcda175fb98515d12, daily 1763-01-01 to 2008-12-01, public domain; used 1900-2008"
+  },
+  "design": {
+    "regime": "a_{k+1} = 0.85 a_k + s_{r_{k+1}} eps_k, eps Gaussian, r a two-state chain with stay probability 0.95 in both states, s1/s0 = 3 and (s0^2 + s1^2)/2 = 1 - 0.85^2 (unit stationary variance); chains of L = 32 after 300 burn-in steps. Seeds 0-7, N in {128, 512, 2048}, E03's twelve levels, one noisy view per training chain (E03's interface), 1024 validation and 2048 test chains. Reference: BP with the true kernel on the doubled grid (2 x 401 points). Arms: regime (the 5-parameter regime kernel by EM through doubled-grid BP), first (the C = 8 mixture by EM through first-order BP, regime-blind), energy (the neural kernel, width 16, by EM, first-order, optimiser restart on), mlp and window (E03's recipe, DSM on the clean chains), lmmse (true covariance).",
+    "real": "Each series is cut into windows of L = 32 days. DTB3: the rate level, standardised on the training years; train 1954-2004 (non-overlapping windows, 397), validation 2005-2010, test 2011-2026 (stride 8). Milan: daily mean temperature (TMAX + TMIN)/2 minus the training years' mean for that day of year, standardised; train 1900-1979 (912 windows), validation 1980-1989, test 1990-2008 (stride 8); windows with a missing day are dropped. N in {32, 128, all} (and 512 for Milan), training windows drawn without replacement per seed (seeds 0-7). There is no exact score: as in E62's wind arm, every model is scored against the score built from the clean value, (e^{-t} a - x)/Delta_t, and only paired differences are meaningful. Arms, all from the clean windows: first (C = 8 mixture by clean maximum likelihood), pair (E62's two-lag mixture on the pair state, clean), energy (neural kernel by clean maximum likelihood, optimiser restart on), mlp and window (E03's recipe)."
+  },
+  "predeclared_predictions": {
+    "P1": "Hidden regime, the repair: the regime kernel is below both first-order kernels (first, energy) at N in {512, 2048} in >= 7/8 seeds.",
+    "P2": "Hidden regime, against networks: the regime kernel is below both networks at every N in >= 7/8 seeds.",
+    "P3": "Hidden regime, the first-order approximation is still useful: at N = 2048 the first-order neural kernel is below the window CNN in >= 6/8 seeds.",
+    "P4": "Hidden regime, parameters: at N = 2048 the regime kernel's stay probabilities are within 0.03 of 0.95 and its noise ratio s1/s0 within 10% of 3 (seed means).",
+    "P5": "T-bill: the neural kernel is below both networks at every N in >= 7/8 seeds.",
+    "P6": "Milan: the neural kernel is below the window CNN at N in {32, 128} in >= 7/8 seeds.",
+    "P7": "Milan is close to first order: the pair-state kernel and the first-order mixture differ by less than 2% of the first-order error (seed means, every N)."
+  },
+  "descriptive": {
+    "D1": "Lag-1 and lag-2 partial autocorrelations of each real series (training years).",
+    "D2": "Errors against N for every arm and dataset; the learned regime parameters against the truth."
+  },
+  "predeclared_analysis": "tools/core/read_e73.py, written before any output: P1-P7 as written; a failed or missing row counts against.",
+  "seeds": "0-7",
+  "budget_rule": "E30/E56/E62 ladders and E03's network recipe, unchanged.",
+  "status": "REGISTERED 2026-11-09 (not run)",
+  "registered": "2026-11-09"
+}

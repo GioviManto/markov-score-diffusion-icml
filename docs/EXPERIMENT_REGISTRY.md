@@ -93,6 +93,7 @@ not re-registered; their status there is authoritative.
 | E70 | E56/E58/E55 drivers with `energy_fresh=True` | the neural kernel arms refitted with the optimiser restart that removes stalled fits, so the figures can show means | `experiments/registry/E70.json` | as originals | REGISTERED 9 Nov 2026 |
 | E71 | `experiments/e71_views.py` | EM with 1, 4 or 12 noisy copies of each training sequence (mixture and neural kernel, Laplace chain) | `experiments/registry/E71.json` | 0-7 | REGISTERED 9 Nov 2026 |
 | E72 | `experiments/e72_small_t_field.py` | E69 on the Allen-Cahn field (T0.3): frozen field kernels at t 0.005-0.05 against retrained networks | `experiments/registry/E72.json` | 0-7 | REGISTERED 9 Nov 2026 |
+| E73 | `experiments/e73_real_and_hidden.py` | a hidden-regime Markov chain (BP on value x regime, EM for the regime model) and two real series, the daily 3-month T-bill rate (FRED DTB3) and Milan's daily temperature anomaly (GHCN-Daily), kernels against networks | `experiments/registry/E73.json` | 0-7 | REGISTERED 9 Nov 2026 |
 
 Dev seeds are 10000–10003 everywhere; confirmatory seeds 0–15. A confirmatory row's
 config file is committed before the run starts, and the commit that produced the
