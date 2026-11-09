@@ -307,6 +307,7 @@ cmd_for() {
     e63-timing-gpu) echo "e63_compute.py --only timing_gpu --output-dir {OUT}/E63_gpu";;
     # E64 (3 Nov 2026, registry E64.json): generation, every arm of a (seed, N) in one cell, one job.
     e64)         echo "e64_generation.py --only gen --output-dir {OUT}/E64";;
+    e69)         echo "e69_small_t.py --only gate,cells --output-dir {OUT}/E69";;
     # E65 (3 Nov 2026, registry E65.json): kernel refits by seed half (the 30-job cap), the networks in one job (N-27).
     e65-k-h0|e65-k-h8)
       local s0=${1#e65-k-h}

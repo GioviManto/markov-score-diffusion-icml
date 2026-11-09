@@ -23,5 +23,6 @@
   "budget_rule": "Network budget as E64 (32,000 steps, E03's checkpoints); no change after any result is seen.",
   "resources": "One job, 16 cells (8 seeds x 2 N), one cell per worker, 16 CPUs on defq: per cell about 8 BP arms x 7 levels on 2048 chains at 1201 points plus two network trainings (MLP ~1 ms/step, window ~2.5 ms/step), about 15-30 min per cell.",
   "status": "REGISTERED 2026-11-09 (not run)",
-  "registered": "2026-11-09"
+  "registered": "2026-11-09",
+  "implementation_notes_2026-11-09": "Driver, reader (tools/core/read_e69.py) and tests written after registration. Pre-run check at full settings on test seed 0, N = 2048, kernels only (no networks): G1 rel diff 2.9e-6 (pass), G2 exact for all four kernels. That check printed seed 0's kernel and reference errors at every level BEFORE the jobs ran, so P2 (kernel part), P3 and P4 were partly seen for one seed of sixteen cells: true_401 at t = 0.005 was 7e-4 (P3 asks > 1e-3), lmmse 0.55 at 0.005 vs 0.28 at 0.05, em_bp 0.145 vs 0.024, clean_energy 0.027 vs 0.009. No prediction was changed after seeing them; P1 and P5 involve the networks, which were not run."
 }

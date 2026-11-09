@@ -97,6 +97,10 @@ SCRIPTS.update({d: "e63_compute.py" for d in _E63_DIRS})
 OUTPUT_DIRS["E64"] = "hpc_E64"
 MAIN_CSV["hpc_E64"] = "generation.csv"
 SCRIPTS["hpc_E64"] = "e64_generation.py"
+# E69 (9 Nov 2026): score error at small t, one directory.
+OUTPUT_DIRS["E69"] = "hpc_E69"
+MAIN_CSV["hpc_E69"] = "small_t.csv"
+SCRIPTS["hpc_E69"] = "e69_small_t.py"
 
 # E65 (3 Nov 2026): kernel refits in two directories by seed half, the networks in one (N-27).
 _E65_DIRS = {**{f"hpc_E65_k_h{s}": "curves_kernels.csv" for s in (0, 8)}, "hpc_E65_nets": "curves_nets.csv"}
