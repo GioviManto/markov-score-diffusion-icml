@@ -101,6 +101,23 @@ SCRIPTS["hpc_E64"] = "e64_generation.py"
 OUTPUT_DIRS["E69"] = "hpc_E69"
 MAIN_CSV["hpc_E69"] = "small_t.csv"
 SCRIPTS["hpc_E69"] = "e69_small_t.py"
+# E70-E72 (9 Nov 2026): the stall-fix refits (several directories), several views, small t on the field.
+for _d, _csv, _s in (("hpc_E70_lap_em_s0", "kernels.csv", "e56_kernel_families.py"),
+                     ("hpc_E70_lap_em_s8", "kernels.csv", "e56_kernel_families.py"),
+                     ("hpc_E70_clean_lap_s0", "kernels.csv", "e58_clean_kernel.py"),
+                     ("hpc_E70_clean_lap_s8", "kernels.csv", "e58_clean_kernel.py"),
+                     ("hpc_E70_clean_T0.3_h1_L32", "kernels.csv", "e58_clean_kernel.py"),
+                     ("hpc_E70_clean_T1_iso_L32", "kernels.csv", "e58_clean_kernel.py"),
+                     ("hpc_E70_field_em", "kernels.csv", "e55_unet_energy.py")):
+    MAIN_CSV[_d] = _csv
+    SCRIPTS[_d] = _s
+OUTPUT_DIRS["E70"] = "hpc_E70_lap_em_s0"
+OUTPUT_DIRS["E71"] = "hpc_E71_n512"
+MAIN_CSV["hpc_E71_n512"] = MAIN_CSV["hpc_E71_n128"] = "views.csv"
+SCRIPTS["hpc_E71_n512"] = SCRIPTS["hpc_E71_n128"] = "e71_views.py"
+OUTPUT_DIRS["E72"] = "hpc_E72"
+MAIN_CSV["hpc_E72"] = "small_t_field.csv"
+SCRIPTS["hpc_E72"] = "e72_small_t_field.py"
 
 # E65 (3 Nov 2026): kernel refits in two directories by seed half, the networks in one (N-27).
 _E65_DIRS = {**{f"hpc_E65_k_h{s}": "curves_kernels.csv" for s in (0, 8)}, "hpc_E65_nets": "curves_nets.csv"}

@@ -64,6 +64,7 @@ SETTINGS = dict(
     shift_W=4.0, shift_lr=1e-2, shift_inner=10,
     loglinear_basis=10,
     energy_lr=1e-2, energy_inner=10, energy_widths=(16, 32, 64),
+    energy_fresh=False,       # E70: restart Adam after a rejected step (NeuralEnergyKernel.fresh_on_reject); off = E56
     energy_hidden=0,          # 0: read the screen's winners.json (`winners`, default <out>/winners.json)
     winners="",               # path of the screen's winners.json when the fits write elsewhere (the cluster shards)
     screen_sizes=(32, 2048), ladder=LADDER,
@@ -90,7 +91,8 @@ def _init_kernel(cfg, arm, seed, n, hidden=0):
             raise ValueError("the energy arm needs a width: run the screen part or --set energy_hidden=<w>")
         s = int(rng_for("e56-energy-init", seed, n).integers(0, 2**31 - 1))
         return NeuralEnergyKernel.init(hidden=int(hidden), seed=s, half_width=cfg["half_width"], lr=cfg["energy_lr"],
-                                       n_inner=cfg["energy_inner"], device=cfg["device"])
+                                       n_inner=cfg["energy_inner"], device=cfg["device"],
+                                       fresh_on_reject=bool(cfg.get("energy_fresh", False)))
     raise ValueError(f"unknown arm {arm!r}")
 
 

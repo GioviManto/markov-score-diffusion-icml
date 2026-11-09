@@ -308,6 +308,21 @@ cmd_for() {
     # E64 (3 Nov 2026, registry E64.json): generation, every arm of a (seed, N) in one cell, one job.
     e64)         echo "e64_generation.py --only gen --output-dir {OUT}/E64";;
     e69)         echo "e69_small_t.py --only gate,cells --output-dir {OUT}/E69";;
+    # E70 (9 Nov 2026, registry E70.json): the neural kernel arms refitted with the optimiser restart (energy_fresh).
+    e70-lap-em-s0|e70-lap-em-s8)
+      local s=${1#e70-lap-em-s}
+      echo "e56_kernel_families.py --only fit --set \"arms=('energy',)\" --set energy_hidden=16 --set energy_fresh=True --set 'seeds=($s, $((s+1)), $((s+2)), $((s+3)), $((s+4)), $((s+5)), $((s+6)), $((s+7)))' --output-dir {OUT}/E70_lap_em_s$s";;
+    e70-clean-lap-s0|e70-clean-lap-s8)
+      local s=${1#e70-clean-lap-s}
+      echo "e58_clean_kernel.py --only kernels --set \"cells=('laplace',)\" --set \"kernel_arms=('energy_h16',)\" --set energy_fresh=True --set 'laplace_seeds=($s, $((s+1)), $((s+2)), $((s+3)), $((s+4)), $((s+5)), $((s+6)), $((s+7)))' --output-dir {OUT}/E70_clean_lap_s$s";;
+    e70-clean-T0.3_h1_L32|e70-clean-T1_iso_L32)
+      local cell=${1#e70-clean-}
+      echo "e58_clean_kernel.py --only kernels --set \"cells=('$cell',)\" --set \"kernel_arms=('energy_h16',)\" --set energy_fresh=True --output-dir {OUT}/E70_clean_$cell";;
+    e70-field-em)
+      echo "e55_unet_energy.py --only energy --set \"cells=('T0.3_h1_L32',)\" --set energy_fresh=True --set winners=\"'{OUT}/../${MSD_E55_TAG:-ecfd68c-20261027T213459Z}/E55_winners/winners.json'\" --output-dir {OUT}/E70_field_em";;
+    e71-n512)    echo "e71_views.py --only fit --set 'sizes=(512,)' --output-dir {OUT}/E71_n512";;
+    e71-n128)    echo "e71_views.py --only fit --set 'sizes=(32, 128)' --output-dir {OUT}/E71_n128";;
+    e72)         echo "e72_small_t_field.py --only gate,cells --output-dir {OUT}/E72";;
     # E65 (3 Nov 2026, registry E65.json): kernel refits by seed half (the 30-job cap), the networks in one job (N-27).
     e65-k-h0|e65-k-h8)
       local s0=${1#e65-k-h}

@@ -61,6 +61,7 @@ SETTINGS = dict(
     n_val=PROTOCOL.n_val, n_test=PROTOCOL.n_test, grid_size=FROZEN.n_grid, half_width=FROZEN.half_width,
     kernel_arms=KERNEL_ARMS, ladder=e56.LADDER, ideal_ladder=(1, 2, 5, 10),
     energy_lr=1e-2, energy_inner=10, components=8,
+    energy_fresh=False,       # E70: restart Adam after a rejected step (NeuralEnergyKernel.fresh_on_reject); off = E58
     em_init_rho=PROTOCOL.em_init_rho, em_init_var=PROTOCOL.em_init_var,
     net_archs=NET_ARCHS,
     # E03's screened winners (outputs/E03/winners.json), written out so a cluster job does not need E03's outputs
@@ -139,7 +140,8 @@ def init_kernel(cfg, cell, arm, seed, n, grid):
     if arm.startswith("energy_h"):
         s = int(rng_for("e58-energy-init", cell, seed, n, arm).integers(0, 2**31 - 1))
         return NeuralEnergyKernel.init(hidden=int(arm[len("energy_h"):]), seed=s, half_width=cfg["half_width"],
-                                       lr=cfg["energy_lr"], n_inner=cfg["energy_inner"])
+                                       lr=cfg["energy_lr"], n_inner=cfg["energy_inner"],
+                                       fresh_on_reject=bool(cfg.get("energy_fresh", False)))
     if arm == "ideal":
         if cell == "laplace":
             return LaplaceAR1Kernel(rho=rho, b=float(np.sqrt(var / 2.0)))

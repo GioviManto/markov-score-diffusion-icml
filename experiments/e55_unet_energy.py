@@ -82,7 +82,7 @@ SETTINGS = dict(
     grid_size=e33.SETTINGS["grid_size"], half_width=e33.SETTINGS["half_width"],
     em_init_rho=e33.SETTINGS["em_init_rho"], em_init_var=e33.SETTINGS["em_init_var"],
     em_checkpoints=e33.SETTINGS["em_checkpoints"],        # the pair arm: E33's ladder, unchanged
-    energy_checkpoints=EM_LADDER, energy_lr=1e-2, energy_inner=10,
+    energy_checkpoints=EM_LADDER, energy_lr=1e-2, energy_inner=10, energy_fresh=False,
     net_arms=("unet", "window"),
     screen=dict(unet=[dict(base=b, lr=lr) for b in (32, 64, 128) for lr in (2e-4, 1e-3)],
                 window=[dict(lr=lr) for lr in (2e-4, 1e-3)],
@@ -368,7 +368,8 @@ def _kernel0(cfg, arm, conf, grid, seed, cell_id, n, dev):
         return e33._init_kernel(arm, cfg, grid, seed, cell_id, n)
     from markov_score.energy_kernel import NeuralEnergyKernel
     return NeuralEnergyKernel.init(hidden=int(conf["hidden"]), seed=int(rng_for("e55-init", arm, cell_id, seed, n).integers(0, 2**31 - 1)),
-                                   half_width=cfg["half_width"], lr=cfg["energy_lr"], n_inner=cfg["energy_inner"], device=dev)
+                                   half_width=cfg["half_width"], lr=cfg["energy_lr"], n_inner=cfg["energy_inner"], device=dev,
+                                   fresh_on_reject=bool(cfg.get("energy_fresh", False)))
 
 
 def _fit_kernel_cell(cfg, arm, conf, cell_id, seed, n, dev, ladder=None):
