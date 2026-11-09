@@ -1,0 +1,27 @@
+{
+  "id": "E69",
+  "script": "experiments/e69_small_t.py",
+  "hypothesis": "Every comparison so far used the twelve levels t in [0.05, 3]; 0.05 is not small for a diffusion model, whose sampler goes down to t ~ 0.005. The user asked (8 Nov 2026) whether the kernels keep their advantage at smaller t. The kernel does not depend on t, so the frozen fitted kernels (experiments/data/e64_kernels.csv: E02a mixture, E56 spline and neural energy kernel, E58 clean-data neural kernel, all on E03's training sequences) are scored unchanged at small t through BP on a finer grid; the global MLP and the window CNN (E03's winners) are retrained with the noise level drawn log-uniformly in [0.005, 3] (E64's recipe) on the same training sequences, so they have seen small t. Expected: every method degrades as t shrinks (the score scales like 1/(2t)), the kernels less than the networks, and the 401-point grid of the paper becomes too coarse below t ~ 0.02.",
+  "design": "Laplace chain alpha = 0.85, L = 32 (E03's chain). Levels T69 = (0.005, 0.0075, 0.01, 0.015, 0.02, 0.03, 0.05). Seeds 0-7, N in {128, 2048} (the sizes E64 froze kernels for). Training sequences: E03's exp31-train draws for (seed, N). Test: 2048 fresh chains per (seed, N) from rng_for('e69-test', seed, n), noised at each level of T69 with rng_for('e69-test-noise', seed, n, t); validation for the networks: 1024 chains, rng_for('e69-val', seed, n). Every BP arm runs on a 1201-point grid on [-8, 8] (h = 0.0133; the noise term's width sqrt(2t) is 0.1 = 7.5 h at t = 0.005). Reference: BP with the true kernel on that grid. Arms: em_bp, spline, energy, clean_energy (frozen kernels rebuilt as functions on the 1201 grid); lmmse (the best linear denoiser, true covariance); true_401 (the true kernel on the paper's 401-point grid, to measure the grid error); mlp_small and window_small (E03 winners, E64's continuous-level recipe: 32,000 steps, batch 64, Adam, clip 1, checkpoints as E03, selection on the validation score error pooled over T69 and all sites). Metric: relative score error per level, pooled over sites and test chains, and pooled over the small levels t <= 0.02.",
+  "gates": {
+    "G1": "Reference resolution, dev seed 10000, N = 128 test draws at t = 0.005: the true-kernel score on 1201 vs 2401 points differs by at most 1e-4 in pooled relative error; otherwise the grid is raised before any fit is read.",
+    "G2": "Rebuild: each frozen kernel, rebuilt on the paper's 401-point grid, reproduces its frozen risk_pooled on E03's test bundle to 1e-6 relative (E64's gate)."
+  },
+  "predeclared_predictions": {
+    "P1": "Kernels keep the lead: at every level t <= 0.02 and both N, em_bp and clean_energy are each below both mlp_small and window_small in >= 7/8 seeds.",
+    "P2": "Everyone degrades: for every learned arm and both N, the seed-mean error at t = 0.005 is above its seed-mean error at t = 0.05.",
+    "P3": "The paper's grid is too coarse at small t: true_401's error against the reference is above 1e-3 at t = 0.005 (seed mean) and below 1e-4 at t = 0.05.",
+    "P4": "The Gaussian approximation gets worse: lmmse's error at t = 0.005 is above 0.3 (seed mean, pooled over sites) and above its error at t = 0.05.",
+    "P5": "The gap widens: at N = 2048 the seed mean of window_small / em_bp (per-seed ratio) is larger at t = 0.005 than at t = 0.05."
+  },
+  "descriptive": {
+    "D1": "Error against t for every arm and N (the appendix figure), and the per-seed ratios network / kernel at each level.",
+    "D2": "mlp_small and window_small at t = 0.05 against E03's frozen MLP and window CNN (trained on the twelve levels only), to show what training on small t costs at t = 0.05."
+  },
+  "predeclared_analysis": "tools/core/read_e69.py: gates first (exit 1 if G1 or G2 fails), then P1-P5 on the seed means and per-seed wins as written, D1-D2. A failed or missing row counts against every prediction it enters.",
+  "seeds": "0-7",
+  "budget_rule": "Network budget as E64 (32,000 steps, E03's checkpoints); no change after any result is seen.",
+  "resources": "One job, 16 cells (8 seeds x 2 N), one cell per worker, 16 CPUs on defq: per cell about 8 BP arms x 7 levels on 2048 chains at 1201 points plus two network trainings (MLP ~1 ms/step, window ~2.5 ms/step), about 15-30 min per cell.",
+  "status": "REGISTERED 2026-11-09 (not run)",
+  "registered": "2026-11-09"
+}
