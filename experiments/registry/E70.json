@@ -11,11 +11,13 @@
   },
   "descriptive": {
     "D1": "Number of rejected steps and final step sizes before and after the fix.",
-    "D2": "Updated figure data (means) for the results and step figures."
+    "D2": "Updated figure data (means) for the results and step figures.",
+    "D3": "Outliers: fits above 3x their (source, cell, N) seed median, before and after the fix."
   },
   "predeclared_analysis": "tools/core/read_e70.py (written before the read): pairs each refit row with the frozen original by (experiment, cell, seed, N), applies P1-P4 as written; a missing or failed row counts against.",
   "seeds": "as the originals",
   "budget_rule": "identical to the originals",
   "status": "REGISTERED 2026-11-09 (not run)",
-  "registered": "2026-11-09"
+  "registered": "2026-11-09",
+  "amendments_2026-11-09": "Pre-run (no E70 output exists): reading the ORIGINAL fits with the reader showed that the registered stall signature (final_lr < 1e-10 and error > 0.8 x floor) flags only 3 of 304 original neural-kernel fits, while final_lr < 1e-10 alone flags 47 (mostly converged, healthy fits) and the worst Laplace outliers (E58 energy_h16, N = 8192, seeds 1 and 8, 0.12-0.13 against a median of 0.0045) have normal step sizes. P1-P4 are unchanged. Added D3 (descriptive): the number of fits above 3 times their (source, cell, N) seed median, before and after the fix; P2 already tests what the figures need."
 }
