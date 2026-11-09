@@ -325,6 +325,7 @@ cmd_for() {
     e72)         echo "e72_small_t_field.py --only gate,cells --output-dir {OUT}/E72";;
     e73-regime)  echo "e73_real_and_hidden.py --only regime --output-dir {OUT}/E73_regime";;
     e73-real)    echo "e73_real_and_hidden.py --only describe,real --output-dir {OUT}/E73_real";;
+    e74)         echo "e74_generation_hard.py --only gen --output-dir {OUT}/E74";;
     # E65 (3 Nov 2026, registry E65.json): kernel refits by seed half (the 30-job cap), the networks in one job (N-27).
     e65-k-h0|e65-k-h8)
       local s0=${1#e65-k-h}
