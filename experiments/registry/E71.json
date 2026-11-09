@@ -1,0 +1,21 @@
+{
+  "id": "E71",
+  "script": "experiments/e71_views.py",
+  "hypothesis": "EM sees one noisy copy of each training sequence at one noise level, while the networks see the clean sequences with fresh noise at every step. Giving EM several noisy copies of each sequence (at different levels, each copy noised independently) closes much of this information gap; the user asked (8 Nov 2026) how much it helps.",
+  "design": "Laplace chain, E03's training sequences (exp31-train) for seeds 0-7, N in {32, 128, 512}. Views K in {1, 4, 12}: K = 1 is E03's one-view interface exactly (e03._one_view_groups); K = 12 noises every sequence once at each of the twelve levels; K = 4 gives each sequence four distinct levels drawn by rng_for('e71-levels', seed, n), noise from rng_for('e71-noise', seed, n). Arms: the C = 8 mixture (E30's fit and selection, em_bp) and the neural energy kernel (width 16, E56's fit and selection, fresh_on_reject on). Scored on E03's test bundles, all sites, the twelve levels; references E03's frozen MLP and window CNN.",
+  "predeclared_predictions": {
+    "P1": "More views help: for both arms and every N, the seed-mean error decreases from K = 1 to K = 4 to K = 12.",
+    "P2": "Diminishing returns: the gain from K = 4 to K = 12 is smaller than from K = 1 to K = 4 (seed means), for both arms and every N.",
+    "P3": "Most of the gap to clean data closes: at N = 512 the neural kernel with K = 12 is within 1.5 times E58's clean-data neural kernel (energy_h16) at the same N (seed means).",
+    "P4": "Reproduction gate: at K = 1 the mixture reproduces E30/E02a's em_bp errors to 1e-6 relative (same data, same fit)."
+  },
+  "descriptive": {
+    "D1": "Error against K for both arms and N.",
+    "D2": "Seconds per EM iteration against K (cost grows with the number of noisy sequences)."
+  },
+  "predeclared_analysis": "tools/core/read_e71.py: gate P4 first, then P1-P3 on seed means; a failed or missing row counts against.",
+  "seeds": "0-7",
+  "budget_rule": "E30's and E56's ladders unchanged.",
+  "status": "REGISTERED 2026-11-09 (not run)",
+  "registered": "2026-11-09"
+}

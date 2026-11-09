@@ -1,0 +1,24 @@
+{
+  "id": "E72",
+  "script": "experiments/e72_small_t_field.py",
+  "hypothesis": "E69's question on the Allen-Cahn field: is the neural kernel still more accurate than the networks at small noise, t from 0.005 to 0.05, where the field's sharp jumps between wells make the score largest?",
+  "design": "Allen-Cahn cell T0.3_h1_L32, E33's training sequences (through e58.context), seeds 0-7, N in {128, 2048}. Levels T69. Frozen kernels rebuilt as functions on a 1201-point grid: the neural kernel by EM (E55 em_energy, selection=risk), the neural kernel by clean maximum likelihood (E58 energy_h16), the shift mixture by clean maximum likelihood (E58 mixture_clean); BP uses each kernel's own stationary law for the first site (E33's convention). Reference: the exact kernel on the same grid. Linear floor: the true covariance. Networks: E58's MLP and window CNN recipes retrained with the level drawn log-uniformly in [0.005, 3] (E64's recipe), selected on validation at T69.",
+  "gates": {
+    "G1": "Reference resolution: the exact-kernel score on 1201 vs 2401 points at t = 0.005 differs by at most 1e-4 (dev seed).",
+    "G2": "Rebuild: each frozen kernel rebuilt on the 401-point grid reproduces its frozen pooled error on its own test bundle to 1e-6 relative."
+  },
+  "predeclared_predictions": {
+    "P1": "At every level t <= 0.02 and both N, the clean-data neural kernel is below both retrained networks in >= 7/8 seeds.",
+    "P2": "At N = 2048, the EM neural kernel is below both retrained networks at every level t <= 0.02 in >= 6/8 seeds.",
+    "P3": "The shift mixture stays within 5% of the linear floor at every level (seed means): the family, not the noise level, is what fails.",
+    "P4": "Everyone degrades: every learned arm's seed-mean error at t = 0.005 is above its error at t = 0.05."
+  },
+  "descriptive": {
+    "D1": "Error against t for every arm and N."
+  },
+  "predeclared_analysis": "tools/core/read_e72.py: gates first, then P1-P4 as written; a failed or missing row counts against.",
+  "seeds": "0-7",
+  "budget_rule": "E64's network recipe; kernels frozen.",
+  "status": "REGISTERED 2026-11-09 (not run)",
+  "registered": "2026-11-09"
+}

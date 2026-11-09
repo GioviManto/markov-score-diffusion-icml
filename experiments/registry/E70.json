@@ -1,0 +1,21 @@
+{
+  "id": "E70",
+  "script": "experiments/e56_kernel_families.py, experiments/e58_clean_kernel.py, experiments/e55_unet_energy.py with --set energy_fresh=True",
+  "hypothesis": "4-7% of the neural energy kernel fits in E55, E56 and E58 stalled at the linear floor because a rejected Adam step kept the optimiser's moments (fixed by NeuralEnergyKernel.fresh_on_reject, used from E60; 0 of 448 stalls in E61). The paper's figures therefore show medians. Refitting the neural kernel arms with the fix should remove the stalls, so that means and medians agree and the figures can show means.",
+  "design": "Same drivers, data, seeds, sizes, ladders and selection as the original runs; only energy_fresh=True. Arms: E56 'energy' at width 16 (Laplace, EM from one noisy view, seeds 0-15, N 32-2048); E58 'energy_h16' (clean maximum likelihood) on laplace (seeds 0-15) and on T0.3_h1_L32 and T1_iso_L32 (seeds 0-7), N 32-32768; E55 'em_energy' on T0.3_h1_L32 (EM from one noisy view, seeds 0-7, its sizes, E55's screened width). Outputs in E70_* directories, never over the frozen ones.",
+  "predeclared_predictions": {
+    "P1": "No stall: no refitted fit ends with final_lr < 1e-10 and an error above 0.8 times the linear floor (E58/E55's stall signature).",
+    "P2": "Means and medians agree: for every (arm, cell, N) the seed mean is within 15% of the seed median.",
+    "P3": "Where the original fit did not stall, the refit's error is within 10% of the original in at least 80% of (seed, N) pairs (the fix only acts after a rejected step).",
+    "P4": "The paper's claims survive with means: on the Laplace chain the refitted EM neural kernel is within 1.15 times the E02a mixture at N = 2048 and below E03's window CNN and MLP in 16/16 seeds at every N."
+  },
+  "descriptive": {
+    "D1": "Number of rejected steps and final step sizes before and after the fix.",
+    "D2": "Updated figure data (means) for the results and step figures."
+  },
+  "predeclared_analysis": "tools/core/read_e70.py (written before the read): pairs each refit row with the frozen original by (experiment, cell, seed, N), applies P1-P4 as written; a missing or failed row counts against.",
+  "seeds": "as the originals",
+  "budget_rule": "identical to the originals",
+  "status": "REGISTERED 2026-11-09 (not run)",
+  "registered": "2026-11-09"
+}
