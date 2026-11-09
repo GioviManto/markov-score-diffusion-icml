@@ -323,6 +323,8 @@ cmd_for() {
     e71-n512)    echo "e71_views.py --only fit --set 'sizes=(512,)' --output-dir {OUT}/E71_n512";;
     e71-n128)    echo "e71_views.py --only fit --set 'sizes=(32, 128)' --output-dir {OUT}/E71_n128";;
     e72)         echo "e72_small_t_field.py --only gate,cells --output-dir {OUT}/E72";;
+    e73-regime)  echo "e73_real_and_hidden.py --only regime --output-dir {OUT}/E73_regime";;
+    e73-real)    echo "e73_real_and_hidden.py --only describe,real --output-dir {OUT}/E73_real";;
     # E65 (3 Nov 2026, registry E65.json): kernel refits by seed half (the 30-job cap), the networks in one job (N-27).
     e65-k-h0|e65-k-h8)
       local s0=${1#e65-k-h}

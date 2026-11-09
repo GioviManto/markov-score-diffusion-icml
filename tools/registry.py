@@ -118,6 +118,10 @@ SCRIPTS["hpc_E71_n512"] = SCRIPTS["hpc_E71_n128"] = "e71_views.py"
 OUTPUT_DIRS["E72"] = "hpc_E72"
 MAIN_CSV["hpc_E72"] = "small_t_field.csv"
 SCRIPTS["hpc_E72"] = "e72_small_t_field.py"
+OUTPUT_DIRS["E73"] = "hpc_E73_regime"
+MAIN_CSV["hpc_E73_regime"] = "regime.csv"
+MAIN_CSV["hpc_E73_real"] = "real.csv"
+SCRIPTS["hpc_E73_regime"] = SCRIPTS["hpc_E73_real"] = "e73_real_and_hidden.py"
 
 # E65 (3 Nov 2026): kernel refits in two directories by seed half, the networks in one (N-27).
 _E65_DIRS = {**{f"hpc_E65_k_h{s}": "curves_kernels.csv" for s in (0, 8)}, "hpc_E65_nets": "curves_nets.csv"}

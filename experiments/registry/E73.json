@@ -27,5 +27,6 @@
   "seeds": "0-7",
   "budget_rule": "E30/E56/E62 ladders and E03's network recipe, unchanged.",
   "status": "REGISTERED 2026-11-09 (not run)",
-  "registered": "2026-11-09"
+  "registered": "2026-11-09",
+  "amendments_2026-11-09": "Pre-run: the full training sets have 398 (DTB3) and 913 (Milan) complete windows, not 397 and 912 as written; 'all' in the design means the full set, so the sizes are (32, 128, 398) and (32, 128, 512, 913). Descriptive D1 computed during the smoke run (data only, no model): DTB3 lag-1 0.9994, lag-2 partial -0.142; Milan lag-1 0.817, lag-2 partial -0.075."
 }
